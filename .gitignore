@@ -1,0 +1,134 @@
+# Added by code-review-graph
+.code-review-graph/
+
+# VS Code Extension Development
+out/
+dist/
+*.vsix
+.vscode-test/
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# TypeScript
+*.tsbuildinfo
+*.js.map
+*.d.ts.map
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+.nyc_output/
+
+# Build artifacts
+build/
+release/
+
+# Documentation
+docs/_site/
+docs/.jekyll-cache/
+
+# Temporary files
+tmp/
+temp/
+
+# OS generated files
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+desktop.ini
+
+# VS Code
+.history/
+*.code-workspace
+
+# Test outputs
+test-results/
+test-reports/
+
+# API keys and secrets
+*.key
+*.pem
+*.crt
+config/local.json
+config/secret.json
+
+# VS Code extension packaging
+*.vsix
+.vsixmanifest
+
+# TypeScript output
+out/
+dist/
+
+# Debug logs
+debug.log
+*.log
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Editor directories and files
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# Project specific
+documint-*.vsix
+.claude/
+plans/
+CLAUDE.md
+AGENTS.md

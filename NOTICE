@@ -1,0 +1,27 @@
+AI Code Documentation Generator
+Copyright (c) 2026 Wonderer-Tech
+
+This project includes the following third-party open source software:
+
+---
+
+axios (https://github.com/axios/axios)
+License: MIT
+Copyright (c) 2014-present Matt Zabriskie & Collaborators
+
+---
+
+marked (https://github.com/markedjs/marked)
+License: MIT
+Copyright (c) 2011-2022, Christopher Jeffrey (https://github.com/chjj)
+
+---
+
+TypeScript (https://github.com/microsoft/TypeScript)
+License: Apache-2.0
+Copyright (c) Microsoft Corporation
+
+---
+
+Full license texts for all dependencies can be found in the
+node_modules/<package>/LICENSE (or similar) files.

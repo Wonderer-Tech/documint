@@ -1,0 +1,228 @@
+{
+  "name": "documint",
+  "displayName": "DocuMint — AI Code Documentation Generator",
+  "description": "Generate clean code documentation in one click using AI. Create Markdown docs, HTML docs, UML diagrams, architecture overviews, docstrings, and usage examples directly inside VS Code.",
+  "version": "0.1.0",
+  "publisher": "wonderertech",
+  "icon": "resources/icon.png",
+  "license": "MIT",
+  "galleryBanner": {
+    "color": "#0078D7",
+    "theme": "dark"
+  },
+  "keywords": [
+    "ai documentation",
+    "code documentation",
+    "documentation generator",
+    "docstring generator",
+    "code comments",
+    "auto documentation",
+    "docs generator",
+    "vscode documentation",
+    "openai",
+    "anthropic",
+    "ollama",
+    "lm studio",
+    "uml",
+    "markdown",
+    "developer tools",
+    "devtools",
+    "jsdoc",
+    "typescript",
+    "javascript",
+    "python"
+  ],
+  "categories": [
+    "Other",
+    "Formatters",
+    "Machine Learning"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Wonderer-Tech/documint.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Wonderer-Tech/documint/issues"
+  },
+  "homepage": "https://github.com/Wonderer-Tech/documint#readme",
+  "engines": {
+    "vscode": "^1.110.0"
+  },
+  "activationEvents": [
+    "onView:aiDocGenerator.sidebar",
+    "onCommand:aiDocGenerator.generateDocumentation",
+    "onCommand:aiDocGenerator.pickAndGenerateFile",
+    "onCommand:aiDocGenerator.pickAndGenerateFolder"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiDocGenerator.generateDocumentation",
+        "title": "Generate Documentation",
+        "icon": "$(book)"
+      },
+      {
+        "command": "aiDocGenerator.cancelGeneration",
+        "title": "Cancel Generation",
+        "icon": "$(stop)"
+      },
+      {
+        "command": "aiDocGenerator.configureApiKey",
+        "title": "Configure API Key",
+        "icon": "$(key)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ai-doc-generator",
+          "title": "Documint",
+          "icon": "resources/sidebar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "ai-doc-generator": [
+        {
+          "type": "webview",
+          "id": "aiDocGenerator.sidebar",
+          "name": "Documentation Generator"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Documint",
+      "properties": {
+        "aiDocGenerator.aiProvider": {
+          "type": "string",
+          "enum": [
+            "openai",
+            "anthropic",
+            "openrouter",
+            "custom",
+            "ollama",
+            "lmstudio"
+          ],
+          "default": "openai",
+          "description": "AI provider for documentation generation"
+        },
+        "aiDocGenerator.model": {
+          "type": "string",
+          "default": "gpt-4",
+          "description": "Model to use for documentation generation"
+        },
+        "aiDocGenerator.documentationDepth": {
+          "type": "string",
+          "enum": [
+            "simple",
+            "basic",
+            "standard",
+            "comprehensive"
+          ],
+          "default": "standard"
+        },
+        "aiDocGenerator.outputFormat": {
+          "type": "string",
+          "enum": [
+            "markdown",
+            "html",
+            "both"
+          ],
+          "default": "markdown"
+        },
+        "aiDocGenerator.targetLanguages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "typescript",
+            "javascript",
+            "python",
+            "java",
+            "cpp",
+            "csharp",
+            "go",
+            "rust",
+            "php",
+            "ruby"
+          ]
+        },
+        "aiDocGenerator.maxTokens": {
+          "type": "number",
+          "default": 4000
+        },
+        "aiDocGenerator.temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.3
+        },
+        "aiDocGenerator.rateLimitDelay": {
+          "type": "number",
+          "default": 1000,
+          "description": "Delay between API requests in milliseconds"
+        },
+        "aiDocGenerator.excludePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/build/**",
+            "**/.git/**"
+          ]
+        },
+        "aiDocGenerator.customApiEndpoint": {
+          "type": "string",
+          "description": "Custom API endpoint URL"
+        },
+        "aiDocGenerator.localModelUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "URL for local AI model server"
+        },
+        "aiDocGenerator.localModelName": {
+          "type": "string",
+          "description": "Name of the local model to use"
+        },
+        "aiDocGenerator.localModelTimeout": {
+          "type": "number",
+          "default": 60000,
+          "description": "Request timeout for local model in milliseconds"
+        },
+        "aiDocGenerator.generateUmlDiagrams": {
+          "type": "boolean",
+          "default": true,
+          "description": "Generate UML diagrams from code structure"
+        },
+        "aiDocGenerator.enableDiffTracking": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable tracking of changes between documentation generations"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/marked": "^5.0.2",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.110.0",
+    "@vscode/vsce": "^3.8.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "marked": "^17.0.5"
+  }
+}
