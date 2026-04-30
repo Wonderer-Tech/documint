@@ -6,6 +6,8 @@
 
 DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file using AI providers such as OpenAI, Anthropic, OpenRouter, Ollama, LM Studio, or a custom OpenAI-compatible endpoint.
 
+![DocuMint Demo](resources/demo.gif)
+
 It produces:
 - `docs/documentation.md`
 - `docs/documentation.html`
