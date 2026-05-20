@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as path from "path";
 import { WorkspaceFile } from "../types";
 
 /**
@@ -32,6 +33,33 @@ const EXTENSION_TO_LANGUAGE: Record<string, string> = {
   sql: "sql",
 };
 
+const LANGUAGE_TO_EXTENSIONS: Record<string, string[]> = {
+  typescript: ["ts", "tsx"],
+  typescriptreact: ["tsx"],
+  javascript: ["js", "jsx"],
+  javascriptreact: ["jsx"],
+  python: ["py"],
+  java: ["java"],
+  cpp: ["cpp"],
+  c: ["c"],
+  csharp: ["cs"],
+  go: ["go"],
+  rust: ["rs"],
+  php: ["php"],
+  ruby: ["rb"],
+  swift: ["swift"],
+  kotlin: ["kt"],
+  scala: ["scala"],
+  shell: ["sh"],
+  yaml: ["yaml", "yml"],
+  json: ["json"],
+  xml: ["xml"],
+  html: ["html"],
+  css: ["css"],
+  scss: ["scss"],
+  sql: ["sql"],
+};
+
 /**
  * Default patterns to exclude from scanning
  */
@@ -63,6 +91,7 @@ const DEFAULT_EXCLUDE_PATTERNS = [
 export interface ScannerConfig {
   excludePatterns?: string[];
   includePatterns?: string[];
+  targetLanguages?: string[];
   maxFileSize?: number; // in bytes, default 100KB
 }
 
@@ -70,11 +99,7 @@ export class WorkspaceScanner {
   private config: ScannerConfig;
 
   constructor(config: ScannerConfig = {}) {
-    this.config = {
-      excludePatterns: config.excludePatterns || DEFAULT_EXCLUDE_PATTERNS,
-      includePatterns: config.includePatterns || ["**/*"],
-      maxFileSize: config.maxFileSize || 100 * 1024, // 100KB
-    };
+    this.config = config;
   }
 
   /**
@@ -84,17 +109,20 @@ export class WorkspaceScanner {
     workspaceFolder: vscode.WorkspaceFolder,
   ): Promise<WorkspaceFile[]> {
     const files: WorkspaceFile[] = [];
-    const excludePatterns =
-      this.config.excludePatterns || DEFAULT_EXCLUDE_PATTERNS;
+    const resolvedConfig = this.resolveConfig(workspaceFolder);
+    const excludePatterns = resolvedConfig.excludePatterns;
 
     // Build exclusion string for findFiles - use glob pattern syntax
-    const excludeGlob = excludePatterns.join(",");
+    const excludeGlob = `{${excludePatterns.join(",")}}`;
+    const includeGlob = this.buildIncludeGlob(resolvedConfig);
 
-    // Get all files in the workspace
-    const allFiles = await vscode.workspace.findFiles(
-      "{**/*.ts,**/*.tsx,**/*.js,**/*.jsx,**/*.py,**/*.java,**/*.go,**/*.rs,**/*.rb}",
-      excludeGlob,
-    );
+    // Get files only from the requested workspace root.
+    const allFiles = (
+      await vscode.workspace.findFiles(
+        new vscode.RelativePattern(workspaceFolder, includeGlob),
+        excludeGlob,
+      )
+    ).sort((a, b) => a.fsPath.localeCompare(b.fsPath));
 
     // Secondary filter: ensure no files from excluded directories slip through
     const excludedDirs = excludePatterns
@@ -117,12 +145,14 @@ export class WorkspaceScanner {
         continue;
       }
 
-      // Get relative path within the workspace
-      const relativePath = vscode.workspace.asRelativePath(uri);
+      // Get relative path within the selected workspace root.
+      const relativePath = path
+        .relative(workspaceFolder.uri.fsPath, uri.fsPath)
+        .replace(/\\/g, "/");
 
       try {
         const stat = await vscode.workspace.fs.stat(uri);
-        if (stat.size > (this.config.maxFileSize || 100 * 1024)) {
+        if (stat.size > resolvedConfig.maxFileSize) {
           continue; // Skip large files
         }
 
@@ -143,6 +173,69 @@ export class WorkspaceScanner {
     }
 
     return files;
+  }
+
+  private resolveConfig(workspaceFolder: vscode.WorkspaceFolder): Required<ScannerConfig> {
+    const settings = vscode.workspace.getConfiguration(
+      "aiDocGenerator",
+      workspaceFolder.uri,
+    );
+    const configuredExcludePatterns =
+      settings.get<string[]>("excludePatterns") ?? [];
+
+    return {
+      excludePatterns: Array.from(
+        new Set([
+          ...DEFAULT_EXCLUDE_PATTERNS,
+          ...configuredExcludePatterns,
+          ...(this.config.excludePatterns ?? []),
+        ]),
+      ),
+      includePatterns: this.config.includePatterns ?? [],
+      targetLanguages:
+        this.config.targetLanguages ??
+        settings.get<string[]>("targetLanguages") ??
+        Object.keys(LANGUAGE_TO_EXTENSIONS),
+      maxFileSize: this.config.maxFileSize ?? 100 * 1024,
+    };
+  }
+
+  private buildIncludeGlob(config: Required<ScannerConfig>): string {
+    if (config.includePatterns.length > 0) {
+      return this.toBraceGlob(config.includePatterns);
+    }
+
+    const extensions = this.getTargetExtensions(config.targetLanguages);
+    return this.toBraceGlob(extensions.map((ext) => `**/*.${ext}`));
+  }
+
+  private toBraceGlob(patterns: string[]): string {
+    if (patterns.length === 1) {
+      return patterns[0];
+    }
+    return `{${patterns.join(",")}}`;
+  }
+
+  private getTargetExtensions(targetLanguages: string[]): string[] {
+    const extensions = new Set<string>();
+
+    for (const value of targetLanguages) {
+      const normalized = value.toLowerCase().replace(/^\./, "");
+
+      for (const ext of LANGUAGE_TO_EXTENSIONS[normalized] ?? []) {
+        extensions.add(ext);
+      }
+
+      if (EXTENSION_TO_LANGUAGE[normalized]) {
+        extensions.add(normalized);
+      }
+    }
+
+    if (extensions.size === 0) {
+      Object.keys(EXTENSION_TO_LANGUAGE).forEach((ext) => extensions.add(ext));
+    }
+
+    return Array.from(extensions).sort();
   }
 
   /**

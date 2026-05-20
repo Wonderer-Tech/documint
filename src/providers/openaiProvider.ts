@@ -229,6 +229,7 @@ export class OpenAIProvider extends BaseAIProvider {
             Authorization: `Bearer ${params.apiKey}`,
             "Content-Type": "application/json",
           },
+          signal: params.signal,
         },
       );
 

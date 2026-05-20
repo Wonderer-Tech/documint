@@ -2,19 +2,23 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
-![Version](https://img.shields.io/badge/version-0.1.0-green)
+![Version](https://img.shields.io/badge/version-1.0.1-green)
 
 DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file using AI providers such as OpenAI, Anthropic, OpenRouter, Ollama, LM Studio, or a custom OpenAI-compatible endpoint.
 
 ![DocuMint Demo](resources/demo.gif)
 
+![DocuMint Screenshot](resources/screenshot1.png)
+
 It produces:
+
 - `docs/documentation.md`
 - `docs/documentation.html`
 
 ## Table of Contents
 
 - [What It Does](#what-it-does)
+- [What's New in 1.0.0](#whats-new-in-100)
 - [How It Works](#how-it-works)
 - [Supported Providers](#supported-providers)
 - [Supported Languages](#supported-languages)
@@ -32,28 +36,47 @@ It produces:
 ## What It Does
 
 DocuMint scans source files, sends code to the configured AI provider, and builds project-level documentation with:
+
 - Project overview and stats
 - Per-file documentation sections
+- Detected imports, exports, symbols, and project links
+- Quality notes when generated docs miss detected source facts
 - Markdown and/or HTML output
 - HTML table of contents with navigation and search
 - Mermaid diagram rendering support in generated HTML
 
 The extension runs directly inside VS Code through a sidebar webview.
 
+## What's New in 1.0.0
+
+DocuMint 1.0.0 is the first stable release.
+
+- Smarter documentation: DocuMint now scans source code for real imports, exports, classes, functions, types, and TODO comments before asking AI to write docs.
+- Better project understanding: generated docs include more accurate project context because DocuMint builds a simple project map first.
+- Fewer fake details: generated sections are checked against detected source symbols, and DocuMint adds a quality note if important symbols are missing.
+- Safer output: generated HTML escapes raw HTML from AI output and uses safer Mermaid rendering settings.
+- Better workspace handling: folder/file generation now respects the selected workspace root, target languages, and exclude patterns.
+- Real cancel support: pressing Cancel now stops active provider requests where supported.
+- Safer cloud use: DocuMint asks before sending source code to cloud providers and blocks generation in untrusted workspaces.
+- Smaller release package: the extension is bundled, so the VSIX ships fewer files.
+
 ## How It Works
 
 1. Resolve provider and model from sidebar payload or VS Code settings.
 2. Scan workspace files through `WorkspaceScanner`.
 3. Optionally narrow generation to selected file/folder path.
-4. Build a project summary prompt from file manifests.
-5. Generate documentation file-by-file via the selected provider.
-6. Save output into `docs/` as Markdown, HTML, or both.
+4. Analyze source files for imports, exports, symbols, TODOs, and internal links.
+5. Build a project map and file-level context from verified source facts.
+6. Generate documentation file-by-file via the selected provider.
+7. Validate generated docs against detected symbols.
+8. Save output into `docs/` as Markdown, HTML, or both.
 
 Core pipeline entry point: `src/services/docGenerator.ts`.
 
 ## Supported Providers
 
 Configured using `aiDocGenerator.aiProvider`:
+
 - `openai`
 - `anthropic`
 - `openrouter`
@@ -65,18 +88,26 @@ Provider implementations live in `src/providers/`.
 
 ## Supported Languages
 
-Current workspace scanner patterns include:
+Current workspace scanner settings can include:
+
 - TypeScript (`.ts`, `.tsx`)
 - JavaScript (`.js`, `.jsx`)
 - Python (`.py`)
 - Java (`.java`)
+- C / C++ / C# (`.c`, `.cpp`, `.cs`)
 - Go (`.go`)
 - Rust (`.rs`)
+- PHP (`.php`)
 - Ruby (`.rb`)
+- Swift (`.swift`)
+- Kotlin (`.kt`)
+- Scala (`.scala`)
+- Shell, YAML, JSON, XML, HTML, CSS, SCSS, and SQL
 
 Notes:
-- Single-file picker UI allows additional extensions, but workspace scanning currently documents the language set above.
-- Exclusions include `node_modules`, `dist`, `build`, `.git`, `docs`, test/spec files, lockfiles, and other common non-source artifacts.
+
+- `aiDocGenerator.targetLanguages` controls which languages are scanned.
+- Exclusions include `node_modules`, `dist`, `build`, `.git`, `docs`, test/spec files, lockfiles, `.env` files, logs, and other common non-source artifacts.
 
 ## Install
 
@@ -95,7 +126,7 @@ ext install wonderertech.documint
 ### VSIX
 
 ```bash
-code --install-extension documint-0.1.0.vsix
+code --install-extension documint-1.0.1.vsix
 ```
 
 ### Build from Source
@@ -119,11 +150,13 @@ npm run compile
 ## Commands
 
 Contributed commands:
+
 - `aiDocGenerator.generateDocumentation` - Generate documentation
 - `aiDocGenerator.cancelGeneration` - Cancel generation
 - `aiDocGenerator.configureApiKey` - Configure API key
 
 Internal scope commands used by sidebar:
+
 - `aiDocGenerator.pickAndGenerateFile`
 - `aiDocGenerator.pickAndGenerateFolder`
 
@@ -175,10 +208,12 @@ All settings are under `aiDocGenerator`.
 ## Output
 
 Generated output is written to a `docs/` directory in the workspace root:
+
 - `documentation.md`
 - `documentation.html`
 
 The HTML renderer includes:
+
 - Sidebar TOC
 - Section anchors
 - Search
@@ -191,6 +226,8 @@ The HTML renderer includes:
 
 ```text
 src/
+|-- analyzer/
+|   `-- sourceAnalyzer.ts         # Static import/export/symbol discovery
 |-- extension.ts                  # Activation and command wiring
 |-- types.ts                      # Shared types and error models
 |-- config/
@@ -209,6 +246,7 @@ src/
 |   `-- customProvider.ts
 |-- services/
 |   |-- docGenerator.ts           # Orchestration + writing docs output
+|   |-- documentationValidator.ts # Checks generated docs against source facts
 |   |-- htmlTemplate.ts           # Full HTML document template
 |   `-- modelMetadataService.ts   # Context window metadata fetch/cache
 `-- views/
@@ -228,6 +266,7 @@ src/
 ```bash
 npm install
 npm run compile
+npm run typecheck
 npm run watch
 npm test
 ```
@@ -240,9 +279,10 @@ npx @vscode/vsce package
 
 ## Known Limitations
 
-- The scanner currently includes a fixed set of language globs (see [Supported Languages](#supported-languages)).
-- `npm test` points to `./out/test/runTest.js`; test harness files may need setup depending on your local branch state.
-- API key setup command currently defaults to `openai` when invoked without provider context.
+- Static analysis is intentionally lightweight. It improves accuracy, but it is not a full compiler for every language.
+- Documentation quality still depends on the selected AI model and the source code that is available in the workspace.
+- Cloud providers receive selected source code after confirmation. Use Ollama, LM Studio, or a local custom endpoint when code must stay local.
+- Very large demo media can make the VSIX larger than the extension code itself.
 
 ## Contributing
 

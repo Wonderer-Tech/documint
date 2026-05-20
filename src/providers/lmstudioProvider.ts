@@ -49,6 +49,7 @@ export class LMStudioProvider extends BaseAIProvider {
         timeout,
         headers: { "Content-Type": "application/json" },
         // LM Studio doesn't require an auth header but accepts one gracefully
+        signal: params.signal,
       },
     );
 

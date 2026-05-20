@@ -35,6 +35,7 @@ export class OpenRouterProvider extends BaseAIProvider {
           "HTTP-Referer": "https://github.com/Wonderer-Tech/documint",
           "X-Title": "Documint",
         },
+        signal: params.signal,
       },
     );
 

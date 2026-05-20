@@ -1,0 +1,46 @@
+# Local/dev metadata
+.git/**
+.github/**
+.claude/**
+.code-review-graph/**
+.vscode/**
+.vscode-test/**
+.mcp.json
+.gitignore
+AGENTS.md
+CLAUDE.md
+plans/**
+
+# Source and build inputs not needed at runtime
+src/**
+dist/**
+!dist/extension.js
+tsconfig.json
+*.tsbuildinfo
+
+# Package/build artifacts
+*.vsix
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+out/**
+coverage/**
+test/**
+tests/**
+test-results/**
+test-reports/**
+
+# Logs and local secrets
+*.log
+.env*
+*.key
+*.pem
+*.crt
+
+# Editor/OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.bak
+*.backup
+*.old

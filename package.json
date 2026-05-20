@@ -2,7 +2,7 @@
   "name": "documint",
   "displayName": "DocuMint — AI Code Documentation Generator",
   "description": "Generate clean code documentation in one click using AI. Create Markdown docs, HTML docs, UML diagrams, architecture overviews, docstrings, and usage examples directly inside VS Code.",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "publisher": "wonderertech",
   "icon": "resources/icon.png",
   "license": "MIT",
@@ -209,20 +209,20 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile",
-    "test": "node ./out/test/runTest.js"
+    "compile": "npm run typecheck && npm run bundle",
+    "typecheck": "tsc -p ./ --noEmit",
+    "bundle": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js",
+    "watch": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --watch",
+    "test": "npm run compile"
   },
   "devDependencies": {
     "@types/marked": "^5.0.2",
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.110.0",
     "@vscode/vsce": "^3.8.0",
+    "axios": "^1.16.1",
+    "esbuild": "^0.28.0",
+    "marked": "^17.0.5",
     "typescript": "^5.3.3"
-  },
-  "dependencies": {
-    "axios": "^1.6.8",
-    "marked": "^17.0.5"
   }
 }

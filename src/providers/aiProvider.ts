@@ -18,6 +18,7 @@ export interface ApiCallParams {
   apiKey: string;
   messages: Array<{ role: string; content: string }>;
   maxTokens: number;
+  signal?: AbortSignal;
 }
 
 /**
@@ -552,42 +553,65 @@ export abstract class BaseAIProvider implements AIProvider {
     model: string,
     apiKey: string,
   ): Promise<DocumentationResult> {
-    const { system, user: promptTemplate } = this.buildPrompt(context);
-    const maxCtx = this.getMaxContextWindow(model);
-    const overhead =
-      this.getTokenCount(system) +
-      this.getTokenCount(promptTemplate.replace("{CODE}", "")) +
-      500;
-    const maxCodeTokens = maxCtx - overhead - 1024;
-
-    if (this.getTokenCount(context.code) > maxCodeTokens) {
-      return this.generateChunked(
-        context,
-        model,
-        apiKey,
-        system,
-        promptTemplate,
-        maxCodeTokens,
-      );
+    if (context.cancellationToken?.isCancellationRequested) {
+      throw new Error("Generation cancelled");
     }
 
-    const userContent = promptTemplate.replace("{CODE}", context.code);
-    const inputTokens =
-      this.getTokenCount(system) + this.getTokenCount(userContent);
-    const maxTokens = Math.min(
-      this.getMaxOutputTokens(model),
-      Math.max(1024, maxCtx - inputTokens - 500),
-    );
+    const abortController = context.cancellationToken
+      ? new AbortController()
+      : undefined;
+    const cancellationSubscription =
+      context.cancellationToken?.onCancellationRequested(() => {
+        abortController?.abort();
+      });
 
-    return this.callApi({
-      model,
-      apiKey,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: userContent },
-      ],
-      maxTokens,
-    });
+    try {
+      const { system, user: promptTemplate } = this.buildPrompt(context);
+      const maxCtx = this.getMaxContextWindow(model);
+      const overhead =
+        this.getTokenCount(system) +
+        this.getTokenCount(promptTemplate.replace("{CODE}", "")) +
+        500;
+      const maxCodeTokens = maxCtx - overhead - 1024;
+
+      if (this.getTokenCount(context.code) > maxCodeTokens) {
+        return await this.generateChunked(
+          context,
+          model,
+          apiKey,
+          system,
+          promptTemplate,
+          maxCodeTokens,
+          abortController?.signal,
+        );
+      }
+
+      const userContent = promptTemplate.replace("{CODE}", context.code);
+      const inputTokens =
+        this.getTokenCount(system) + this.getTokenCount(userContent);
+      const maxTokens = Math.min(
+        this.getMaxOutputTokens(model),
+        Math.max(1024, maxCtx - inputTokens - 500),
+      );
+
+      return await this.callApi({
+        model,
+        apiKey,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: userContent },
+        ],
+        maxTokens,
+        signal: abortController?.signal,
+      });
+    } catch (error) {
+      if (context.cancellationToken?.isCancellationRequested) {
+        throw new Error("Generation cancelled");
+      }
+      throw error;
+    } finally {
+      cancellationSubscription?.dispose();
+    }
   }
 
   /** Splits large files into chunks and merges the AI output. */
@@ -598,12 +622,17 @@ export abstract class BaseAIProvider implements AIProvider {
     system: string,
     promptTemplate: string,
     maxCodeTokens: number,
+    signal?: AbortSignal,
   ): Promise<DocumentationResult> {
     const chunks = this.chunkCode(context.code, maxCodeTokens);
     let combined = "";
     let totalTokens = 0;
 
     for (let i = 0; i < chunks.length; i++) {
+      if (context.cancellationToken?.isCancellationRequested) {
+        throw new Error("Generation cancelled");
+      }
+
       const label = `Part ${i + 1} of ${chunks.length}`;
       const userContent =
         `[Large file — ${label}. Document only what is in this chunk. ` +
@@ -623,6 +652,7 @@ export abstract class BaseAIProvider implements AIProvider {
           { role: "user", content: userContent },
         ],
         maxTokens,
+        signal,
       });
       combined += `\n\n${result.documentation}`;
       totalTokens += result.tokensUsed;
@@ -717,7 +747,12 @@ export abstract class BaseAIProvider implements AIProvider {
     }
 
     const rules = isSimple ? "" : this.getOutputRules();
+    const verifiedContext = context.existingContext
+      ? `Verified source analysis (treat this as authoritative and prefer it over guesses):\n` +
+        `\`\`\`text\n${context.existingContext}\n\`\`\`\n\n`
+      : "";
     const user =
+      verifiedContext +
       `File: \`${filePath}\`\n` +
       `Language: ${lang}\n\n` +
       `\`\`\`${lang}\n{CODE}\n\`\`\`\n\n` +

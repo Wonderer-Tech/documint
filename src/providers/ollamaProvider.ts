@@ -48,6 +48,7 @@ export class OllamaProvider extends BaseAIProvider {
       {
         timeout,
         headers: { "Content-Type": "application/json" },
+        signal: params.signal,
       },
     );
 

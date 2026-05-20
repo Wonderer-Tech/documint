@@ -4,6 +4,11 @@ import { WorkspaceScanner } from "../scanner/workspaceScanner";
 import { BaseAIProvider } from "../providers/aiProvider";
 import { ProviderFactory } from "../providers/providerFactory";
 import {
+  FileAnalysis,
+  ProjectAnalysis,
+  SourceAnalyzer,
+} from "../analyzer/sourceAnalyzer";
+import {
   DocumentationContext,
   GenerationProgress,
   DocumentationError,
@@ -11,6 +16,7 @@ import {
 } from "../types";
 import { SecretStorageManager } from "../config/secretStorage";
 import { generateHtmlTemplate } from "./htmlTemplate";
+import { DocumentationValidator } from "./documentationValidator";
 
 export interface DocGeneratorOptions {
   provider?: string;
@@ -38,6 +44,8 @@ interface ProjectStats {
 
 export class DocGeneratorService {
   private scanner: WorkspaceScanner;
+  private sourceAnalyzer: SourceAnalyzer;
+  private documentationValidator: DocumentationValidator;
   private aiProvider: BaseAIProvider;
   private secretManager: SecretStorageManager;
   private cancellationToken?: vscode.CancellationToken;
@@ -49,6 +57,8 @@ export class DocGeneratorService {
   ) {
     this.secretManager = secretManager;
     this.scanner = new WorkspaceScanner();
+    this.sourceAnalyzer = new SourceAnalyzer();
+    this.documentationValidator = new DocumentationValidator();
     // Default provider — overridden per-run in generateDocumentation()
     this.aiProvider = ProviderFactory.create("openai", context);
   }
@@ -104,6 +114,10 @@ export class DocGeneratorService {
       }
 
       const stats = this.collectStats(files);
+      const projectAnalysis = this.sourceAnalyzer.analyzeProject(files);
+      const analysisByPath = new Map(
+        projectAnalysis.files.map((file) => [file.path, file]),
+      );
 
       this.reportProgress({
         phase: "scanning",
@@ -111,7 +125,7 @@ export class DocGeneratorService {
         totalFiles: files.length,
         processedFiles: files.length,
         percentage: 8,
-        message: `Found ${files.length} files (${stats.totalLines.toLocaleString()} lines) across ${stats.languages.length} language(s)`,
+        message: `Found ${files.length} files, ${projectAnalysis.files.reduce((sum, file) => sum + file.symbols.length, 0)} symbols, and ${projectAnalysis.internalDependencies.length} internal links`,
       });
 
       if (this.cancellationToken?.isCancellationRequested) {
@@ -144,6 +158,7 @@ export class DocGeneratorService {
         files,
         workspaceFolder.name,
         stats,
+        projectAnalysis,
         options,
       );
 
@@ -171,11 +186,34 @@ export class DocGeneratorService {
         });
 
         try {
-          const result = await this.generateForFile(file, options);
+          const fileAnalysis = analysisByPath.get(file.path);
+          const result = await this.generateForFile(
+            file,
+            fileAnalysis,
+            projectAnalysis,
+            options,
+          );
+          const documentation = fileAnalysis
+            ? this.documentationValidator.appendQualityNotes(
+                result.documentation,
+                this.documentationValidator.validateFileDocumentation(
+                  result.documentation,
+                  fileAnalysis,
+                ),
+              )
+            : result.documentation;
           const lineCount = file.content.split("\n").length;
           const fileMeta = `*${file.language} · ${lineCount.toLocaleString()} lines · \`${file.path}\`*\n\n`;
-          allDocumentation += `# ${file.path}\n\n${fileMeta}${result.documentation}\n\n---\n\n`;
+          allDocumentation += `# ${file.path}\n\n${fileMeta}${documentation}\n\n---\n\n`;
         } catch (error) {
+          if (this.cancellationToken?.isCancellationRequested) {
+            throw new DocumentationError(
+              "Generation cancelled",
+              "api",
+              file.path,
+              error instanceof Error ? error : undefined,
+            );
+          }
           console.warn(`Failed to generate docs for ${file.path}:`, error);
           allDocumentation += `# ${file.path}\n\n> ⚠️ Documentation generation failed: ${error instanceof Error ? error.message : String(error)}\n\n---\n\n`;
         }
@@ -285,14 +323,29 @@ export class DocGeneratorService {
     files: WorkspaceFile[],
     projectName: string,
     stats: ProjectStats,
+    projectAnalysis: ProjectAnalysis,
     options: DocGeneratorOptions,
   ): Promise<string> {
     try {
+      const projectContext =
+        this.sourceAnalyzer.formatProjectContext(projectAnalysis);
       // Build a manifest: file path + first 5 lines of each file
       const manifest = files
         .map((f) => {
-          const preview = f.content.split("\n").slice(0, 5).join("\n").trim();
-          return `### ${f.path} (${f.language})\n\`\`\`\n${preview}\n\`\`\``;
+          const analysis = projectAnalysis.files.find(
+            (file) => file.path === f.path,
+          );
+          const symbols =
+            analysis?.symbols
+              .slice(0, 12)
+              .map((symbol) => `${symbol.kind} ${symbol.name}`)
+              .join(", ") || "none detected";
+          const imports =
+            analysis?.imports
+              .slice(0, 8)
+              .map((sourceImport) => sourceImport.source)
+              .join(", ") || "none detected";
+          return `### ${f.path} (${f.language})\nSymbols: ${symbols}\nImports: ${imports}`;
         })
         .join("\n\n");
 
@@ -301,7 +354,8 @@ export class DocGeneratorService {
         language: "plaintext",
         filePath: "__project_summary__",
         depth: "standard",
-        existingContext: `Project: ${projectName}\nLanguages: ${stats.languages.join(", ")}\nFiles: ${stats.fileCount}\nTotal lines: ${stats.totalLines}`,
+        existingContext: projectContext,
+        cancellationToken: this.cancellationToken,
       };
 
       const result = await this.aiProvider.generateDocumentation({
@@ -313,7 +367,10 @@ Languages: ${stats.languages.join(", ")}
 Total files: ${stats.fileCount}
 Total lines of code: ${stats.totalLines.toLocaleString()}
 
-File manifest (path + first 5 lines each):
+Verified project context:
+${projectContext}
+
+File manifest:
 ${manifest}`,
       });
 
@@ -332,9 +389,23 @@ ${result.documentation}
 | Documentation Depth | ${options.depth || "standard"} |
 | Generated | ${new Date().toLocaleString()} |
 `;
-    } catch {
+    } catch (error) {
+      if (this.cancellationToken?.isCancellationRequested) {
+        throw new DocumentationError(
+          "Generation cancelled",
+          "api",
+          "__project_summary__",
+          error instanceof Error ? error : undefined,
+        );
+      }
       // Non-fatal: fall back to a static summary
       return `## Project Overview
+
+### Detected Project Map
+
+\`\`\`text
+${this.sourceAnalyzer.formatProjectContext(projectAnalysis)}
+\`\`\`
 
 | Metric | Value |
 |--------|-------|
@@ -350,15 +421,22 @@ ${result.documentation}
 
   private async generateForFile(
     file: { path: string; language: string; content: string },
+    fileAnalysis: FileAnalysis | undefined,
+    projectAnalysis: ProjectAnalysis,
     options: DocGeneratorOptions,
   ) {
+    const fileContext = fileAnalysis
+      ? this.sourceAnalyzer.formatFileContext(fileAnalysis, projectAnalysis)
+      : undefined;
     const context: DocumentationContext = {
       code: file.content,
       language: file.language,
       filePath: file.path,
       depth: options.depth || "standard",
+      existingContext: fileContext,
       model: options.model,
       contextWindow: options.contextWindow,
+      cancellationToken: this.cancellationToken,
     };
 
     return await this.aiProvider.generateDocumentation(context);
@@ -399,9 +477,13 @@ ${result.documentation}
   ): string {
     marked.setOptions({ gfm: true, breaks: true });
 
+    const markdownWithoutRawHtml =
+      this.escapeRawHtmlOutsideCodeFences(markdown);
+
     // Normalise Windows backslash paths in headings before parsing
-    const normalisedMarkdown = markdown.replace(/^(#{1,4}\s+.+)$/gm, (line) =>
-      line.replace(/\\/g, "/"),
+    const normalisedMarkdown = markdownWithoutRawHtml.replace(
+      /^(#{1,4}\s+.+)$/gm,
+      (line) => line.replace(/\\/g, "/"),
     );
 
     // ── Single-pass: parse markdown → HTML, assign IDs, collect TOC entries ──
@@ -493,5 +575,37 @@ ${result.documentation}
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  private escapeRawHtmlOutsideCodeFences(markdown: string): string {
+    let inFence = false;
+    let fenceChar = "";
+
+    return markdown
+      .split(/\r?\n/)
+      .map((line) => {
+        const fenceMatch = line.match(/^\s*(```+|~~~+)/);
+        if (fenceMatch) {
+          const marker = fenceMatch[1][0];
+          if (!inFence) {
+            inFence = true;
+            fenceChar = marker;
+          } else if (marker === fenceChar) {
+            inFence = false;
+            fenceChar = "";
+          }
+          return line;
+        }
+
+        if (inFence || !/<\/?[a-zA-Z][^>]*>/.test(line)) {
+          return line;
+        }
+
+        return line
+          .replace(/&(?!(amp|lt|gt|quot|#039);)/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      })
+      .join("\n");
   }
 }

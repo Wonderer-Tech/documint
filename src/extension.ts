@@ -5,6 +5,7 @@ import {
   DocGeneratorService,
   GeneratedOutputPaths,
 } from "./services/docGenerator";
+import { ProviderFactory } from "./providers/providerFactory";
 import { DocumentationError } from "./types";
 
 export function activate(context: vscode.ExtensionContext) {
@@ -22,6 +23,80 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   const docGenerator = new DocGeneratorService(context, secretManager);
+  let activeCancellationSource: vscode.CancellationTokenSource | undefined;
+
+  function resolveRunProvider(provider?: string): string {
+    return ProviderFactory.resolveProviderName(provider);
+  }
+
+  function isLocalEndpoint(endpoint?: string): boolean {
+    if (!endpoint) {
+      return false;
+    }
+
+    try {
+      const url = new URL(endpoint);
+      const host = url.hostname.toLowerCase();
+      return (
+        host === "localhost" ||
+        host === "127.0.0.1" ||
+        host === "::1" ||
+        host.endsWith(".localhost")
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  function sendsCodeToExternalProvider(provider: string): boolean {
+    if (provider === "ollama" || provider === "lmstudio") {
+      return false;
+    }
+
+    if (provider === "custom") {
+      const endpoint = vscode.workspace
+        .getConfiguration("aiDocGenerator")
+        .get<string>("customApiEndpoint");
+      return !isLocalEndpoint(endpoint);
+    }
+
+    return true;
+  }
+
+  async function ensureGenerationAllowed(
+    provider: string,
+    workspaceFolder: vscode.WorkspaceFolder,
+  ): Promise<boolean> {
+    if (!vscode.workspace.isTrusted) {
+      vscode.window.showErrorMessage(
+        "DocuMint requires a trusted workspace before reading project files.",
+      );
+      return false;
+    }
+
+    if (!sendsCodeToExternalProvider(provider)) {
+      return true;
+    }
+
+    const consentKey = `cloud-consent:${provider}:${workspaceFolder.uri.toString()}`;
+    if (context.workspaceState.get<boolean>(consentKey)) {
+      return true;
+    }
+
+    const selection = await vscode.window.showWarningMessage(
+      `DocuMint will send selected source code to ${provider} to generate documentation.`,
+      { modal: true },
+      "Continue",
+    );
+
+    if (selection !== "Continue") {
+      sidebarProvider.addLogEntry("Generation cancelled before sending code", "info");
+      return false;
+    }
+
+    await context.workspaceState.update(consentKey, true);
+    return true;
+  }
 
   // Check API key status on startup for the configured provider
   const configuredProvider =
@@ -50,7 +125,32 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.showErrorMessage("No workspace folder open");
       return;
     }
-    const workspaceFolder = workspaceFolders[0];
+
+    if (
+      activeCancellationSource &&
+      !activeCancellationSource.token.isCancellationRequested
+    ) {
+      vscode.window.showWarningMessage(
+        "Documentation generation is already running",
+      );
+      return;
+    }
+
+    const targetWorkspaceFolder = payload.targetPaths?.[0]
+      ? vscode.workspace.getWorkspaceFolder(
+          vscode.Uri.file(payload.targetPaths[0]),
+        )
+      : undefined;
+    const workspaceFolder = targetWorkspaceFolder ?? workspaceFolders[0];
+    const providerName = resolveRunProvider(payload.provider);
+
+    if (!(await ensureGenerationAllowed(providerName, workspaceFolder))) {
+      return;
+    }
+
+    const cancellationSource = new vscode.CancellationTokenSource();
+    activeCancellationSource = cancellationSource;
+    docGenerator.setCancellationToken(cancellationSource.token);
 
     docGenerator.setProgressCallback((progress) => {
       sidebarProvider.updateProgress(progress);
@@ -108,8 +208,10 @@ export function activate(context: vscode.ExtensionContext) {
           console.error("[Documint] showInformationMessage error:", err),
         );
     } catch (error) {
-      const docError =
-        error instanceof DocumentationError
+      const wasCancelled = cancellationSource.token.isCancellationRequested;
+      const docError = wasCancelled
+        ? new DocumentationError("Generation cancelled by user", "api")
+        : error instanceof DocumentationError
           ? error
           : new DocumentationError(
               error instanceof Error ? error.message : String(error),
@@ -118,9 +220,18 @@ export function activate(context: vscode.ExtensionContext) {
       sidebarProvider.setGeneratingState(false);
       sidebarProvider.reportError(docError.message);
       sidebarProvider.addLogEntry(`Error: ${docError.message}`, "error");
-      vscode.window.showErrorMessage(
-        `Documentation generation failed: ${docError.message}`,
-      );
+      if (wasCancelled) {
+        vscode.window.showInformationMessage("Documentation generation cancelled");
+      } else {
+        vscode.window.showErrorMessage(
+          `Documentation generation failed: ${docError.message}`,
+        );
+      }
+    } finally {
+      if (activeCancellationSource === cancellationSource) {
+        activeCancellationSource = undefined;
+      }
+      cancellationSource.dispose();
     }
   }
 
@@ -142,8 +253,16 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("aiDocGenerator.cancelGeneration", () => {
-      sidebarProvider.reportError("Generation cancelled by user");
-      sidebarProvider.addLogEntry("Generation cancelled by user", "info");
+      if (
+        activeCancellationSource &&
+        !activeCancellationSource.token.isCancellationRequested
+      ) {
+        activeCancellationSource.cancel();
+        sidebarProvider.addLogEntry("Cancelling generation...", "warning");
+        return;
+      }
+
+      sidebarProvider.addLogEntry("No active generation to cancel", "info");
     }),
   );
 

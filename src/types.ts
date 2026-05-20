@@ -39,6 +39,7 @@ export interface DocumentationContext {
   model?: string;
   /** User-specified context window override in tokens */
   contextWindow?: number;
+  cancellationToken?: vscode.CancellationToken;
 }
 
 /**

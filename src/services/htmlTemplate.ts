@@ -20,9 +20,10 @@ function escapeHtmlAttr(str: string): string {
 export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
   const safeTitle = escapeHtmlAttr(options.title);
   const safeDate = escapeHtmlAttr(options.generationDate);
+  const safeProjectName = escapeHtmlAttr(options.projectName);
 
   const languagesStr = options.languages?.length
-    ? options.languages.join(", ")
+    ? options.languages.map(escapeHtmlAttr).join(", ")
     : "Mixed";
 
   const totalLinesStr = options.totalLines
@@ -564,7 +565,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       DocuMint
     </a>
     <div class="topbar-sep"></div>
-    <span class="topbar-project">${options.projectName}</span>
+    <span class="topbar-project">${safeProjectName}</span>
     <div class="topbar-spacer"></div>
 
     <div class="search-wrap">
@@ -626,10 +627,10 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       return {
         startOnLoad: false,
         theme: 'base',
-        securityLevel: 'loose',
+        securityLevel: 'strict',
         fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif',
         fontSize: 13,
-        flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'orthogonal', padding: 18 },
+        flowchart: { useMaxWidth: true, htmlLabels: false, curve: 'orthogonal', padding: 18 },
         sequence:  { useMaxWidth: true, boxMargin: 10, messageMargin: 40 },
         er:        { useMaxWidth: true },
         themeVariables: isDark ? {
@@ -1002,6 +1003,14 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     var drop = document.getElementById('searchDropdown');
 
     function escRe(s) { return s.replace(/[.*+?^{}()|[\]\\$]/g, '\\$&'); }
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
 
     inp.addEventListener('input', function () {
       var q = this.value.trim().toLowerCase();
@@ -1012,17 +1021,18 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       }).slice(0, 10);
 
       if (!hits.length) {
-        drop.innerHTML = '<div class="search-empty">No results for &ldquo;' + q + '&rdquo;</div>';
+        drop.innerHTML = '<div class="search-empty">No results for &ldquo;' + escHtml(q) + '&rdquo;</div>';
         drop.classList.add('open');
         return;
       }
 
-      var re = new RegExp('(' + escRe(q) + ')', 'gi');
+      var safeQ = escHtml(q);
+      var re = new RegExp('(' + escRe(safeQ) + ')', 'gi');
       drop.innerHTML = hits.map(function (it) {
-        var hi = it.text.replace(re, '<mark>$1</mark>');
+        var hi = escHtml(it.text).replace(re, '<mark>$1</mark>');
         var fileNote = it.file && it.file !== it.text
-          ? '<div class="search-item-file">' + it.file + '</div>' : '';
-        return '<div class="search-item" data-id="' + (it.id || '') + '">'
+          ? '<div class="search-item-file">' + escHtml(it.file) + '</div>' : '';
+        return '<div class="search-item" data-id="' + escHtml(it.id || '') + '">'
           + '<div class="search-item-title">' + hi + '</div>' + fileNote + '</div>';
       }).join('');
       drop.classList.add('open');

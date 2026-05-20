@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import axios from "axios";
 import { BaseAIProvider, ApiCallParams } from "./aiProvider";
-import { DocumentationResult } from "../types";
+import { DocumentationContext, DocumentationResult } from "../types";
 
 /**
  * Custom provider — calls a user-specified endpoint using the OpenAI
@@ -34,6 +34,16 @@ export class CustomProvider extends BaseAIProvider {
     return "default";
   }
 
+  public async generateDocumentation(
+    context: DocumentationContext,
+  ): Promise<DocumentationResult> {
+    const cfg = vscode.workspace.getConfiguration("aiDocGenerator");
+    const model =
+      context.model || cfg.get<string>("model") || this.defaultModel();
+    const apiKey = (await this.secretManager.getApiKey(this.name)) || "";
+    return this.generateWithMessages(context, model, apiKey);
+  }
+
   protected async callApi(params: ApiCallParams): Promise<DocumentationResult> {
     const response = await axios.post(
       this.endpoint,
@@ -51,6 +61,7 @@ export class CustomProvider extends BaseAIProvider {
           "Content-Type": "application/json",
         },
         timeout: 120000,
+        signal: params.signal,
       },
     );
 

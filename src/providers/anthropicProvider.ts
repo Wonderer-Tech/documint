@@ -40,6 +40,7 @@ export class AnthropicProvider extends BaseAIProvider {
           "anthropic-version": this.apiVersion,
           "Content-Type": "application/json",
         },
+        signal: params.signal,
       },
     );
 
