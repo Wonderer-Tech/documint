@@ -5,12 +5,14 @@ import { AnthropicProvider } from "./anthropicProvider";
 import { OpenRouterProvider } from "./openrouterProvider";
 import { OllamaProvider } from "./ollamaProvider";
 import { LMStudioProvider } from "./lmstudioProvider";
+import { DeepSeekProvider } from "./deepseekProvider";
 import { CustomProvider } from "./customProvider";
 
 export type ProviderName =
   | "openai"
   | "anthropic"
   | "openrouter"
+  | "deepseek"
   | "ollama"
   | "lmstudio"
   | "custom";
@@ -29,6 +31,8 @@ export class ProviderFactory {
         return new AnthropicProvider(context);
       case "openrouter":
         return new OpenRouterProvider(context);
+      case "deepseek":
+        return new DeepSeekProvider(context);
       case "ollama":
         return new OllamaProvider(context);
       case "lmstudio":

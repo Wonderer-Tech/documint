@@ -49,7 +49,10 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   function sendsCodeToExternalProvider(provider: string): boolean {
-    if (provider === "ollama" || provider === "lmstudio") {
+    if (
+      provider === "ollama" ||
+      provider === "lmstudio"
+    ) {
       return false;
     }
 
@@ -164,7 +167,11 @@ export function activate(context: vscode.ExtensionContext) {
         await docGenerator.generateDocumentation(workspaceFolder, {
           provider: payload.provider,
           model: payload.model,
-          depth: payload.depth as "basic" | "standard" | "comprehensive",
+          depth: payload.depth as
+            | "simple"
+            | "basic"
+            | "standard"
+            | "comprehensive",
           outputFormat:
             (payload.outputFormat as "markdown" | "html" | "both") || "both",
           scope:

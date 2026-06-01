@@ -2,7 +2,7 @@
   "name": "documint",
   "displayName": "DocuMint — AI Code Documentation Generator",
   "description": "Generate clean code documentation in one click using AI. Create Markdown docs, HTML docs, UML diagrams, architecture overviews, docstrings, and usage examples directly inside VS Code.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "wonderertech",
   "icon": "resources/icon.png",
   "license": "MIT",
@@ -100,6 +100,7 @@
             "openai",
             "anthropic",
             "openrouter",
+            "deepseek",
             "custom",
             "ollama",
             "lmstudio"
@@ -163,6 +164,13 @@
           "type": "number",
           "default": 1000,
           "description": "Delay between API requests in milliseconds"
+        },
+        "aiDocGenerator.concurrentRequests": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 15,
+          "default": 15,
+          "description": "Maximum number of detailed file documentation requests to run at the same time. Defaults to 15 for faster generation; lower it in settings if requests are rate-limited."
         },
         "aiDocGenerator.excludePatterns": {
           "type": "array",

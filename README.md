@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
-![Version](https://img.shields.io/badge/version-1.0.1-green)
+![Version](https://img.shields.io/badge/version-1.0.2-green)
 
 DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file using AI providers such as OpenAI, Anthropic, OpenRouter, Ollama, LM Studio, or a custom OpenAI-compatible endpoint.
 
@@ -49,7 +49,7 @@ The extension runs directly inside VS Code through a sidebar webview.
 
 ## What's New in 1.0.0
 
-DocuMint 1.0.0 is the first stable release.
+DocuMint 1.0.2 improves documentation generation speed, cache reuse, and provider support.
 
 - Smarter documentation: DocuMint now scans source code for real imports, exports, classes, functions, types, and TODO comments before asking AI to write docs.
 - Better project understanding: generated docs include more accurate project context because DocuMint builds a simple project map first.
@@ -67,9 +67,10 @@ DocuMint 1.0.0 is the first stable release.
 3. Optionally narrow generation to selected file/folder path.
 4. Analyze source files for imports, exports, symbols, TODOs, and internal links.
 5. Build a project map and file-level context from verified source facts.
-6. Generate documentation file-by-file via the selected provider.
-7. Validate generated docs against detected symbols.
-8. Save output into `docs/` as Markdown, HTML, or both.
+6. Prepare local CPU context for each file, including dependency graph links, symbols, imports, and prompt inputs.
+7. Generate detailed file documentation in parallel via the selected provider.
+8. Validate generated docs against detected symbols.
+9. Save output into `docs/` as Markdown, HTML, or both.
 
 Core pipeline entry point: `src/services/docGenerator.ts`.
 
@@ -80,6 +81,7 @@ Configured using `aiDocGenerator.aiProvider`:
 - `openai`
 - `anthropic`
 - `openrouter`
+- `deepseek`
 - `custom`
 - `ollama`
 - `lmstudio`
@@ -126,7 +128,7 @@ ext install wonderertech.documint
 ### VSIX
 
 ```bash
-code --install-extension documint-1.0.1.vsix
+code --install-extension documint-1.0.2.vsix
 ```
 
 ### Build from Source
@@ -174,6 +176,7 @@ All settings are under `aiDocGenerator`.
 - `aiDocGenerator.maxTokens`
 - `aiDocGenerator.temperature`
 - `aiDocGenerator.rateLimitDelay`
+- `aiDocGenerator.concurrentRequests`
 - `aiDocGenerator.excludePatterns`
 - `aiDocGenerator.customApiEndpoint`
 - `aiDocGenerator.localModelUrl`
@@ -192,6 +195,8 @@ All settings are under `aiDocGenerator`.
   "aiDocGenerator.outputFormat": "both",
   "aiDocGenerator.maxTokens": 4000,
   "aiDocGenerator.temperature": 0.3,
+  "aiDocGenerator.concurrentRequests": 15,
+  "aiDocGenerator.rateLimitDelay": 1000,
   "aiDocGenerator.excludePatterns": [
     "**/node_modules/**",
     "**/dist/**",
@@ -202,6 +207,15 @@ All settings are under `aiDocGenerator`.
   "aiDocGenerator.localModelTimeout": 60000,
   "aiDocGenerator.generateUmlDiagrams": true,
   "aiDocGenerator.enableDiffTracking": true
+}
+```
+
+DeepSeek example:
+
+```json
+{
+  "aiDocGenerator.aiProvider": "deepseek",
+  "aiDocGenerator.model": "deepseek-v4-flash"
 }
 ```
 
@@ -241,6 +255,7 @@ src/
 |   |-- openaiProvider.ts
 |   |-- anthropicProvider.ts
 |   |-- openrouterProvider.ts
+|   |-- deepseekProvider.ts
 |   |-- ollamaProvider.ts
 |   |-- lmstudioProvider.ts
 |   `-- customProvider.ts
@@ -282,6 +297,7 @@ npx @vscode/vsce package
 - Static analysis is intentionally lightweight. It improves accuracy, but it is not a full compiler for every language.
 - Documentation quality still depends on the selected AI model and the source code that is available in the workspace.
 - Cloud providers receive selected source code after confirmation. Use Ollama, LM Studio, or a local custom endpoint when code must stay local.
+- `aiDocGenerator.concurrentRequests` defaults to `15` for faster generation. Lower it in settings if your cloud provider rate-limits requests.
 - Very large demo media can make the VSIX larger than the extension code itself.
 
 ## Contributing

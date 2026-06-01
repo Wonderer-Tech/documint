@@ -52,6 +52,11 @@ export interface ProjectAnalysis {
   }>;
 }
 
+export interface FileDependencyIndex {
+  dependenciesByPath: Map<string, ProjectAnalysis["internalDependencies"]>;
+  dependentsByPath: Map<string, ProjectAnalysis["internalDependencies"]>;
+}
+
 export class SourceAnalyzer {
   analyzeProject(files: WorkspaceFile[]): ProjectAnalysis {
     const analyses = files.map((file) => this.analyzeFile(file));
@@ -154,7 +159,34 @@ export class SourceAnalyzer {
     ].join("\n");
   }
 
-  formatFileContext(file: FileAnalysis, project: ProjectAnalysis): string {
+  buildDependencyIndex(project: ProjectAnalysis): FileDependencyIndex {
+    const dependenciesByPath = new Map<
+      string,
+      ProjectAnalysis["internalDependencies"]
+    >();
+    const dependentsByPath = new Map<
+      string,
+      ProjectAnalysis["internalDependencies"]
+    >();
+
+    for (const edge of project.internalDependencies) {
+      const dependencies = dependenciesByPath.get(edge.from) ?? [];
+      dependencies.push(edge);
+      dependenciesByPath.set(edge.from, dependencies);
+
+      const dependents = dependentsByPath.get(edge.to) ?? [];
+      dependents.push(edge);
+      dependentsByPath.set(edge.to, dependents);
+    }
+
+    return { dependenciesByPath, dependentsByPath };
+  }
+
+  formatFileContext(
+    file: FileAnalysis,
+    project: ProjectAnalysis,
+    dependencyIndex = this.buildDependencyIndex(project),
+  ): string {
     const exports = file.symbols
       .filter((symbol) => symbol.exported)
       .map((symbol) => this.formatSymbol(symbol));
@@ -168,11 +200,9 @@ export class SourceAnalyzer {
         : "";
       return `- line ${sourceImport.line}: ${sourceImport.source}${resolved}${importedSymbols}`;
     });
-    const dependents = project.internalDependencies
-      .filter((edge) => edge.to === file.path)
+    const dependents = (dependencyIndex.dependentsByPath.get(file.path) ?? [])
       .map((edge) => `- ${edge.from}`);
-    const dependencies = project.internalDependencies
-      .filter((edge) => edge.from === file.path)
+    const dependencies = (dependencyIndex.dependenciesByPath.get(file.path) ?? [])
       .map((edge) => `- ${edge.to}`);
     const todos = file.todos.map((todo) => `- line ${todo.line}: ${todo.text}`);
 

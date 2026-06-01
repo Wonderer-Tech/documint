@@ -1,9 +1,11 @@
 import * as vscode from "vscode";
+import * as crypto from "crypto";
 import { marked } from "marked";
 import { WorkspaceScanner } from "../scanner/workspaceScanner";
 import { BaseAIProvider } from "../providers/aiProvider";
 import { ProviderFactory } from "../providers/providerFactory";
 import {
+  FileDependencyIndex,
   FileAnalysis,
   ProjectAnalysis,
   SourceAnalyzer,
@@ -23,7 +25,11 @@ export interface DocGeneratorOptions {
   model?: string;
   /** Token context window — from auto-fetch or user override in sidebar */
   contextWindow?: number;
-  depth?: "basic" | "standard" | "comprehensive";
+  /** Maximum number of file documentation requests running at once. */
+  concurrentRequests?: number;
+  /** Minimum delay between starting provider requests, in milliseconds. */
+  rateLimitDelay?: number;
+  depth?: "simple" | "basic" | "standard" | "comprehensive";
   outputFormat?: "markdown" | "html" | "both";
   scope?: "current-file" | "folder" | "workspace";
   targetFilePath?: string;
@@ -42,7 +48,33 @@ interface ProjectStats {
   fileCount: number;
 }
 
+interface PreparedFileDocumentationTask {
+  index: number;
+  file: WorkspaceFile;
+  fileAnalysis?: FileAnalysis;
+  context: DocumentationContext;
+  cacheKey: string;
+}
+
+interface FileDocumentationJob {
+  tasks: PreparedFileDocumentationTask[];
+}
+
+interface DocumentationCacheEntry {
+  cacheKey: string;
+  section: string;
+  generatedAt: string;
+}
+
+interface DocumentationCacheManifest {
+  version: string;
+  entries: Record<string, DocumentationCacheEntry>;
+}
+
 export class DocGeneratorService {
+  private static readonly CACHE_VERSION = "documint-cache-v1";
+  private static readonly PROMPT_VERSION = "lean-prompts-2026-06-01";
+
   private scanner: WorkspaceScanner;
   private sourceAnalyzer: SourceAnalyzer;
   private documentationValidator: DocumentationValidator;
@@ -118,6 +150,8 @@ export class DocGeneratorService {
       const analysisByPath = new Map(
         projectAnalysis.files.map((file) => [file.path, file]),
       );
+      const dependencyIndex =
+        this.sourceAnalyzer.buildDependencyIndex(projectAnalysis);
 
       this.reportProgress({
         phase: "scanning",
@@ -132,6 +166,25 @@ export class DocGeneratorService {
         throw new DocumentationError("Generation cancelled", "scan");
       }
 
+      this.reportProgress({
+        phase: "parsing",
+        currentFile: "",
+        totalFiles: files.length,
+        processedFiles: 0,
+        percentage: 9,
+        message:
+          "Preparing local CPU context: dependency graph, symbols, imports, and prompts...",
+      });
+
+      const fileTasks = this.prepareFileDocumentationTasks(
+        files,
+        analysisByPath,
+        projectAnalysis,
+        dependencyIndex,
+        options,
+        providerName,
+      );
+
       const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, "docs");
       try {
         await vscode.workspace.fs.createDirectory(docsFolder);
@@ -143,6 +196,7 @@ export class DocGeneratorService {
           error instanceof Error ? error : undefined,
         );
       }
+      const documentationCache = await this.loadDocumentationCache(docsFolder);
 
       // Generate project-level summary first
       this.reportProgress({
@@ -168,56 +222,15 @@ export class DocGeneratorService {
       allDocumentation += `\n\n---\n\n`;
 
       const totalFiles = files.length;
+      const fileSections = await this.generateAiFileDocumentationSections(
+        fileTasks,
+        this.resolveConcurrentRequests(options, totalFiles),
+        documentationCache,
+        docsFolder,
+      );
+      allDocumentation += fileSections.join("");
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-
-        if (this.cancellationToken?.isCancellationRequested) {
-          throw new DocumentationError("Generation cancelled", "api");
-        }
-
-        this.reportProgress({
-          phase: "generating",
-          currentFile: file.path,
-          totalFiles,
-          processedFiles: i,
-          percentage: 12 + (i / totalFiles) * 78,
-          message: `Documenting ${file.path}...`,
-        });
-
-        try {
-          const fileAnalysis = analysisByPath.get(file.path);
-          const result = await this.generateForFile(
-            file,
-            fileAnalysis,
-            projectAnalysis,
-            options,
-          );
-          const documentation = fileAnalysis
-            ? this.documentationValidator.appendQualityNotes(
-                result.documentation,
-                this.documentationValidator.validateFileDocumentation(
-                  result.documentation,
-                  fileAnalysis,
-                ),
-              )
-            : result.documentation;
-          const lineCount = file.content.split("\n").length;
-          const fileMeta = `*${file.language} · ${lineCount.toLocaleString()} lines · \`${file.path}\`*\n\n`;
-          allDocumentation += `# ${file.path}\n\n${fileMeta}${documentation}\n\n---\n\n`;
-        } catch (error) {
-          if (this.cancellationToken?.isCancellationRequested) {
-            throw new DocumentationError(
-              "Generation cancelled",
-              "api",
-              file.path,
-              error instanceof Error ? error : undefined,
-            );
-          }
-          console.warn(`Failed to generate docs for ${file.path}:`, error);
-          allDocumentation += `# ${file.path}\n\n> ⚠️ Documentation generation failed: ${error instanceof Error ? error.message : String(error)}\n\n---\n\n`;
-        }
-      }
+      await this.saveDocumentationCache(docsFolder, documentationCache);
 
       // Add DocuMint footer
       allDocumentation += `\n\n---\n\n*Generated by **DocuMint** - AI-Powered Documentation Generator*`;
@@ -316,6 +329,585 @@ export class DocGeneratorService {
     };
   }
 
+  private async generateAiFileDocumentationSections(
+    tasks: PreparedFileDocumentationTask[],
+    concurrentRequests: number,
+    documentationCache: DocumentationCacheManifest,
+    docsFolder: vscode.Uri,
+  ): Promise<string[]> {
+    const totalFiles = tasks.length;
+    const sections = new Array<string>(totalFiles);
+    const pendingTasks: PreparedFileDocumentationTask[] = [];
+    let cachedFiles = 0;
+
+    for (const task of tasks) {
+      const cached = documentationCache.entries[task.file.path];
+      if (cached?.cacheKey === task.cacheKey && cached.section.trim()) {
+        sections[task.index] = cached.section;
+        cachedFiles++;
+      } else {
+        pendingTasks.push(task);
+      }
+    }
+
+    if (pendingTasks.length === 0) {
+      this.reportProgress({
+        phase: "generating",
+        currentFile: "",
+        totalFiles,
+        processedFiles: totalFiles,
+        percentage: 90,
+        message: `Reused cached documentation for all ${totalFiles} file${totalFiles === 1 ? "" : "s"}.`,
+      });
+      return sections;
+    }
+
+    let nextFileIndex = 0;
+    let completedFiles = cachedFiles;
+    let generatedFiles = 0;
+    let activeRequests = 0;
+    const startedAt = Date.now();
+    const jobs = this.createFileDocumentationJobs(pendingTasks);
+
+    this.reportProgress({
+      phase: "generating",
+      currentFile: "",
+      totalFiles,
+      processedFiles: cachedFiles,
+      percentage: 12,
+      message:
+        `Documenting ${pendingTasks.length}/${totalFiles} file${totalFiles === 1 ? "" : "s"} ` +
+        `with ${concurrentRequests} parallel AI request${concurrentRequests === 1 ? "" : "s"} ` +
+        `(${cachedFiles} cache hit${cachedFiles === 1 ? "" : "s"}, ${jobs.length} request job${jobs.length === 1 ? "" : "s"})...`,
+    });
+
+    const worker = async (): Promise<void> => {
+      while (true) {
+        this.throwIfCancelled("api");
+
+        const jobIndex = nextFileIndex++;
+        if (jobIndex >= jobs.length) {
+          return;
+        }
+
+        const job = jobs[jobIndex];
+        const firstTask = job.tasks[0];
+        const file = firstTask.file;
+        let requestStarted = false;
+
+        try {
+          this.throwIfCancelled("api", file.path);
+
+          requestStarted = true;
+          activeRequests++;
+          this.reportProgress({
+            phase: "generating",
+            currentFile: file.path,
+            totalFiles,
+            processedFiles: completedFiles,
+            percentage: 12 + (completedFiles / totalFiles) * 78,
+            message:
+              `Documenting ${this.describeDocumentationJob(job)} ` +
+              `(${activeRequests} active, ${completedFiles}/${totalFiles} done, ` +
+              `ETA ${this.formatEta(startedAt, generatedFiles, pendingTasks.length)})...`,
+          });
+
+          const jobSections = await this.generateFileDocumentationJob(job);
+          for (const [taskIndex, section] of jobSections) {
+            const task = job.tasks.find((candidate) => candidate.index === taskIndex);
+            if (!task) {
+              continue;
+            }
+            sections[task.index] = section;
+            documentationCache.entries[task.file.path] = {
+              cacheKey: task.cacheKey,
+              section,
+              generatedAt: new Date().toISOString(),
+            };
+          }
+          await this.saveDocumentationCache(docsFolder, documentationCache);
+        } catch (error) {
+          if (this.cancellationToken?.isCancellationRequested) {
+            throw new DocumentationError(
+              "Generation cancelled",
+              "api",
+              file.path,
+              error instanceof Error ? error : undefined,
+            );
+          }
+
+          for (const task of job.tasks) {
+            console.warn(`Failed to generate docs for ${task.file.path}:`, error);
+            sections[task.index] = this.formatFailedFileDocumentationSection(
+              task.file,
+              error,
+            );
+          }
+        } finally {
+          if (requestStarted) {
+            activeRequests--;
+          }
+
+          if (!this.cancellationToken?.isCancellationRequested) {
+            completedFiles += job.tasks.length;
+            generatedFiles += job.tasks.length;
+            this.reportProgress({
+              phase: "generating",
+              currentFile: file.path,
+              totalFiles,
+              processedFiles: completedFiles,
+              percentage: 12 + (completedFiles / totalFiles) * 78,
+              message:
+                `Completed ${completedFiles}/${totalFiles} files ` +
+                `(${cachedFiles} cached, ${activeRequests} active, ETA ${this.formatEta(startedAt, generatedFiles, pendingTasks.length)})...`,
+            });
+          }
+        }
+      }
+    };
+
+    const workers = Array.from(
+      { length: Math.min(concurrentRequests, jobs.length) },
+      () => worker(),
+    );
+    const results = await Promise.allSettled(workers);
+    const rejected = results.find(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+    if (rejected) {
+      throw rejected.reason;
+    }
+
+    return sections;
+  }
+
+  private prepareFileDocumentationTasks(
+    files: WorkspaceFile[],
+    analysisByPath: Map<string, FileAnalysis>,
+    projectAnalysis: ProjectAnalysis,
+    dependencyIndex: FileDependencyIndex,
+    options: DocGeneratorOptions,
+    providerName: string,
+  ): PreparedFileDocumentationTask[] {
+    const rateLimitDelay = this.resolveRateLimitDelay(options);
+    const configuredModel =
+      options.model ||
+      vscode.workspace
+        .getConfiguration("aiDocGenerator")
+        .get<string>("model") ||
+      "";
+
+    return files.map((file, index) => {
+      const fileAnalysis = analysisByPath.get(file.path);
+      const fileContext = fileAnalysis
+        ? this.sourceAnalyzer.formatFileContext(
+            fileAnalysis,
+            projectAnalysis,
+            dependencyIndex,
+          )
+        : undefined;
+
+      const depth = options.depth || "standard";
+      const cacheKey = this.createFileCacheKey({
+        file,
+        fileContext,
+        providerName,
+        model: configuredModel,
+        depth,
+      });
+
+      return {
+        index,
+        file,
+        fileAnalysis,
+        cacheKey,
+        context: {
+          code: file.content,
+          language: file.language,
+          filePath: file.path,
+          depth,
+          existingContext: fileContext,
+          model: options.model,
+          contextWindow: options.contextWindow,
+          rateLimitDelay,
+          cancellationToken: this.cancellationToken,
+        },
+      };
+    });
+  }
+
+  private createFileDocumentationJobs(
+    tasks: PreparedFileDocumentationTask[],
+  ): FileDocumentationJob[] {
+    const jobs: FileDocumentationJob[] = [];
+    let batch: PreparedFileDocumentationTask[] = [];
+    let batchChars = 0;
+
+    const flushBatch = () => {
+      if (batch.length > 0) {
+        jobs.push({ tasks: batch });
+        batch = [];
+        batchChars = 0;
+      }
+    };
+
+    for (const task of tasks) {
+      const canBatch = this.canBatchTask(task);
+      const nextChars = batchChars + task.file.content.length;
+      if (!canBatch) {
+        flushBatch();
+        jobs.push({ tasks: [task] });
+        continue;
+      }
+
+      if (batch.length >= 5 || nextChars > 12000) {
+        flushBatch();
+      }
+
+      batch.push(task);
+      batchChars += task.file.content.length;
+    }
+
+    flushBatch();
+    return jobs;
+  }
+
+  private canBatchTask(task: PreparedFileDocumentationTask): boolean {
+    return (
+      task.file.content.length <= 3500 &&
+      task.context.depth !== "comprehensive"
+    );
+  }
+
+  private describeDocumentationJob(job: FileDocumentationJob): string {
+    if (job.tasks.length === 1) {
+      return job.tasks[0].file.path;
+    }
+    return `${job.tasks.length} small files starting at ${job.tasks[0].file.path}`;
+  }
+
+  private async generateFileDocumentationJob(
+    job: FileDocumentationJob,
+  ): Promise<Map<number, string>> {
+    if (job.tasks.length === 1) {
+      const task = job.tasks[0];
+      return new Map([
+        [task.index, await this.generateFileDocumentationSection(task)],
+      ]);
+    }
+
+    try {
+      return await this.generateBatchFileDocumentationSections(job.tasks);
+    } catch (error) {
+      console.warn("Batch documentation failed; falling back to single files:", error);
+      const sections = new Map<number, string>();
+      for (const task of job.tasks) {
+        this.throwIfCancelled("api", task.file.path);
+        sections.set(task.index, await this.generateFileDocumentationSection(task));
+      }
+      return sections;
+    }
+  }
+
+  private async generateBatchFileDocumentationSections(
+    tasks: PreparedFileDocumentationTask[],
+  ): Promise<Map<number, string>> {
+    const depth = tasks[0].context.depth;
+    const systemPrompt =
+      "You are a senior documentation engineer. Generate factual Markdown only. " +
+      "Use only real symbols and facts from the supplied source files. " +
+      "Do not invent APIs, configuration, errors, or usage examples.";
+    const userPrompt = [
+      `Generate ${depth} documentation for each file below.`,
+      "Return one Markdown block per file.",
+      "Wrap each file's documentation body in these exact delimiters:",
+      "<!-- DOCUMINT_FILE_START:path -->",
+      "<!-- DOCUMINT_FILE_END:path -->",
+      "Use the exact path shown for each file. Do not add extra text outside delimiters.",
+      "",
+      this.batchModeInstructions(depth),
+      "",
+      ...tasks.map((task) => this.formatBatchTaskInput(task)),
+    ].join("\n");
+
+    const result = await this.aiProvider.generateMarkdownFromPrompt({
+      systemPrompt,
+      userPrompt,
+      model: tasks[0].context.model,
+      rateLimitDelay: tasks[0].context.rateLimitDelay,
+      cancellationToken: this.cancellationToken,
+    });
+    const parsed = this.parseBatchDocumentation(result.documentation, tasks);
+
+    if (parsed.size !== tasks.length) {
+      throw new Error(
+        `Batch response returned ${parsed.size}/${tasks.length} file sections`,
+      );
+    }
+
+    const sections = new Map<number, string>();
+    for (const task of tasks) {
+      const body = parsed.get(task.file.path);
+      if (!body) {
+        throw new Error(`Missing batch section for ${task.file.path}`);
+      }
+      const documentation = task.fileAnalysis
+        ? this.documentationValidator.appendQualityNotes(
+            body,
+            this.documentationValidator.validateFileDocumentation(
+              body,
+              task.fileAnalysis,
+            ),
+          )
+        : body;
+      sections.set(task.index, this.formatFileDocumentationSection(task.file, documentation));
+    }
+
+    return sections;
+  }
+
+  private batchModeInstructions(
+    depth: "simple" | "basic" | "standard" | "comprehensive",
+  ): string {
+    if (depth === "simple") {
+      return [
+        "For each file include only:",
+        "## What This Does",
+        "## Key Things It Can Do",
+        "## What Goes In / What Comes Out",
+      ].join("\n");
+    }
+
+    if (depth === "basic") {
+      return [
+        "For each file include only:",
+        "## Module Metadata",
+        "## Overview",
+        "## API Reference",
+        "## Quick Start",
+        "## See Also",
+      ].join("\n");
+    }
+
+    return [
+      "For each file include:",
+      "## Module Metadata",
+      "## Overview",
+      "## API Reference",
+      "## Dependencies",
+      "## Usage Examples",
+      "## See Also",
+      "Add compact evidence-based sections only when source evidence exists.",
+    ].join("\n");
+  }
+
+  private formatBatchTaskInput(task: PreparedFileDocumentationTask): string {
+    return [
+      `FILE: ${task.file.path}`,
+      `LANGUAGE: ${task.file.language}`,
+      "VERIFIED CONTEXT:",
+      "```text",
+      task.context.existingContext ?? "No verified context available.",
+      "```",
+      "SOURCE:",
+      `\`\`\`${task.file.language}`,
+      task.file.content,
+      "```",
+      "",
+    ].join("\n");
+  }
+
+  private parseBatchDocumentation(
+    documentation: string,
+    tasks: PreparedFileDocumentationTask[],
+  ): Map<string, string> {
+    const sections = new Map<string, string>();
+    for (const task of tasks) {
+      const start = `<!-- DOCUMINT_FILE_START:${task.file.path} -->`;
+      const end = `<!-- DOCUMINT_FILE_END:${task.file.path} -->`;
+      const startIndex = documentation.indexOf(start);
+      const endIndex = documentation.indexOf(end);
+      if (startIndex < 0 || endIndex <= startIndex) {
+        continue;
+      }
+      sections.set(
+        task.file.path,
+        documentation
+          .slice(startIndex + start.length, endIndex)
+          .trim(),
+      );
+    }
+    return sections;
+  }
+
+  private async generateFileDocumentationSection(
+    task: PreparedFileDocumentationTask,
+  ): Promise<string> {
+    const result = await this.aiProvider.generateDocumentation(task.context);
+    const documentation = task.fileAnalysis
+      ? this.documentationValidator.appendQualityNotes(
+          result.documentation,
+          this.documentationValidator.validateFileDocumentation(
+            result.documentation,
+            task.fileAnalysis,
+          ),
+        )
+      : result.documentation;
+
+    return this.formatFileDocumentationSection(task.file, documentation);
+  }
+
+  private formatFileDocumentationSection(
+    file: WorkspaceFile,
+    documentation: string,
+  ): string {
+    const lineCount = file.content.split("\n").length;
+    const fileMeta = `*${file.language} · ${lineCount.toLocaleString()} lines · \`${file.path}\`*\n\n`;
+    return `# ${file.path}\n\n${fileMeta}${documentation}\n\n---\n\n`;
+  }
+
+  private formatFailedFileDocumentationSection(
+    file: WorkspaceFile,
+    error: unknown,
+  ): string {
+    const message = error instanceof Error ? error.message : String(error);
+    return `# ${file.path}\n\n> Warning: Documentation generation failed: ${message}\n\n---\n\n`;
+  }
+
+  private resolveConcurrentRequests(
+    options: DocGeneratorOptions,
+    totalFiles: number,
+  ): number {
+    const configuration = vscode.workspace.getConfiguration("aiDocGenerator");
+    const configured =
+      options.concurrentRequests ??
+      configuration.get<number>("concurrentRequests") ??
+      15;
+    const parsed = Number(configured);
+    const bounded = Number.isFinite(parsed) ? Math.floor(parsed) : 15;
+    return Math.min(Math.max(bounded, 1), Math.min(totalFiles, 15));
+  }
+
+  private resolveRateLimitDelay(options: DocGeneratorOptions): number {
+    if (this.aiProvider.isLocal) {
+      return 0;
+    }
+
+    const configuration = vscode.workspace.getConfiguration("aiDocGenerator");
+    const configured =
+      options.rateLimitDelay ??
+      configuration.get<number>("rateLimitDelay") ??
+      0;
+    const parsed = Number(configured);
+    return Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0;
+  }
+
+  private async loadDocumentationCache(
+    docsFolder: vscode.Uri,
+  ): Promise<DocumentationCacheManifest> {
+    const empty: DocumentationCacheManifest = {
+      version: DocGeneratorService.CACHE_VERSION,
+      entries: {},
+    };
+    const cacheFile = vscode.Uri.joinPath(docsFolder, ".documint-cache.json");
+
+    try {
+      const bytes = await vscode.workspace.fs.readFile(cacheFile);
+      const parsed = JSON.parse(Buffer.from(bytes).toString("utf-8")) as
+        | DocumentationCacheManifest
+        | undefined;
+      if (
+        !parsed ||
+        parsed.version !== DocGeneratorService.CACHE_VERSION ||
+        typeof parsed.entries !== "object"
+      ) {
+        return empty;
+      }
+      return parsed;
+    } catch {
+      return empty;
+    }
+  }
+
+  private async saveDocumentationCache(
+    docsFolder: vscode.Uri,
+    cache: DocumentationCacheManifest,
+  ): Promise<void> {
+    const cacheFile = vscode.Uri.joinPath(docsFolder, ".documint-cache.json");
+    const payload = JSON.stringify(cache, null, 2);
+    await vscode.workspace.fs.writeFile(
+      cacheFile,
+      Buffer.from(payload, "utf-8"),
+    );
+  }
+
+  private createFileCacheKey(input: {
+    file: WorkspaceFile;
+    fileContext?: string;
+    providerName: string;
+    model: string;
+    depth: "simple" | "basic" | "standard" | "comprehensive";
+  }): string {
+    return this.hashJson({
+      promptVersion: DocGeneratorService.PROMPT_VERSION,
+      providerName: input.providerName,
+      model: input.model,
+      depth: input.depth,
+      filePath: input.file.path,
+      language: input.file.language,
+      contentHash: this.hashText(input.file.content),
+      contextHash: this.hashText(input.fileContext ?? ""),
+    });
+  }
+
+  private hashJson(value: unknown): string {
+    return this.hashText(JSON.stringify(value));
+  }
+
+  private hashText(value: string): string {
+    return crypto.createHash("sha256").update(value).digest("hex");
+  }
+
+  private formatEta(
+    startedAt: number,
+    completedGenerated: number,
+    totalToGenerate: number,
+  ): string {
+    if (completedGenerated <= 0) {
+      return "calculating";
+    }
+
+    const elapsedMs = Date.now() - startedAt;
+    const remaining = Math.max(totalToGenerate - completedGenerated, 0);
+    const etaMs = (elapsedMs / completedGenerated) * remaining;
+    if (!Number.isFinite(etaMs) || etaMs <= 0) {
+      return "less than 1m";
+    }
+
+    const totalSeconds = Math.ceil(etaMs / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    if (minutes <= 0) {
+      return `${seconds}s`;
+    }
+    if (minutes < 60) {
+      return `${minutes}m ${seconds}s`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+    const remainderMinutes = minutes % 60;
+    return `${hours}h ${remainderMinutes}m`;
+  }
+
+  private throwIfCancelled(
+    type: "scan" | "parse" | "chunk" | "api" | "format" | "write",
+    filePath?: string,
+  ): void {
+    if (this.cancellationToken?.isCancellationRequested) {
+      throw new DocumentationError("Generation cancelled", type, filePath);
+    }
+  }
+
   /**
    * Generates a project-level overview using a condensed manifest of all files.
    */
@@ -355,6 +947,7 @@ export class DocGeneratorService {
         filePath: "__project_summary__",
         depth: "standard",
         existingContext: projectContext,
+        rateLimitDelay: this.resolveRateLimitDelay(options),
         cancellationToken: this.cancellationToken,
       };
 
@@ -417,29 +1010,6 @@ ${this.sourceAnalyzer.formatProjectContext(projectAnalysis)}
 
 `;
     }
-  }
-
-  private async generateForFile(
-    file: { path: string; language: string; content: string },
-    fileAnalysis: FileAnalysis | undefined,
-    projectAnalysis: ProjectAnalysis,
-    options: DocGeneratorOptions,
-  ) {
-    const fileContext = fileAnalysis
-      ? this.sourceAnalyzer.formatFileContext(fileAnalysis, projectAnalysis)
-      : undefined;
-    const context: DocumentationContext = {
-      code: file.content,
-      language: file.language,
-      filePath: file.path,
-      depth: options.depth || "standard",
-      existingContext: fileContext,
-      model: options.model,
-      contextWindow: options.contextWindow,
-      cancellationToken: this.cancellationToken,
-    };
-
-    return await this.aiProvider.generateDocumentation(context);
   }
 
   private reportProgress(progress: GenerationProgress): void {

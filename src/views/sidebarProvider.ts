@@ -442,6 +442,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       <option value="openai">OpenAI</option>
       <option value="anthropic">Anthropic</option>
       <option value="openrouter">OpenRouter</option>
+      <option value="deepseek">DeepSeek</option>
       <option value="ollama">Ollama (Local)</option>
       <option value="lmstudio">LM Studio (Local)</option>
       <option value="custom">Custom Endpoint</option>
@@ -619,7 +620,15 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   // ── Event listeners ────────────────────────────────────────────────────────
 
   providerSel.addEventListener('change', function() {
-    vscode.postMessage({ type: 'update-settings', payload: { provider: providerSel.value } });
+    var providerDefaults = {
+      deepseek: 'deepseek-v4-flash',
+      ollama: 'llama3',
+      lmstudio: 'local-model'
+    };
+    if (providerDefaults[providerSel.value] && (!modelInput.value.trim() || modelInput.value.trim() === 'gpt-4o')) {
+      modelInput.value = providerDefaults[providerSel.value];
+    }
+    vscode.postMessage({ type: 'update-settings', payload: { provider: providerSel.value, model: modelInput.value.trim() } });
   });
 
   modelInput.addEventListener('change', function() {

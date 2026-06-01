@@ -61,6 +61,7 @@ release/
 # Documentation
 docs/_site/
 docs/.jekyll-cache/
+docs/.documint-cache.json
 
 # Temporary files
 tmp/

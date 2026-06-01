@@ -8,6 +8,7 @@ export interface DocGeneratorConfig {
     | "openai"
     | "anthropic"
     | "openrouter"
+    | "deepseek"
     | "custom"
     | "ollama"
     | "lmstudio";
@@ -18,6 +19,7 @@ export interface DocGeneratorConfig {
   maxTokens: number;
   temperature: number;
   rateLimitDelay: number;
+  concurrentRequests: number;
   excludePatterns: string[];
   includePatterns: string[];
   localModelUrl?: string;
@@ -39,6 +41,8 @@ export interface DocumentationContext {
   model?: string;
   /** User-specified context window override in tokens */
   contextWindow?: number;
+  /** Delay between provider API request starts, in milliseconds. */
+  rateLimitDelay?: number;
   cancellationToken?: vscode.CancellationToken;
 }
 

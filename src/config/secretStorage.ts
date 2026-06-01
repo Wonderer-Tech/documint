@@ -60,6 +60,8 @@ export class SecretStorageManager {
         return apiKey.startsWith("sk-ant-") && apiKey.length > 40;
       case "openrouter":
         return apiKey.startsWith("sk-or-") && apiKey.length > 40;
+      case "deepseek":
+        return apiKey.startsWith("sk-") && apiKey.length > 20;
       case "ollama":
       case "lmstudio":
         // Local providers don't need API keys
