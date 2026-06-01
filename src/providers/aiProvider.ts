@@ -146,7 +146,7 @@ export abstract class BaseAIProvider implements AIProvider {
   // ── Protected helpers ─────────────────────────────────────────────────────
 
   protected defaultModel(): string {
-    return "gpt-4";
+    return "gpt-5.4-nano";
   }
 
   protected get temperature(): number {

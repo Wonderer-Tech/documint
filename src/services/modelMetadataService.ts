@@ -10,6 +10,12 @@ export interface ModelMetadata {
 // Hardcoded fallbacks — used when API is unreachable or key is missing
 const FALLBACK_CONTEXT_WINDOWS: Record<string, number> = {
   // OpenAI
+  "gpt-5.4-nano": 128000,
+  "gpt-5.4-mini": 128000,
+  "gpt-5.4": 200000,
+  "gpt-5-nano": 128000,
+  "gpt-5-mini": 128000,
+  "gpt-5": 200000,
   "gpt-4o": 128000,
   "gpt-4o-mini": 128000,
   "gpt-4-turbo": 128000,
@@ -252,7 +258,7 @@ export class ModelMetadataService {
 
     // Pattern-based inference for unknown model names
     if (m.includes("200k") || m.includes("claude")) return { contextWindow: 200000, source: "estimated" };
-    if (m.includes("128k") || m.includes("gpt-4o") || m.includes("o1") || m.includes("o3")) return { contextWindow: 128000, source: "estimated" };
+    if (m.includes("128k") || m.includes("gpt-5") || m.includes("gpt-4o") || m.includes("o1") || m.includes("o3")) return { contextWindow: 128000, source: "estimated" };
     if (m.includes("32k") || m.includes("mistral") || m.includes("mixtral")) return { contextWindow: 32768, source: "estimated" };
     if (m.includes("16k")) return { contextWindow: 16385, source: "estimated" };
     if (m.includes("turbo")) return { contextWindow: 128000, source: "estimated" };

@@ -7,6 +7,7 @@ export interface HtmlTemplateOptions {
   generationDate: string;
   languages?: string[];
   totalLines?: number;
+  logoSrc?: string;
 }
 
 function escapeHtmlAttr(str: string): string {
@@ -21,6 +22,15 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
   const safeTitle = escapeHtmlAttr(options.title);
   const safeDate = escapeHtmlAttr(options.generationDate);
   const safeProjectName = escapeHtmlAttr(options.projectName);
+  const safeLogoSrc = options.logoSrc ? escapeHtmlAttr(options.logoSrc) : "";
+  const logoImgHtml = safeLogoSrc
+    ? `<img class="documint-logo-img" src="${safeLogoSrc}" alt="DocuMint logo">`
+    : `<svg class="documint-logo-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>`;
 
   const languagesStr = options.languages?.length
     ? options.languages.map(escapeHtmlAttr).join(", ")
@@ -44,7 +54,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     `<div class="stat-item"><span class="stat-label">Generated</span><span class="stat-value generated-date">${safeDate}</span></div>`,
   ].join("");
 
-  return `<!DOCTYPE html>
+  return String.raw`<!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
@@ -120,6 +130,10 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       font-weight: 700; font-size: 15px; color: var(--text-primary);
       text-decoration: none; white-space: nowrap; flex-shrink: 0;
     }
+    .documint-logo-img {
+      width: 22px; height: 22px; border-radius: 5px; display: block;
+    }
+    .documint-logo-svg { flex-shrink: 0; color: var(--accent); }
     .topbar-sep { width: 1px; height: 22px; background: var(--border); flex-shrink: 0; }
     .topbar-project {
       font-size: 13px; color: var(--text-secondary);
@@ -288,6 +302,22 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     }
 
     /* Stats banner */
+    .doc-brand {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 20px; margin-bottom: 16px;
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .doc-brand img {
+      width: 38px; height: 38px; border-radius: 8px; flex-shrink: 0;
+    }
+    .doc-brand-title {
+      font-size: 18px; font-weight: 800; color: var(--text-primary);
+      line-height: 1.2;
+    }
+    .doc-brand-subtitle {
+      font-size: 12px; color: var(--text-secondary); margin-top: 2px;
+    }
     .stats-banner {
       display: flex; gap: 20px; flex-wrap: wrap; align-items: center;
       padding: 14px 20px; background: var(--bg-secondary);
@@ -556,12 +586,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
 
   <nav class="topbar">
     <a class="topbar-logo" href="#">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <line x1="16" y1="13" x2="8" y2="13"/>
-        <line x1="16" y1="17" x2="8" y2="17"/>
-      </svg>
+      ${logoImgHtml}
       DocuMint
     </a>
     <div class="topbar-sep"></div>
@@ -595,6 +620,11 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
   </aside>
 
   <main class="main" id="mainContent">
+    ${
+      safeLogoSrc
+        ? `<div class="doc-brand"><img src="${safeLogoSrc}" alt="DocuMint logo"><div><div class="doc-brand-title">DocuMint Documentation</div><div class="doc-brand-subtitle">${safeProjectName}</div></div></div>`
+        : ""
+    }
     <div class="stats-banner">${statsHtml}</div>
     ${options.contentHtml}
   </main>
@@ -936,13 +966,29 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     }
 
     // ── Theme ────────────────────────────────────────────────────────────────
-    var theme = localStorage.getItem('doc-theme') || 'dark';
+    function readStoredValue(key, fallback) {
+      try {
+        return window.localStorage ? (window.localStorage.getItem(key) || fallback) : fallback;
+      } catch (_err) {
+        return fallback;
+      }
+    }
+
+    function writeStoredValue(key, value) {
+      try {
+        if (window.localStorage) window.localStorage.setItem(key, value);
+      } catch (_err) {
+        // Storage can be blocked in some local/VS Code preview contexts.
+      }
+    }
+
+    var theme = readStoredValue('doc-theme', 'dark');
     setTheme(theme);
 
     function setTheme(t) {
       theme = t;
       document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem('doc-theme', t);
+      writeStoredValue('doc-theme', t);
       var label = document.getElementById('themeLabel');
       var hljsLink = document.getElementById('hljs-theme');
       if (label) label.textContent = t === 'dark' ? 'Light' : 'Dark';
@@ -953,14 +999,18 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       }
     }
 
-    document.getElementById('themeBtn').addEventListener('click', function () {
-      setTheme(theme === 'dark' ? 'light' : 'dark');
-      reinitMermaid();
-    });
+    var themeBtn = document.getElementById('themeBtn');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', function () {
+        setTheme(theme === 'dark' ? 'light' : 'dark');
+        reinitMermaid();
+      });
+    }
 
     // ── Back to top ──────────────────────────────────────────────────────────
     var btt = document.getElementById('btt');
     window.addEventListener('scroll', function () {
+      if (!btt) return;
       if (window.scrollY > 400) btt.classList.add('show');
       else btt.classList.remove('show');
     }, { passive: true });
@@ -1012,7 +1062,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
         .replace(/'/g, '&#039;');
     }
 
-    inp.addEventListener('input', function () {
+    if (inp && drop) inp.addEventListener('input', function () {
       var q = this.value.trim().toLowerCase();
       if (q.length < 2) { drop.classList.remove('open'); drop.innerHTML = ''; return; }
 
@@ -1049,21 +1099,25 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     });
 
     document.addEventListener('click', function (e) {
+      if (!drop) return;
       if (!e.target.closest('.search-wrap')) drop.classList.remove('open');
     });
 
     // ── Keyboard shortcuts ───────────────────────────────────────────────────
     document.addEventListener('keydown', function (e) {
       if (e.target.matches('input, textarea')) {
-        if (e.key === 'Escape') { drop.classList.remove('open'); inp.blur(); }
+        if (e.key === 'Escape' && drop && inp) { drop.classList.remove('open'); inp.blur(); }
         return;
       }
-      if (e.key === '/') { e.preventDefault(); inp.focus(); inp.select(); }
+      if (e.key === '/' && inp) { e.preventDefault(); inp.focus(); inp.select(); }
       if (e.key === 't' || e.key === 'T') { setTheme(theme === 'dark' ? 'light' : 'dark'); }
     });
 
     // ── Init ─────────────────────────────────────────────────────────────────
+    var initDone = false;
     function runInit() {
+      if (initDone) return;
+      initDone = true;
       initMermaid();          // async — fire and forget
       applyHighlighting();
       enhanceCodeBlocks();

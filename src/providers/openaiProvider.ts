@@ -187,7 +187,7 @@ export class OpenAIProvider extends BaseAIProvider {
   }
 
   protected defaultModel(): string {
-    return "gpt-4o-mini";
+    return "gpt-5.4-nano";
   }
 
   /**

@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
-![Version](https://img.shields.io/badge/version-1.0.2-green)
+![Version](https://img.shields.io/badge/version-1.0.3-green)
 
 DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file using AI providers such as OpenAI, Anthropic, OpenRouter, Ollama, LM Studio, or a custom OpenAI-compatible endpoint.
 
@@ -18,7 +18,7 @@ It produces:
 ## Table of Contents
 
 - [What It Does](#what-it-does)
-- [What's New in 1.0.0](#whats-new-in-100)
+- [What's New in 1.0.3](#whats-new-in-103)
 - [How It Works](#how-it-works)
 - [Supported Providers](#supported-providers)
 - [Supported Languages](#supported-languages)
@@ -47,18 +47,18 @@ DocuMint scans source files, sends code to the configured AI provider, and build
 
 The extension runs directly inside VS Code through a sidebar webview.
 
-## What's New in 1.0.0
+## What's New in 1.0.3
 
-DocuMint 1.0.2 improves documentation generation speed, cache reuse, and provider support.
+DocuMint 1.0.3 focuses on faster comprehensive documentation generation, cleaner output, and a smoother generated-doc reading experience.
 
-- Smarter documentation: DocuMint now scans source code for real imports, exports, classes, functions, types, and TODO comments before asking AI to write docs.
-- Better project understanding: generated docs include more accurate project context because DocuMint builds a simple project map first.
-- Fewer fake details: generated sections are checked against detected source symbols, and DocuMint adds a quality note if important symbols are missing.
-- Safer output: generated HTML escapes raw HTML from AI output and uses safer Mermaid rendering settings.
-- Better workspace handling: folder/file generation now respects the selected workspace root, target languages, and exclude patterns.
-- Real cancel support: pressing Cancel now stops active provider requests where supported.
-- Safer cloud use: DocuMint asks before sending source code to cloud providers and blocks generation in untrusted workspaces.
-- Smaller release package: the extension is bundled, so the VSIX ships fewer files.
+- Faster generation: detailed file documentation now runs in parallel, with the default parallel request limit set to `15`.
+- Local CPU prep: DocuMint analyzes source structure, dependencies, symbols, imports, and prompt context locally before calling the AI provider.
+- Cleaner comprehensive docs: unnecessary repeated sections were reduced across generation modes so output stays detailed without extra noise.
+- Better generated HTML: search and light/dark toggle now keep working after documentation generation.
+- Automatic branding: generated Markdown and HTML docs now include the DocuMint logo automatically.
+- Better provider support: DeepSeek is available as a provider option.
+- Updated default model: new installs default to `gpt-5.4-nano`.
+- Cleaner VSIX output: generated docs are excluded from the packaged extension.
 
 ## How It Works
 
@@ -128,7 +128,7 @@ ext install wonderertech.documint
 ### VSIX
 
 ```bash
-code --install-extension documint-1.0.2.vsix
+code --install-extension documint-1.0.3.vsix
 ```
 
 ### Build from Source
@@ -169,7 +169,7 @@ All settings are under `aiDocGenerator`.
 ### Key Settings
 
 - `aiDocGenerator.aiProvider` (`openai` by default)
-- `aiDocGenerator.model` (`gpt-4` by default)
+- `aiDocGenerator.model` (`gpt-5.4-nano` by default)
 - `aiDocGenerator.documentationDepth` (`simple | basic | standard | comprehensive`)
 - `aiDocGenerator.outputFormat` (`markdown | html | both`)
 - `aiDocGenerator.targetLanguages` (language hint list)
@@ -190,7 +190,7 @@ All settings are under `aiDocGenerator`.
 ```json
 {
   "aiDocGenerator.aiProvider": "openai",
-  "aiDocGenerator.model": "gpt-4o-mini",
+  "aiDocGenerator.model": "gpt-5.4-nano",
   "aiDocGenerator.documentationDepth": "standard",
   "aiDocGenerator.outputFormat": "both",
   "aiDocGenerator.maxTokens": 4000,

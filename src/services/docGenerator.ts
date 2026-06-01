@@ -71,6 +71,11 @@ interface DocumentationCacheManifest {
   entries: Record<string, DocumentationCacheEntry>;
 }
 
+interface DocumentationAssets {
+  logoMarkdown?: string;
+  logoHtmlSrc?: string;
+}
+
 export class DocGeneratorService {
   private static readonly CACHE_VERSION = "documint-cache-v1";
   private static readonly PROMPT_VERSION = "lean-prompts-2026-06-01";
@@ -197,6 +202,8 @@ export class DocGeneratorService {
         );
       }
       const documentationCache = await this.loadDocumentationCache(docsFolder);
+      const documentationAssets =
+        await this.ensureDocumentationAssets(docsFolder);
 
       // Generate project-level summary first
       this.reportProgress({
@@ -216,7 +223,9 @@ export class DocGeneratorService {
         options,
       );
 
-      let allDocumentation = `# DocuMint\n\n`;
+      let allDocumentation = documentationAssets.logoMarkdown
+        ? `${documentationAssets.logoMarkdown}\n\n# DocuMint\n\n`
+        : `# DocuMint\n\n`;
       allDocumentation +=
         `# ${workspaceFolder.name} — Documentation\n\n` + projectSummary;
       allDocumentation += `\n\n---\n\n`;
@@ -272,6 +281,7 @@ export class DocGeneratorService {
             allDocumentation,
             workspaceFolder.name,
             stats,
+            documentationAssets.logoHtmlSrc,
           );
           await vscode.workspace.fs.writeFile(
             htmlFile,
@@ -841,6 +851,32 @@ export class DocGeneratorService {
     );
   }
 
+  private async ensureDocumentationAssets(
+    docsFolder: vscode.Uri,
+  ): Promise<DocumentationAssets> {
+    const sourceLogo = vscode.Uri.joinPath(
+      this.context.extensionUri,
+      "resources",
+      "icon.png",
+    );
+    const assetsFolder = vscode.Uri.joinPath(docsFolder, "assets");
+    const targetLogo = vscode.Uri.joinPath(assetsFolder, "documint-icon.png");
+
+    try {
+      const logoBytes = await vscode.workspace.fs.readFile(sourceLogo);
+      await vscode.workspace.fs.createDirectory(assetsFolder);
+      await vscode.workspace.fs.writeFile(targetLogo, logoBytes);
+      const base64Logo = Buffer.from(logoBytes).toString("base64");
+      return {
+        logoMarkdown: "![DocuMint Logo](assets/documint-icon.png)",
+        logoHtmlSrc: `data:image/png;base64,${base64Logo}`,
+      };
+    } catch (error) {
+      console.warn("[Documint] Failed to copy documentation logo:", error);
+      return {};
+    }
+  }
+
   private createFileCacheKey(input: {
     file: WorkspaceFile;
     fileContext?: string;
@@ -1044,6 +1080,7 @@ ${this.sourceAnalyzer.formatProjectContext(projectAnalysis)}
     markdown: string,
     projectName: string,
     stats: ProjectStats,
+    logoHtmlSrc?: string,
   ): string {
     marked.setOptions({ gfm: true, breaks: true });
 
@@ -1135,6 +1172,7 @@ ${this.sourceAnalyzer.formatProjectContext(projectAnalysis)}
       generationDate: new Date().toLocaleString(),
       languages: stats.languages,
       totalLines: stats.totalLines,
+      logoSrc: logoHtmlSrc,
     });
   }
 

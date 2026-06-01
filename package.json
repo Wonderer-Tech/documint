@@ -2,7 +2,7 @@
   "name": "documint",
   "displayName": "DocuMint — AI Code Documentation Generator",
   "description": "Generate clean code documentation in one click using AI. Create Markdown docs, HTML docs, UML diagrams, architecture overviews, docstrings, and usage examples directly inside VS Code.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "wonderertech",
   "icon": "resources/icon.png",
   "license": "MIT",
@@ -110,7 +110,7 @@
         },
         "aiDocGenerator.model": {
           "type": "string",
-          "default": "gpt-4",
+          "default": "gpt-5.4-nano",
           "description": "Model to use for documentation generation"
         },
         "aiDocGenerator.documentationDepth": {

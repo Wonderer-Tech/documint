@@ -59,6 +59,9 @@ build/
 release/
 
 # Documentation
+docs/documentation.md
+docs/documentation.html
+docs/assets/
 docs/_site/
 docs/.jekyll-cache/
 docs/.documint-cache.json

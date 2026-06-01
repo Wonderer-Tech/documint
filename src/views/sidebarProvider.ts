@@ -17,7 +17,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     },
     settings: {
       provider: "openai",
-      model: "gpt-4o",
+      model: "gpt-5.4-nano",
       depth: "standard",
       outputFormat: "both",
     },
@@ -451,7 +451,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   <div class="field">
     <label class="field-label">Model</label>
-    <input type="text" id="model" value="gpt-4o" placeholder="e.g. gpt-4o, gpt-4.1-nano, claude-3-5-sonnet-20241022">
+    <input type="text" id="model" value="gpt-5.4-nano" placeholder="e.g. gpt-5.4-nano, gpt-4o, claude-3-5-sonnet-20241022">
   </div>
 </div>
 
@@ -625,7 +625,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       ollama: 'llama3',
       lmstudio: 'local-model'
     };
-    if (providerDefaults[providerSel.value] && (!modelInput.value.trim() || modelInput.value.trim() === 'gpt-4o')) {
+    if (providerDefaults[providerSel.value] && (!modelInput.value.trim() || modelInput.value.trim() === 'gpt-5.4-nano' || modelInput.value.trim() === 'gpt-4o')) {
       modelInput.value = providerDefaults[providerSel.value];
     }
     vscode.postMessage({ type: 'update-settings', payload: { provider: providerSel.value, model: modelInput.value.trim() } });
