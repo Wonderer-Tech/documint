@@ -36,13 +36,12 @@ export class ApiKeyConfiguration {
       "openai",
       "anthropic",
       "openrouter",
+      "deepseek",
       "custom",
-      "ollama",
-      "lmstudio",
     ];
 
     const selected = await vscode.window.showQuickPick(providers, {
-      placeHolder: "Select AI provider",
+      placeHolder: "Select provider",
       title: "Configure API Key",
     });
 
@@ -50,11 +49,6 @@ export class ApiKeyConfiguration {
   }
 
   private async inputApiKey(provider: string): Promise<string | undefined> {
-    if (provider === "ollama" || provider === "lmstudio") {
-      vscode.window.showInformationMessage(`No API key needed for ${provider}`);
-      return "";
-    }
-
     return await vscode.window.showInputBox({
       prompt: `Enter API key for ${provider}`,
       password: true,

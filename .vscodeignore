@@ -5,6 +5,7 @@
 .code-review-graph/**
 .vscode/**
 .vscode-test/**
+.playwright-mcp/**
 .mcp.json
 .gitignore
 AGENTS.md

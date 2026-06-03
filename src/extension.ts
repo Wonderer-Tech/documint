@@ -49,13 +49,6 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   function sendsCodeToExternalProvider(provider: string): boolean {
-    if (
-      provider === "ollama" ||
-      provider === "lmstudio"
-    ) {
-      return false;
-    }
-
     if (provider === "custom") {
       const endpoint = vscode.workspace
         .getConfiguration("aiDocGenerator")
@@ -117,6 +110,7 @@ export function activate(context: vscode.ExtensionContext) {
     payload: {
       provider?: string;
       model?: string;
+      customApiEndpoint?: string;
       depth?: string;
       outputFormat?: string;
       targetPaths?: string[];
@@ -146,6 +140,45 @@ export function activate(context: vscode.ExtensionContext) {
       : undefined;
     const workspaceFolder = targetWorkspaceFolder ?? workspaceFolders[0];
     const providerName = resolveRunProvider(payload.provider);
+
+    if (providerName === "custom") {
+      const configuration = vscode.workspace.getConfiguration("aiDocGenerator");
+      const endpoint =
+        payload.customApiEndpoint?.trim() ||
+        configuration.get<string>("customApiEndpoint")?.trim() ||
+        "";
+
+      if (!endpoint) {
+        const message =
+          "Custom provider requires a Custom Endpoint URL.";
+        sidebarProvider.reportError(message);
+        sidebarProvider.addLogEntry(message, "error");
+        vscode.window.showErrorMessage(message);
+        return;
+      }
+
+      try {
+        const parsed = new URL(endpoint);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          throw new Error("Unsupported protocol");
+        }
+      } catch {
+        const message =
+          "Custom Endpoint URL must be a valid http or https URL.";
+        sidebarProvider.reportError(message);
+        sidebarProvider.addLogEntry(message, "error");
+        vscode.window.showErrorMessage(message);
+        return;
+      }
+
+      if (payload.customApiEndpoint?.trim()) {
+        await configuration.update(
+          "customApiEndpoint",
+          endpoint,
+          vscode.ConfigurationTarget.Workspace,
+        );
+      }
+    }
 
     if (!(await ensureGenerationAllowed(providerName, workspaceFolder))) {
       return;
@@ -242,12 +275,62 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
+  async function clearDocumentationCache() {
+    if (
+      activeCancellationSource &&
+      !activeCancellationSource.token.isCancellationRequested
+    ) {
+      const message = "Cannot clear cache while documentation generation is running.";
+      sidebarProvider.addLogEntry(message, "warning");
+      vscode.window.showWarningMessage(message);
+      return;
+    }
+
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders || workspaceFolders.length === 0) {
+      const message = "No workspace folder open";
+      sidebarProvider.addLogEntry(message, "error");
+      vscode.window.showErrorMessage(message);
+      return;
+    }
+
+    const cacheFiles = [
+      ".documint-cache.json",
+      ".documint-visual-cache.json",
+    ];
+    let deletedCount = 0;
+
+    for (const folder of workspaceFolders) {
+      const docsFolder = vscode.Uri.joinPath(folder.uri, "docs");
+      for (const cacheFile of cacheFiles) {
+        const target = vscode.Uri.joinPath(docsFolder, cacheFile);
+        try {
+          await vscode.workspace.fs.delete(target, {
+            recursive: false,
+            useTrash: false,
+          });
+          deletedCount++;
+        } catch {
+          // Missing cache files are expected for fresh workspaces.
+        }
+      }
+    }
+
+    const message =
+      deletedCount > 0
+        ? `Cleared ${deletedCount} documentation cache file${deletedCount === 1 ? "" : "s"}.`
+        : "No documentation cache files found.";
+    sidebarProvider.addLogEntry(message, deletedCount > 0 ? "success" : "info");
+    vscode.window.showInformationMessage(message);
+  }
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "aiDocGenerator.generateDocumentation",
       async (payload?: {
         provider?: string;
         model?: string;
+        customApiEndpoint?: string;
         depth?: string;
         outputFormat?: string;
         scope?: string;
@@ -275,11 +358,18 @@ export function activate(context: vscode.ExtensionContext) {
 
   // ── Pick a single file then generate docs for it ───────────────────────────
   context.subscriptions.push(
+    vscode.commands.registerCommand("aiDocGenerator.clearCache", async () => {
+      await clearDocumentationCache();
+    }),
+  );
+
+  context.subscriptions.push(
     vscode.commands.registerCommand(
       "aiDocGenerator.pickAndGenerateFile",
       async (payload?: {
         provider?: string;
         model?: string;
+        customApiEndpoint?: string;
         depth?: string;
         outputFormat?: string;
       }) => {
@@ -328,6 +418,7 @@ export function activate(context: vscode.ExtensionContext) {
       async (payload?: {
         provider?: string;
         model?: string;
+        customApiEndpoint?: string;
         depth?: string;
         outputFormat?: string;
       }) => {

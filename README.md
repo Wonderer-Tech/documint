@@ -1,14 +1,18 @@
-# DocuMint - AI Code Documentation Generator for VS Code
+# DocuMint - Code Documentation Generator for VS Code
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
-![Version](https://img.shields.io/badge/version-1.0.3-green)
+![Version](https://img.shields.io/badge/version-1.0.4-green)
 
-DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file using AI providers such as OpenAI, Anthropic, OpenRouter, Ollama, LM Studio, or a custom OpenAI-compatible endpoint.
+DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file using providers such as OpenAI, Anthropic, OpenRouter, DeepSeek, or a custom OpenAI-compatible endpoint.
 
-![DocuMint Demo](resources/demo.gif)
+![DocuMint Demo](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/demo.gif)
 
-![DocuMint Screenshot](resources/screenshot1.png)
+![DocuMint Screenshot](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/screenshot1.png)
+
+Generated documentation preview:
+
+![DocuMint Generated Documentation](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/s2.png)
 
 It produces:
 
@@ -18,7 +22,7 @@ It produces:
 ## Table of Contents
 
 - [What It Does](#what-it-does)
-- [What's New in 1.0.3](#whats-new-in-103)
+- [What's New in 1.0.4](#whats-new-in-104)
 - [How It Works](#how-it-works)
 - [Supported Providers](#supported-providers)
 - [Supported Languages](#supported-languages)
@@ -26,6 +30,7 @@ It produces:
 - [Quick Start](#quick-start)
 - [Commands](#commands)
 - [Configuration](#configuration)
+- [Documentation Modes](#documentation-modes)
 - [Output](#output)
 - [Project Structure](#project-structure)
 - [Development](#development)
@@ -35,7 +40,7 @@ It produces:
 
 ## What It Does
 
-DocuMint scans source files, sends code to the configured AI provider, and builds project-level documentation with:
+DocuMint scans source files, sends code to the configured provider, and builds project-level documentation with:
 
 - Project overview and stats
 - Per-file documentation sections
@@ -47,18 +52,59 @@ DocuMint scans source files, sends code to the configured AI provider, and build
 
 The extension runs directly inside VS Code through a sidebar webview.
 
-## What's New in 1.0.3
+## What's New in 1.0.4
 
-DocuMint 1.0.3 focuses on faster comprehensive documentation generation, cleaner output, and a smoother generated-doc reading experience.
+DocuMint 1.0.4 is focused on speed, cache reuse, and a cleaner premium generated-document experience.
 
-- Faster generation: detailed file documentation now runs in parallel, with the default parallel request limit set to `15`.
-- Local CPU prep: DocuMint analyzes source structure, dependencies, symbols, imports, and prompt context locally before calling the AI provider.
-- Cleaner comprehensive docs: unnecessary repeated sections were reduced across generation modes so output stays detailed without extra noise.
-- Better generated HTML: search and light/dark toggle now keep working after documentation generation.
-- Automatic branding: generated Markdown and HTML docs now include the DocuMint logo automatically.
-- Better provider support: DeepSeek is available as a provider option.
+**Headline:** super fast generation after the first run. The first generation builds full docs and cache; the second generation can reuse unchanged file docs, project overview data, and visual blueprint cache, so repeat runs are much faster.
+
+### 1.0.4 Highlights
+
+- Super fast generation flow: file documentation runs in parallel, with the default parallel request limit set to `15`.
+- Smarter local CPU prep: DocuMint analyzes source structure, dependencies, symbols, imports, and prompt context locally before calling the provider.
+- First run builds cache, second run is fast: unchanged docs, project overview, and visual blueprints can be reused instead of regenerated.
+- Old cache wipe button: clear stale documentation and visual cache directly from the sidebar.
+- Cleaner generated HTML: default dark theme, improved layout width, fixed right-side gap, and better dark-mode readability.
+- Premium navigation: wider sidebar, VS Code-style project tree, folder/file icons, and `+` / `-` folder controls.
+- Better project flow: HTML content follows the same order as the Project Tree.
+- Visual upgrades: colored Module Scale Chart pie view, visual blueprint sections, architecture map, code workflow, and interactive dependency graph.
+- Cleaner output: empty "no data found" style sections are removed when useful data is not available.
+- UI Storyboard removed from generated HTML so the output stays source-grounded and avoids fake-looking UI mockups.
+- Better provider support: DeepSeek and custom OpenAI-compatible endpoints are supported.
 - Updated default model: new installs default to `gpt-5.4-nano`.
 - Cleaner VSIX output: generated docs are excluded from the packaged extension.
+
+### Estimated 100-Page Website Generation Time
+
+These are practical estimates, not fixed benchmarks. Actual time depends on provider speed, selected model, rate limits, project size, file changes, and network latency.
+
+| Scenario | Before 1.0.4 | 1.0.4 first run | 1.0.4 second run with cache |
+|---|---:|---:|---:|
+| Standard documentation | 45-90 minutes | 10-25 minutes | 1-5 minutes |
+| Comprehensive documentation | 2+ hours | 20-45 minutes | 2-8 minutes |
+
+### Design Improvements
+
+| Area | 1.0.4 improvement |
+|---|---|
+| Generated HTML | Default dark theme, cleaner spacing, stronger visual hierarchy |
+| Sidebar | Wider premium panel with project-tree style navigation |
+| Project Tree | Folder/file icons, better nesting, and `+` / `-` expand controls |
+| Visual Blueprints | Architecture map, workflow diagram, editable diagram export, and dependency graph |
+| Module Scale Chart | Colored pie chart with clearer module scale comparison |
+| Content Order | Documentation sections follow Project Tree order |
+| Cache Control | Clear Cache button for old doc and visual cache cleanup |
+| Output Cleanliness | Empty or low-value sections are hidden instead of shown as noise |
+
+### Visual Preview
+
+Interactive Dependency Graph:
+
+![DocuMint Interactive Dependency Graph](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/s3.png)
+
+Editable Diagram Export:
+
+![DocuMint Editable Diagram Export](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/s4.png)
 
 ## How It Works
 
@@ -83,8 +129,6 @@ Configured using `aiDocGenerator.aiProvider`:
 - `openrouter`
 - `deepseek`
 - `custom`
-- `ollama`
-- `lmstudio`
 
 Provider implementations live in `src/providers/`.
 
@@ -128,7 +172,7 @@ ext install wonderertech.documint
 ### VSIX
 
 ```bash
-code --install-extension documint-1.0.3.vsix
+code --install-extension documint-1.0.4.vsix
 ```
 
 ### Build from Source
@@ -156,6 +200,7 @@ Contributed commands:
 - `aiDocGenerator.generateDocumentation` - Generate documentation
 - `aiDocGenerator.cancelGeneration` - Cancel generation
 - `aiDocGenerator.configureApiKey` - Configure API key
+- `aiDocGenerator.clearCache` - Clear old documentation and visual cache
 
 Internal scope commands used by sidebar:
 
@@ -179,9 +224,6 @@ All settings are under `aiDocGenerator`.
 - `aiDocGenerator.concurrentRequests`
 - `aiDocGenerator.excludePatterns`
 - `aiDocGenerator.customApiEndpoint`
-- `aiDocGenerator.localModelUrl`
-- `aiDocGenerator.localModelName`
-- `aiDocGenerator.localModelTimeout`
 - `aiDocGenerator.generateUmlDiagrams`
 - `aiDocGenerator.enableDiffTracking`
 
@@ -203,8 +245,6 @@ All settings are under `aiDocGenerator`.
     "**/build/**",
     "**/.git/**"
   ],
-  "aiDocGenerator.localModelUrl": "http://localhost:11434",
-  "aiDocGenerator.localModelTimeout": 60000,
   "aiDocGenerator.generateUmlDiagrams": true,
   "aiDocGenerator.enableDiffTracking": true
 }
@@ -219,6 +259,33 @@ DeepSeek example:
 }
 ```
 
+Custom endpoint example:
+
+```json
+{
+  "aiDocGenerator.aiProvider": "custom",
+  "aiDocGenerator.model": "your-model-name",
+  "aiDocGenerator.customApiEndpoint": "https://api.example.com/v1/chat/completions"
+}
+```
+
+## Documentation Modes
+
+Use `aiDocGenerator.documentationDepth` to control how detailed the generated documentation should be.
+
+| Mode | Best For | What It Generates |
+|------|----------|-------------------|
+| `simple` | Fast plain-English understanding | Short purpose, key capabilities, and input/output summary for each file. |
+| `basic` | Lightweight developer reference | Module metadata, overview, exported API reference, quick start, and related modules. |
+| `standard` | Default production documentation | Full API reference, dependencies, usage examples, side effects, errors, configuration, security, concurrency, and testing notes when source evidence exists. |
+| `comprehensive` | Detailed enterprise documentation | Architecture/design notes, module boundaries, exhaustive API reference, data flow, configuration, errors/recovery, security, limitations, TODO/FIXME inventory, and performance/resource notes when source evidence exists. |
+
+Notes:
+
+- Project tree, architecture visuals, workflow diagrams, whiteboard-style diagrams, and interactive dependency graphs are available in generated HTML output across all modes.
+- `simple`, `basic`, and `standard` can batch small files for faster generation.
+- `comprehensive` can batch small files, but large files are not truncated. They are generated as full single-file requests, and files that exceed the provider context window are split into chunks before the output is merged.
+
 ## Output
 
 Generated output is written to a `docs/` directory in the workspace root:
@@ -229,11 +296,18 @@ Generated output is written to a `docs/` directory in the workspace root:
 The HTML renderer includes:
 
 - Sidebar TOC
+- Route-based folder/file navigation
 - Section anchors
 - Search
 - Theme toggle
 - Syntax highlighting
 - Mermaid rendering
+- Project tree
+- Architecture blueprint
+- Draw.io export for Mermaid diagrams
+- D2 source export
+- Excalidraw-style whiteboard diagram
+- Interactive dependency graph
 - Copy-to-clipboard for code blocks
 
 ## Project Structure
@@ -256,8 +330,6 @@ src/
 |   |-- anthropicProvider.ts
 |   |-- openrouterProvider.ts
 |   |-- deepseekProvider.ts
-|   |-- ollamaProvider.ts
-|   |-- lmstudioProvider.ts
 |   `-- customProvider.ts
 |-- services/
 |   |-- docGenerator.ts           # Orchestration + writing docs output
@@ -295,8 +367,8 @@ npx @vscode/vsce package
 ## Known Limitations
 
 - Static analysis is intentionally lightweight. It improves accuracy, but it is not a full compiler for every language.
-- Documentation quality still depends on the selected AI model and the source code that is available in the workspace.
-- Cloud providers receive selected source code after confirmation. Use Ollama, LM Studio, or a local custom endpoint when code must stay local.
+- Documentation quality still depends on the selected model and the source code that is available in the workspace.
+- Cloud providers receive selected source code after confirmation. Use a localhost custom endpoint when code must stay local.
 - `aiDocGenerator.concurrentRequests` defaults to `15` for faster generation. Lower it in settings if your cloud provider rate-limits requests.
 - Very large demo media can make the VSIX larger than the extension code itself.
 

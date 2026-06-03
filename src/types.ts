@@ -9,9 +9,7 @@ export interface DocGeneratorConfig {
     | "anthropic"
     | "openrouter"
     | "deepseek"
-    | "custom"
-    | "ollama"
-    | "lmstudio";
+    | "custom";
   model: string;
   documentationDepth: "simple" | "basic" | "standard" | "comprehensive";
   outputFormat: "markdown" | "html" | "both";
@@ -22,15 +20,12 @@ export interface DocGeneratorConfig {
   concurrentRequests: number;
   excludePatterns: string[];
   includePatterns: string[];
-  localModelUrl?: string;
-  localModelName?: string;
-  localModelTimeout?: number;
   generateUmlDiagrams?: boolean;
   enableDiffTracking?: boolean;
 }
 
 /**
- * Context provided to AI providers for generating documentation
+ * Context provided to providers for generating documentation
  */
 export interface DocumentationContext {
   code: string;

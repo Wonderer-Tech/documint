@@ -31,7 +31,7 @@ export interface RawMarkdownPromptParams {
 
 /**
  * Abstract base class providing shared prompt-building, chunking,
- * and generation orchestration for all AI providers.
+ * and generation orchestration for all providers.
  * Each concrete provider only needs to implement callApi() and getMaxContextWindow().
  */
 export abstract class BaseAIProvider implements AIProvider {
@@ -353,11 +353,9 @@ export abstract class BaseAIProvider implements AIProvider {
       `## Dependencies and Data Flow\n` +
       `Explain imports, internal calls, key data inputs, and returned or emitted outputs.\n\n` +
       `## Configuration and Environment\n` +
-      `List real configuration values, settings, environment variables, credentials, or endpoints used by this file. ` +
-      `If none are present, write "No configuration or environment inputs detected."\n\n` +
+      `Include only when this file uses real configuration values, settings, environment variables, credentials, or endpoints.\n\n` +
       `## Errors and Recovery\n` +
-      `Document only explicit thrown errors, caught errors, validation failures, API failures, or returned error states. ` +
-      `If none are present, write "No explicit error handling detected."\n\n` +
+      `Include only explicit thrown errors, caught errors, validation failures, API failures, or returned error states.\n\n` +
       `## Usage Examples\n\n` +
       `### Basic Usage\n` +
       `\`\`\`${lang}\n// Minimal real-world example using actual exported symbols\n\`\`\`\n\n` +

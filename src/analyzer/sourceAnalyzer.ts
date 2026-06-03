@@ -144,7 +144,7 @@ export class SourceAnalyzer {
       .join("\n");
 
     return [
-      "Verified project map generated before AI documentation:",
+      "Verified project map generated before documentation generation:",
       "",
       `Entry points: ${project.entryPoints.join(", ") || "none detected"}`,
       `External dependencies: ${

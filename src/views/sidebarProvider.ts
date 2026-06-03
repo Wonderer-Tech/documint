@@ -18,6 +18,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     settings: {
       provider: "openai",
       model: "gpt-5.4-nano",
+      customApiEndpoint: "",
       depth: "standard",
       outputFormat: "both",
     },
@@ -72,15 +73,26 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             );
             break;
 
+          case "clear-cache":
+            await vscode.commands.executeCommand("aiDocGenerator.clearCache");
+            break;
+
           case "configure-api-key":
-            await vscode.commands.executeCommand(
-              "aiDocGenerator.configureApiKey",
-              msg.provider || this._state.settings.provider,
+            this._post({ type: "show-api-key-form" });
+            break;
+
+          case "save-api-key":
+            await this._saveApiKeyFromPanel(
+              typeof msg.provider === "string"
+                ? msg.provider
+                : this._state.settings.provider,
+              typeof msg.apiKey === "string" ? msg.apiKey : "",
             );
             break;
 
           case "update-settings":
             this._state.settings = { ...this._state.settings, ...msg.payload };
+            await this._persistSettings(msg.payload);
             break;
         }
       } catch (e) {
@@ -152,6 +164,20 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
 
   private async _restoreState() {
+    const config = vscode.workspace.getConfiguration("aiDocGenerator");
+    this._state.settings = {
+      ...this._state.settings,
+      provider: config.get<string>("aiProvider") || this._state.settings.provider,
+      model: config.get<string>("model") || this._state.settings.model,
+      customApiEndpoint:
+        config.get<string>("customApiEndpoint") ||
+        this._state.settings.customApiEndpoint,
+      depth:
+        config.get<string>("documentationDepth") || this._state.settings.depth,
+      outputFormat:
+        config.get<string>("outputFormat") || this._state.settings.outputFormat,
+    };
+
     // Re-validate API key from storage
     try {
       const key = await this._secretManager.getApiKey(
@@ -163,6 +189,74 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     this._post({ type: "restore-state", state: this._state });
+  }
+
+  private async _persistSettings(payload: Record<string, unknown>) {
+    const config = vscode.workspace.getConfiguration("aiDocGenerator");
+    const updates: Array<[string, unknown]> = [];
+
+    if (typeof payload.provider === "string") {
+      updates.push(["aiProvider", payload.provider]);
+    }
+    if (typeof payload.model === "string") {
+      updates.push(["model", payload.model]);
+    }
+    if (typeof payload.customApiEndpoint === "string") {
+      updates.push(["customApiEndpoint", payload.customApiEndpoint.trim()]);
+    }
+    if (typeof payload.depth === "string") {
+      updates.push(["documentationDepth", payload.depth]);
+    }
+    if (typeof payload.outputFormat === "string") {
+      updates.push(["outputFormat", payload.outputFormat]);
+    }
+
+    for (const [key, value] of updates) {
+      await config.update(key, value, vscode.ConfigurationTarget.Workspace);
+    }
+  }
+
+  private async _saveApiKeyFromPanel(provider: string, apiKey: string) {
+    const trimmedKey = apiKey.trim();
+    if (!trimmedKey) {
+      this._post({
+        type: "api-key-save-result",
+        ok: false,
+        message: "API key cannot be empty.",
+      });
+      return;
+    }
+
+    const isValid = await this._secretManager.validateApiKey(
+      provider,
+      trimmedKey,
+    );
+    if (!isValid) {
+      this._post({
+        type: "api-key-save-result",
+        ok: false,
+        message: `Invalid API key format for ${provider}.`,
+      });
+      return;
+    }
+
+    const stored = await this._secretManager.storeApiKey(provider, trimmedKey);
+    if (!stored) {
+      this._post({
+        type: "api-key-save-result",
+        ok: false,
+        message: `Failed to store API key for ${provider}.`,
+      });
+      return;
+    }
+
+    this._state.apiKeyConfigured = true;
+    this._post({ type: "api-key-status", configured: true });
+    this._post({
+      type: "api-key-save-result",
+      ok: true,
+      message: `API key for ${provider} saved.`,
+    });
   }
 
   // ── HTML ───────────────────────────────────────────────────────────────────
@@ -277,7 +371,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     display: block; font-size: 11px; color: var(--fg-muted);
     margin-bottom: 4px; font-weight: 500;
   }
-  select, input[type="text"], input[type="number"] {
+  select, input[type="text"], input[type="number"], input[type="url"], input[type="password"] {
     width: 100%; padding: 5px 8px;
     background: var(--input-bg); color: var(--input-fg);
     border: 1px solid var(--input-border);
@@ -287,6 +381,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
   select:focus, input:focus { border-color: var(--input-focus); }
   select { cursor: pointer; }
+  .field-help {
+    margin-top: 4px;
+    color: var(--fg-muted);
+    font-size: 10px;
+    line-height: 1.4;
+  }
+  .hidden { display: none !important; }
 
   .input-row { display: flex; gap: 6px; }
   .input-row input, .input-row select { flex: 1; }
@@ -301,6 +402,32 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   .icon-btn:hover { border-color: var(--input-focus); color: var(--fg); }
   .icon-btn.spinning svg { animation: spin .7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .api-key-panel {
+    display: none;
+    margin-top: 8px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: rgba(255,255,255,.035);
+  }
+  .api-key-panel.visible { display: block; }
+  .api-key-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .api-key-actions .btn { margin: 0; padding: 6px 8px; }
+  .api-key-feedback {
+    display: none;
+    margin-top: 7px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .api-key-feedback.visible { display: block; }
+  .api-key-feedback.ok { color: var(--success); }
+  .api-key-feedback.error { color: var(--error); }
 
 
   /* ── Buttons ── */
@@ -421,12 +548,24 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     </svg>
     <span id="authText">API Key not configured</span>
   </div>
-  <button class="btn btn-secondary" id="configureBtn" style="font-size:11px;padding:5px 10px;">
+  <button class="btn btn-primary" id="configureBtn" type="button">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
     </svg>
     Configure API Key
   </button>
+  <div class="api-key-panel" id="apiKeyPanel">
+    <div class="field">
+      <label class="field-label" for="apiKeyInput">API Key</label>
+      <input type="password" id="apiKeyInput" placeholder="Paste API key for selected provider" autocomplete="off">
+      <div class="field-help">Stored securely in VS Code Secret Storage.</div>
+    </div>
+    <div class="api-key-actions">
+      <button class="btn btn-primary" id="saveApiKeyBtn" type="button">Save Key</button>
+      <button class="btn btn-secondary" id="cancelApiKeyBtn" type="button">Cancel</button>
+    </div>
+    <div class="api-key-feedback" id="apiKeyFeedback"></div>
+  </div>
 </div>
 
 <!-- Provider & Model -->
@@ -437,14 +576,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   </div>
 
   <div class="field">
-    <label class="field-label">AI Provider</label>
+    <label class="field-label">Provider</label>
     <select id="provider">
       <option value="openai">OpenAI</option>
       <option value="anthropic">Anthropic</option>
       <option value="openrouter">OpenRouter</option>
       <option value="deepseek">DeepSeek</option>
-      <option value="ollama">Ollama (Local)</option>
-      <option value="lmstudio">LM Studio (Local)</option>
       <option value="custom">Custom Endpoint</option>
     </select>
   </div>
@@ -452,6 +589,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   <div class="field">
     <label class="field-label">Model</label>
     <input type="text" id="model" value="gpt-5.4-nano" placeholder="e.g. gpt-5.4-nano, gpt-4o, claude-3-5-sonnet-20241022">
+  </div>
+
+  <div class="field hidden" id="customEndpointField">
+    <label class="field-label">Custom Endpoint URL</label>
+    <input type="url" id="customApiEndpoint" placeholder="https://api.example.com/v1/chat/completions">
+    <div class="field-help">Use an OpenAI-compatible chat completions URL.</div>
   </div>
 </div>
 
@@ -494,6 +637,16 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         <rect x="6" y="6" width="12" height="12"/>
       </svg>
       Cancel
+    </button>
+    <button class="btn btn-secondary" id="clearCacheBtn" type="button">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 6h18"/>
+        <path d="M8 6V4h8v2"/>
+        <path d="M6 6l1 16h10l1-16"/>
+        <path d="M10 11v6"/>
+        <path d="M14 11v6"/>
+      </svg>
+      Clear Cache
     </button>
   </div>
 
@@ -550,8 +703,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   var authIcon     = $('authIcon');
   var providerSel  = $('provider');
   var modelInput   = $('model');
+  var customEndpointField = $('customEndpointField');
+  var customEndpointInput = $('customApiEndpoint');
   var generateBtn  = $('generateBtn');
   var cancelBtn    = $('cancelBtn');
+  var clearCacheBtn = $('clearCacheBtn');
   var configureBtn = $('configureBtn');
   var progressSec  = $('progressSection');
   var progressFill = $('progressFill');
@@ -562,6 +718,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   var logSection   = $('logSection');
   var logContainer = $('logContainer');
   var logClear     = $('logClear');
+  var apiKeyPanel  = $('apiKeyPanel');
+  var apiKeyInput  = $('apiKeyInput');
+  var saveApiKeyBtn = $('saveApiKeyBtn');
+  var cancelApiKeyBtn = $('cancelApiKeyBtn');
+  var apiKeyFeedback = $('apiKeyFeedback');
 
   // ── API key status ─────────────────────────────────────────────────────────
   function setApiKeyStatus(configured) {
@@ -576,6 +737,24 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
   }
 
+  function showApiKeyFeedback(message, ok) {
+    apiKeyFeedback.textContent = message || '';
+    apiKeyFeedback.className = 'api-key-feedback visible ' + (ok ? 'ok' : 'error');
+  }
+
+  function setApiKeyPanelVisible(visible) {
+    apiKeyPanel.classList.toggle('visible', visible);
+    if (visible) {
+      apiKeyFeedback.className = 'api-key-feedback';
+      apiKeyFeedback.textContent = '';
+      setTimeout(function() { apiKeyInput.focus(); }, 0);
+    } else {
+      apiKeyInput.value = '';
+      apiKeyFeedback.className = 'api-key-feedback';
+      apiKeyFeedback.textContent = '';
+    }
+  }
+
   // ── Status bar ─────────────────────────────────────────────────────────────
   function setStatus(mode, text) {
     statusDot.className = 'status-dot' + (mode ? ' ' + mode : '');
@@ -587,6 +766,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     state.isGenerating = on;
     generateBtn.disabled = on;
     cancelBtn.disabled = !on;
+    clearCacheBtn.disabled = on;
     progressSec.classList.toggle('visible', on);
     if (on) {
       setStatus('running', 'Generating…');
@@ -617,28 +797,66 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  function getCustomEndpoint() {
+    return customEndpointInput ? customEndpointInput.value.trim() : '';
+  }
+
+  function updateCustomEndpointVisibility() {
+    if (!customEndpointField) return;
+    customEndpointField.classList.toggle('hidden', providerSel.value !== 'custom');
+  }
+
+  function validateCustomEndpointForRun() {
+    if (providerSel.value !== 'custom') return true;
+
+    var endpoint = getCustomEndpoint();
+    if (!endpoint) {
+      addLog('Custom Endpoint URL is required for the custom provider.', 'error');
+      setStatus('error', 'Missing custom endpoint');
+      return false;
+    }
+
+    try {
+      var parsed = new URL(endpoint);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        throw new Error('Invalid protocol');
+      }
+    } catch (err) {
+      addLog('Custom Endpoint URL must be a valid http or https URL.', 'error');
+      setStatus('error', 'Invalid custom endpoint');
+      return false;
+    }
+
+    return true;
+  }
+
   // ── Event listeners ────────────────────────────────────────────────────────
 
   providerSel.addEventListener('change', function() {
     var providerDefaults = {
-      deepseek: 'deepseek-v4-flash',
-      ollama: 'llama3',
-      lmstudio: 'local-model'
+      deepseek: 'deepseek-v4-flash'
     };
     if (providerDefaults[providerSel.value] && (!modelInput.value.trim() || modelInput.value.trim() === 'gpt-5.4-nano' || modelInput.value.trim() === 'gpt-4o')) {
       modelInput.value = providerDefaults[providerSel.value];
     }
-    vscode.postMessage({ type: 'update-settings', payload: { provider: providerSel.value, model: modelInput.value.trim() } });
+    updateCustomEndpointVisibility();
+    vscode.postMessage({ type: 'update-settings', payload: { provider: providerSel.value, model: modelInput.value.trim(), customApiEndpoint: getCustomEndpoint() } });
   });
 
   modelInput.addEventListener('change', function() {
     vscode.postMessage({ type: 'update-settings', payload: { model: modelInput.value.trim() } });
   });
 
+  customEndpointInput.addEventListener('change', function() {
+    vscode.postMessage({ type: 'update-settings', payload: { customApiEndpoint: getCustomEndpoint() } });
+  });
+
   generateBtn.addEventListener('click', function() {
+    if (!validateCustomEndpointForRun()) return;
     var payload = {
       provider: providerSel.value,
       model: modelInput.value.trim(),
+      customApiEndpoint: getCustomEndpoint(),
       depth: $('depth').value,
       outputFormat: $('outputFormat').value,
       scope: 'workspace',
@@ -651,8 +869,38 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     vscode.postMessage({ type: 'cancel-generation' });
   });
 
+  clearCacheBtn.addEventListener('click', function() {
+    vscode.postMessage({ type: 'clear-cache' });
+  });
+
   configureBtn.addEventListener('click', function() {
-    vscode.postMessage({ type: 'configure-api-key', provider: providerSel.value });
+    setApiKeyPanelVisible(!apiKeyPanel.classList.contains('visible'));
+  });
+
+  saveApiKeyBtn.addEventListener('click', function() {
+    var apiKey = apiKeyInput.value.trim();
+    if (!apiKey) {
+      showApiKeyFeedback('API key cannot be empty.', false);
+      return;
+    }
+    saveApiKeyBtn.disabled = true;
+    showApiKeyFeedback('Saving key...', true);
+    vscode.postMessage({ type: 'save-api-key', provider: providerSel.value, apiKey: apiKey });
+  });
+
+  cancelApiKeyBtn.addEventListener('click', function() {
+    setApiKeyPanelVisible(false);
+  });
+
+  apiKeyInput.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      saveApiKeyBtn.click();
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setApiKeyPanelVisible(false);
+    }
   });
 
   document.querySelectorAll('.scope-btn').forEach(function(btn) {
@@ -661,9 +909,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       var payload = {
         provider: providerSel.value,
         model: modelInput.value.trim(),
+        customApiEndpoint: getCustomEndpoint(),
         depth: $('depth').value,
         outputFormat: $('outputFormat').value,
       };
+      if (!validateCustomEndpointForRun()) return;
       if (scope === 'current-file') {
         // Open native file picker in extension host — setGenerating called after user confirms
         vscode.postMessage({ type: 'pick-file', payload: payload });
@@ -702,8 +952,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         if (s.settings) {
           if (s.settings.provider) providerSel.value = s.settings.provider;
           if (s.settings.model) modelInput.value = s.settings.model;
+          if (s.settings.customApiEndpoint) customEndpointInput.value = s.settings.customApiEndpoint;
           if (s.settings.depth) $('depth').value = s.settings.depth;
           if (s.settings.outputFormat) $('outputFormat').value = s.settings.outputFormat;
+          updateCustomEndpointVisibility();
         }
         if (s.isGenerating) setGenerating(true);
         if (s.logs && s.logs.length) {
@@ -713,6 +965,19 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
       case 'api-key-status':
         setApiKeyStatus(msg.configured);
+        break;
+
+      case 'show-api-key-form':
+        setApiKeyPanelVisible(true);
+        break;
+
+      case 'api-key-save-result':
+        saveApiKeyBtn.disabled = false;
+        showApiKeyFeedback(msg.message || (msg.ok ? 'API key saved.' : 'Could not save API key.'), !!msg.ok);
+        if (msg.ok) {
+          apiKeyInput.value = '';
+          setTimeout(function() { setApiKeyPanelVisible(false); }, 900);
+        }
         break;
 
       case 'progress':

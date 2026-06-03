@@ -33,17 +33,10 @@ const FALLBACK_CONTEXT_WINDOWS: Record<string, number> = {
   "claude-3-haiku-20240307": 200000,
   "claude-2.1": 200000,
   "claude-2.0": 100000,
-  // Ollama / local common models
-  "llama3": 8192,
-  "llama3.1": 131072,
-  "llama3.2": 131072,
-  "mistral": 32768,
-  "mixtral": 32768,
-  "codellama": 16384,
-  "gemma2": 8192,
-  "phi3": 4096,
-  "qwen2": 32768,
-  "deepseek-coder": 16384,
+  // DeepSeek
+  "deepseek-v4-flash": 128000,
+  "deepseek-chat": 64000,
+  "deepseek-reasoner": 64000,
 };
 
 export class ModelMetadataService {
@@ -91,12 +84,6 @@ export class ModelMetadataService {
           break;
         case "openrouter":
           result = await this.fetchOpenRouter(model, apiKey);
-          break;
-        case "ollama":
-          result = await this.fetchOllama(model);
-          break;
-        case "lmstudio":
-          result = await this.fetchLMStudio(model);
           break;
         default:
           result = this.estimateFallback(model);
@@ -195,50 +182,6 @@ export class ModelMetadataService {
     return this.estimateFallback(model);
   }
 
-  private async fetchOllama(model: string): Promise<ModelMetadata> {
-    const baseUrl =
-      vscode.workspace
-        .getConfiguration("aiDocGenerator")
-        .get<string>("localModelUrl") || "http://localhost:11434";
-    try {
-      const res = await axios.post(
-        `${baseUrl}/api/show`,
-        { name: model },
-        { timeout: 6000 },
-      );
-      // Ollama returns model_info with llama.context_length for GGUF models
-      const cw =
-        res.data?.model_info?.["llama.context_length"] ??
-        res.data?.parameters?.num_ctx ??
-        res.data?.template_context_length;
-      if (typeof cw === "number" && cw > 0) {
-        return { contextWindow: cw, source: "api" };
-      }
-    } catch {
-      // fall through
-    }
-    return this.estimateFallback(model);
-  }
-
-  private async fetchLMStudio(model: string): Promise<ModelMetadata> {
-    const baseUrl =
-      vscode.workspace
-        .getConfiguration("aiDocGenerator")
-        .get<string>("localModelUrl") || "http://localhost:1234";
-    try {
-      const res = await axios.get(`${baseUrl}/v1/models`, { timeout: 6000 });
-      const entry = res.data?.data?.find(
-        (m: { id: string; context_length?: number }) => m.id === model,
-      );
-      if (entry?.context_length) {
-        return { contextWindow: entry.context_length, source: "api" };
-      }
-    } catch {
-      // fall through
-    }
-    return this.estimateFallback(model);
-  }
-
   // ── Fallback logic ─────────────────────────────────────────────────────────
 
   private estimateFallback(model: string): ModelMetadata {
@@ -259,7 +202,7 @@ export class ModelMetadataService {
     // Pattern-based inference for unknown model names
     if (m.includes("200k") || m.includes("claude")) return { contextWindow: 200000, source: "estimated" };
     if (m.includes("128k") || m.includes("gpt-5") || m.includes("gpt-4o") || m.includes("o1") || m.includes("o3")) return { contextWindow: 128000, source: "estimated" };
-    if (m.includes("32k") || m.includes("mistral") || m.includes("mixtral")) return { contextWindow: 32768, source: "estimated" };
+    if (m.includes("32k")) return { contextWindow: 32768, source: "estimated" };
     if (m.includes("16k")) return { contextWindow: 16385, source: "estimated" };
     if (m.includes("turbo")) return { contextWindow: 128000, source: "estimated" };
 

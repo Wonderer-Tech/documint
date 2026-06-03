@@ -1,8 +1,8 @@
 {
   "name": "documint",
-  "displayName": "DocuMint — AI Code Documentation Generator",
-  "description": "Generate clean code documentation in one click using AI. Create Markdown docs, HTML docs, UML diagrams, architecture overviews, docstrings, and usage examples directly inside VS Code.",
-  "version": "1.0.3",
+  "displayName": "DocuMint — Code Documentation Generator",
+  "description": "Generate clean code documentation in one click. Create Markdown docs, HTML docs, UML diagrams, architecture overviews, docstrings, and usage examples directly inside VS Code.",
+  "version": "1.0.4",
   "publisher": "wonderertech",
   "icon": "resources/icon.png",
   "license": "MIT",
@@ -21,8 +21,6 @@
     "vscode documentation",
     "openai",
     "anthropic",
-    "ollama",
-    "lm studio",
     "uml",
     "markdown",
     "developer tools",
@@ -51,6 +49,7 @@
   "activationEvents": [
     "onView:aiDocGenerator.sidebar",
     "onCommand:aiDocGenerator.generateDocumentation",
+    "onCommand:aiDocGenerator.clearCache",
     "onCommand:aiDocGenerator.pickAndGenerateFile",
     "onCommand:aiDocGenerator.pickAndGenerateFolder"
   ],
@@ -66,6 +65,11 @@
         "command": "aiDocGenerator.cancelGeneration",
         "title": "Cancel Generation",
         "icon": "$(stop)"
+      },
+      {
+        "command": "aiDocGenerator.clearCache",
+        "title": "Clear Documentation Cache",
+        "icon": "$(trash)"
       },
       {
         "command": "aiDocGenerator.configureApiKey",
@@ -101,12 +105,10 @@
             "anthropic",
             "openrouter",
             "deepseek",
-            "custom",
-            "ollama",
-            "lmstudio"
+            "custom"
           ],
           "default": "openai",
-          "description": "AI provider for documentation generation"
+          "description": "Provider for documentation generation"
         },
         "aiDocGenerator.model": {
           "type": "string",
@@ -186,21 +188,7 @@
         },
         "aiDocGenerator.customApiEndpoint": {
           "type": "string",
-          "description": "Custom API endpoint URL"
-        },
-        "aiDocGenerator.localModelUrl": {
-          "type": "string",
-          "default": "http://localhost:11434",
-          "description": "URL for local AI model server"
-        },
-        "aiDocGenerator.localModelName": {
-          "type": "string",
-          "description": "Name of the local model to use"
-        },
-        "aiDocGenerator.localModelTimeout": {
-          "type": "number",
-          "default": 60000,
-          "description": "Request timeout for local model in milliseconds"
+          "description": "Custom OpenAI-compatible chat completions URL, for example https://api.example.com/v1/chat/completions"
         },
         "aiDocGenerator.generateUmlDiagrams": {
           "type": "boolean",

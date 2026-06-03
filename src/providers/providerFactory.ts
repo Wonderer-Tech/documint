@@ -3,8 +3,6 @@ import { BaseAIProvider } from "./aiProvider";
 import { OpenAIProvider } from "./openaiProvider";
 import { AnthropicProvider } from "./anthropicProvider";
 import { OpenRouterProvider } from "./openrouterProvider";
-import { OllamaProvider } from "./ollamaProvider";
-import { LMStudioProvider } from "./lmstudioProvider";
 import { DeepSeekProvider } from "./deepseekProvider";
 import { CustomProvider } from "./customProvider";
 
@@ -13,12 +11,10 @@ export type ProviderName =
   | "anthropic"
   | "openrouter"
   | "deepseek"
-  | "ollama"
-  | "lmstudio"
   | "custom";
 
 /**
- * Creates the correct AI provider instance for the given provider name.
+ * Creates the correct provider instance for the given provider name.
  * Falls back to OpenAI for unknown values.
  */
 export class ProviderFactory {
@@ -33,10 +29,6 @@ export class ProviderFactory {
         return new OpenRouterProvider(context);
       case "deepseek":
         return new DeepSeekProvider(context);
-      case "ollama":
-        return new OllamaProvider(context);
-      case "lmstudio":
-        return new LMStudioProvider(context);
       case "custom":
         return new CustomProvider(context);
       case "openai":

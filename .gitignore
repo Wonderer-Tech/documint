@@ -6,6 +6,7 @@ out/
 dist/
 *.vsix
 .vscode-test/
+.playwright-mcp/
 .vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -65,6 +66,7 @@ docs/assets/
 docs/_site/
 docs/.jekyll-cache/
 docs/.documint-cache.json
+docs/.documint-visual-cache.json
 
 # Temporary files
 tmp/
