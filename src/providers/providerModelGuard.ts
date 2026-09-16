@@ -1,4 +1,8 @@
-export type GuardedProviderName = "anthropic" | "deepseek" | "openrouter";
+export type GuardedProviderName =
+  | "openai"
+  | "anthropic"
+  | "deepseek"
+  | "openrouter";
 
 /**
  * Prevents a model selected for one provider from being sent unchanged to
@@ -18,6 +22,10 @@ export function normalizeProviderModel(
 
   const model = requested.toLowerCase();
 
+  if (provider === "openai") {
+    return isClearlyForeignToOpenAI(model) ? fallbackModel : requested;
+  }
+
   if (provider === "anthropic") {
     return isClearlyForeignToAnthropic(model) ? fallbackModel : requested;
   }
@@ -27,6 +35,14 @@ export function normalizeProviderModel(
   }
 
   return isClearlyForeignToOpenRouter(model) ? fallbackModel : requested;
+}
+
+function isClearlyForeignToOpenAI(model: string): boolean {
+  return (
+    model.startsWith("claude-") ||
+    model.startsWith("deepseek-") ||
+    model.includes("/")
+  );
 }
 
 function isClearlyForeignToAnthropic(model: string): boolean {
