@@ -18,3 +18,4 @@ import "./providerHttpError.test";
 import "./openRouterCapabilities.test";
 import "./providerNamePolicy.test";
 import "./manifestMetadata.test";
+import "./sourceAnalyzer.test";
