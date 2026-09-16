@@ -1,10 +1,11 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+    paths:
+      - ".github/ci-trigger"
 
 permissions:
   contents: read
