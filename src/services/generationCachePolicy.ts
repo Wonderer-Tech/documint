@@ -1,27 +1,12 @@
 import * as vscode from "vscode";
+import {
+  buildGenerationCacheIdentity,
+  GenerationCacheIdentityInput,
+  GenerationCacheSettings,
+} from "./generationCacheIdentity";
 
-const CACHE_POLICY_VERSION = "generation-cache-policy-v1";
 const MARKER_FILE = ".documint-generation-cache-key.json";
 const DOCUMENTATION_CACHE_FILE = ".documint-cache.json";
-
-export interface GenerationCacheIdentityInput {
-  providerName: string;
-  model?: string;
-  depth?: string;
-  contextWindow?: number;
-  customApiEndpoint?: string;
-}
-
-interface GenerationCacheIdentity {
-  version: string;
-  provider: string;
-  model: string;
-  depth: string;
-  maxTokens: number;
-  temperature: number;
-  contextWindow: number | null;
-  customApiEndpoint: string;
-}
 
 /**
  * Prevents documentation generated under materially different AI settings from
@@ -39,7 +24,14 @@ export async function ensureGenerationCacheCompatibility(
   const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, "docs");
   const markerUri = vscode.Uri.joinPath(docsFolder, MARKER_FILE);
   const cacheUri = vscode.Uri.joinPath(docsFolder, DOCUMENTATION_CACHE_FILE);
-  const identity = buildGenerationCacheIdentity(configuration, input);
+  const settings: GenerationCacheSettings = {
+    model: configuration.get<string>("model"),
+    documentationDepth: configuration.get<string>("documentationDepth"),
+    maxTokens: configuration.get<number>("maxTokens"),
+    temperature: configuration.get<number>("temperature"),
+    customApiEndpoint: configuration.get<string>("customApiEndpoint"),
+  };
+  const identity = buildGenerationCacheIdentity(settings, input);
   const serialized = JSON.stringify(identity, null, 2);
 
   let previous: string | undefined;
@@ -69,62 +61,4 @@ export async function ensureGenerationCacheCompatibility(
     Buffer.from(serialized, "utf-8"),
   );
   return true;
-}
-
-function buildGenerationCacheIdentity(
-  configuration: vscode.WorkspaceConfiguration,
-  input: GenerationCacheIdentityInput,
-): GenerationCacheIdentity {
-  const provider = input.providerName.trim().toLowerCase() || "openai";
-  const model =
-    input.model?.trim() || configuration.get<string>("model")?.trim() || "";
-  const depth =
-    input.depth?.trim() ||
-    configuration.get<string>("documentationDepth")?.trim() ||
-    "standard";
-  const maxTokens = normalizePositiveInteger(
-    configuration.get<number>("maxTokens"),
-    4000,
-  );
-  const temperature = normalizeFiniteNumber(
-    configuration.get<number>("temperature"),
-    0.3,
-  );
-  const contextWindow = Number.isFinite(input.contextWindow) &&
-    (input.contextWindow ?? 0) > 0
-    ? Math.floor(input.contextWindow!)
-    : null;
-  const customApiEndpoint =
-    provider === "custom"
-      ? input.customApiEndpoint?.trim() ||
-        configuration.get<string>("customApiEndpoint")?.trim() ||
-        ""
-      : "";
-
-  return {
-    version: CACHE_POLICY_VERSION,
-    provider,
-    model,
-    depth,
-    maxTokens,
-    temperature,
-    contextWindow,
-    customApiEndpoint,
-  };
-}
-
-function normalizePositiveInteger(
-  value: number | undefined,
-  fallback: number,
-): number {
-  return Number.isFinite(value) && (value ?? 0) > 0
-    ? Math.floor(value!)
-    : fallback;
-}
-
-function normalizeFiniteNumber(
-  value: number | undefined,
-  fallback: number,
-): number {
-  return Number.isFinite(value) ? value! : fallback;
 }
