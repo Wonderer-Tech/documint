@@ -10,6 +10,7 @@ import { normalizeProviderModel } from "./providerModelGuard";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 import { runProviderRequestWithRetry } from "./providerRetry";
+import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
 
 /**
  * OpenRouter provider — routes requests to 100+ models via a single API key.
@@ -74,6 +75,7 @@ export class OpenRouterProvider extends BaseAIProvider {
               "HTTP-Referer": "https://github.com/Wonderer-Tech/documint",
               "X-Title": "Documint",
             },
+            timeout: CLOUD_PROVIDER_REQUEST_TIMEOUT_MS,
             signal: params.signal,
           },
         ),
