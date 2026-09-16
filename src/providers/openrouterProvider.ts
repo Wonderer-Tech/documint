@@ -8,6 +8,7 @@ import {
 import { DocumentationContext, DocumentationResult } from "../types";
 import { normalizeProviderModel } from "./providerModelGuard";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
+import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 
 /**
  * OpenRouter provider — routes requests to 100+ models via a single API key.
@@ -74,9 +75,9 @@ export class OpenRouterProvider extends BaseAIProvider {
       },
     );
 
+    const parsed = parseOpenAICompatibleResponse(response.data, "OpenRouter");
     return {
-      documentation: response.data.choices[0].message.content,
-      tokensUsed: response.data.usage?.total_tokens ?? 0,
+      ...parsed,
       model: params.model,
     };
   }
