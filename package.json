@@ -154,7 +154,9 @@
         },
         "aiDocGenerator.maxTokens": {
           "type": "number",
-          "default": 4000
+          "minimum": 1,
+          "default": 4000,
+          "description": "Maximum output tokens requested per provider response. Provider and context-window safety limits can reduce this further."
         },
         "aiDocGenerator.temperature": {
           "type": "number",
