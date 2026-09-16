@@ -25,7 +25,16 @@ const FALLBACK_CONTEXT_WINDOWS: Record<string, number> = {
   "o1-mini": 128000,
   "o3": 200000,
   "o3-mini": 200000,
-  // Anthropic
+  // Anthropic current models
+  "claude-sonnet-5": 1000000,
+  "claude-opus-5": 1000000,
+  "claude-sonnet-4-6": 1000000,
+  "claude-opus-4-8": 1000000,
+  "claude-opus-4-7": 1000000,
+  "claude-opus-4-6": 1000000,
+  "claude-sonnet-4-5-20250929": 200000,
+  "claude-haiku-4-5-20251001": 200000,
+  // Older Anthropic IDs retained for explicit legacy selections
   "claude-3-5-sonnet-20241022": 200000,
   "claude-3-5-haiku-20241022": 200000,
   "claude-3-opus-20240229": 200000,
@@ -33,7 +42,7 @@ const FALLBACK_CONTEXT_WINDOWS: Record<string, number> = {
   "claude-3-haiku-20240307": 200000,
   "claude-2.1": 200000,
   "claude-2.0": 100000,
-  // DeepSeek — V4/V4.1 official API models use a 1M context window.
+  // DeepSeek
   "deepseek-flash": 1000000,
   "deepseek-v4-flash": 1000000,
   "deepseek-v4-pro": 1000000,
@@ -217,20 +226,27 @@ export class ModelMetadataService {
   private estimateFallback(model: string): ModelMetadata {
     const m = model.toLowerCase();
 
-    // Exact match first
     if (FALLBACK_CONTEXT_WINDOWS[m]) {
       return { contextWindow: FALLBACK_CONTEXT_WINDOWS[m], source: "estimated" };
     }
 
-    // Partial match — check if model name contains a known key
     for (const [key, tokens] of Object.entries(FALLBACK_CONTEXT_WINDOWS)) {
       if (m.includes(key)) {
         return { contextWindow: tokens, source: "estimated" };
       }
     }
 
-    // Pattern-based inference for unknown model names
     if (m.includes("deepseek-v4") || m.includes("deepseek-flash")) {
+      return { contextWindow: 1000000, source: "estimated" };
+    }
+    if (
+      m.includes("claude-sonnet-5") ||
+      m.includes("claude-opus-5") ||
+      m.includes("claude-sonnet-4-6") ||
+      m.includes("claude-opus-4-8") ||
+      m.includes("claude-opus-4-7") ||
+      m.includes("claude-opus-4-6")
+    ) {
       return { contextWindow: 1000000, source: "estimated" };
     }
     if (m.includes("200k") || m.includes("claude")) {
@@ -255,7 +271,6 @@ export class ModelMetadataService {
       return { contextWindow: 128000, source: "estimated" };
     }
 
-    // Safe conservative default
     return { contextWindow: 8192, source: "estimated" };
   }
 }
