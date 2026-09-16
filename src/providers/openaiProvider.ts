@@ -6,6 +6,7 @@ import { normalizeProviderModel } from "./providerModelGuard";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 import { runProviderRequestWithRetry } from "./providerRetry";
+import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
 
 /**
  * Model aliases map known shorthand names to their full OpenAI model IDs.
@@ -239,6 +240,7 @@ export class OpenAIProvider extends BaseAIProvider {
               Authorization: `Bearer ${params.apiKey}`,
               "Content-Type": "application/json",
             },
+            timeout: CLOUD_PROVIDER_REQUEST_TIMEOUT_MS,
             signal: params.signal,
           }),
         { signal: params.signal },
