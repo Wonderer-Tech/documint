@@ -29,7 +29,7 @@ export class ModelMetadataService {
    * Fetches the context window for a given provider + model.
    * Exact known current/legacy models resolve locally first. Unknown models may
    * query provider metadata APIs before falling back to conservative inference.
-   * Concurrent callers for the same provider/model share one in-flight lookup.
+   * Concurrent callers for the same provider/model/key revision share one lookup.
    */
   async fetchContextWindow(
     provider: string,
@@ -41,20 +41,20 @@ export class ModelMetadataService {
       return { contextWindow: 8192, source: "estimated" };
     }
 
-    const cacheKey = `${normalizedProvider}:${normalizedModel}`;
-    const cached = this.cache.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
-
     const known = getKnownModelContext(normalizedModel);
     if (known) {
-      const knownResult: ModelMetadata = {
+      return {
         contextWindow: known.contextWindow,
         source: "estimated",
       };
-      this.cache.set(cacheKey, knownResult);
-      return knownResult;
+    }
+
+    const credentialRevision =
+      SecretStorageManager.getCredentialRevision(normalizedProvider);
+    const cacheKey = `${normalizedProvider}:${credentialRevision}:${normalizedModel}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached) {
+      return cached;
     }
 
     const inFlight = this.pending.get(cacheKey);
@@ -75,7 +75,7 @@ export class ModelMetadataService {
     return lookup;
   }
 
-  /** Clears cached and in-flight metadata state — call when provider/key changes. */
+  /** Clears cached and in-flight metadata state explicitly when required. */
   clearCache(): void {
     this.cache.clear();
     this.pending.clear();
