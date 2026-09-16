@@ -18,6 +18,9 @@ export interface ProviderFailureClassification {
   retryable: boolean;
 }
 
+const CANCEL_CODES = new Set(["ERR_CANCELED", "ABORT_ERR"]);
+const CANCEL_NAMES = new Set(["aborterror", "cancelederror", "cancellederror"]);
+
 const RETRYABLE_NETWORK_CODES = new Set([
   "ECONNABORTED",
   "ECONNRESET",
@@ -25,7 +28,11 @@ const RETRYABLE_NETWORK_CODES = new Set([
   "ENETDOWN",
   "ENETUNREACH",
   "ENOTFOUND",
+  "ESOCKETTIMEDOUT",
   "ETIMEDOUT",
+  "UND_ERR_CONNECT_TIMEOUT",
+  "UND_ERR_HEADERS_TIMEOUT",
+  "UND_ERR_BODY_TIMEOUT",
 ]);
 
 /**
@@ -39,7 +46,7 @@ export function classifyProviderFailure(
   const name = failure.name?.trim().toLowerCase();
   const code = failure.code?.trim().toUpperCase();
 
-  if (name === "aborterror" || code === "ERR_CANCELED") {
+  if ((name && CANCEL_NAMES.has(name)) || (code && CANCEL_CODES.has(code))) {
     return { kind: "cancelled", retryable: false };
   }
 
