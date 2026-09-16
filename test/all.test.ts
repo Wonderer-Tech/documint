@@ -7,3 +7,4 @@ import "./generationCacheIdentity.test";
 import "./outputSanitizer.test";
 import "./scannerPolicy.test";
 import "./openAICompatibleResponse.test";
+import "./documentationValidatorEvidence.test";
