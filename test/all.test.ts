@@ -10,3 +10,4 @@ import "./openAICompatibleResponse.test";
 import "./documentationValidatorEvidence.test";
 import "./modelMetadataCacheKey.test";
 import "./customEndpointPolicy.test";
+import "./providerErrorPolicy.test";
