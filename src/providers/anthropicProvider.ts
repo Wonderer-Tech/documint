@@ -82,9 +82,29 @@ export class AnthropicProvider extends BaseAIProvider {
     const tokensUsed =
       (response.data.usage?.input_tokens ?? 0) +
       (response.data.usage?.output_tokens ?? 0);
+    const contentBlocks = Array.isArray(response.data.content)
+      ? response.data.content
+      : [];
+    const documentation = contentBlocks
+      .filter(
+        (block: unknown): block is { type: string; text: string } =>
+          typeof block === "object" &&
+          block !== null &&
+          (block as { type?: unknown }).type === "text" &&
+          typeof (block as { text?: unknown }).text === "string",
+      )
+      .map((block) => block.text)
+      .join("\n\n")
+      .trim();
+
+    if (!documentation) {
+      throw new Error(
+        `Anthropic returned no text content for model "${params.model}".`,
+      );
+    }
 
     return {
-      documentation: response.data.content[0].text,
+      documentation,
       tokensUsed,
       model: params.model,
     };
