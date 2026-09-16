@@ -54,19 +54,31 @@ export class ModelMetadataService {
 
   /**
    * Fetches the context window for a given provider + model.
-   * Tries the provider's API first, falls back to known values, then a safe default.
+   * Known models resolve locally first; unknown models may query provider metadata
+   * APIs before falling back to conservative estimates.
    */
   async fetchContextWindow(
     provider: string,
     model: string,
   ): Promise<ModelMetadata> {
-    if (!model.trim()) {
+    const normalizedModel = model.trim().toLowerCase();
+    if (!normalizedModel) {
       return { contextWindow: 8192, source: "estimated" };
     }
 
-    const cacheKey = `${provider}:${model}`;
+    const cacheKey = `${provider}:${normalizedModel}`;
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
+    }
+
+    const knownContextWindow = FALLBACK_CONTEXT_WINDOWS[normalizedModel];
+    if (knownContextWindow) {
+      const knownResult: ModelMetadata = {
+        contextWindow: knownContextWindow,
+        source: "estimated",
+      };
+      this.cache.set(cacheKey, knownResult);
+      return knownResult;
     }
 
     let result: ModelMetadata;
