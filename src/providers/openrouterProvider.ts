@@ -7,6 +7,7 @@ import {
 } from "./aiProvider";
 import { DocumentationContext, DocumentationResult } from "../types";
 import { normalizeProviderModel } from "./providerModelGuard";
+import { capRequestedOutputTokens } from "./outputTokenLimit";
 
 /**
  * OpenRouter provider — routes requests to 100+ models via a single API key.
@@ -59,7 +60,7 @@ export class OpenRouterProvider extends BaseAIProvider {
         model: params.model,
         messages: params.messages,
         temperature: this.temperature,
-        max_tokens: params.maxTokens,
+        max_tokens: capRequestedOutputTokens(params.maxTokens),
       },
       {
         headers: {
