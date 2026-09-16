@@ -5,6 +5,7 @@ import { DocumentationResult } from "../types";
 import { normalizeProviderModel } from "./providerModelGuard";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
+import { runProviderRequestWithRetry } from "./providerRetry";
 
 /**
  * Model aliases map known shorthand names to their full OpenAI model IDs.
@@ -231,13 +232,17 @@ export class OpenAIProvider extends BaseAIProvider {
     };
 
     try {
-      const response = await axios.post(this.endpoint, body, {
-        headers: {
-          Authorization: `Bearer ${params.apiKey}`,
-          "Content-Type": "application/json",
-        },
-        signal: params.signal,
-      });
+      const response = await runProviderRequestWithRetry(
+        () =>
+          axios.post(this.endpoint, body, {
+            headers: {
+              Authorization: `Bearer ${params.apiKey}`,
+              "Content-Type": "application/json",
+            },
+            signal: params.signal,
+          }),
+        { signal: params.signal },
+      );
 
       const parsed = parseOpenAICompatibleResponse(response.data, "OpenAI");
       return {
