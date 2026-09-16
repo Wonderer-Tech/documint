@@ -315,8 +315,7 @@ src/
 |-- extension.ts                  # Activation and command wiring
 |-- types.ts                      # Shared types and error models
 |-- config/
-|   |-- secretStorage.ts          # VS Code secret storage wrapper
-|   `-- apiKeyConfiguration.ts    # API key configuration helper
+|   `-- secretStorage.ts          # VS Code secret storage wrapper
 |-- scanner/
 |   `-- workspaceScanner.ts       # Workspace file discovery and filtering
 |-- providers/
