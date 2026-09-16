@@ -12,6 +12,7 @@ import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 import { runProviderRequestWithRetry } from "./providerRetry";
 import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
 import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
+import { normalizeProviderRequestError } from "./providerHttpError";
 
 /**
  * OpenRouter provider — routes requests to 100+ models via a single API key.
@@ -58,36 +59,40 @@ export class OpenRouterProvider extends BaseAIProvider {
   }
 
   protected async callApi(params: ApiCallParams): Promise<DocumentationResult> {
-    const response = await runProviderRequestWithRetry(
-      () =>
-        axios.post(
-          this.endpoint,
-          {
-            model: params.model,
-            messages: params.messages,
-            temperature: this.temperature,
-            max_tokens: capRequestedOutputTokens(params.maxTokens),
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${params.apiKey}`,
-              "Content-Type": "application/json",
-              // Recommended by OpenRouter for rate-limit tier identification
-              "HTTP-Referer": "https://github.com/Wonderer-Tech/documint",
-              "X-Title": "Documint",
+    try {
+      const response = await runProviderRequestWithRetry(
+        () =>
+          axios.post(
+            this.endpoint,
+            {
+              model: params.model,
+              messages: params.messages,
+              temperature: this.temperature,
+              max_tokens: capRequestedOutputTokens(params.maxTokens),
             },
-            timeout: CLOUD_PROVIDER_REQUEST_TIMEOUT_MS,
-            signal: params.signal,
-          },
-        ),
-      { signal: params.signal },
-    );
+            {
+              headers: {
+                Authorization: `Bearer ${params.apiKey}`,
+                "Content-Type": "application/json",
+                // Recommended by OpenRouter for rate-limit tier identification
+                "HTTP-Referer": "https://github.com/Wonderer-Tech/documint",
+                "X-Title": "Documint",
+              },
+              timeout: CLOUD_PROVIDER_REQUEST_TIMEOUT_MS,
+              signal: params.signal,
+            },
+          ),
+        { signal: params.signal },
+      );
 
-    const parsed = parseOpenAICompatibleResponse(response.data, "OpenRouter");
-    return {
-      ...parsed,
-      model: params.model,
-    };
+      const parsed = parseOpenAICompatibleResponse(response.data, "OpenRouter");
+      return {
+        ...parsed,
+        model: params.model,
+      };
+    } catch (error) {
+      throw normalizeProviderRequestError(error, "OpenRouter");
+    }
   }
 
   protected getMaxOutputTokens(model?: string): number {
