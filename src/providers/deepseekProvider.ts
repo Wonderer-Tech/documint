@@ -9,6 +9,7 @@ import { DocumentationContext, DocumentationResult } from "../types";
 import { normalizeProviderModel } from "./providerModelGuard";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
+import { runProviderRequestWithRetry } from "./providerRetry";
 
 /**
  * DeepSeek provider using the official OpenAI-compatible Chat Completions API.
@@ -63,24 +64,28 @@ export class DeepSeekProvider extends BaseAIProvider {
 
   protected async callApi(params: ApiCallParams): Promise<DocumentationResult> {
     try {
-      const response = await axios.post(
-        this.endpoint,
-        {
-          model: params.model,
-          messages: params.messages,
-          temperature: this.temperature,
-          max_tokens: capRequestedOutputTokens(params.maxTokens),
-          stream: false,
-          thinking: { type: "disabled" },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${params.apiKey}`,
-            "Content-Type": "application/json",
-          },
-          timeout: 300000,
-          signal: params.signal,
-        },
+      const response = await runProviderRequestWithRetry(
+        () =>
+          axios.post(
+            this.endpoint,
+            {
+              model: params.model,
+              messages: params.messages,
+              temperature: this.temperature,
+              max_tokens: capRequestedOutputTokens(params.maxTokens),
+              stream: false,
+              thinking: { type: "disabled" },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${params.apiKey}`,
+                "Content-Type": "application/json",
+              },
+              timeout: 300000,
+              signal: params.signal,
+            },
+          ),
+        { signal: params.signal },
       );
 
       const parsed = parseOpenAICompatibleResponse(response.data, "DeepSeek");
