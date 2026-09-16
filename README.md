@@ -224,8 +224,6 @@ All settings are under `aiDocGenerator`.
 - `aiDocGenerator.concurrentRequests`
 - `aiDocGenerator.excludePatterns`
 - `aiDocGenerator.customApiEndpoint`
-- `aiDocGenerator.generateUmlDiagrams`
-- `aiDocGenerator.enableDiffTracking`
 
 ### Example `settings.json`
 
@@ -244,9 +242,7 @@ All settings are under `aiDocGenerator`.
     "**/dist/**",
     "**/build/**",
     "**/.git/**"
-  ],
-  "aiDocGenerator.generateUmlDiagrams": true,
-  "aiDocGenerator.enableDiffTracking": true
+  ]
 }
 ```
 
