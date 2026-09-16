@@ -9,6 +9,7 @@ import { DocumentationContext, DocumentationResult } from "../types";
 import { normalizeProviderModel } from "./providerModelGuard";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { runProviderRequestWithRetry } from "./providerRetry";
+import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
 
 /**
  * Anthropic Claude provider.
@@ -78,6 +79,7 @@ export class AnthropicProvider extends BaseAIProvider {
               "anthropic-version": this.apiVersion,
               "Content-Type": "application/json",
             },
+            timeout: CLOUD_PROVIDER_REQUEST_TIMEOUT_MS,
             signal: params.signal,
           },
         ),
