@@ -132,7 +132,8 @@
             "html",
             "both"
           ],
-          "default": "markdown"
+          "default": "both",
+          "description": "Documentation files to generate. Defaults to both Markdown and HTML across all generation entry points."
         },
         "aiDocGenerator.targetLanguages": {
           "type": "array",
