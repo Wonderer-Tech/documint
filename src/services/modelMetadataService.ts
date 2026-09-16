@@ -42,6 +42,7 @@ const FALLBACK_CONTEXT_WINDOWS: Record<string, number> = {
 export class ModelMetadataService {
   private static instance: ModelMetadataService;
   private cache = new Map<string, ModelMetadata>();
+  private pending = new Map<string, Promise<ModelMetadata>>();
 
   private constructor(private context: vscode.ExtensionContext) {}
 
@@ -55,20 +56,23 @@ export class ModelMetadataService {
   /**
    * Fetches the context window for a given provider + model.
    * Known models resolve locally first; unknown models may query provider metadata
-   * APIs before falling back to conservative estimates.
+   * APIs before falling back to conservative estimates. Concurrent callers for the
+   * same provider/model share one in-flight lookup.
    */
   async fetchContextWindow(
     provider: string,
     model: string,
   ): Promise<ModelMetadata> {
+    const normalizedProvider = provider.trim().toLowerCase();
     const normalizedModel = model.trim().toLowerCase();
     if (!normalizedModel) {
       return { contextWindow: 8192, source: "estimated" };
     }
 
-    const cacheKey = `${provider}:${normalizedModel}`;
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey)!;
+    const cacheKey = `${normalizedProvider}:${normalizedModel}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached) {
+      return cached;
     }
 
     const knownContextWindow = FALLBACK_CONTEXT_WINDOWS[normalizedModel];
@@ -81,36 +85,51 @@ export class ModelMetadataService {
       return knownResult;
     }
 
-    let result: ModelMetadata;
+    const inFlight = this.pending.get(cacheKey);
+    if (inFlight) {
+      return inFlight;
+    }
 
+    const lookup = this.fetchUncached(normalizedProvider, model)
+      .then((result) => {
+        this.cache.set(cacheKey, result);
+        return result;
+      })
+      .finally(() => {
+        this.pending.delete(cacheKey);
+      });
+
+    this.pending.set(cacheKey, lookup);
+    return lookup;
+  }
+
+  /** Clears cached and in-flight metadata state — call when provider/key changes. */
+  clearCache(): void {
+    this.cache.clear();
+    this.pending.clear();
+  }
+
+  private async fetchUncached(
+    provider: string,
+    model: string,
+  ): Promise<ModelMetadata> {
     try {
       const secretManager = SecretStorageManager.getInstance(this.context);
       const apiKey = (await secretManager.getApiKey(provider)) || "";
 
       switch (provider) {
         case "openai":
-          result = await this.fetchOpenAI(model, apiKey);
-          break;
+          return await this.fetchOpenAI(model, apiKey);
         case "anthropic":
-          result = await this.fetchAnthropic(model, apiKey);
-          break;
+          return await this.fetchAnthropic(model, apiKey);
         case "openrouter":
-          result = await this.fetchOpenRouter(model, apiKey);
-          break;
+          return await this.fetchOpenRouter(model, apiKey);
         default:
-          result = this.estimateFallback(model);
+          return this.estimateFallback(model);
       }
     } catch {
-      result = this.estimateFallback(model);
+      return this.estimateFallback(model);
     }
-
-    this.cache.set(cacheKey, result);
-    return result;
-  }
-
-  /** Clears the cache — call when provider/key changes */
-  clearCache(): void {
-    this.cache.clear();
   }
 
   // ── Provider implementations ───────────────────────────────────────────────
@@ -158,8 +177,7 @@ export class ModelMetadataService {
           timeout: 6000,
         },
       );
-      const cw =
-        res.data?.context_window ?? res.data?.max_tokens_input;
+      const cw = res.data?.context_window ?? res.data?.max_tokens_input;
       if (typeof cw === "number" && cw > 0) {
         return { contextWindow: cw, source: "api" };
       }
@@ -212,12 +230,30 @@ export class ModelMetadataService {
     }
 
     // Pattern-based inference for unknown model names
-    if (m.includes("deepseek-v4") || m.includes("deepseek-flash")) return { contextWindow: 1000000, source: "estimated" };
-    if (m.includes("200k") || m.includes("claude")) return { contextWindow: 200000, source: "estimated" };
-    if (m.includes("128k") || m.includes("gpt-5") || m.includes("gpt-4o") || m.includes("o1") || m.includes("o3")) return { contextWindow: 128000, source: "estimated" };
-    if (m.includes("32k")) return { contextWindow: 32768, source: "estimated" };
-    if (m.includes("16k")) return { contextWindow: 16385, source: "estimated" };
-    if (m.includes("turbo")) return { contextWindow: 128000, source: "estimated" };
+    if (m.includes("deepseek-v4") || m.includes("deepseek-flash")) {
+      return { contextWindow: 1000000, source: "estimated" };
+    }
+    if (m.includes("200k") || m.includes("claude")) {
+      return { contextWindow: 200000, source: "estimated" };
+    }
+    if (
+      m.includes("128k") ||
+      m.includes("gpt-5") ||
+      m.includes("gpt-4o") ||
+      m.includes("o1") ||
+      m.includes("o3")
+    ) {
+      return { contextWindow: 128000, source: "estimated" };
+    }
+    if (m.includes("32k")) {
+      return { contextWindow: 32768, source: "estimated" };
+    }
+    if (m.includes("16k")) {
+      return { contextWindow: 16385, source: "estimated" };
+    }
+    if (m.includes("turbo")) {
+      return { contextWindow: 128000, source: "estimated" };
+    }
 
     // Safe conservative default
     return { contextWindow: 8192, source: "estimated" };
