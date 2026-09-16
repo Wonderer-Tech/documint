@@ -66,6 +66,21 @@ const JAVASCRIPT_CONTROL_KEYWORDS = new Set([
   "with",
 ]);
 
+const TYPED_LANGUAGE_NON_METHOD_PREFIXES = new Set([
+  "return",
+  "throw",
+  "if",
+  "for",
+  "while",
+  "switch",
+  "catch",
+  "case",
+  "else",
+  "do",
+  "new",
+  "delete",
+]);
+
 const INTERNAL_IMPORT_EXTENSIONS = [
   "ts",
   "tsx",
@@ -122,8 +137,13 @@ export class SourceAnalyzer {
             to: resolvedPath,
             source: sourceImport.source,
           });
-        } else if (!sourceImport.source.startsWith(".")) {
-          externalDependencies.add(this.packageName(sourceImport.source));
+        } else if (
+          !sourceImport.source.startsWith(".") &&
+          !sourceImport.source.startsWith("crate::")
+        ) {
+          externalDependencies.add(
+            this.packageName(sourceImport.source, file.language),
+          );
         }
       }
     }
@@ -420,6 +440,29 @@ export class SourceAnalyzer {
     }
 
     if (language === "rust") {
+      const useMatch = trimmed.match(/^use\s+([^;]+);/);
+      if (useMatch) {
+        const useTarget = useMatch[1].trim();
+        const braceMatch = useTarget.match(/^(.+?)::\{([^}]+)\}$/);
+        const rawSource = (braceMatch?.[1] ?? useTarget)
+          .split(/\s+as\s+/)[0]
+          .replace(/::\*$/, "")
+          .trim();
+        const symbols = braceMatch
+          ? braceMatch[2]
+              .split(",")
+              .map((value) => value.trim().split(/\s+as\s+/)[0])
+              .filter(Boolean)
+          : [rawSource.split("::").pop() ?? rawSource].filter(Boolean);
+        const source = rawSource.startsWith("self::")
+          ? `./${rawSource.slice("self::".length).replace(/::/g, "/")}`
+          : rawSource.startsWith("super::")
+            ? `../${rawSource.slice("super::".length).replace(/::/g, "/")}`
+            : rawSource;
+        imports.push({ line: lineNumber, source, symbols });
+        return;
+      }
+
       const moduleMatch = trimmed.match(
         /^(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z_]\w*)\s*;/,
       );
@@ -566,6 +609,7 @@ export class SourceAnalyzer {
     }
 
     if (language === "go") {
+      const startIndex = symbols.length;
       this.addMatchSymbol(
         trimmed,
         lineNumber,
@@ -587,6 +631,9 @@ export class SourceAnalyzer {
         "interface",
         symbols,
       );
+      for (let index = startIndex; index < symbols.length; index++) {
+        symbols[index].exported = /^[A-Z]/.test(symbols[index].name);
+      }
       return;
     }
 
@@ -619,6 +666,63 @@ export class SourceAnalyzer {
         "trait",
         symbols,
       );
+      return;
+    }
+
+    if (["java", "csharp", "c", "cpp"].includes(language)) {
+      const startIndex = symbols.length;
+      const modifiers =
+        "(?:(?:public|private|protected|internal|static|abstract|final|sealed|partial|virtual|override|export)\\s+)*";
+      this.addMatchSymbol(
+        trimmed,
+        lineNumber,
+        new RegExp(`^${modifiers}class\\s+([A-Za-z_]\\w*)`),
+        "class",
+        symbols,
+      );
+      this.addMatchSymbol(
+        trimmed,
+        lineNumber,
+        new RegExp(`^${modifiers}interface\\s+([A-Za-z_]\\w*)`),
+        "interface",
+        symbols,
+      );
+      this.addMatchSymbol(
+        trimmed,
+        lineNumber,
+        new RegExp(
+          `^${modifiers}enum(?:\\s+(?:class|struct))?\\s+([A-Za-z_]\\w*)`,
+        ),
+        "enum",
+        symbols,
+      );
+      this.addMatchSymbol(
+        trimmed,
+        lineNumber,
+        new RegExp(`^${modifiers}struct\\s+([A-Za-z_]\\w*)`),
+        "struct",
+        symbols,
+      );
+
+      const firstWord = trimmed.match(/^([A-Za-z_]\w*)/)?.[1]?.toLowerCase();
+      if (!firstWord || !TYPED_LANGUAGE_NON_METHOD_PREFIXES.has(firstWord)) {
+        const methodPattern =
+          /^(?:(?:public|private|protected|internal|static|final|virtual|override|abstract|async|synchronized|native|constexpr|inline|extern|friend|sealed|new|partial)\s+)*(?:[\w:<>,.?\[\]*&]+\s+)+([A-Za-z_]\w*)\s*\(([^()]*)\)\s*(?:const\s*)?(?:noexcept(?:\([^)]*\))?\s*)?(?:->\s*[\w:<>,.?\[\]*&]+\s*)?(?:\{|;|=>)/;
+        this.addMatchSymbol(
+          trimmed,
+          lineNumber,
+          methodPattern,
+          "method",
+          symbols,
+        );
+      }
+
+      if (language === "java" || language === "csharp") {
+        const isPublic = /^public\b/.test(trimmed);
+        for (let index = startIndex; index < symbols.length; index++) {
+          symbols[index].exported = isPublic;
+        }
+      }
       return;
     }
 
@@ -871,11 +975,19 @@ export class SourceAnalyzer {
     importSource: string,
     pathIndex: Set<string>,
   ): string | undefined {
+    const normalizedFromPath = this.normalize(fromPath);
+    if (normalizedFromPath.endsWith(".rs") && importSource.startsWith("crate::")) {
+      return this.resolveRustCrateImport(
+        normalizedFromPath,
+        importSource,
+        pathIndex,
+      );
+    }
+
     if (!importSource.startsWith(".")) {
       return undefined;
     }
 
-    const normalizedFromPath = this.normalize(fromPath);
     const baseDir = path.posix.dirname(normalizedFromPath);
     const basePaths = new Set<string>([
       this.resolveRelativeBasePath(baseDir, importSource),
@@ -908,6 +1020,36 @@ export class SourceAnalyzer {
     return candidates.find((candidate) => pathIndex.has(candidate));
   }
 
+  private resolveRustCrateImport(
+    fromPath: string,
+    importSource: string,
+    pathIndex: Set<string>,
+  ): string | undefined {
+    const segments = fromPath.split("/");
+    const srcIndex = segments.lastIndexOf("src");
+    const crateRoot =
+      srcIndex >= 0
+        ? segments.slice(0, srcIndex + 1).join("/")
+        : path.posix.dirname(fromPath);
+    const moduleParts = importSource
+      .slice("crate::".length)
+      .split("::")
+      .filter(Boolean);
+
+    for (let length = moduleParts.length; length > 0; length--) {
+      const basePath = this.normalize(
+        path.posix.join(crateRoot, ...moduleParts.slice(0, length)),
+      );
+      const candidates = [basePath, `${basePath}.rs`, `${basePath}/mod.rs`];
+      const resolved = candidates.find((candidate) => pathIndex.has(candidate));
+      if (resolved) {
+        return resolved;
+      }
+    }
+
+    return undefined;
+  }
+
   private resolveRelativeBasePath(baseDir: string, importSource: string): string {
     const pythonRelative = importSource.match(/^(\.+)([A-Za-z_]?[\w.]*)$/);
     if (pythonRelative && !importSource.includes("/")) {
@@ -925,7 +1067,13 @@ export class SourceAnalyzer {
     return this.normalize(path.posix.join(baseDir, importSource));
   }
 
-  private packageName(importSource: string): string {
+  private packageName(importSource: string, language?: string): string {
+    if (language === "python") {
+      return importSource.split(".")[0];
+    }
+    if (language === "rust") {
+      return importSource.split("::")[0];
+    }
     if (importSource.startsWith("@")) {
       return importSource.split("/").slice(0, 2).join("/");
     }
