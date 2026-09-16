@@ -3,6 +3,7 @@ import axios from "axios";
 import { BaseAIProvider, ApiCallParams } from "./aiProvider";
 import { DocumentationContext, DocumentationResult } from "../types";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
+import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 
 /**
  * Custom provider — calls a user-specified endpoint using the OpenAI
@@ -95,9 +96,12 @@ export class CustomProvider extends BaseAIProvider {
       },
     );
 
+    const parsed = parseOpenAICompatibleResponse(
+      response.data,
+      "Custom provider",
+    );
     return {
-      documentation: response.data.choices[0].message.content,
-      tokensUsed: response.data.usage?.total_tokens ?? 0,
+      ...parsed,
       model: params.model,
     };
   }
