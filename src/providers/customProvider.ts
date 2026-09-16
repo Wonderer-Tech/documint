@@ -14,7 +14,12 @@ import { DocumentationContext, DocumentationResult } from "../types";
  */
 export class CustomProvider extends BaseAIProvider {
   name = "custom";
-  isLocal = false;
+  isLocal: boolean;
+
+  constructor(context: vscode.ExtensionContext) {
+    super(context);
+    this.isLocal = this.isConfiguredEndpointLocal();
+  }
 
   private get endpoint(): string {
     const ep = vscode.workspace
@@ -28,6 +33,30 @@ export class CustomProvider extends BaseAIProvider {
       );
     }
     return ep;
+  }
+
+  private isConfiguredEndpointLocal(): boolean {
+    const ep = vscode.workspace
+      .getConfiguration("aiDocGenerator")
+      .get<string>("customApiEndpoint")
+      ?.trim();
+
+    if (!ep) {
+      return false;
+    }
+
+    try {
+      const url = new URL(ep);
+      const host = url.hostname.toLowerCase();
+      return (
+        host === "localhost" ||
+        host === "127.0.0.1" ||
+        host === "::1" ||
+        host.endsWith(".localhost")
+      );
+    } catch {
+      return false;
+    }
   }
 
   protected defaultModel(): string {
