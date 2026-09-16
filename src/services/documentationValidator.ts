@@ -1,4 +1,4 @@
-import { FileAnalysis } from "../analyzer/sourceAnalyzer";
+import type { FileAnalysis } from "../analyzer/sourceAnalyzer";
 
 export interface DocumentationValidationResult {
   warnings: string[];
