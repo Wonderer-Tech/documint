@@ -189,16 +189,6 @@
         "aiDocGenerator.customApiEndpoint": {
           "type": "string",
           "description": "Custom OpenAI-compatible chat completions URL, for example https://api.example.com/v1/chat/completions"
-        },
-        "aiDocGenerator.generateUmlDiagrams": {
-          "type": "boolean",
-          "default": true,
-          "description": "Generate UML diagrams from code structure"
-        },
-        "aiDocGenerator.enableDiffTracking": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable tracking of changes between documentation generations"
         }
       }
     }
