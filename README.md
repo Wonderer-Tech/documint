@@ -63,6 +63,7 @@ DocuMint 1.0.4 is focused on speed, cache reuse, and a cleaner premium generated
 - Super fast generation flow: file documentation runs in parallel, with the default parallel request limit set to `15`.
 - Smarter local CPU prep: DocuMint analyzes source structure, dependencies, symbols, imports, and prompt context locally before calling the provider.
 - First run builds cache, second run is fast: unchanged docs, project overview, and visual blueprints can be reused instead of regenerated.
+- Generation-aware cache safety: provider/model/depth/token/temperature/context-window/custom-endpoint changes invalidate AI-generated documentation cache instead of reusing stale output.
 - Old cache wipe button: clear stale documentation and visual cache directly from the sidebar.
 - Cleaner generated HTML: default dark theme, improved layout width, fixed right-side gap, and better dark-mode readability.
 - Premium navigation: wider sidebar, VS Code-style project tree, folder/file icons, and `+` / `-` folder controls.
@@ -70,8 +71,8 @@ DocuMint 1.0.4 is focused on speed, cache reuse, and a cleaner premium generated
 - Visual upgrades: colored Module Scale Chart pie view, source-derived architecture map, editable diagram exports, whiteboard sketch, and interactive dependency graph.
 - Cleaner output: empty "no data found" style sections are removed when useful data is not available.
 - UI Storyboard removed from generated HTML so the output stays source-grounded and avoids fake-looking UI mockups.
-- Better provider support: DeepSeek and custom OpenAI-compatible endpoints are supported.
-- Updated default model: new installs default to `gpt-5.4-nano`.
+- Better provider support: OpenAI, Anthropic, OpenRouter, DeepSeek, and custom OpenAI-compatible endpoints are supported.
+- Updated defaults: OpenAI starts with `gpt-5.4-nano`; Anthropic fallback uses the active `claude-sonnet-5`; DeepSeek fallback uses `deepseek-flash`.
 - Cleaner VSIX output: generated docs are excluded from the packaged extension.
 
 ### Estimated 100-Page Website Generation Time
@@ -93,7 +94,7 @@ These are practical estimates, not fixed benchmarks. Actual time depends on prov
 | Visual Blueprints | Source-derived architecture map, editable diagram exports, whiteboard sketch, and dependency graph |
 | Module Scale Chart | Colored pie chart with clearer module scale comparison |
 | Content Order | Documentation sections follow Project Tree order |
-| Cache Control | Clear Cache button for old doc and visual cache cleanup |
+| Cache Control | Clear Cache button plus automatic invalidation when generation-affecting settings change |
 | Output Cleanliness | Empty or low-value sections are hidden instead of shown as noise |
 
 ### Visual Preview
@@ -109,14 +110,15 @@ Editable Diagram Export:
 ## How It Works
 
 1. Resolve provider and model from sidebar payload or VS Code settings.
-2. Scan workspace files through `WorkspaceScanner`.
-3. Optionally narrow generation to selected file/folder path.
-4. Analyze source files for imports, exports, symbols, TODOs, and internal links.
-5. Build a project map and file-level context from verified source facts.
-6. Prepare local CPU context for each file, including dependency graph links, symbols, imports, and prompt inputs.
-7. Generate detailed file documentation in parallel via the selected provider.
-8. Validate generated docs against detected symbols.
-9. Save output into `docs/` as Markdown, HTML, or both.
+2. Verify that cached AI documentation was generated with compatible provider/model/generation settings; reset that cache when those settings materially change.
+3. Scan workspace files through `WorkspaceScanner`.
+4. Optionally narrow generation directly to a selected file/folder path.
+5. Analyze source files for imports, exports, symbols, TODOs, and internal links.
+6. Build a project map and file-level context from verified source facts.
+7. Prepare local CPU context for each file, including dependency graph links, symbols, imports, and prompt inputs.
+8. Generate detailed file documentation in parallel via the selected provider.
+9. Validate generated docs against detected symbols.
+10. Save output into `docs/` as Markdown, HTML, or both.
 
 Core pipeline entry point: `src/services/docGenerator.ts`.
 
@@ -125,16 +127,16 @@ Core pipeline entry point: `src/services/docGenerator.ts`.
 Configured using `aiDocGenerator.aiProvider`:
 
 - `openai`
-- `anthropic`
+- `anthropic` — current fallback model: `claude-sonnet-5`
 - `openrouter`
-- `deepseek`
+- `deepseek` — current fallback model: `deepseek-flash`
 - `custom`
 
 Provider implementations live in `src/providers/`.
 
 ## Supported Languages
 
-Current workspace scanner settings can include:
+The following scanner languages are enabled by default on new installs:
 
 - TypeScript (`.ts`, `.tsx`)
 - JavaScript (`.js`, `.jsx`)
@@ -148,12 +150,19 @@ Current workspace scanner settings can include:
 - Swift (`.swift`)
 - Kotlin (`.kt`)
 - Scala (`.scala`)
-- Shell, YAML, JSON, XML, HTML, CSS, SCSS, and SQL
+- Shell (`.sh`)
+- YAML (`.yaml`, `.yml`)
+- JSON (`.json`)
+- XML (`.xml`)
+- HTML (`.html`)
+- CSS / SCSS (`.css`, `.scss`)
+- SQL (`.sql`)
 
 Notes:
 
 - `aiDocGenerator.targetLanguages` controls which languages are scanned.
-- Exclusions include `node_modules`, `dist`, `build`, `.git`, `docs`, test/spec files, lockfiles, `.env` files, logs, and other common non-source artifacts.
+- Workspace scans exclude `node_modules`, generated/build folders, `.git`, `docs`, test/spec files, lockfiles, `.env` files, logs, and other common non-source artifacts by default.
+- Deliberately selecting a folder relaxes DocuMint's default test/spec exclusion, but explicit user-configured exclusions remain authoritative.
 
 ## Install
 
@@ -200,7 +209,7 @@ Contributed commands:
 - `aiDocGenerator.generateDocumentation` - Generate documentation
 - `aiDocGenerator.cancelGeneration` - Cancel generation
 - `aiDocGenerator.configureApiKey` - Configure API key
-- `aiDocGenerator.clearCache` - Clear old documentation and visual cache
+- `aiDocGenerator.clearCache` - Clear documentation, visual, and generation-settings cache markers
 
 Internal scope commands used by sidebar:
 
@@ -217,7 +226,7 @@ All settings are under `aiDocGenerator`.
 - `aiDocGenerator.model` (`gpt-5.4-nano` by default)
 - `aiDocGenerator.documentationDepth` (`simple | basic | standard | comprehensive`)
 - `aiDocGenerator.outputFormat` (`markdown | html | both`)
-- `aiDocGenerator.targetLanguages` (language hint list)
+- `aiDocGenerator.targetLanguages` (all listed supported scanner languages by default)
 - `aiDocGenerator.maxTokens`
 - `aiDocGenerator.temperature`
 - `aiDocGenerator.rateLimitDelay`
@@ -243,6 +252,15 @@ All settings are under `aiDocGenerator`.
     "**/build/**",
     "**/.git/**"
   ]
+}
+```
+
+Anthropic example:
+
+```json
+{
+  "aiDocGenerator.aiProvider": "anthropic",
+  "aiDocGenerator.model": "claude-sonnet-5"
 }
 ```
 
@@ -317,10 +335,12 @@ src/
 |-- config/
 |   `-- secretStorage.ts          # VS Code secret storage wrapper
 |-- scanner/
-|   `-- workspaceScanner.ts       # Workspace file discovery and filtering
+|   `-- workspaceScanner.ts       # Workspace/selected-path discovery and filtering
 |-- providers/
 |   |-- aiProvider.ts             # Base provider and prompt/chunking pipeline
 |   |-- providerFactory.ts        # Provider resolution and creation
+|   |-- providerModelGuard.ts     # Prevents stale cross-provider model IDs
+|   |-- providerMetadataDecorator.ts # Context-window metadata/override layer
 |   |-- openaiProvider.ts
 |   |-- anthropicProvider.ts
 |   |-- openrouterProvider.ts
@@ -328,7 +348,9 @@ src/
 |   `-- customProvider.ts
 |-- services/
 |   |-- docGenerator.ts           # Orchestration + writing docs output
+|   |-- generationCachePolicy.ts  # Invalidates AI-doc cache on material generation changes
 |   |-- documentationValidator.ts # Checks generated docs against source facts
+|   |-- outputSanitizer.ts        # Removes unsafe/non-source-grounded output sections
 |   |-- htmlTemplate.ts           # Full HTML document template
 |   `-- modelMetadataService.ts   # Context window metadata fetch/cache
 `-- views/
