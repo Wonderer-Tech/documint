@@ -26,22 +26,34 @@ test("provider failure policy retries throttling and transient server errors", (
 });
 
 test("provider failure policy retries known transport failures but not cancellation", () => {
-  assert.deepEqual(classifyProviderFailure({ code: "ETIMEDOUT" }), {
-    kind: "network",
-    retryable: true,
-  });
-  assert.deepEqual(classifyProviderFailure({ code: "ECONNRESET" }), {
-    kind: "network",
-    retryable: true,
-  });
-  assert.deepEqual(classifyProviderFailure({ name: "AbortError" }), {
-    kind: "cancelled",
-    retryable: false,
-  });
-  assert.deepEqual(classifyProviderFailure({ code: "ERR_CANCELED" }), {
-    kind: "cancelled",
-    retryable: false,
-  });
+  for (const code of [
+    "ETIMEDOUT",
+    "ECONNRESET",
+    "ECONNABORTED",
+    "ESOCKETTIMEDOUT",
+    "UND_ERR_CONNECT_TIMEOUT",
+    "UND_ERR_HEADERS_TIMEOUT",
+    "UND_ERR_BODY_TIMEOUT",
+  ]) {
+    assert.deepEqual(classifyProviderFailure({ code }), {
+      kind: "network",
+      retryable: true,
+    });
+  }
+
+  for (const name of ["AbortError", "CanceledError", "CancelledError"]) {
+    assert.deepEqual(classifyProviderFailure({ name }), {
+      kind: "cancelled",
+      retryable: false,
+    });
+  }
+
+  for (const code of ["ERR_CANCELED", "ABORT_ERR"]) {
+    assert.deepEqual(classifyProviderFailure({ code }), {
+      kind: "cancelled",
+      retryable: false,
+    });
+  }
 });
 
 test("provider retry delay uses bounded exponential backoff", () => {
