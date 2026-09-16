@@ -1,97 +1,15 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { WorkspaceFile } from "../types";
-
-/**
- * Maps file extensions to language identifiers
- */
-const EXTENSION_TO_LANGUAGE: Record<string, string> = {
-  ts: "typescript",
-  tsx: "typescriptreact",
-  js: "javascript",
-  jsx: "javascriptreact",
-  py: "python",
-  java: "java",
-  cpp: "cpp",
-  c: "c",
-  cs: "csharp",
-  go: "go",
-  rs: "rust",
-  php: "php",
-  rb: "ruby",
-  swift: "swift",
-  kt: "kotlin",
-  scala: "scala",
-  sh: "shell",
-  yaml: "yaml",
-  yml: "yaml",
-  json: "json",
-  xml: "xml",
-  html: "html",
-  css: "css",
-  scss: "scss",
-  sql: "sql",
-};
-
-const LANGUAGE_TO_EXTENSIONS: Record<string, string[]> = {
-  typescript: ["ts", "tsx"],
-  typescriptreact: ["tsx"],
-  javascript: ["js", "jsx"],
-  javascriptreact: ["jsx"],
-  python: ["py"],
-  java: ["java"],
-  cpp: ["cpp"],
-  c: ["c"],
-  csharp: ["cs"],
-  go: ["go"],
-  rust: ["rs"],
-  php: ["php"],
-  ruby: ["rb"],
-  swift: ["swift"],
-  kotlin: ["kt"],
-  scala: ["scala"],
-  shell: ["sh"],
-  yaml: ["yaml", "yml"],
-  json: ["json"],
-  xml: ["xml"],
-  html: ["html"],
-  css: ["css"],
-  scss: ["scss"],
-  sql: ["sql"],
-};
-
-/**
- * Default patterns to exclude from scanning
- */
-const DEFAULT_EXCLUDE_PATTERNS = [
-  "**/node_modules/**",
-  "**/dist/**",
-  "**/build/**",
-  "**/out/**",
-  "**/.next/**",
-  "**/.nuxt/**",
-  "**/.svelte-kit/**",
-  "**/.angular/**",
-  "**/.git/**",
-  "**/.vscode/**",
-  "**/.idea/**",
-  "**/docs/**",
-  "**/coverage/**",
-  "**/*.min.*",
-  "**/*.test.*",
-  "**/*.spec.*",
-  "**/*.d.ts",
-  "**/package-lock.json",
-  "**/yarn.lock",
-  "**/pnpm-lock.yaml",
-  "**/.env*",
-  "**/*.log",
-];
-
-const EXPLICIT_FOLDER_OVERRIDE_PATTERNS = new Set([
-  "**/*.test.*",
-  "**/*.spec.*",
-]);
+import {
+  buildExplicitFolderExcludePatterns,
+  buildWorkspaceExcludePatterns,
+  getDefaultTargetLanguages,
+  getLanguageFromPath,
+  getTargetExtensions,
+  isInsideWorkspace,
+  normalizeFsPath,
+} from "./scannerPolicy";
 
 // Extension generation is single-run (concurrent runs are rejected), so this
 // transient scope safely bridges the selected picker paths to the scanner
@@ -145,21 +63,16 @@ export class WorkspaceScanner {
       );
       const configuredExcludePatterns =
         settings.get<string[]>("excludePatterns") ?? [];
-      excludePatterns = Array.from(
-        new Set([
-          ...DEFAULT_EXCLUDE_PATTERNS.filter(
-            (pattern) => !EXPLICIT_FOLDER_OVERRIDE_PATTERNS.has(pattern),
-          ),
-          ...configuredExcludePatterns,
-          ...(this.config.excludePatterns ?? []),
-        ]),
+      excludePatterns = buildExplicitFolderExcludePatterns(
+        configuredExcludePatterns,
+        this.config.excludePatterns ?? [],
       );
       const excludeGlob = this.toBraceGlob(excludePatterns);
       const selectedFiles: vscode.Uri[] = [];
 
       for (const targetPath of effectiveTargetPaths) {
         const absoluteTarget = path.resolve(targetPath);
-        if (!this.isInsideWorkspace(workspaceFolder.uri.fsPath, absoluteTarget)) {
+        if (!isInsideWorkspace(workspaceFolder.uri.fsPath, absoluteTarget)) {
           continue;
         }
 
@@ -167,7 +80,7 @@ export class WorkspaceScanner {
         try {
           const stat = await vscode.workspace.fs.stat(targetUri);
           if ((stat.type & vscode.FileType.File) !== 0) {
-            explicitFiles.add(this.normalizeFsPath(targetUri.fsPath));
+            explicitFiles.add(normalizeFsPath(targetUri.fsPath));
             selectedFiles.push(targetUri);
             continue;
           }
@@ -202,7 +115,7 @@ export class WorkspaceScanner {
       .map((p) => p.replace(/^\*\*\//, "").replace(/\/\*\*$/, ""));
 
     for (const uri of allFiles) {
-      const normalizedPath = this.normalizeFsPath(uri.fsPath);
+      const normalizedPath = normalizeFsPath(uri.fsPath);
       const isExplicitFile = explicitFiles.has(normalizedPath);
       const fsPath = uri.fsPath.toLowerCase();
 
@@ -237,7 +150,7 @@ export class WorkspaceScanner {
 
         const content = await vscode.workspace.fs.readFile(uri);
         const text = Buffer.from(content).toString("utf-8");
-        const language = this.getLanguageFromPath(uri.fsPath);
+        const language = getLanguageFromPath(uri.fsPath);
 
         if (language) {
           files.push({
@@ -265,18 +178,15 @@ export class WorkspaceScanner {
       settings.get<string[]>("excludePatterns") ?? [];
 
     return {
-      excludePatterns: Array.from(
-        new Set([
-          ...DEFAULT_EXCLUDE_PATTERNS,
-          ...configuredExcludePatterns,
-          ...(this.config.excludePatterns ?? []),
-        ]),
+      excludePatterns: buildWorkspaceExcludePatterns(
+        configuredExcludePatterns,
+        this.config.excludePatterns ?? [],
       ),
       includePatterns: this.config.includePatterns ?? [],
       targetLanguages:
         this.config.targetLanguages ??
         settings.get<string[]>("targetLanguages") ??
-        Object.keys(LANGUAGE_TO_EXTENSIONS),
+        getDefaultTargetLanguages(),
       maxFileSize: this.config.maxFileSize ?? Number.POSITIVE_INFINITY,
     };
   }
@@ -286,7 +196,7 @@ export class WorkspaceScanner {
       return this.toBraceGlob(config.includePatterns);
     }
 
-    const extensions = this.getTargetExtensions(config.targetLanguages);
+    const extensions = getTargetExtensions(config.targetLanguages);
     return this.toBraceGlob(extensions.map((ext) => `**/*.${ext}`));
   }
 
@@ -300,58 +210,11 @@ export class WorkspaceScanner {
   private uniqueSortedUris(uris: vscode.Uri[]): vscode.Uri[] {
     const unique = new Map<string, vscode.Uri>();
     for (const uri of uris) {
-      unique.set(this.normalizeFsPath(uri.fsPath), uri);
+      unique.set(normalizeFsPath(uri.fsPath), uri);
     }
     return Array.from(unique.values()).sort((a, b) =>
       a.fsPath.localeCompare(b.fsPath),
     );
-  }
-
-  private normalizeFsPath(filePath: string): string {
-    return path.resolve(filePath).replace(/\\/g, "/");
-  }
-
-  private isInsideWorkspace(workspaceRoot: string, targetPath: string): boolean {
-    const relative = path.relative(
-      path.resolve(workspaceRoot),
-      path.resolve(targetPath),
-    );
-    return (
-      relative === "" ||
-      (relative !== ".." &&
-        !relative.startsWith(`..${path.sep}`) &&
-        !path.isAbsolute(relative))
-    );
-  }
-
-  private getTargetExtensions(targetLanguages: string[]): string[] {
-    const extensions = new Set<string>();
-
-    for (const value of targetLanguages) {
-      const normalized = value.toLowerCase().replace(/^\./, "");
-
-      for (const ext of LANGUAGE_TO_EXTENSIONS[normalized] ?? []) {
-        extensions.add(ext);
-      }
-
-      if (EXTENSION_TO_LANGUAGE[normalized]) {
-        extensions.add(normalized);
-      }
-    }
-
-    if (extensions.size === 0) {
-      Object.keys(EXTENSION_TO_LANGUAGE).forEach((ext) => extensions.add(ext));
-    }
-
-    return Array.from(extensions).sort();
-  }
-
-  /**
-   * Determines the language from a file path
-   */
-  private getLanguageFromPath(filePath: string): string | undefined {
-    const ext = filePath.split(".").pop()?.toLowerCase();
-    return ext ? EXTENSION_TO_LANGUAGE[ext] : undefined;
   }
 
   /**
