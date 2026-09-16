@@ -98,10 +98,26 @@ export class SourceAnalyzer {
     const imports: SourceImport[] = [];
     const symbols: SourceSymbol[] = [];
     const todos: TodoComment[] = [];
+    let inGoImportBlock = false;
 
     lines.forEach((line, index) => {
       const lineNumber = index + 1;
-      this.extractImports(line, lineNumber, file.language, imports);
+
+      if (file.language === "go") {
+        const trimmed = line.trim();
+        if (/^import\s*\(\s*$/.test(trimmed)) {
+          inGoImportBlock = true;
+        } else if (inGoImportBlock && trimmed === ")") {
+          inGoImportBlock = false;
+        } else if (inGoImportBlock) {
+          this.extractGoBlockImport(trimmed, lineNumber, imports);
+        } else {
+          this.extractImports(line, lineNumber, file.language, imports);
+        }
+      } else {
+        this.extractImports(line, lineNumber, file.language, imports);
+      }
+
       this.extractSymbols(line, lineNumber, file.language, symbols);
       this.extractTodos(line, lineNumber, todos);
     });
@@ -240,6 +256,30 @@ export class SourceAnalyzer {
     const trimmed = line.trim();
 
     if (this.isJavaScriptLike(language)) {
+      const namedReExportMatch = trimmed.match(
+        /^export\s+(?:type\s+)?\{([^}]*)\}\s+from\s+["']([^"']+)["']/,
+      );
+      if (namedReExportMatch) {
+        imports.push({
+          line: lineNumber,
+          source: namedReExportMatch[2],
+          symbols: this.extractImportedSymbols(namedReExportMatch[1]),
+        });
+        return;
+      }
+
+      const wildcardReExportMatch = trimmed.match(
+        /^export\s+\*\s+from\s+["']([^"']+)["']/,
+      );
+      if (wildcardReExportMatch) {
+        imports.push({
+          line: lineNumber,
+          source: wildcardReExportMatch[1],
+          symbols: [],
+        });
+        return;
+      }
+
       const fromMatch = trimmed.match(
         /^import\s+(?:type\s+)?(.+?)\s+from\s+["']([^"']+)["']/,
       );
@@ -270,6 +310,16 @@ export class SourceAnalyzer {
           symbols: [],
         });
       }
+
+      for (const dynamicMatch of trimmed.matchAll(
+        /\bimport\(\s*["']([^"']+)["']\s*\)/g,
+      )) {
+        imports.push({
+          line: lineNumber,
+          source: dynamicMatch[1],
+          symbols: [],
+        });
+      }
       return;
     }
 
@@ -279,7 +329,7 @@ export class SourceAnalyzer {
         imports.push({
           line: lineNumber,
           source: fromMatch[1],
-          symbols: fromMatch[2].split(",").map((value) => value.trim()),
+          symbols: this.extractPythonImportedSymbols(fromMatch[2]),
         });
         return;
       }
@@ -287,21 +337,25 @@ export class SourceAnalyzer {
       const importMatch = trimmed.match(/^import\s+([\w.,\s]+)/);
       if (importMatch) {
         for (const source of importMatch[1].split(",")) {
-          imports.push({
-            line: lineNumber,
-            source: source.trim().split(/\s+as\s+/)[0],
-            symbols: [],
-          });
+          const normalizedSource = source.trim().split(/\s+as\s+/i)[0].trim();
+          if (normalizedSource) {
+            imports.push({
+              line: lineNumber,
+              source: normalizedSource,
+              symbols: [],
+            });
+          }
         }
       }
       return;
     }
 
     if (language === "go") {
-      const match = trimmed.match(/^["']([^"']+)["']|^import\s+["']([^"']+)["']/);
-      const source = match?.[1] ?? match?.[2];
-      if (source) {
-        imports.push({ line: lineNumber, source, symbols: [] });
+      const match = trimmed.match(
+        /^import\s+(?:(?:[A-Za-z_.][\w.]*)\s+)?["`]([^"`]+)["`]/,
+      );
+      if (match) {
+        imports.push({ line: lineNumber, source: match[1], symbols: [] });
       }
       return;
     }
@@ -323,6 +377,19 @@ export class SourceAnalyzer {
     const trimmed = line.trim();
 
     if (this.isJavaScriptLike(language)) {
+      const arrowFunctionPattern =
+        /^(export\s+)?(?:const|let)\s+([A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*(?:async\s+)?(?:<[^>]+>\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)(?:\s*:\s*[^=]+)?\s*=>/;
+      if (arrowFunctionPattern.test(trimmed)) {
+        this.addMatchSymbol(
+          trimmed,
+          lineNumber,
+          arrowFunctionPattern,
+          "function",
+          symbols,
+        );
+        return;
+      }
+
       this.addMatchSymbol(
         trimmed,
         lineNumber,
@@ -415,28 +482,28 @@ export class SourceAnalyzer {
       this.addMatchSymbol(
         trimmed,
         lineNumber,
-        /^(pub\s+)?fn\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/,
+        /^(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?(?:unsafe\s+)?(?:const\s+)?fn\s+([A-Za-z_]\w*)\s*\(([^)]*)\)/,
         "function",
         symbols,
       );
       this.addMatchSymbol(
         trimmed,
         lineNumber,
-        /^(pub\s+)?struct\s+([A-Za-z_]\w*)/,
+        /^(?:pub(?:\([^)]*\))?\s+)?struct\s+([A-Za-z_]\w*)/,
         "struct",
         symbols,
       );
       this.addMatchSymbol(
         trimmed,
         lineNumber,
-        /^(pub\s+)?enum\s+([A-Za-z_]\w*)/,
+        /^(?:pub(?:\([^)]*\))?\s+)?enum\s+([A-Za-z_]\w*)/,
         "enum",
         symbols,
       );
       this.addMatchSymbol(
         trimmed,
         lineNumber,
-        /^(pub\s+)?trait\s+([A-Za-z_]\w*)/,
+        /^(?:pub(?:\([^)]*\))?\s+)?trait\s+([A-Za-z_]\w*)/,
         "trait",
         symbols,
       );
@@ -510,6 +577,29 @@ export class SourceAnalyzer {
       .filter(Boolean)
       .map((value) => value.split(/\s+as\s+/)[0].trim())
       .filter((value) => value !== "*" && value !== "type");
+  }
+
+  private extractPythonImportedSymbols(importClause: string): string[] {
+    return importClause
+      .replace(/[()]/g, "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean)
+      .map((value) => value.split(/\s+as\s+/i)[0].trim())
+      .filter(Boolean);
+  }
+
+  private extractGoBlockImport(
+    trimmed: string,
+    lineNumber: number,
+    imports: SourceImport[],
+  ): void {
+    const match = trimmed.match(
+      /^(?:(?:[A-Za-z_.][\w.]*)\s+)?["`]([^"`]+)["`]/,
+    );
+    if (match) {
+      imports.push({ line: lineNumber, source: match[1], symbols: [] });
+    }
   }
 
   private uniqueImports(imports: SourceImport[]): SourceImport[] {
