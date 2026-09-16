@@ -64,15 +64,11 @@ const MODEL_ALIASE: Record<string, string> = {
 
 /**
  * Known model patterns used for capability detection (context window, max output).
+ * More specific variants must appear before their broader family matchers.
  * New models should be added here as they become available.
  */
 const MODEL_PATTERNS = {
   // GPT-5 family
-  gpt5: {
-    match: (m: string) => m.includes("gpt-5") || m.includes("gpt-5.4"),
-    contextWindow: 200000,
-    maxOutput: 32768,
-  },
   gpt5Nano: {
     match: (m: string) => m.includes("gpt-5") && m.includes("nano"),
     contextWindow: 128000,
@@ -83,12 +79,12 @@ const MODEL_PATTERNS = {
     contextWindow: 128000,
     maxOutput: 32768,
   },
-  // GPT-4.1 family
-  gpt41: {
-    match: (m: string) => m.includes("gpt-4.1") || m.includes("gpt-4-1"),
-    contextWindow: 1000000,
+  gpt5: {
+    match: (m: string) => m.includes("gpt-5") || m.includes("gpt-5.4"),
+    contextWindow: 200000,
     maxOutput: 32768,
   },
+  // GPT-4.1 family
   gpt41Nano: {
     match: (m: string) =>
       (m.includes("gpt-4.1") || m.includes("gpt-4-1")) && m.includes("nano"),
@@ -101,23 +97,23 @@ const MODEL_PATTERNS = {
     contextWindow: 128000,
     maxOutput: 32768,
   },
-  // GPT-4o family
-  gpt4o: {
-    match: (m: string) => m.includes("gpt-4o"),
-    contextWindow: 128000,
-    maxOutput: 16384,
+  gpt41: {
+    match: (m: string) => m.includes("gpt-4.1") || m.includes("gpt-4-1"),
+    contextWindow: 1000000,
+    maxOutput: 32768,
   },
+  // GPT-4o family
   gpt4oMini: {
     match: (m: string) => m.includes("gpt-4o") && m.includes("mini"),
     contextWindow: 128000,
     maxOutput: 16384,
   },
-  // o1 series
-  o1: {
-    match: (m: string) => m === "o1" || m.startsWith("o1-"),
-    contextWindow: 200000,
-    maxOutput: 100000,
+  gpt4o: {
+    match: (m: string) => m.includes("gpt-4o"),
+    contextWindow: 128000,
+    maxOutput: 16384,
   },
+  // o1 series
   o1Mini: {
     match: (m: string) => m.includes("o1-mini"),
     contextWindow: 128000,
@@ -128,16 +124,21 @@ const MODEL_PATTERNS = {
     contextWindow: 128000,
     maxOutput: 32768,
   },
-  // o3 series
-  o3: {
-    match: (m: string) => m === "o3" || m.startsWith("o3-"),
+  o1: {
+    match: (m: string) => m === "o1" || m.startsWith("o1-"),
     contextWindow: 200000,
     maxOutput: 100000,
   },
+  // o3 series
   o3Mini: {
     match: (m: string) => m.includes("o3-mini"),
     contextWindow: 128000,
     maxOutput: 65536,
+  },
+  o3: {
+    match: (m: string) => m === "o3" || m.startsWith("o3-"),
+    contextWindow: 200000,
+    maxOutput: 100000,
   },
   // GPT-4 Turbo
   gpt4Turbo: {
@@ -149,6 +150,11 @@ const MODEL_PATTERNS = {
     maxOutput: 4096,
   },
   // GPT-4 base
+  gpt432k: {
+    match: (m: string) => m.includes("gpt-4-32k"),
+    contextWindow: 32768,
+    maxOutput: 8192,
+  },
   gpt4: {
     match: (m: string) =>
       m.includes("gpt-4") &&
@@ -156,11 +162,6 @@ const MODEL_PATTERNS = {
       !m.includes("4o") &&
       !m.includes("4.1"),
     contextWindow: 8192,
-    maxOutput: 8192,
-  },
-  gpt432k: {
-    match: (m: string) => m.includes("gpt-4-32k"),
-    contextWindow: 32768,
     maxOutput: 8192,
   },
   // GPT-3.5
