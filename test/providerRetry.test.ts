@@ -95,3 +95,20 @@ test("parses Retry-After seconds and HTTP dates", () => {
     3000,
   );
 });
+
+test("reads Retry-After through AxiosHeaders-style get", () => {
+  const headers = {
+    get(name: string) {
+      return name === "retry-after" ? "1.25" : undefined;
+    },
+  };
+
+  assert.equal(getRetryAfterMs({ response: { headers } }, 0), 1250);
+});
+
+test("prefers retry-after-ms when provided", () => {
+  assert.equal(
+    getRetryAfterMs({ response: { headers: { "retry-after-ms": "1750" } } }, 0),
+    1750,
+  );
+});
