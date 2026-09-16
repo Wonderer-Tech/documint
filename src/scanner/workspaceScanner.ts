@@ -88,6 +88,11 @@ const DEFAULT_EXCLUDE_PATTERNS = [
   "**/*.log",
 ];
 
+const EXPLICIT_FOLDER_OVERRIDE_PATTERNS = new Set([
+  "**/*.test.*",
+  "**/*.spec.*",
+]);
+
 export interface ScannerConfig {
   excludePatterns?: string[];
   includePatterns?: string[];
@@ -104,49 +109,95 @@ export class WorkspaceScanner {
   }
 
   /**
-   * Scans the workspace and returns a list of files eligible for documentation
+   * Scans the workspace and returns a list of files eligible for documentation.
+   * When targetPaths are supplied, discovery is scoped to those exact files or
+   * folders instead of scanning the full workspace and filtering afterwards.
    */
   async scanWorkspace(
     workspaceFolder: vscode.WorkspaceFolder,
+    targetPaths?: string[],
   ): Promise<WorkspaceFile[]> {
     const files: WorkspaceFile[] = [];
     const resolvedConfig = this.resolveConfig(workspaceFolder);
-    const excludePatterns = resolvedConfig.excludePatterns;
-
-    // Build exclusion string for findFiles - use glob pattern syntax
-    const excludeGlob = `{${excludePatterns.join(",")}}`;
     const includeGlob = this.buildIncludeGlob(resolvedConfig);
+    const explicitFiles = new Set<string>();
 
-    // Get files only from the requested workspace root.
-    const allFiles = (
-      await vscode.workspace.findFiles(
-        new vscode.RelativePattern(workspaceFolder, includeGlob),
-        excludeGlob,
-      )
-    ).sort((a, b) => a.fsPath.localeCompare(b.fsPath));
+    let excludePatterns = resolvedConfig.excludePatterns;
+    let allFiles: vscode.Uri[];
 
-    // Secondary filter: ensure no files from excluded directories slip through
+    if (targetPaths && targetPaths.length > 0) {
+      // A deliberate folder selection should include test/spec source files,
+      // while still excluding vendor/build/generated/noise paths. An exact file
+      // selection overrides file-name exclusions entirely.
+      excludePatterns = resolvedConfig.excludePatterns.filter(
+        (pattern) => !EXPLICIT_FOLDER_OVERRIDE_PATTERNS.has(pattern),
+      );
+      const excludeGlob = this.toBraceGlob(excludePatterns);
+      const selectedFiles: vscode.Uri[] = [];
+
+      for (const targetPath of targetPaths) {
+        const absoluteTarget = path.resolve(targetPath);
+        if (!this.isInsideWorkspace(workspaceFolder.uri.fsPath, absoluteTarget)) {
+          continue;
+        }
+
+        const targetUri = vscode.Uri.file(absoluteTarget);
+        try {
+          const stat = await vscode.workspace.fs.stat(targetUri);
+          if ((stat.type & vscode.FileType.File) !== 0) {
+            explicitFiles.add(this.normalizeFsPath(targetUri.fsPath));
+            selectedFiles.push(targetUri);
+            continue;
+          }
+
+          if ((stat.type & vscode.FileType.Directory) !== 0) {
+            const matches = await vscode.workspace.findFiles(
+              new vscode.RelativePattern(absoluteTarget, includeGlob),
+              excludeGlob,
+            );
+            selectedFiles.push(...matches);
+          }
+        } catch (error) {
+          console.warn(`Failed to inspect selected path ${absoluteTarget}:`, error);
+        }
+      }
+
+      allFiles = this.uniqueSortedUris(selectedFiles);
+    } else {
+      const excludeGlob = this.toBraceGlob(excludePatterns);
+      allFiles = (
+        await vscode.workspace.findFiles(
+          new vscode.RelativePattern(workspaceFolder, includeGlob),
+          excludeGlob,
+        )
+      ).sort((a, b) => a.fsPath.localeCompare(b.fsPath));
+    }
+
+    // Secondary filter: ensure no files from excluded directories slip through.
+    // Exact user-selected files intentionally bypass this directory filter.
     const excludedDirs = excludePatterns
       .filter((p) => p.startsWith("**/") && p.endsWith("/**"))
       .map((p) => p.replace(/^\*\*\//, "").replace(/\/\*\*$/, ""));
 
     for (const uri of allFiles) {
+      const normalizedPath = this.normalizeFsPath(uri.fsPath);
+      const isExplicitFile = explicitFiles.has(normalizedPath);
       const fsPath = uri.fsPath.toLowerCase();
 
-      // Strict secondary filter: check if path contains any excluded directory
-      const shouldSkip = excludedDirs.some(
-        (dir) =>
-          fsPath.includes(`/${dir.toLowerCase()}/`) ||
-          fsPath.includes(`\\${dir.toLowerCase()}\\`) ||
-          fsPath.endsWith(`/${dir.toLowerCase()}`) ||
-          fsPath.endsWith(`\\${dir.toLowerCase()}`),
-      );
+      const shouldSkip =
+        !isExplicitFile &&
+        excludedDirs.some(
+          (dir) =>
+            fsPath.includes(`/${dir.toLowerCase()}/`) ||
+            fsPath.includes(`\\${dir.toLowerCase()}\\`) ||
+            fsPath.endsWith(`/${dir.toLowerCase()}`) ||
+            fsPath.endsWith(`\\${dir.toLowerCase()}`),
+        );
 
       if (shouldSkip) {
         continue;
       }
 
-      // Get relative path within the selected workspace root.
       const relativePath = path
         .relative(workspaceFolder.uri.fsPath, uri.fsPath)
         .replace(/\\/g, "/");
@@ -181,7 +232,9 @@ export class WorkspaceScanner {
     return files;
   }
 
-  private resolveConfig(workspaceFolder: vscode.WorkspaceFolder): Required<ScannerConfig> {
+  private resolveConfig(
+    workspaceFolder: vscode.WorkspaceFolder,
+  ): Required<ScannerConfig> {
     const settings = vscode.workspace.getConfiguration(
       "aiDocGenerator",
       workspaceFolder.uri,
@@ -220,6 +273,33 @@ export class WorkspaceScanner {
       return patterns[0];
     }
     return `{${patterns.join(",")}}`;
+  }
+
+  private uniqueSortedUris(uris: vscode.Uri[]): vscode.Uri[] {
+    const unique = new Map<string, vscode.Uri>();
+    for (const uri of uris) {
+      unique.set(this.normalizeFsPath(uri.fsPath), uri);
+    }
+    return Array.from(unique.values()).sort((a, b) =>
+      a.fsPath.localeCompare(b.fsPath),
+    );
+  }
+
+  private normalizeFsPath(filePath: string): string {
+    return path.resolve(filePath).replace(/\\/g, "/");
+  }
+
+  private isInsideWorkspace(workspaceRoot: string, targetPath: string): boolean {
+    const relative = path.relative(
+      path.resolve(workspaceRoot),
+      path.resolve(targetPath),
+    );
+    return (
+      relative === "" ||
+      (relative !== ".." &&
+        !relative.startsWith(`..${path.sep}`) &&
+        !path.isAbsolute(relative))
+    );
   }
 
   private getTargetExtensions(targetLanguages: string[]): string[] {
