@@ -6,8 +6,8 @@ import { DocumentationValidator } from "../src/services/documentationValidator";
 
 test("provider model guard replaces clearly foreign stale models", () => {
   assert.equal(
-    normalizeProviderModel("anthropic", "gpt-5.4-nano", "claude-default"),
-    "claude-default",
+    normalizeProviderModel("anthropic", "gpt-5.4-nano", "claude-sonnet-5"),
+    "claude-sonnet-5",
   );
   assert.equal(
     normalizeProviderModel("deepseek", "gpt-4o", "deepseek-flash"),
@@ -23,10 +23,10 @@ test("provider model guard preserves provider-native model choices", () => {
   assert.equal(
     normalizeProviderModel(
       "anthropic",
-      "claude-3-5-sonnet-20241022",
+      "claude-sonnet-5",
       "claude-default",
     ),
-    "claude-3-5-sonnet-20241022",
+    "claude-sonnet-5",
   );
   assert.equal(
     normalizeProviderModel("deepseek", "deepseek-flash", "fallback"),
