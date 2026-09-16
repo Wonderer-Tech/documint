@@ -10,6 +10,7 @@ import { normalizeProviderModel } from "./providerModelGuard";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { runProviderRequestWithRetry } from "./providerRetry";
 import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
+import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
 
 /**
  * Anthropic Claude provider.
@@ -23,7 +24,7 @@ export class AnthropicProvider extends BaseAIProvider {
   private readonly apiVersion = "2023-06-01";
 
   protected defaultModel(): string {
-    return "claude-sonnet-5";
+    return PROVIDER_DEFAULT_MODELS.anthropic;
   }
 
   public async generateDocumentation(
