@@ -493,14 +493,37 @@ export function activate(context: vscode.ExtensionContext) {
           password: true,
           ignoreFocusOut: true,
         });
-
-        if (apiKey) {
-          await secretManager.storeApiKey(targetProvider, apiKey);
-          sidebarProvider.updateApiKeyStatus(true);
-          vscode.window.showInformationMessage(
-            `API Key for ${targetProvider} saved successfully!`,
-          );
+        const trimmedApiKey = apiKey?.trim();
+        if (!trimmedApiKey) {
+          return;
         }
+
+        const isValid = await secretManager.validateApiKey(
+          targetProvider,
+          trimmedApiKey,
+        );
+        if (!isValid) {
+          vscode.window.showErrorMessage(
+            `Invalid API key format for ${targetProvider}.`,
+          );
+          return;
+        }
+
+        const stored = await secretManager.storeApiKey(
+          targetProvider,
+          trimmedApiKey,
+        );
+        if (!stored) {
+          vscode.window.showErrorMessage(
+            `Failed to store API key for ${targetProvider}.`,
+          );
+          return;
+        }
+
+        sidebarProvider.updateApiKeyStatus(true);
+        vscode.window.showInformationMessage(
+          `API Key for ${targetProvider} saved successfully!`,
+        );
       },
     ),
   );
