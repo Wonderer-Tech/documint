@@ -8,6 +8,7 @@ import {
 import { DocumentationContext, DocumentationResult } from "../types";
 import { normalizeProviderModel } from "./providerModelGuard";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
+import { runProviderRequestWithRetry } from "./providerRetry";
 
 /**
  * Anthropic Claude provider.
@@ -58,25 +59,29 @@ export class AnthropicProvider extends BaseAIProvider {
     const systemMessage = params.messages.find((m) => m.role === "system");
     const userMessages = params.messages.filter((m) => m.role !== "system");
 
-    const response = await axios.post(
-      this.endpoint,
-      {
-        model: params.model,
-        max_tokens: capRequestedOutputTokens(params.maxTokens),
-        ...(systemMessage ? { system: systemMessage.content } : {}),
-        messages: userMessages.map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
-      },
-      {
-        headers: {
-          "x-api-key": params.apiKey,
-          "anthropic-version": this.apiVersion,
-          "Content-Type": "application/json",
-        },
-        signal: params.signal,
-      },
+    const response = await runProviderRequestWithRetry(
+      () =>
+        axios.post(
+          this.endpoint,
+          {
+            model: params.model,
+            max_tokens: capRequestedOutputTokens(params.maxTokens),
+            ...(systemMessage ? { system: systemMessage.content } : {}),
+            messages: userMessages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+          },
+          {
+            headers: {
+              "x-api-key": params.apiKey,
+              "anthropic-version": this.apiVersion,
+              "Content-Type": "application/json",
+            },
+            signal: params.signal,
+          },
+        ),
+      { signal: params.signal },
     );
 
     const tokensUsed =
