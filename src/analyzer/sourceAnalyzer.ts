@@ -57,6 +57,49 @@ export interface FileDependencyIndex {
   dependentsByPath: Map<string, ProjectAnalysis["internalDependencies"]>;
 }
 
+const JAVASCRIPT_CONTROL_KEYWORDS = new Set([
+  "if",
+  "for",
+  "while",
+  "switch",
+  "catch",
+  "with",
+]);
+
+const INTERNAL_IMPORT_EXTENSIONS = [
+  "ts",
+  "tsx",
+  "js",
+  "jsx",
+  "py",
+  "go",
+  "rs",
+  "c",
+  "cc",
+  "cpp",
+  "cxx",
+  "h",
+  "hh",
+  "hpp",
+  "hxx",
+  "cs",
+  "java",
+  "kt",
+  "php",
+  "rb",
+  "swift",
+  "scala",
+  "sh",
+  "yaml",
+  "yml",
+  "json",
+  "xml",
+  "html",
+  "css",
+  "scss",
+  "sql",
+];
+
 export class SourceAnalyzer {
   analyzeProject(files: WorkspaceFile[]): ProjectAnalysis {
     const analyses = files.map((file) => this.analyzeFile(file));
@@ -119,7 +162,7 @@ export class SourceAnalyzer {
       }
 
       this.extractSymbols(line, lineNumber, file.language, symbols);
-      this.extractTodos(line, lineNumber, todos);
+      this.extractTodos(line, lineNumber, file.language, todos);
     });
 
     return {
@@ -216,10 +259,12 @@ export class SourceAnalyzer {
         : "";
       return `- line ${sourceImport.line}: ${sourceImport.source}${resolved}${importedSymbols}`;
     });
-    const dependents = (dependencyIndex.dependentsByPath.get(file.path) ?? [])
-      .map((edge) => `- ${edge.from}`);
-    const dependencies = (dependencyIndex.dependenciesByPath.get(file.path) ?? [])
-      .map((edge) => `- ${edge.to}`);
+    const dependents = (dependencyIndex.dependentsByPath.get(file.path) ?? []).map(
+      (edge) => `- ${edge.from}`,
+    );
+    const dependencies = (
+      dependencyIndex.dependenciesByPath.get(file.path) ?? []
+    ).map((edge) => `- ${edge.to}`);
     const todos = file.todos.map((todo) => `- line ${todo.line}: ${todo.text}`);
 
     return [
@@ -326,11 +371,25 @@ export class SourceAnalyzer {
     if (language === "python") {
       const fromMatch = trimmed.match(/^from\s+([\w.]+)\s+import\s+(.+)$/);
       if (fromMatch) {
-        imports.push({
-          line: lineNumber,
-          source: fromMatch[1],
-          symbols: this.extractPythonImportedSymbols(fromMatch[2]),
-        });
+        const symbols = this.extractPythonImportedSymbols(fromMatch[2]);
+        if (/^\.+$/.test(fromMatch[1]) && symbols.length > 0) {
+          for (const symbol of symbols) {
+            if (symbol === "*") {
+              continue;
+            }
+            imports.push({
+              line: lineNumber,
+              source: `${fromMatch[1]}${symbol}`,
+              symbols: [symbol],
+            });
+          }
+        } else {
+          imports.push({
+            line: lineNumber,
+            source: fromMatch[1],
+            symbols,
+          });
+        }
         return;
       }
 
@@ -356,6 +415,43 @@ export class SourceAnalyzer {
       );
       if (match) {
         imports.push({ line: lineNumber, source: match[1], symbols: [] });
+      }
+      return;
+    }
+
+    if (language === "rust") {
+      const moduleMatch = trimmed.match(
+        /^(?:pub(?:\([^)]*\))?\s+)?mod\s+([A-Za-z_]\w*)\s*;/,
+      );
+      if (moduleMatch) {
+        imports.push({
+          line: lineNumber,
+          source: `./${moduleMatch[1]}`,
+          symbols: [moduleMatch[1]],
+        });
+      }
+      return;
+    }
+
+    if (language === "c" || language === "cpp") {
+      const localIncludeMatch = trimmed.match(/^#\s*include\s*"([^"]+)"/);
+      if (localIncludeMatch) {
+        const source = localIncludeMatch[1];
+        imports.push({
+          line: lineNumber,
+          source: source.startsWith(".") ? source : `./${source}`,
+          symbols: [],
+        });
+        return;
+      }
+
+      const systemIncludeMatch = trimmed.match(/^#\s*include\s*<([^>]+)>/);
+      if (systemIncludeMatch) {
+        imports.push({
+          line: lineNumber,
+          source: systemIncludeMatch[1],
+          symbols: [],
+        });
       }
       return;
     }
@@ -432,6 +528,22 @@ export class SourceAnalyzer {
         "constant",
         symbols,
       );
+
+      const methodPattern =
+        /^(?:(?:public|private|protected|static|abstract|override|readonly|async|get|set)\s+)*([A-Za-z_$][\w$]*)\s*(?:<[^>]+>\s*)?\(([^)]*)\)\s*(?::\s*[^={]+)?\s*\{/;
+      const methodMatch = trimmed.match(methodPattern);
+      if (
+        methodMatch &&
+        !JAVASCRIPT_CONTROL_KEYWORDS.has(methodMatch[1].toLowerCase())
+      ) {
+        this.addMatchSymbol(
+          trimmed,
+          lineNumber,
+          methodPattern,
+          "method",
+          symbols,
+        );
+      }
       return;
     }
 
@@ -529,15 +641,115 @@ export class SourceAnalyzer {
   private extractTodos(
     line: string,
     lineNumber: number,
+    language: string,
     todos: TodoComment[],
   ): void {
-    const match = line.match(/\b(TODO|FIXME|HACK)\b[:\s-]*(.+)$/i);
+    const commentText = this.extractCommentText(line, language);
+    if (!commentText) {
+      return;
+    }
+
+    const match = commentText.match(/\b(TODO|FIXME|HACK)\b[:\s-]*(.+)$/i);
     if (match) {
       todos.push({
         line: lineNumber,
-        text: `${match[1].toUpperCase()}: ${match[2].trim()}`,
+        text: `${match[1].toUpperCase()}: ${match[2]
+          .replace(/\*\/\s*$/, "")
+          .replace(/-->\s*$/, "")
+          .trim()}`,
       });
     }
+  }
+
+  private extractCommentText(line: string, language: string): string | undefined {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("*")) {
+      return trimmed.slice(1).trim();
+    }
+
+    const markers = this.commentMarkersForLanguage(language);
+    const match = this.findCommentMarkerOutsideQuotes(line, markers);
+    return match
+      ? line.slice(match.index + match.marker.length).trim()
+      : undefined;
+  }
+
+  private commentMarkersForLanguage(language: string): string[] {
+    if (
+      this.isJavaScriptLike(language) ||
+      [
+        "java",
+        "kotlin",
+        "go",
+        "rust",
+        "c",
+        "cpp",
+        "csharp",
+        "swift",
+      ].includes(language)
+    ) {
+      return ["//", "/*"];
+    }
+    if (["python", "ruby", "shell", "yaml"].includes(language)) {
+      return ["#"];
+    }
+    if (language === "php") {
+      return ["//", "#", "/*"];
+    }
+    if (language === "sql") {
+      return ["--"];
+    }
+    if (language === "html" || language === "xml") {
+      return ["<!--"];
+    }
+    if (language === "css" || language === "scss") {
+      return ["/*"];
+    }
+    return [];
+  }
+
+  private findCommentMarkerOutsideQuotes(
+    value: string,
+    markers: string[],
+  ): { index: number; marker: string } | undefined {
+    let quote: "\"" | "'" | "`" | undefined;
+    let escaped = false;
+
+    for (let index = 0; index < value.length; index++) {
+      const char = value[index];
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (quote) {
+        if (char === "\\") {
+          escaped = true;
+        } else if (char === quote) {
+          quote = undefined;
+        }
+        continue;
+      }
+      if (char === "\"" || char === "'" || char === "`") {
+        quote = char;
+        continue;
+      }
+
+      for (const marker of markers) {
+        if (!value.startsWith(marker, index)) {
+          continue;
+        }
+        if (
+          (marker === "#" || marker === "--") &&
+          index > 0 &&
+          !/\s/.test(value[index - 1])
+        ) {
+          continue;
+        }
+        return { index, marker };
+      }
+    }
+
+    return undefined;
   }
 
   private addMatchSymbol(
@@ -570,13 +782,30 @@ export class SourceAnalyzer {
   }
 
   private extractImportedSymbols(importClause: string): string[] {
-    return importClause
-      .replace(/[{}]/g, "")
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean)
-      .map((value) => value.split(/\s+as\s+/)[0].trim())
-      .filter((value) => value !== "*" && value !== "type");
+    const symbols = new Set<string>();
+    const segments = importClause.replace(/[{}]/g, "").split(",");
+
+    for (const value of segments) {
+      const segment = value.trim().replace(/^type\s+/, "");
+      if (!segment) {
+        continue;
+      }
+
+      const namespaceMatch = segment.match(
+        /^\*\s+as\s+([A-Za-z_$][\w$]*)$/,
+      );
+      if (namespaceMatch) {
+        symbols.add(namespaceMatch[1]);
+        continue;
+      }
+
+      const original = segment.split(/\s+as\s+/)[0].trim();
+      if (/^[A-Za-z_$][\w$]*$/.test(original) && original !== "type") {
+        symbols.add(original);
+      }
+    }
+
+    return Array.from(symbols);
   }
 
   private extractPythonImportedSymbols(importClause: string): string[] {
@@ -646,24 +875,54 @@ export class SourceAnalyzer {
       return undefined;
     }
 
-    const baseDir = path.posix.dirname(this.normalize(fromPath));
-    const basePath = this.normalize(path.posix.join(baseDir, importSource));
-    const candidates = [
-      basePath,
-      `${basePath}.ts`,
-      `${basePath}.tsx`,
-      `${basePath}.js`,
-      `${basePath}.jsx`,
-      `${basePath}.py`,
-      `${basePath}.go`,
-      `${basePath}.rs`,
-      `${basePath}/index.ts`,
-      `${basePath}/index.tsx`,
-      `${basePath}/index.js`,
-      `${basePath}/index.jsx`,
-    ];
+    const normalizedFromPath = this.normalize(fromPath);
+    const baseDir = path.posix.dirname(normalizedFromPath);
+    const basePaths = new Set<string>([
+      this.resolveRelativeBasePath(baseDir, importSource),
+    ]);
+
+    if (normalizedFromPath.endsWith(".rs")) {
+      const stem = path.posix.basename(normalizedFromPath, ".rs");
+      if (!new Set(["lib", "main", "mod"]).has(stem)) {
+        const nestedModuleDir = path.posix.join(baseDir, stem);
+        basePaths.add(this.resolveRelativeBasePath(nestedModuleDir, importSource));
+      }
+    }
+
+    const candidates: string[] = [];
+    for (const basePath of basePaths) {
+      candidates.push(basePath);
+      for (const extension of INTERNAL_IMPORT_EXTENSIONS) {
+        candidates.push(`${basePath}.${extension}`);
+      }
+      candidates.push(
+        `${basePath}/index.ts`,
+        `${basePath}/index.tsx`,
+        `${basePath}/index.js`,
+        `${basePath}/index.jsx`,
+        `${basePath}/__init__.py`,
+        `${basePath}/mod.rs`,
+      );
+    }
 
     return candidates.find((candidate) => pathIndex.has(candidate));
+  }
+
+  private resolveRelativeBasePath(baseDir: string, importSource: string): string {
+    const pythonRelative = importSource.match(/^(\.+)([A-Za-z_]?[\w.]*)$/);
+    if (pythonRelative && !importSource.includes("/")) {
+      let targetDir = baseDir;
+      const parentLevels = Math.max(0, pythonRelative[1].length - 1);
+      for (let level = 0; level < parentLevels; level++) {
+        targetDir = path.posix.dirname(targetDir);
+      }
+      const modulePath = pythonRelative[2].replace(/\./g, "/");
+      return this.normalize(
+        modulePath ? path.posix.join(targetDir, modulePath) : targetDir,
+      );
+    }
+
+    return this.normalize(path.posix.join(baseDir, importSource));
   }
 
   private packageName(importSource: string): string {
