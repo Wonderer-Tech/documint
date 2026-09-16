@@ -10,6 +10,7 @@ import { normalizeProviderModel } from "./providerModelGuard";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 import { runProviderRequestWithRetry } from "./providerRetry";
+import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
 
 /**
  * DeepSeek provider using the official OpenAI-compatible Chat Completions API.
@@ -81,7 +82,7 @@ export class DeepSeekProvider extends BaseAIProvider {
                 Authorization: `Bearer ${params.apiKey}`,
                 "Content-Type": "application/json",
               },
-              timeout: 300000,
+              timeout: CLOUD_PROVIDER_REQUEST_TIMEOUT_MS,
               signal: params.signal,
             },
           ),
