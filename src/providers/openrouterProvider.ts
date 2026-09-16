@@ -1,7 +1,12 @@
 import * as vscode from "vscode";
 import axios from "axios";
-import { BaseAIProvider, ApiCallParams } from "./aiProvider";
-import { DocumentationResult } from "../types";
+import {
+  BaseAIProvider,
+  ApiCallParams,
+  RawMarkdownPromptParams,
+} from "./aiProvider";
+import { DocumentationContext, DocumentationResult } from "../types";
+import { normalizeProviderModel } from "./providerModelGuard";
 
 /**
  * OpenRouter provider — routes requests to 100+ models via a single API key.
@@ -16,6 +21,35 @@ export class OpenRouterProvider extends BaseAIProvider {
 
   protected defaultModel(): string {
     return "openai/gpt-4o";
+  }
+
+  public async generateDocumentation(
+    context: DocumentationContext,
+  ): Promise<DocumentationResult> {
+    return super.generateDocumentation({
+      ...context,
+      model: this.resolveCompatibleModel(context.model),
+    });
+  }
+
+  public async generateMarkdownFromPrompt(
+    params: RawMarkdownPromptParams,
+  ): Promise<DocumentationResult> {
+    return super.generateMarkdownFromPrompt({
+      ...params,
+      model: this.resolveCompatibleModel(params.model),
+    });
+  }
+
+  private resolveCompatibleModel(requestedModel?: string): string {
+    const configuredModel = vscode.workspace
+      .getConfiguration("aiDocGenerator")
+      .get<string>("model");
+    return normalizeProviderModel(
+      "openrouter",
+      requestedModel ?? configuredModel,
+      this.defaultModel(),
+    );
   }
 
   protected async callApi(params: ApiCallParams): Promise<DocumentationResult> {
