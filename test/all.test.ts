@@ -13,3 +13,6 @@ import "./customEndpointPolicy.test";
 import "./providerErrorPolicy.test";
 import "./providerRetry.test";
 import "./providerRequestPolicy.test";
+import "./anthropicResponse.test";
+import "./providerHttpError.test";
+import "./openRouterCapabilities.test";
