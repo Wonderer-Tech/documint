@@ -1,52 +1,15 @@
 import * as vscode from "vscode";
 import axios from "axios";
 import { SecretStorageManager } from "../config/secretStorage";
+import {
+  estimateModelContextWindow,
+  getKnownModelContext,
+} from "./modelContextCatalog";
 
 export interface ModelMetadata {
   contextWindow: number;
   source: "api" | "estimated";
 }
-
-// Hardcoded fallbacks — used when API is unreachable or key is missing
-const FALLBACK_CONTEXT_WINDOWS: Record<string, number> = {
-  // OpenAI
-  "gpt-5.4-nano": 128000,
-  "gpt-5.4-mini": 128000,
-  "gpt-5.4": 200000,
-  "gpt-5-nano": 128000,
-  "gpt-5-mini": 128000,
-  "gpt-5": 200000,
-  "gpt-4o": 128000,
-  "gpt-4o-mini": 128000,
-  "gpt-4-turbo": 128000,
-  "gpt-4": 8192,
-  "gpt-3.5-turbo": 16385,
-  "o1": 200000,
-  "o1-mini": 128000,
-  "o3": 200000,
-  "o3-mini": 200000,
-  // Anthropic current models
-  "claude-sonnet-5": 1000000,
-  "claude-opus-5": 1000000,
-  "claude-sonnet-4-6": 1000000,
-  "claude-opus-4-8": 1000000,
-  "claude-opus-4-7": 1000000,
-  "claude-opus-4-6": 1000000,
-  "claude-sonnet-4-5-20250929": 200000,
-  "claude-haiku-4-5-20251001": 200000,
-  // Older Anthropic IDs retained for explicit legacy selections
-  "claude-3-5-sonnet-20241022": 200000,
-  "claude-3-5-haiku-20241022": 200000,
-  "claude-3-opus-20240229": 200000,
-  "claude-3-sonnet-20240229": 200000,
-  "claude-3-haiku-20240307": 200000,
-  "claude-2.1": 200000,
-  "claude-2.0": 100000,
-  // DeepSeek
-  "deepseek-flash": 1000000,
-  "deepseek-v4-flash": 1000000,
-  "deepseek-v4-pro": 1000000,
-};
 
 export class ModelMetadataService {
   private static instance: ModelMetadataService;
@@ -64,9 +27,9 @@ export class ModelMetadataService {
 
   /**
    * Fetches the context window for a given provider + model.
-   * Known models resolve locally first; unknown models may query provider metadata
-   * APIs before falling back to conservative estimates. Concurrent callers for the
-   * same provider/model share one in-flight lookup.
+   * Exact known current/legacy models resolve locally first. Unknown models may
+   * query provider metadata APIs before falling back to conservative inference.
+   * Concurrent callers for the same provider/model share one in-flight lookup.
    */
   async fetchContextWindow(
     provider: string,
@@ -84,10 +47,10 @@ export class ModelMetadataService {
       return cached;
     }
 
-    const knownContextWindow = FALLBACK_CONTEXT_WINDOWS[normalizedModel];
-    if (knownContextWindow) {
+    const known = getKnownModelContext(normalizedModel);
+    if (known) {
       const knownResult: ModelMetadata = {
-        contextWindow: knownContextWindow,
+        contextWindow: known.contextWindow,
         source: "estimated",
       };
       this.cache.set(cacheKey, knownResult);
@@ -141,8 +104,6 @@ export class ModelMetadataService {
     }
   }
 
-  // ── Provider implementations ───────────────────────────────────────────────
-
   private async fetchOpenAI(
     model: string,
     apiKey: string,
@@ -150,6 +111,7 @@ export class ModelMetadataService {
     if (!apiKey) {
       return this.estimateFallback(model);
     }
+
     try {
       const res = await axios.get(
         `https://api.openai.com/v1/models/${encodeURIComponent(model)}`,
@@ -158,13 +120,14 @@ export class ModelMetadataService {
           timeout: 6000,
         },
       );
-      const cw = res.data?.context_window;
-      if (typeof cw === "number" && cw > 0) {
-        return { contextWindow: cw, source: "api" };
+      const contextWindow = res.data?.context_window;
+      if (typeof contextWindow === "number" && contextWindow > 0) {
+        return { contextWindow, source: "api" };
       }
     } catch {
-      // fall through
+      // Fall through to the local estimate.
     }
+
     return this.estimateFallback(model);
   }
 
@@ -175,6 +138,7 @@ export class ModelMetadataService {
     if (!apiKey) {
       return this.estimateFallback(model);
     }
+
     try {
       const res = await axios.get(
         `https://api.anthropic.com/v1/models/${encodeURIComponent(model)}`,
@@ -186,13 +150,15 @@ export class ModelMetadataService {
           timeout: 6000,
         },
       );
-      const cw = res.data?.context_window ?? res.data?.max_tokens_input;
-      if (typeof cw === "number" && cw > 0) {
-        return { contextWindow: cw, source: "api" };
+      const contextWindow =
+        res.data?.context_window ?? res.data?.max_tokens_input;
+      if (typeof contextWindow === "number" && contextWindow > 0) {
+        return { contextWindow, source: "api" };
       }
     } catch {
-      // fall through
+      // Fall through to the local estimate.
     }
+
     return this.estimateFallback(model);
   }
 
@@ -203,74 +169,30 @@ export class ModelMetadataService {
     if (!apiKey) {
       return this.estimateFallback(model);
     }
+
     try {
-      // OpenRouter exposes model metadata at /api/v1/models
       const res = await axios.get("https://openrouter.ai/api/v1/models", {
         headers: { Authorization: `Bearer ${apiKey}` },
         timeout: 6000,
       });
       const entry = res.data?.data?.find(
-        (m: { id: string; context_length?: number }) => m.id === model,
+        (candidate: { id: string; context_length?: number }) =>
+          candidate.id === model,
       );
       if (entry?.context_length) {
         return { contextWindow: entry.context_length, source: "api" };
       }
     } catch {
-      // fall through
+      // Fall through to the local estimate.
     }
+
     return this.estimateFallback(model);
   }
 
-  // ── Fallback logic ─────────────────────────────────────────────────────────
-
   private estimateFallback(model: string): ModelMetadata {
-    const m = model.toLowerCase();
-
-    if (FALLBACK_CONTEXT_WINDOWS[m]) {
-      return { contextWindow: FALLBACK_CONTEXT_WINDOWS[m], source: "estimated" };
-    }
-
-    for (const [key, tokens] of Object.entries(FALLBACK_CONTEXT_WINDOWS)) {
-      if (m.includes(key)) {
-        return { contextWindow: tokens, source: "estimated" };
-      }
-    }
-
-    if (m.includes("deepseek-v4") || m.includes("deepseek-flash")) {
-      return { contextWindow: 1000000, source: "estimated" };
-    }
-    if (
-      m.includes("claude-sonnet-5") ||
-      m.includes("claude-opus-5") ||
-      m.includes("claude-sonnet-4-6") ||
-      m.includes("claude-opus-4-8") ||
-      m.includes("claude-opus-4-7") ||
-      m.includes("claude-opus-4-6")
-    ) {
-      return { contextWindow: 1000000, source: "estimated" };
-    }
-    if (m.includes("200k") || m.includes("claude")) {
-      return { contextWindow: 200000, source: "estimated" };
-    }
-    if (
-      m.includes("128k") ||
-      m.includes("gpt-5") ||
-      m.includes("gpt-4o") ||
-      m.includes("o1") ||
-      m.includes("o3")
-    ) {
-      return { contextWindow: 128000, source: "estimated" };
-    }
-    if (m.includes("32k")) {
-      return { contextWindow: 32768, source: "estimated" };
-    }
-    if (m.includes("16k")) {
-      return { contextWindow: 16385, source: "estimated" };
-    }
-    if (m.includes("turbo")) {
-      return { contextWindow: 128000, source: "estimated" };
-    }
-
-    return { contextWindow: 8192, source: "estimated" };
+    return {
+      contextWindow: estimateModelContextWindow(model),
+      source: "estimated",
+    };
   }
 }
