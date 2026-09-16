@@ -17,7 +17,7 @@ export function sanitizeMarkdown(markdown: string): string {
 function removeMarkdownSection(markdown: string, heading: string): string {
   const escaped = escapeRegExp(heading);
   const pattern = new RegExp(
-    `\\n### ${escaped}\\n[\\s\\S]*?(?=\\n### |\\n## |\\n# |$)`,
+    `(?:^|\\n)### ${escaped}\\n[\\s\\S]*?(?=\\n### |\\n## |\\n# |$)`,
     "g",
   );
   return markdown.replace(pattern, "");
