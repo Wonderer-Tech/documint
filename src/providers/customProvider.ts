@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import axios from "axios";
 import { BaseAIProvider, ApiCallParams } from "./aiProvider";
 import { DocumentationContext, DocumentationResult } from "../types";
+import { capRequestedOutputTokens } from "./outputTokenLimit";
 
 /**
  * Custom provider — calls a user-specified endpoint using the OpenAI
@@ -80,7 +81,7 @@ export class CustomProvider extends BaseAIProvider {
         model: params.model,
         messages: params.messages,
         temperature: this.temperature,
-        max_tokens: params.maxTokens,
+        max_tokens: capRequestedOutputTokens(params.maxTokens),
       },
       {
         headers: {
