@@ -4,6 +4,7 @@ import { BaseAIProvider, ApiCallParams } from "./aiProvider";
 import { DocumentationResult } from "../types";
 import { normalizeProviderModel } from "./providerModelGuard";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
+import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 
 /**
  * Model aliases map known shorthand names to their full OpenAI model IDs.
@@ -238,9 +239,9 @@ export class OpenAIProvider extends BaseAIProvider {
         signal: params.signal,
       });
 
+      const parsed = parseOpenAICompatibleResponse(response.data, "OpenAI");
       return {
-        documentation: response.data.choices[0].message.content,
-        tokensUsed: response.data.usage.total_tokens,
+        ...parsed,
         model: resolvedModel,
       };
     } catch (error) {
