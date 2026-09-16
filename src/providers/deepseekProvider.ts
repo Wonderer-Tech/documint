@@ -8,6 +8,7 @@ import {
 import { DocumentationContext, DocumentationResult } from "../types";
 import { normalizeProviderModel } from "./providerModelGuard";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
+import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 
 /**
  * DeepSeek provider using the official OpenAI-compatible Chat Completions API.
@@ -82,9 +83,9 @@ export class DeepSeekProvider extends BaseAIProvider {
         },
       );
 
+      const parsed = parseOpenAICompatibleResponse(response.data, "DeepSeek");
       return {
-        documentation: response.data.choices?.[0]?.message?.content ?? "",
-        tokensUsed: response.data.usage?.total_tokens ?? 0,
+        ...parsed,
         model: params.model,
       };
     } catch (error) {
@@ -120,6 +121,10 @@ export class DeepSeekProvider extends BaseAIProvider {
             `Check your internet connection and firewall settings.\n\n` +
             `Original error: ${axErr.message}`,
         );
+      }
+
+      if (error instanceof Error) {
+        throw error;
       }
 
       throw new Error(`Unexpected DeepSeek API error: ${axErr.message}`);
