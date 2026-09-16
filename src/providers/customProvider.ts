@@ -6,6 +6,7 @@ import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 import { evaluateCustomEndpoint } from "./customEndpointPolicy";
 import { runProviderRequestWithRetry } from "./providerRetry";
+import { CUSTOM_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
 
 /**
  * Custom provider — calls a user-specified endpoint using the OpenAI
@@ -75,7 +76,7 @@ export class CustomProvider extends BaseAIProvider {
                 : {}),
               "Content-Type": "application/json",
             },
-            timeout: 120000,
+            timeout: CUSTOM_PROVIDER_REQUEST_TIMEOUT_MS,
             signal: params.signal,
           },
         ),
