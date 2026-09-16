@@ -53,9 +53,14 @@ export async function runProviderRequestWithRetry<T>(
 export function getRetryAfterMs(error: unknown, now = Date.now()): number | undefined {
   const response = getRecord(error)?.response;
   const headers = getRecord(response)?.headers;
-  const record = getRecord(headers);
-  const raw = record?.["retry-after"] ?? record?.["Retry-After"];
 
+  const explicitMilliseconds = readHeader(headers, "retry-after-ms");
+  const parsedMilliseconds = parseNonNegativeNumber(explicitMilliseconds);
+  if (parsedMilliseconds !== undefined) {
+    return Math.floor(parsedMilliseconds);
+  }
+
+  const raw = readHeader(headers, "retry-after");
   if (typeof raw === "number" && Number.isFinite(raw) && raw >= 0) {
     return Math.floor(raw * 1000);
   }
@@ -98,6 +103,47 @@ function getProviderFailureInput(error: unknown): {
     name: typeof record?.name === "string" ? record.name : undefined,
     message: typeof record?.message === "string" ? record.message : undefined,
   };
+}
+
+function readHeader(headers: unknown, name: string): unknown {
+  if (!headers) {
+    return undefined;
+  }
+
+  const getter = getRecord(headers)?.get;
+  if (typeof getter === "function") {
+    try {
+      const value = getter.call(headers, name);
+      if (value !== undefined && value !== null) {
+        return value;
+      }
+    } catch {
+      // Fall through to plain-object lookup.
+    }
+  }
+
+  const record = getRecord(headers);
+  return record?.[name] ?? record?.[toHeaderCase(name)];
+}
+
+function parseNonNegativeNumber(value: unknown): number | undefined {
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value >= 0 ? value : undefined;
+  }
+
+  if (typeof value !== "string" || !value.trim()) {
+    return undefined;
+  }
+
+  const parsed = Number(value.trim());
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+function toHeaderCase(name: string): string {
+  return name
+    .split("-")
+    .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : part))
+    .join("-");
 }
 
 function getRecord(value: unknown): Record<string, unknown> | undefined {
