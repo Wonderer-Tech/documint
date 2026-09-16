@@ -3,6 +3,7 @@ import axios, { AxiosError } from "axios";
 import { BaseAIProvider, ApiCallParams } from "./aiProvider";
 import { DocumentationResult } from "../types";
 import { normalizeProviderModel } from "./providerModelGuard";
+import { capRequestedOutputTokens } from "./outputTokenLimit";
 
 /**
  * Model aliases map known shorthand names to their full OpenAI model IDs.
@@ -216,6 +217,7 @@ export class OpenAIProvider extends BaseAIProvider {
   protected async callApi(params: ApiCallParams): Promise<DocumentationResult> {
     const resolvedModel = this.resolveModelName(params.model);
     const newStyleTokens = this.usesCompletionTokensParam(resolvedModel);
+    const maxTokens = capRequestedOutputTokens(params.maxTokens);
 
     // Build request body — newer models use max_completion_tokens, not max_tokens,
     // and do not accept the temperature parameter.
@@ -223,8 +225,8 @@ export class OpenAIProvider extends BaseAIProvider {
       model: resolvedModel,
       messages: params.messages,
       ...(newStyleTokens
-        ? { max_completion_tokens: params.maxTokens }
-        : { temperature: this.temperature, max_tokens: params.maxTokens }),
+        ? { max_completion_tokens: maxTokens }
+        : { temperature: this.temperature, max_tokens: maxTokens }),
     };
 
     try {
