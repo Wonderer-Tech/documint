@@ -4,17 +4,12 @@ import {
   GuardedProviderName,
   normalizeProviderModel,
 } from "./providerModelGuard";
+import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
 import { ModelMetadataService } from "../services/modelMetadataService";
 
 type MetadataProviderName = GuardedProviderName | "custom";
 
-const DEFAULT_MODELS: Record<MetadataProviderName, string> = {
-  openai: "gpt-5.4-nano",
-  anthropic: "claude-sonnet-5",
-  openrouter: "openai/gpt-4o",
-  deepseek: "deepseek-flash",
-  custom: "default",
-};
+const CUSTOM_DEFAULT_MODEL = "default";
 
 /**
  * Makes ModelMetadataService part of the real generation path without changing
@@ -29,11 +24,14 @@ export function withModelMetadata(
   provider: BaseAIProvider,
   context: vscode.ExtensionContext,
 ): BaseAIProvider {
-  if (!(provider.name in DEFAULT_MODELS)) {
+  const providerName = provider.name as MetadataProviderName;
+  if (
+    providerName !== "custom" &&
+    !(providerName in PROVIDER_DEFAULT_MODELS)
+  ) {
     return provider;
   }
 
-  const providerName = provider.name as MetadataProviderName;
   const metadataService = ModelMetadataService.getInstance(context);
   const resolvedWindows = new Map<string, number>();
   const originalGetMaxContextWindow =
@@ -50,13 +48,13 @@ export function withModelMetadata(
       ?.trim();
 
     if (providerName === "custom") {
-      return requestedModel?.trim() || configuredModel || DEFAULT_MODELS.custom;
+      return requestedModel?.trim() || configuredModel || CUSTOM_DEFAULT_MODEL;
     }
 
     return normalizeProviderModel(
       providerName,
       requestedModel ?? configuredModel,
-      DEFAULT_MODELS[providerName],
+      PROVIDER_DEFAULT_MODELS[providerName],
     );
   };
 
