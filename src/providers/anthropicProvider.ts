@@ -141,13 +141,4 @@ export class AnthropicProvider extends BaseAIProvider {
     }
     return 200000;
   }
-
-  public async validateConnection(): Promise<boolean> {
-    try {
-      const key = await this.secretManager.getApiKey(this.name);
-      return typeof key === "string" && key.startsWith("sk-ant-");
-    } catch {
-      return false;
-    }
-  }
 }
