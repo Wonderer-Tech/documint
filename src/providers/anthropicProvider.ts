@@ -7,6 +7,7 @@ import {
 } from "./aiProvider";
 import { DocumentationContext, DocumentationResult } from "../types";
 import { normalizeProviderModel } from "./providerModelGuard";
+import { capRequestedOutputTokens } from "./outputTokenLimit";
 
 /**
  * Anthropic Claude provider.
@@ -61,7 +62,7 @@ export class AnthropicProvider extends BaseAIProvider {
       this.endpoint,
       {
         model: params.model,
-        max_tokens: params.maxTokens,
+        max_tokens: capRequestedOutputTokens(params.maxTokens),
         ...(systemMessage ? { system: systemMessage.content } : {}),
         messages: userMessages.map((m) => ({
           role: m.role,
