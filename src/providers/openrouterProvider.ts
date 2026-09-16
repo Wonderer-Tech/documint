@@ -11,6 +11,7 @@ import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 import { runProviderRequestWithRetry } from "./providerRetry";
 import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
+import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
 
 /**
  * OpenRouter provider — routes requests to 100+ models via a single API key.
@@ -24,7 +25,7 @@ export class OpenRouterProvider extends BaseAIProvider {
   private readonly endpoint = "https://openrouter.ai/api/v1/chat/completions";
 
   protected defaultModel(): string {
-    return "openai/gpt-4o";
+    return PROVIDER_DEFAULT_MODELS.openrouter;
   }
 
   public async generateDocumentation(
