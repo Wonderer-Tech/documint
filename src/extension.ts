@@ -7,6 +7,7 @@ import {
 } from "./services/docGenerator";
 import { sanitizeGeneratedOutputs } from "./services/outputSanitizer";
 import { ProviderFactory } from "./providers/providerFactory";
+import { setWorkspaceScannerRunTargets } from "./scanner/workspaceScanner";
 import { DocumentationError } from "./types";
 
 export function activate(context: vscode.ExtensionContext) {
@@ -195,6 +196,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     sidebarProvider.setGeneratingState(true);
+    setWorkspaceScannerRunTargets(payload.targetPaths);
 
     try {
       const outputPaths: GeneratedOutputPaths =
@@ -271,6 +273,7 @@ export function activate(context: vscode.ExtensionContext) {
         );
       }
     } finally {
+      setWorkspaceScannerRunTargets(undefined);
       if (activeCancellationSource === cancellationSource) {
         activeCancellationSource = undefined;
       }
