@@ -146,11 +146,23 @@
             "python",
             "java",
             "cpp",
+            "c",
             "csharp",
             "go",
             "rust",
             "php",
-            "ruby"
+            "ruby",
+            "swift",
+            "kotlin",
+            "scala",
+            "shell",
+            "yaml",
+            "json",
+            "xml",
+            "html",
+            "css",
+            "scss",
+            "sql"
           ]
         },
         "aiDocGenerator.maxTokens": {
