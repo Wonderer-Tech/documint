@@ -82,7 +82,7 @@ export class AnthropicProvider extends BaseAIProvider {
     const tokensUsed =
       (response.data.usage?.input_tokens ?? 0) +
       (response.data.usage?.output_tokens ?? 0);
-    const contentBlocks = Array.isArray(response.data.content)
+    const contentBlocks: unknown[] = Array.isArray(response.data.content)
       ? response.data.content
       : [];
     const documentation = contentBlocks
