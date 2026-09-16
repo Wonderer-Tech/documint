@@ -13,7 +13,7 @@ export class DeepSeekProvider extends BaseAIProvider {
   private readonly endpoint = "https://api.deepseek.com/chat/completions";
 
   protected defaultModel(): string {
-    return "deepseek-v4-flash";
+    return "deepseek-flash";
   }
 
   protected getMaxOutputTokens(_model?: string): number {
