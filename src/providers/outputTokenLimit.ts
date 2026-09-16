@@ -1,26 +1,7 @@
 import * as vscode from "vscode";
+import { resolveOutputTokenLimit } from "./outputTokenLimitCore";
 
-/**
- * Applies a configured output ceiling while preserving a stricter upstream
- * provider/context limit. Invalid configured values are ignored.
- */
-export function resolveOutputTokenLimit(
-  requestedTokens: number,
-  configuredTokens?: number,
-): number {
-  const requested = Number.isFinite(requestedTokens)
-    ? Math.max(1, Math.floor(requestedTokens))
-    : 1;
-
-  if (!Number.isFinite(configuredTokens) || (configuredTokens ?? 0) <= 0) {
-    return requested;
-  }
-
-  return Math.min(
-    requested,
-    Math.max(1, Math.floor(configuredTokens!)),
-  );
-}
+export { resolveOutputTokenLimit } from "./outputTokenLimitCore";
 
 /**
  * Applies the user-facing aiDocGenerator.maxTokens setting as an upper bound
