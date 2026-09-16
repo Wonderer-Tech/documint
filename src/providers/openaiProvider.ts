@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import axios, { AxiosError } from "axios";
 import { BaseAIProvider, ApiCallParams } from "./aiProvider";
 import { DocumentationResult } from "../types";
+import { normalizeProviderModel } from "./providerModelGuard";
 
 /**
  * Model aliases map known shorthand names to their full OpenAI model IDs.
@@ -180,11 +181,16 @@ export class OpenAIProvider extends BaseAIProvider {
 
   /**
    * Resolves a model name to its canonical OpenAI ID using the alias map.
-   * Falls back to the original name for forward compatibility with new models.
+   * Clearly foreign provider models fall back to the OpenAI default.
    */
   private resolveModelName(model: string): string {
-    const lower = model.toLowerCase().trim();
-    return MODEL_ALIASE[lower] ?? model;
+    const compatibleModel = normalizeProviderModel(
+      "openai",
+      model,
+      this.defaultModel(),
+    );
+    const lower = compatibleModel.toLowerCase().trim();
+    return MODEL_ALIASE[lower] ?? compatibleModel;
   }
 
   protected defaultModel(): string {
@@ -222,17 +228,13 @@ export class OpenAIProvider extends BaseAIProvider {
     };
 
     try {
-      const response = await axios.post(
-        this.endpoint,
-        body,
-        {
-          headers: {
-            Authorization: `Bearer ${params.apiKey}`,
-            "Content-Type": "application/json",
-          },
-          signal: params.signal,
+      const response = await axios.post(this.endpoint, body, {
+        headers: {
+          Authorization: `Bearer ${params.apiKey}`,
+          "Content-Type": "application/json",
         },
-      );
+        signal: params.signal,
+      });
 
       return {
         documentation: response.data.choices[0].message.content,
@@ -304,7 +306,7 @@ export class OpenAIProvider extends BaseAIProvider {
   }
 
   protected getMaxOutputTokens(model?: string): number {
-    const m = (model || "").toLowerCase();
+    const m = this.resolveModelName(model || this.defaultModel()).toLowerCase();
 
     for (const [, pattern] of Object.entries(MODEL_PATTERNS)) {
       if (pattern.match(m)) {
@@ -317,7 +319,7 @@ export class OpenAIProvider extends BaseAIProvider {
   }
 
   getMaxContextWindow(model?: string): number {
-    const m = (model || "").toLowerCase();
+    const m = this.resolveModelName(model || this.defaultModel()).toLowerCase();
 
     for (const [, pattern] of Object.entries(MODEL_PATTERNS)) {
       if (pattern.match(m)) {
