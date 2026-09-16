@@ -7,6 +7,7 @@ import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 import { evaluateCustomEndpoint } from "./customEndpointPolicy";
 import { runProviderRequestWithRetry } from "./providerRetry";
 import { CUSTOM_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
+import { normalizeProviderRequestError } from "./providerHttpError";
 
 /**
  * Custom provider — calls a user-specified endpoint using the OpenAI
@@ -59,38 +60,42 @@ export class CustomProvider extends BaseAIProvider {
   }
 
   protected async callApi(params: ApiCallParams): Promise<DocumentationResult> {
-    const response = await runProviderRequestWithRetry(
-      () =>
-        axios.post(
-          this.endpoint,
-          {
-            model: params.model,
-            messages: params.messages,
-            temperature: this.temperature,
-            max_tokens: capRequestedOutputTokens(params.maxTokens),
-          },
-          {
-            headers: {
-              ...(params.apiKey
-                ? { Authorization: `Bearer ${params.apiKey}` }
-                : {}),
-              "Content-Type": "application/json",
+    try {
+      const response = await runProviderRequestWithRetry(
+        () =>
+          axios.post(
+            this.endpoint,
+            {
+              model: params.model,
+              messages: params.messages,
+              temperature: this.temperature,
+              max_tokens: capRequestedOutputTokens(params.maxTokens),
             },
-            timeout: CUSTOM_PROVIDER_REQUEST_TIMEOUT_MS,
-            signal: params.signal,
-          },
-        ),
-      { signal: params.signal },
-    );
+            {
+              headers: {
+                ...(params.apiKey
+                  ? { Authorization: `Bearer ${params.apiKey}` }
+                  : {}),
+                "Content-Type": "application/json",
+              },
+              timeout: CUSTOM_PROVIDER_REQUEST_TIMEOUT_MS,
+              signal: params.signal,
+            },
+          ),
+        { signal: params.signal },
+      );
 
-    const parsed = parseOpenAICompatibleResponse(
-      response.data,
-      "Custom provider",
-    );
-    return {
-      ...parsed,
-      model: params.model,
-    };
+      const parsed = parseOpenAICompatibleResponse(
+        response.data,
+        "Custom provider",
+      );
+      return {
+        ...parsed,
+        model: params.model,
+      };
+    } catch (error) {
+      throw normalizeProviderRequestError(error, "Custom provider");
+    }
   }
 
   public async validateConnection(): Promise<boolean> {
