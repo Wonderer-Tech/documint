@@ -6,26 +6,24 @@ import { OpenRouterProvider } from "./openrouterProvider";
 import { DeepSeekProvider } from "./deepseekProvider";
 import { CustomProvider } from "./customProvider";
 import { withModelMetadata } from "./providerMetadataDecorator";
-
-export type ProviderName =
-  | "openai"
-  | "anthropic"
-  | "openrouter"
-  | "deepseek"
-  | "custom";
+import {
+  normalizeProviderName,
+  ProviderName,
+} from "./providerNamePolicy";
 
 /**
  * Creates the correct provider instance for the given provider name.
- * Falls back to OpenAI for unknown values.
+ * Unknown values are normalized to OpenAI before provider construction.
  */
 export class ProviderFactory {
   static create(
     provider: string,
     context: vscode.ExtensionContext,
   ): BaseAIProvider {
+    const providerName = normalizeProviderName(provider);
     let instance: BaseAIProvider;
 
-    switch (provider as ProviderName) {
+    switch (providerName) {
       case "anthropic":
         instance = new AnthropicProvider(context);
         break;
@@ -48,18 +46,13 @@ export class ProviderFactory {
   }
 
   /**
-   * Resolves the provider name from options, falling back to VS Code settings,
-   * then to "openai".
+   * Resolves the provider name from options/settings and normalizes it before
+   * consent checks and provider construction use the value.
    */
-  static resolveProviderName(
-    optionProvider?: string,
-  ): string {
-    return (
-      optionProvider ||
-      vscode.workspace
-        .getConfiguration("aiDocGenerator")
-        .get<string>("aiProvider") ||
-      "openai"
-    );
+  static resolveProviderName(optionProvider?: string): ProviderName {
+    const configuredProvider = vscode.workspace
+      .getConfiguration("aiDocGenerator")
+      .get<string>("aiProvider");
+    return normalizeProviderName(optionProvider || configuredProvider);
   }
 }
