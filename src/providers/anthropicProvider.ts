@@ -21,7 +21,7 @@ export class AnthropicProvider extends BaseAIProvider {
   private readonly apiVersion = "2023-06-01";
 
   protected defaultModel(): string {
-    return "claude-3-5-sonnet-20241022";
+    return "claude-sonnet-5";
   }
 
   public async generateDocumentation(
@@ -92,7 +92,9 @@ export class AnthropicProvider extends BaseAIProvider {
 
   protected getMaxOutputTokens(model?: string): number {
     const m = (model || "").toLowerCase();
-    // claude-3-5 supports 8K output; claude-3 supports 4K
+    if (m.includes("claude-sonnet-5") || m.includes("claude-opus-5")) {
+      return 128000;
+    }
     if (m.includes("claude-3-5") || m.includes("claude-3.5")) {
       return 8192;
     }
@@ -101,19 +103,16 @@ export class AnthropicProvider extends BaseAIProvider {
 
   getMaxContextWindow(model?: string): number {
     const m = (model || "").toLowerCase();
-    // All Claude 3+ models support 200K context
+    if (m.includes("claude-sonnet-5") || m.includes("claude-opus-5")) {
+      return 1000000;
+    }
     if (m.includes("claude-3") || m.includes("claude-3-5")) {
       return 200000;
     }
-    // Claude 2.x
-    if (m.includes("claude-2")) {
+    if (m.includes("claude-2") || m.includes("instant")) {
       return 100000;
     }
-    // Claude Instant
-    if (m.includes("instant")) {
-      return 100000;
-    }
-    return 200000; // Default to 200K for new models
+    return 200000;
   }
 
   public async validateConnection(): Promise<boolean> {
