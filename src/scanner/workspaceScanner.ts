@@ -92,7 +92,8 @@ export interface ScannerConfig {
   excludePatterns?: string[];
   includePatterns?: string[];
   targetLanguages?: string[];
-  maxFileSize?: number; // in bytes, default 100KB
+  /** Optional scanner-level safety cap in bytes. Unset means no size cap. */
+  maxFileSize?: number;
 }
 
 export class WorkspaceScanner {
@@ -151,9 +152,14 @@ export class WorkspaceScanner {
         .replace(/\\/g, "/");
 
       try {
-        const stat = await vscode.workspace.fs.stat(uri);
-        if (stat.size > resolvedConfig.maxFileSize) {
-          continue; // Skip large files
+        // Large source files should reach the provider layer, which already
+        // handles context-window-aware chunking. Only enforce a scanner-level
+        // size cap when one is explicitly supplied by the caller.
+        if (Number.isFinite(resolvedConfig.maxFileSize)) {
+          const stat = await vscode.workspace.fs.stat(uri);
+          if (stat.size > resolvedConfig.maxFileSize) {
+            continue;
+          }
         }
 
         const content = await vscode.workspace.fs.readFile(uri);
@@ -196,7 +202,7 @@ export class WorkspaceScanner {
         this.config.targetLanguages ??
         settings.get<string[]>("targetLanguages") ??
         Object.keys(LANGUAGE_TO_EXTENSIONS),
-      maxFileSize: this.config.maxFileSize ?? 100 * 1024,
+      maxFileSize: this.config.maxFileSize ?? Number.POSITIVE_INFINITY,
     };
   }
 
