@@ -20,8 +20,6 @@ export interface DocGeneratorConfig {
   concurrentRequests: number;
   excludePatterns: string[];
   includePatterns: string[];
-  generateUmlDiagrams?: boolean;
-  enableDiffTracking?: boolean;
 }
 
 /**
