@@ -202,7 +202,8 @@
     "typecheck": "tsc -p ./ --noEmit",
     "bundle": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js",
     "watch": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.js --watch",
-    "test": "npm run compile"
+    "test": "npm run compile && npm run test:unit",
+    "test:unit": "esbuild test/regression.test.ts --bundle --platform=node --format=cjs --outfile=node_modules/documint-regression.test.cjs && node --test node_modules/documint-regression.test.cjs"
   },
   "devDependencies": {
     "@types/marked": "^5.0.2",
