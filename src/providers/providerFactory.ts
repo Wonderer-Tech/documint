@@ -5,6 +5,7 @@ import { AnthropicProvider } from "./anthropicProvider";
 import { OpenRouterProvider } from "./openrouterProvider";
 import { DeepSeekProvider } from "./deepseekProvider";
 import { CustomProvider } from "./customProvider";
+import { withModelMetadata } from "./providerMetadataDecorator";
 
 export type ProviderName =
   | "openai"
@@ -22,19 +23,28 @@ export class ProviderFactory {
     provider: string,
     context: vscode.ExtensionContext,
   ): BaseAIProvider {
+    let instance: BaseAIProvider;
+
     switch (provider as ProviderName) {
       case "anthropic":
-        return new AnthropicProvider(context);
+        instance = new AnthropicProvider(context);
+        break;
       case "openrouter":
-        return new OpenRouterProvider(context);
+        instance = new OpenRouterProvider(context);
+        break;
       case "deepseek":
-        return new DeepSeekProvider(context);
+        instance = new DeepSeekProvider(context);
+        break;
       case "custom":
-        return new CustomProvider(context);
+        instance = new CustomProvider(context);
+        break;
       case "openai":
       default:
-        return new OpenAIProvider(context);
+        instance = new OpenAIProvider(context);
+        break;
     }
+
+    return withModelMetadata(instance, context);
   }
 
   /**
