@@ -93,6 +93,16 @@ const EXPLICIT_FOLDER_OVERRIDE_PATTERNS = new Set([
   "**/*.spec.*",
 ]);
 
+// Extension generation is single-run (concurrent runs are rejected), so this
+// transient scope safely bridges the selected picker paths to the scanner
+// without persisting them in user/workspace settings.
+let activeRunTargetPaths: string[] | undefined;
+
+export function setWorkspaceScannerRunTargets(targetPaths?: string[]): void {
+  activeRunTargetPaths =
+    targetPaths && targetPaths.length > 0 ? [...targetPaths] : undefined;
+}
+
 export interface ScannerConfig {
   excludePatterns?: string[];
   includePatterns?: string[];
@@ -121,11 +131,12 @@ export class WorkspaceScanner {
     const resolvedConfig = this.resolveConfig(workspaceFolder);
     const includeGlob = this.buildIncludeGlob(resolvedConfig);
     const explicitFiles = new Set<string>();
+    const effectiveTargetPaths = targetPaths ?? activeRunTargetPaths;
 
     let excludePatterns = resolvedConfig.excludePatterns;
     let allFiles: vscode.Uri[];
 
-    if (targetPaths && targetPaths.length > 0) {
+    if (effectiveTargetPaths && effectiveTargetPaths.length > 0) {
       // A deliberate folder selection should include test/spec source files,
       // while still excluding vendor/build/generated/noise paths. An exact file
       // selection overrides file-name exclusions entirely.
@@ -135,7 +146,7 @@ export class WorkspaceScanner {
       const excludeGlob = this.toBraceGlob(excludePatterns);
       const selectedFiles: vscode.Uri[] = [];
 
-      for (const targetPath of targetPaths) {
+      for (const targetPath of effectiveTargetPaths) {
         const absoluteTarget = path.resolve(targetPath);
         if (!this.isInsideWorkspace(workspaceFolder.uri.fsPath, absoluteTarget)) {
           continue;
