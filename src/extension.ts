@@ -5,6 +5,7 @@ import {
   DocGeneratorService,
   GeneratedOutputPaths,
 } from "./services/docGenerator";
+import { sanitizeGeneratedOutputs } from "./services/outputSanitizer";
 import { ProviderFactory } from "./providers/providerFactory";
 import { DocumentationError } from "./types";
 
@@ -212,6 +213,8 @@ export function activate(context: vscode.ExtensionContext) {
             "workspace",
           targetPaths: payload.targetPaths,
         });
+
+      await sanitizeGeneratedOutputs(outputPaths);
 
       sidebarProvider.setGeneratingState(false);
       sidebarProvider.completeGeneration();
