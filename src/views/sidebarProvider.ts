@@ -834,7 +834,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   providerSel.addEventListener('change', function() {
     var providerDefaults = {
-      deepseek: 'deepseek-v4-flash'
+      deepseek: 'deepseek-flash'
     };
     if (providerDefaults[providerSel.value] && (!modelInput.value.trim() || modelInput.value.trim() === 'gpt-5.4-nano' || modelInput.value.trim() === 'gpt-4o')) {
       modelInput.value = providerDefaults[providerSel.value];
