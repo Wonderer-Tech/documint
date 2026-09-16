@@ -5,6 +5,7 @@ import {
   estimateModelContextWindow,
   getKnownModelContext,
 } from "./modelContextCatalog";
+import { buildModelMetadataLookupIdentity } from "./modelMetadataCacheKey";
 
 export interface ModelMetadata {
   contextWindow: number;
@@ -49,29 +50,31 @@ export class ModelMetadataService {
       };
     }
 
-    const credentialRevision =
-      SecretStorageManager.getCredentialRevision(normalizedProvider);
-    const cacheKey = `${normalizedProvider}:${credentialRevision}:${normalizedModel}`;
-    const cached = this.cache.get(cacheKey);
+    const identity = buildModelMetadataLookupIdentity(
+      normalizedProvider,
+      normalizedModel,
+      SecretStorageManager.getCredentialRevision(normalizedProvider),
+    );
+    const cached = this.cache.get(identity.cacheKey);
     if (cached) {
       return cached;
     }
 
-    const inFlight = this.pending.get(cacheKey);
+    const inFlight = this.pending.get(identity.cacheKey);
     if (inFlight) {
       return inFlight;
     }
 
-    const lookup = this.fetchUncached(normalizedProvider, model)
+    const lookup = this.fetchUncached(identity.provider, model)
       .then((result) => {
-        this.cache.set(cacheKey, result);
+        this.cache.set(identity.cacheKey, result);
         return result;
       })
       .finally(() => {
-        this.pending.delete(cacheKey);
+        this.pending.delete(identity.cacheKey);
       });
 
-    this.pending.set(cacheKey, lookup);
+    this.pending.set(identity.cacheKey, lookup);
     return lookup;
   }
 
