@@ -1,6 +1,12 @@
+import * as vscode from "vscode";
 import axios, { AxiosError } from "axios";
-import { BaseAIProvider, ApiCallParams } from "./aiProvider";
-import { DocumentationResult } from "../types";
+import {
+  BaseAIProvider,
+  ApiCallParams,
+  RawMarkdownPromptParams,
+} from "./aiProvider";
+import { DocumentationContext, DocumentationResult } from "../types";
+import { normalizeProviderModel } from "./providerModelGuard";
 
 /**
  * DeepSeek provider using the official OpenAI-compatible Chat Completions API.
@@ -14,6 +20,35 @@ export class DeepSeekProvider extends BaseAIProvider {
 
   protected defaultModel(): string {
     return "deepseek-flash";
+  }
+
+  public async generateDocumentation(
+    context: DocumentationContext,
+  ): Promise<DocumentationResult> {
+    return super.generateDocumentation({
+      ...context,
+      model: this.resolveCompatibleModel(context.model),
+    });
+  }
+
+  public async generateMarkdownFromPrompt(
+    params: RawMarkdownPromptParams,
+  ): Promise<DocumentationResult> {
+    return super.generateMarkdownFromPrompt({
+      ...params,
+      model: this.resolveCompatibleModel(params.model),
+    });
+  }
+
+  private resolveCompatibleModel(requestedModel?: string): string {
+    const configuredModel = vscode.workspace
+      .getConfiguration("aiDocGenerator")
+      .get<string>("model");
+    return normalizeProviderModel(
+      "deepseek",
+      requestedModel ?? configuredModel,
+      this.defaultModel(),
+    );
   }
 
   protected getMaxOutputTokens(_model?: string): number {
