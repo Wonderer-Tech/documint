@@ -11,6 +11,7 @@ import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { runProviderRequestWithRetry } from "./providerRetry";
 import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
 import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
+import { parseAnthropicResponse } from "./anthropicResponse";
 
 /**
  * Anthropic Claude provider.
@@ -87,33 +88,9 @@ export class AnthropicProvider extends BaseAIProvider {
       { signal: params.signal },
     );
 
-    const tokensUsed =
-      (response.data.usage?.input_tokens ?? 0) +
-      (response.data.usage?.output_tokens ?? 0);
-    const contentBlocks: unknown[] = Array.isArray(response.data.content)
-      ? response.data.content
-      : [];
-    const documentation = contentBlocks
-      .filter(
-        (block: unknown): block is { type: string; text: string } =>
-          typeof block === "object" &&
-          block !== null &&
-          (block as { type?: unknown }).type === "text" &&
-          typeof (block as { text?: unknown }).text === "string",
-      )
-      .map((block) => block.text)
-      .join("\n\n")
-      .trim();
-
-    if (!documentation) {
-      throw new Error(
-        `Anthropic returned no text content for model "${params.model}".`,
-      );
-    }
-
+    const parsed = parseAnthropicResponse(response.data);
     return {
-      documentation,
-      tokensUsed,
+      ...parsed,
       model: params.model,
     };
   }
