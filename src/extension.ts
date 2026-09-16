@@ -61,6 +61,34 @@ export function activate(context: vscode.ExtensionContext) {
     return true;
   }
 
+  function resolveTargetWorkspace(
+    targetPaths: string[] | undefined,
+    workspaceFolders: readonly vscode.WorkspaceFolder[],
+  ): vscode.WorkspaceFolder | undefined {
+    if (!targetPaths || targetPaths.length === 0) {
+      return workspaceFolders[0];
+    }
+
+    const resolvedFolders = targetPaths.map((targetPath) =>
+      vscode.workspace.getWorkspaceFolder(vscode.Uri.file(targetPath)),
+    );
+    const first = resolvedFolders[0];
+    if (!first) {
+      return undefined;
+    }
+
+    const firstUri = first.uri.toString();
+    if (
+      resolvedFolders.some(
+        (folder) => !folder || folder.uri.toString() !== firstUri,
+      )
+    ) {
+      return undefined;
+    }
+
+    return first;
+  }
+
   async function ensureGenerationAllowed(
     provider: string,
     workspaceFolder: vscode.WorkspaceFolder,
@@ -135,12 +163,19 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const targetWorkspaceFolder = payload.targetPaths?.[0]
-      ? vscode.workspace.getWorkspaceFolder(
-          vscode.Uri.file(payload.targetPaths[0]),
-        )
-      : undefined;
-    const workspaceFolder = targetWorkspaceFolder ?? workspaceFolders[0];
+    const workspaceFolder = resolveTargetWorkspace(
+      payload.targetPaths,
+      workspaceFolders,
+    );
+    if (!workspaceFolder) {
+      const message =
+        "Selected files and folders must belong to the same open workspace folder.";
+      sidebarProvider.reportError(message);
+      sidebarProvider.addLogEntry(message, "error");
+      vscode.window.showErrorMessage(message);
+      return;
+    }
+
     const providerName = resolveRunProvider(payload.provider);
 
     if (providerName === "custom") {
