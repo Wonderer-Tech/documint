@@ -47,7 +47,9 @@
   "activationEvents": [
     "onView:aiDocGenerator.sidebar",
     "onCommand:aiDocGenerator.generateDocumentation",
+    "onCommand:aiDocGenerator.cancelGeneration",
     "onCommand:aiDocGenerator.clearCache",
+    "onCommand:aiDocGenerator.configureApiKey",
     "onCommand:aiDocGenerator.pickAndGenerateFile",
     "onCommand:aiDocGenerator.pickAndGenerateFolder"
   ],
@@ -161,7 +163,8 @@
             "css",
             "scss",
             "sql"
-          ]
+          ],
+          "description": "Languages and source-file types included in workspace/folder scanning. All listed defaults are enabled unless you narrow this setting."
         },
         "aiDocGenerator.maxTokens": {
           "type": "number",
@@ -177,6 +180,7 @@
         },
         "aiDocGenerator.rateLimitDelay": {
           "type": "number",
+          "minimum": 0,
           "default": 1000,
           "description": "Delay between API requests in milliseconds"
         },
