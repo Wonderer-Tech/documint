@@ -6,9 +6,23 @@ import {
   GeneratedOutputPaths,
 } from "./services/docGenerator";
 import { sanitizeGeneratedOutputs } from "./services/outputSanitizer";
+import { ensureGenerationCacheCompatibility } from "./services/generationCachePolicy";
 import { ProviderFactory } from "./providers/providerFactory";
 import { setWorkspaceScannerRunTargets } from "./scanner/workspaceScanner";
 import { DocumentationError } from "./types";
+
+interface GenerationCommandPayload {
+  provider?: string;
+  model?: string;
+  customApiEndpoint?: string;
+  depth?: string;
+  outputFormat?: string;
+  targetPaths?: string[];
+  scope?: string;
+  contextWindow?: number;
+  concurrentRequests?: number;
+  rateLimitDelay?: number;
+}
 
 export function activate(context: vscode.ExtensionContext) {
   const secretManager = SecretStorageManager.getInstance(context);
@@ -124,29 +138,28 @@ export function activate(context: vscode.ExtensionContext) {
     return true;
   }
 
-  // Check API key status on startup for the configured provider
-  const configuredProvider =
-    vscode.workspace
-      .getConfiguration("aiDocGenerator")
-      .get<string>("aiProvider") || "openai";
-  secretManager.getApiKey(configuredProvider).then((apiKey) => {
+  async function refreshConfiguredApiKeyStatus(): Promise<void> {
+    const provider =
+      vscode.workspace
+        .getConfiguration("aiDocGenerator")
+        .get<string>("aiProvider") || "openai";
+    const apiKey = await secretManager.getApiKey(provider);
     sidebarProvider.updateApiKeyStatus(!!apiKey);
-  });
+  }
+
+  void refreshConfiguredApiKeyStatus();
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration("aiDocGenerator.aiProvider")) {
+        void refreshConfiguredApiKeyStatus();
+      }
+    }),
+  );
 
   // ── Commands ───────────────────────────────────────────────────────────────
 
   // ── Shared generation runner ───────────────────────────────────────────────
-  async function runGeneration(
-    payload: {
-      provider?: string;
-      model?: string;
-      customApiEndpoint?: string;
-      depth?: string;
-      outputFormat?: string;
-      targetPaths?: string[];
-      scope?: string;
-    } = {},
-  ) {
+  async function runGeneration(payload: GenerationCommandPayload = {}) {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
       vscode.window.showErrorMessage("No workspace folder open");
@@ -186,8 +199,7 @@ export function activate(context: vscode.ExtensionContext) {
         "";
 
       if (!endpoint) {
-        const message =
-          "Custom provider requires a Custom Endpoint URL.";
+        const message = "Custom provider requires a Custom Endpoint URL.";
         sidebarProvider.reportError(message);
         sidebarProvider.addLogEntry(message, "error");
         vscode.window.showErrorMessage(message);
@@ -200,8 +212,7 @@ export function activate(context: vscode.ExtensionContext) {
           throw new Error("Unsupported protocol");
         }
       } catch {
-        const message =
-          "Custom Endpoint URL must be a valid http or https URL.";
+        const message = "Custom Endpoint URL must be a valid http or https URL.";
         sidebarProvider.reportError(message);
         sidebarProvider.addLogEntry(message, "error");
         vscode.window.showErrorMessage(message);
@@ -234,6 +245,23 @@ export function activate(context: vscode.ExtensionContext) {
     setWorkspaceScannerRunTargets(payload.targetPaths);
 
     try {
+      const cacheReset = await ensureGenerationCacheCompatibility(
+        workspaceFolder,
+        {
+          providerName,
+          model: payload.model,
+          depth: payload.depth,
+          contextWindow: payload.contextWindow,
+          customApiEndpoint: payload.customApiEndpoint,
+        },
+      );
+      if (cacheReset) {
+        sidebarProvider.addLogEntry(
+          "Generation settings changed; regenerated documentation cache will be used.",
+          "info",
+        );
+      }
+
       const outputPaths: GeneratedOutputPaths =
         await docGenerator.generateDocumentation(workspaceFolder, {
           provider: payload.provider,
@@ -249,6 +277,9 @@ export function activate(context: vscode.ExtensionContext) {
             (payload.scope as "workspace" | "folder" | "current-file") ??
             "workspace",
           targetPaths: payload.targetPaths,
+          contextWindow: payload.contextWindow,
+          concurrentRequests: payload.concurrentRequests,
+          rateLimitDelay: payload.rateLimitDelay,
         });
 
       await sanitizeGeneratedOutputs(outputPaths);
@@ -338,6 +369,7 @@ export function activate(context: vscode.ExtensionContext) {
     const cacheFiles = [
       ".documint-cache.json",
       ".documint-visual-cache.json",
+      ".documint-generation-cache-key.json",
     ];
     let deletedCount = 0;
 
@@ -368,15 +400,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "aiDocGenerator.generateDocumentation",
-      async (payload?: {
-        provider?: string;
-        model?: string;
-        customApiEndpoint?: string;
-        depth?: string;
-        outputFormat?: string;
-        scope?: string;
-        targetPaths?: string[];
-      }) => {
+      async (payload?: GenerationCommandPayload) => {
         await runGeneration(payload ?? {});
       },
     ),
@@ -397,7 +421,6 @@ export function activate(context: vscode.ExtensionContext) {
     }),
   );
 
-  // ── Pick a single file then generate docs for it ───────────────────────────
   context.subscriptions.push(
     vscode.commands.registerCommand("aiDocGenerator.clearCache", async () => {
       await clearDocumentationCache();
@@ -407,13 +430,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "aiDocGenerator.pickAndGenerateFile",
-      async (payload?: {
-        provider?: string;
-        model?: string;
-        customApiEndpoint?: string;
-        depth?: string;
-        outputFormat?: string;
-      }) => {
+      async (payload?: GenerationCommandPayload) => {
         const uris = await vscode.window.showOpenDialog({
           canSelectFiles: true,
           canSelectFolders: false,
@@ -436,6 +453,16 @@ export function activate(context: vscode.ExtensionContext) {
               "kt",
               "swift",
               "php",
+              "scala",
+              "sh",
+              "yaml",
+              "yml",
+              "json",
+              "xml",
+              "html",
+              "css",
+              "scss",
+              "sql",
             ],
           },
         });
@@ -452,17 +479,10 @@ export function activate(context: vscode.ExtensionContext) {
     ),
   );
 
-  // ── Pick a folder then generate docs for all files inside it ──────────────
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "aiDocGenerator.pickAndGenerateFolder",
-      async (payload?: {
-        provider?: string;
-        model?: string;
-        customApiEndpoint?: string;
-        depth?: string;
-        outputFormat?: string;
-      }) => {
+      async (payload?: GenerationCommandPayload) => {
         const uris = await vscode.window.showOpenDialog({
           canSelectFiles: false,
           canSelectFolders: true,
@@ -520,7 +540,7 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
 
-        sidebarProvider.updateApiKeyStatus(true);
+        await refreshConfiguredApiKeyStatus();
         vscode.window.showInformationMessage(
           `API Key for ${targetProvider} saved successfully!`,
         );
