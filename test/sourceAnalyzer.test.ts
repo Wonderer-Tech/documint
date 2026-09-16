@@ -77,6 +77,40 @@ test("JS/TS exported arrow functions are classified as functions", () => {
   assert.equal(limit?.kind, "constant");
 });
 
+test("JS/TS methods and namespace imports are normalized", () => {
+  const analysis = analyzer.analyzeFile(
+    file(
+      "src/service.ts",
+      "typescript",
+      [
+        'import DefaultThing, * as Utils from "./utils";',
+        'import { type Config, run as execute } from "./runtime";',
+        "export class Service {",
+        "  public async run(value: string): Promise<void> {",
+        "  }",
+        "  constructor() {",
+        "  }",
+        "}",
+        "if (ready) {",
+        "}",
+      ].join("\n"),
+    ),
+  );
+
+  assert.deepEqual(analysis.imports[0].symbols, ["DefaultThing", "Utils"]);
+  assert.deepEqual(analysis.imports[1].symbols, ["Config", "run"]);
+  assert.deepEqual(
+    analysis.symbols
+      .filter((symbol) => symbol.kind === "method")
+      .map((symbol) => symbol.name),
+    ["run", "constructor"],
+  );
+  assert.equal(
+    analysis.symbols.some((symbol) => symbol.name === "if"),
+    false,
+  );
+});
+
 test("Python import aliases are normalized to source names", () => {
   const analysis = analyzer.analyzeFile(
     file(
@@ -94,6 +128,28 @@ test("Python import aliases are normalized to source names", () => {
     { line: 2, source: "numpy", symbols: [] },
     { line: 2, source: "pandas", symbols: [] },
   ]);
+});
+
+test("Python relative imports resolve to sibling and parent modules", () => {
+  const project = analyzer.analyzeProject([
+    file(
+      "pkg/sub/app.py",
+      "python",
+      ["from . import helpers", "from ..shared import load"].join("\n"),
+    ),
+    file("pkg/sub/helpers.py", "python", "def helper(): pass"),
+    file("pkg/shared.py", "python", "def load(): pass"),
+  ]);
+
+  const app = project.files.find((item) => item.path === "pkg/sub/app.py");
+  assert.ok(app);
+  assert.deepEqual(
+    app.imports.map((item) => [item.source, item.resolvedPath]),
+    [
+      [".helpers", "pkg/sub/helpers.py"],
+      ["..shared", "pkg/shared.py"],
+    ],
+  );
 });
 
 test("Go grouped imports are parsed only inside an import block", () => {
@@ -123,6 +179,38 @@ test("Go grouped imports are parsed only inside an import block", () => {
   );
 });
 
+test("C/C++ local headers become internal edges and system headers stay external", () => {
+  const project = analyzer.analyzeProject([
+    file(
+      "src/main.c",
+      "c",
+      ['#include "config.h"', "#include <stdio.h>"].join("\n"),
+    ),
+    file("src/config.h", "c", "#define ENABLED 1"),
+  ]);
+
+  assert.deepEqual(project.internalDependencies, [
+    { from: "src/main.c", to: "src/config.h", source: "./config.h" },
+  ]);
+  assert.deepEqual(project.externalDependencies, ["stdio.h"]);
+});
+
+test("Rust module declarations resolve module files", () => {
+  const project = analyzer.analyzeProject([
+    file("src/lib.rs", "rust", "pub mod service;"),
+    file("src/service.rs", "rust", "mod helper;"),
+    file("src/service/helper.rs", "rust", "pub fn run() {}"),
+  ]);
+
+  assert.deepEqual(
+    project.internalDependencies.map((edge) => [edge.from, edge.to]),
+    [
+      ["src/lib.rs", "src/service.rs"],
+      ["src/service.rs", "src/service/helper.rs"],
+    ],
+  );
+});
+
 test("Rust restricted/public async functions are detected", () => {
   const analysis = analyzer.analyzeFile(
     file(
@@ -143,5 +231,52 @@ test("Rust restricted/public async functions are detected", () => {
       ["internal_helper", "function"],
       ["Service", "struct"],
     ],
+  );
+});
+
+test("TODO markers are collected from comments but ignored inside strings", () => {
+  const typescript = analyzer.analyzeFile(
+    file(
+      "src/todos.ts",
+      "typescript",
+      [
+        'const fake = "TODO: not a real task";',
+        "const value = 1; // FIXME: real task",
+        "/* HACK: temporary workaround */",
+      ].join("\n"),
+    ),
+  );
+  const python = analyzer.analyzeFile(
+    file(
+      "todos.py",
+      "python",
+      ['fake = "TODO: not real"', "# TODO: real python task"].join("\n"),
+    ),
+  );
+
+  assert.deepEqual(
+    typescript.todos.map((todo) => todo.text),
+    ["FIXME: real task", "HACK: temporary workaround"],
+  );
+  assert.deepEqual(
+    python.todos.map((todo) => todo.text),
+    ["TODO: real python task"],
+  );
+});
+
+test("relative imports resolve supported non-code assets", () => {
+  const project = analyzer.analyzeProject([
+    file(
+      "src/index.ts",
+      "typescript",
+      ['import schema from "./schema";', 'import "./styles";'].join("\n"),
+    ),
+    file("src/schema.json", "json", "{}"),
+    file("src/styles.css", "css", "body {}"),
+  ]);
+
+  assert.deepEqual(
+    project.internalDependencies.map((edge) => edge.to),
+    ["src/schema.json", "src/styles.css"],
   );
 });
