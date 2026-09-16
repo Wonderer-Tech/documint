@@ -137,11 +137,22 @@ export class WorkspaceScanner {
     let allFiles: vscode.Uri[];
 
     if (effectiveTargetPaths && effectiveTargetPaths.length > 0) {
-      // A deliberate folder selection should include test/spec source files,
-      // while still excluding vendor/build/generated/noise paths. An exact file
-      // selection overrides file-name exclusions entirely.
-      excludePatterns = resolvedConfig.excludePatterns.filter(
-        (pattern) => !EXPLICIT_FOLDER_OVERRIDE_PATTERNS.has(pattern),
+      // A deliberate folder selection relaxes only DocuMint's default test/spec
+      // exclusions. User/workspace and programmatic exclusions remain authoritative.
+      const settings = vscode.workspace.getConfiguration(
+        "aiDocGenerator",
+        workspaceFolder.uri,
+      );
+      const configuredExcludePatterns =
+        settings.get<string[]>("excludePatterns") ?? [];
+      excludePatterns = Array.from(
+        new Set([
+          ...DEFAULT_EXCLUDE_PATTERNS.filter(
+            (pattern) => !EXPLICIT_FOLDER_OVERRIDE_PATTERNS.has(pattern),
+          ),
+          ...configuredExcludePatterns,
+          ...(this.config.excludePatterns ?? []),
+        ]),
       );
       const excludeGlob = this.toBraceGlob(excludePatterns);
       const selectedFiles: vscode.Uri[] = [];
