@@ -251,7 +251,7 @@ DeepSeek example:
 ```json
 {
   "aiDocGenerator.aiProvider": "deepseek",
-  "aiDocGenerator.model": "deepseek-v4-flash"
+  "aiDocGenerator.model": "deepseek-flash"
 }
 ```
 
