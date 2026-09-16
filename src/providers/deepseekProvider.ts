@@ -11,6 +11,7 @@ import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 import { runProviderRequestWithRetry } from "./providerRetry";
 import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
+import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
 
 /**
  * DeepSeek provider using the official OpenAI-compatible Chat Completions API.
@@ -23,7 +24,7 @@ export class DeepSeekProvider extends BaseAIProvider {
   private readonly endpoint = "https://api.deepseek.com/chat/completions";
 
   protected defaultModel(): string {
-    return "deepseek-flash";
+    return PROVIDER_DEFAULT_MODELS.deepseek;
   }
 
   public async generateDocumentation(
