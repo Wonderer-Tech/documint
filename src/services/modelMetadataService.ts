@@ -33,10 +33,10 @@ const FALLBACK_CONTEXT_WINDOWS: Record<string, number> = {
   "claude-3-haiku-20240307": 200000,
   "claude-2.1": 200000,
   "claude-2.0": 100000,
-  // DeepSeek
-  "deepseek-v4-flash": 128000,
-  "deepseek-chat": 64000,
-  "deepseek-reasoner": 64000,
+  // DeepSeek — V4/V4.1 official API models use a 1M context window.
+  "deepseek-flash": 1000000,
+  "deepseek-v4-flash": 1000000,
+  "deepseek-v4-pro": 1000000,
 };
 
 export class ModelMetadataService {
@@ -200,6 +200,7 @@ export class ModelMetadataService {
     }
 
     // Pattern-based inference for unknown model names
+    if (m.includes("deepseek-v4") || m.includes("deepseek-flash")) return { contextWindow: 1000000, source: "estimated" };
     if (m.includes("200k") || m.includes("claude")) return { contextWindow: 200000, source: "estimated" };
     if (m.includes("128k") || m.includes("gpt-5") || m.includes("gpt-4o") || m.includes("o1") || m.includes("o3")) return { contextWindow: 128000, source: "estimated" };
     if (m.includes("32k")) return { contextWindow: 32768, source: "estimated" };
