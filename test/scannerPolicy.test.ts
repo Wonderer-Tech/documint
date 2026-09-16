@@ -19,6 +19,17 @@ test("scanner target language expansion covers language aliases and extensions",
   assert.equal(getLanguageFromPath("schema.sql"), "sql");
 });
 
+test("scanner expands common C and C++ source/header extensions", () => {
+  assert.deepEqual(getTargetExtensions(["c"]), ["c", "h"]);
+  assert.deepEqual(
+    getTargetExtensions(["cpp"]),
+    ["cc", "cpp", "cxx", "hh", "hpp", "hxx"],
+  );
+  assert.equal(getLanguageFromPath("include/config.H"), "c");
+  assert.equal(getLanguageFromPath("include/service.HPP"), "cpp");
+  assert.equal(getLanguageFromPath("src/service.CXX"), "cpp");
+});
+
 test("default scanner languages include the full supported matrix", () => {
   const languages = getDefaultTargetLanguages();
   for (const required of [
