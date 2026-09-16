@@ -4,6 +4,7 @@ import { BaseAIProvider, ApiCallParams } from "./aiProvider";
 import { DocumentationContext, DocumentationResult } from "../types";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
+import { evaluateCustomEndpoint } from "./customEndpointPolicy";
 
 /**
  * Custom provider — calls a user-specified endpoint using the OpenAI
@@ -20,45 +21,25 @@ export class CustomProvider extends BaseAIProvider {
 
   constructor(context: vscode.ExtensionContext) {
     super(context);
-    this.isLocal = this.isConfiguredEndpointLocal();
+    this.isLocal = this.getEndpointPolicy().isLocal;
   }
 
   private get endpoint(): string {
-    const ep = vscode.workspace
-      .getConfiguration("aiDocGenerator")
-      .get<string>("customApiEndpoint");
-
-    if (!ep) {
+    const policy = this.getEndpointPolicy();
+    if (!policy.valid) {
       throw new Error(
-        `No custom API endpoint configured. ` +
-          `Set "aiDocGenerator.customApiEndpoint" in your VS Code settings.`,
+        policy.reason ??
+          `Set "aiDocGenerator.customApiEndpoint" to a valid http or https URL.`,
       );
     }
-    return ep;
+    return policy.normalizedEndpoint;
   }
 
-  private isConfiguredEndpointLocal(): boolean {
-    const ep = vscode.workspace
+  private getEndpointPolicy() {
+    const endpoint = vscode.workspace
       .getConfiguration("aiDocGenerator")
-      .get<string>("customApiEndpoint")
-      ?.trim();
-
-    if (!ep) {
-      return false;
-    }
-
-    try {
-      const url = new URL(ep);
-      const host = url.hostname.toLowerCase();
-      return (
-        host === "localhost" ||
-        host === "127.0.0.1" ||
-        host === "::1" ||
-        host.endsWith(".localhost")
-      );
-    } catch {
-      return false;
-    }
+      .get<string>("customApiEndpoint");
+    return evaluateCustomEndpoint(endpoint);
   }
 
   protected defaultModel(): string {
@@ -108,11 +89,7 @@ export class CustomProvider extends BaseAIProvider {
 
   public async validateConnection(): Promise<boolean> {
     try {
-      // For custom providers, just check the endpoint is configured
-      const ep = vscode.workspace
-        .getConfiguration("aiDocGenerator")
-        .get<string>("customApiEndpoint");
-      return typeof ep === "string" && ep.startsWith("http");
+      return this.getEndpointPolicy().valid;
     } catch {
       return false;
     }
