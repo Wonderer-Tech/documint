@@ -10,7 +10,7 @@ type MetadataProviderName = GuardedProviderName | "custom";
 
 const DEFAULT_MODELS: Record<MetadataProviderName, string> = {
   openai: "gpt-5.4-nano",
-  anthropic: "claude-3-5-sonnet-20241022",
+  anthropic: "claude-sonnet-5",
   openrouter: "openai/gpt-4o",
   deepseek: "deepseek-flash",
   custom: "default",
