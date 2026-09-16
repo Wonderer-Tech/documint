@@ -16,3 +16,4 @@ import "./providerRequestPolicy.test";
 import "./anthropicResponse.test";
 import "./providerHttpError.test";
 import "./openRouterCapabilities.test";
+import "./providerNamePolicy.test";
