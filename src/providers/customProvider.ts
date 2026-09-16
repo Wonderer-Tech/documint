@@ -5,6 +5,7 @@ import { DocumentationContext, DocumentationResult } from "../types";
 import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 import { evaluateCustomEndpoint } from "./customEndpointPolicy";
+import { runProviderRequestWithRetry } from "./providerRetry";
 
 /**
  * Custom provider — calls a user-specified endpoint using the OpenAI
@@ -57,24 +58,28 @@ export class CustomProvider extends BaseAIProvider {
   }
 
   protected async callApi(params: ApiCallParams): Promise<DocumentationResult> {
-    const response = await axios.post(
-      this.endpoint,
-      {
-        model: params.model,
-        messages: params.messages,
-        temperature: this.temperature,
-        max_tokens: capRequestedOutputTokens(params.maxTokens),
-      },
-      {
-        headers: {
-          ...(params.apiKey
-            ? { Authorization: `Bearer ${params.apiKey}` }
-            : {}),
-          "Content-Type": "application/json",
-        },
-        timeout: 120000,
-        signal: params.signal,
-      },
+    const response = await runProviderRequestWithRetry(
+      () =>
+        axios.post(
+          this.endpoint,
+          {
+            model: params.model,
+            messages: params.messages,
+            temperature: this.temperature,
+            max_tokens: capRequestedOutputTokens(params.maxTokens),
+          },
+          {
+            headers: {
+              ...(params.apiKey
+                ? { Authorization: `Bearer ${params.apiKey}` }
+                : {}),
+              "Content-Type": "application/json",
+            },
+            timeout: 120000,
+            signal: params.signal,
+          },
+        ),
+      { signal: params.signal },
     );
 
     const parsed = parseOpenAICompatibleResponse(
