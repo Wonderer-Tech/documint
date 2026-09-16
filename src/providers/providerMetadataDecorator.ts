@@ -48,6 +48,19 @@ export function withModelMetadata(
     );
   };
 
+  const rememberExplicitContextWindow = (
+    requestedModel: string | undefined,
+    contextWindow: number | undefined,
+  ): boolean => {
+    if (!Number.isFinite(contextWindow) || (contextWindow ?? 0) <= 0) {
+      return false;
+    }
+
+    const model = resolveModel(requestedModel);
+    resolvedWindows.set(model.toLowerCase(), Math.floor(contextWindow!));
+    return true;
+  };
+
   const warmContextWindow = async (requestedModel?: string): Promise<void> => {
     const model = resolveModel(requestedModel);
     const key = model.toLowerCase();
@@ -76,7 +89,13 @@ export function withModelMetadata(
   };
 
   provider.generateDocumentation = async (documentationContext) => {
-    await warmContextWindow(documentationContext.model);
+    const hasExplicitWindow = rememberExplicitContextWindow(
+      documentationContext.model,
+      documentationContext.contextWindow,
+    );
+    if (!hasExplicitWindow) {
+      await warmContextWindow(documentationContext.model);
+    }
     return originalGenerateDocumentation(documentationContext);
   };
 
