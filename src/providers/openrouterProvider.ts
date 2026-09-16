@@ -13,6 +13,10 @@ import { runProviderRequestWithRetry } from "./providerRetry";
 import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
 import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
 import { normalizeProviderRequestError } from "./providerHttpError";
+import {
+  getOpenRouterContextWindow,
+  getOpenRouterMaxOutputTokens,
+} from "./openRouterCapabilities";
 
 /**
  * OpenRouter provider — routes requests to 100+ models via a single API key.
@@ -96,44 +100,10 @@ export class OpenRouterProvider extends BaseAIProvider {
   }
 
   protected getMaxOutputTokens(model?: string): number {
-    const m = (model || "").toLowerCase();
-    if (m.includes("gpt-4o") || m.includes("o1") || m.includes("o3")) {
-      return 16384;
-    }
-    if (m.includes("claude-3-5") || m.includes("claude-3.5")) {
-      return 8192;
-    }
-    if (m.includes("gemini-1.5") || m.includes("gemini-2")) {
-      return 8192;
-    }
-    // Safe default for unknown OpenRouter models
-    return 4096;
+    return getOpenRouterMaxOutputTokens(model);
   }
 
-  /**
-   * OpenRouter routes to many models — use a generous default.
-   * Users can paste any context window for the model they select.
-   */
   getMaxContextWindow(model?: string): number {
-    const m = (model || "").toLowerCase();
-    if (m.includes("claude-3") || m.includes("gemini")) {
-      return 200000;
-    }
-    if (m.includes("gpt-4o") || m.includes("o1") || m.includes("o3")) {
-      return 128000;
-    }
-    if (m.includes("gpt-4-turbo") || m.includes("turbo")) {
-      return 128000;
-    }
-    if (m.includes("gpt-3.5")) {
-      return 16385;
-    }
-    if (m.includes("mistral") || m.includes("mixtral")) {
-      return 32000;
-    }
-    if (m.includes("llama")) {
-      return 8192;
-    }
-    return 32000; // Conservative default for unknown models
+    return getOpenRouterContextWindow(model);
   }
 }
