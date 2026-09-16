@@ -1,7 +1,7 @@
 {
   "name": "documint",
   "displayName": "DocuMint — Code Documentation Generator",
-  "description": "Generate clean code documentation in one click. Create Markdown docs, HTML docs, UML diagrams, architecture overviews, docstrings, and usage examples directly inside VS Code.",
+  "description": "Generate source-grounded code documentation in one click. Create Markdown and HTML docs with project overviews, architecture visuals, dependency graphs, API references, and usage examples directly inside VS Code.",
   "version": "1.0.4",
   "publisher": "wonderertech",
   "icon": "resources/icon.png",
@@ -14,25 +14,23 @@
     "ai documentation",
     "code documentation",
     "documentation generator",
-    "docstring generator",
-    "code comments",
+    "architecture documentation",
+    "dependency graph",
     "auto documentation",
     "docs generator",
     "vscode documentation",
     "openai",
     "anthropic",
-    "uml",
-    "markdown",
+    "markdown documentation",
+    "html documentation",
     "developer tools",
     "devtools",
-    "jsdoc",
     "typescript",
     "javascript",
     "python"
   ],
   "categories": [
     "Other",
-    "Formatters",
     "Machine Learning"
   ],
   "repository": {
