@@ -67,7 +67,7 @@ DocuMint 1.0.4 is focused on speed, cache reuse, and a cleaner premium generated
 - Cleaner generated HTML: default dark theme, improved layout width, fixed right-side gap, and better dark-mode readability.
 - Premium navigation: wider sidebar, VS Code-style project tree, folder/file icons, and `+` / `-` folder controls.
 - Better project flow: HTML content follows the same order as the Project Tree.
-- Visual upgrades: colored Module Scale Chart pie view, visual blueprint sections, architecture map, code workflow, and interactive dependency graph.
+- Visual upgrades: colored Module Scale Chart pie view, source-derived architecture map, editable diagram exports, whiteboard sketch, and interactive dependency graph.
 - Cleaner output: empty "no data found" style sections are removed when useful data is not available.
 - UI Storyboard removed from generated HTML so the output stays source-grounded and avoids fake-looking UI mockups.
 - Better provider support: DeepSeek and custom OpenAI-compatible endpoints are supported.
@@ -90,7 +90,7 @@ These are practical estimates, not fixed benchmarks. Actual time depends on prov
 | Generated HTML | Default dark theme, cleaner spacing, stronger visual hierarchy |
 | Sidebar | Wider premium panel with project-tree style navigation |
 | Project Tree | Folder/file icons, better nesting, and `+` / `-` expand controls |
-| Visual Blueprints | Architecture map, workflow diagram, editable diagram export, and dependency graph |
+| Visual Blueprints | Source-derived architecture map, editable diagram exports, whiteboard sketch, and dependency graph |
 | Module Scale Chart | Colored pie chart with clearer module scale comparison |
 | Content Order | Documentation sections follow Project Tree order |
 | Cache Control | Clear Cache button for old doc and visual cache cleanup |
@@ -278,7 +278,7 @@ Use `aiDocGenerator.documentationDepth` to control how detailed the generated do
 
 Notes:
 
-- Project tree, architecture visuals, workflow diagrams, whiteboard-style diagrams, and interactive dependency graphs are available in generated HTML output across all modes.
+- Project tree, source-derived architecture visuals, whiteboard-style diagrams, and interactive dependency graphs are available in generated HTML output across all modes.
 - `simple`, `basic`, and `standard` can batch small files for faster generation.
 - `comprehensive` can batch small files, but large files are not truncated. They are generated as full single-file requests, and files that exceed the provider context window are split into chunks before the output is merged.
 
