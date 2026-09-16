@@ -7,6 +7,7 @@ import {
 } from "./aiProvider";
 import { DocumentationContext, DocumentationResult } from "../types";
 import { normalizeProviderModel } from "./providerModelGuard";
+import { capRequestedOutputTokens } from "./outputTokenLimit";
 
 /**
  * DeepSeek provider using the official OpenAI-compatible Chat Completions API.
@@ -67,7 +68,7 @@ export class DeepSeekProvider extends BaseAIProvider {
           model: params.model,
           messages: params.messages,
           temperature: this.temperature,
-          max_tokens: params.maxTokens,
+          max_tokens: capRequestedOutputTokens(params.maxTokens),
           stream: false,
           thinking: { type: "disabled" },
         },
