@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { validateApiKeyValue } from "./apiKeyValidation";
 
 export class SecretStorageManager {
   private static instance: SecretStorageManager;
@@ -49,22 +50,9 @@ export class SecretStorageManager {
   }
 
   public async validateApiKey(
-    provider: string,
+    _provider: string,
     apiKey: string,
   ): Promise<boolean> {
-    // Basic validation - different providers have different key formats
-    switch (provider) {
-      case "openai":
-        return apiKey.startsWith("sk-") && apiKey.length > 30;
-      case "anthropic":
-        return apiKey.startsWith("sk-ant-") && apiKey.length > 40;
-      case "openrouter":
-        return apiKey.startsWith("sk-or-") && apiKey.length > 40;
-      case "deepseek":
-        return apiKey.startsWith("sk-") && apiKey.length > 20;
-      default:
-        // For custom providers, just check minimum length
-        return apiKey.length >= 20;
-    }
+    return validateApiKeyValue(apiKey).valid;
   }
 }
