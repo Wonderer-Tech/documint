@@ -25,6 +25,7 @@ import "./providerNamePolicy.test";
 import "./manifestMetadata.test";
 import "./generationMode.test";
 import "./generationDepth.test";
+import "./sidebarAuthState.test";
 import "./localFileDocumentation.test";
 import "./localProjectDocumentation.test";
 import "./localArchitectureDocumentation.test";
