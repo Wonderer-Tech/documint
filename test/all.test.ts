@@ -24,3 +24,5 @@ import "./sourceAnalyzerDependencySemantics.test";
 import "./contextWindowPolicy.test";
 import "./modelMetadataCacheEpoch.test";
 import "./generationRunPipeline.test";
+import "./chunkDocumentationMerge.test";
+import "./providerSelectionRuntime.test";
