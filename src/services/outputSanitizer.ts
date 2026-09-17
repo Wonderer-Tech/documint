@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as vscode from "vscode";
 import { hardenGeneratedHtmlForOffline } from "./htmlOfflineHardening";
-import { sanitizeHtml, sanitizeMarkdown } from "./outputSanitizerCore";
+import { sanitizeMarkdown } from "./outputSanitizerCore";
 
 interface CachedSection {
   section?: unknown;
@@ -17,16 +17,23 @@ interface DocumentationCacheShape {
 
 export { sanitizeHtml, sanitizeMarkdown } from "./outputSanitizerCore";
 
+/**
+ * Finalizes freshly generated output and cleans legacy cached visual sections.
+ *
+ * Fresh Markdown/HTML is no longer filtered for the removed hard-coded
+ * "Code Workflow" headings. Those headings can be legitimate source-grounded
+ * project content, and the current generators no longer emit the legacy visual.
+ * The legacy sanitizer therefore stays scoped to persisted cache compatibility,
+ * while generated HTML still receives the offline/CDN hardening pass.
+ */
 export async function sanitizeGeneratedOutputs(paths: {
   markdown?: string;
   html?: string;
 }): Promise<void> {
-  if (paths.markdown) {
-    await sanitizeFile(vscode.Uri.file(paths.markdown), sanitizeMarkdown);
-  }
   if (paths.html) {
-    await sanitizeFile(vscode.Uri.file(paths.html), (content) =>
-      hardenGeneratedHtmlForOffline(sanitizeHtml(content)),
+    await sanitizeFile(
+      vscode.Uri.file(paths.html),
+      hardenGeneratedHtmlForOffline,
     );
   }
 
