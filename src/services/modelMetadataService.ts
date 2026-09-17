@@ -6,6 +6,7 @@ import {
   getKnownModelContext,
 } from "./modelContextCatalog";
 import { buildModelMetadataLookupIdentity } from "./modelMetadataCacheKey";
+import { ModelMetadataCacheEpoch } from "./modelMetadataCacheEpoch";
 
 export interface ModelMetadata {
   contextWindow: number;
@@ -16,6 +17,7 @@ export class ModelMetadataService {
   private static instance: ModelMetadataService;
   private cache = new Map<string, ModelMetadata>();
   private pending = new Map<string, Promise<ModelMetadata>>();
+  private cacheEpoch = new ModelMetadataCacheEpoch();
 
   private constructor(private context: vscode.ExtensionContext) {}
 
@@ -65,21 +67,31 @@ export class ModelMetadataService {
       return inFlight;
     }
 
-    const lookup = this.fetchUncached(identity.provider, model)
+    const lookupEpoch = this.cacheEpoch.snapshot();
+    let lookup!: Promise<ModelMetadata>;
+    lookup = this.fetchUncached(identity.provider, model)
       .then((result) => {
-        this.cache.set(identity.cacheKey, result);
+        if (this.cacheEpoch.isCurrent(lookupEpoch)) {
+          this.cache.set(identity.cacheKey, result);
+        }
         return result;
       })
       .finally(() => {
-        this.pending.delete(identity.cacheKey);
+        if (this.pending.get(identity.cacheKey) === lookup) {
+          this.pending.delete(identity.cacheKey);
+        }
       });
 
     this.pending.set(identity.cacheKey, lookup);
     return lookup;
   }
 
-  /** Clears cached and in-flight metadata state explicitly when required. */
+  /**
+   * Clears cached and in-flight metadata state. The epoch prevents lookups that
+   * started before this clear from repopulating cache after they resolve.
+   */
   clearCache(): void {
+    this.cacheEpoch.invalidate();
     this.cache.clear();
     this.pending.clear();
   }
