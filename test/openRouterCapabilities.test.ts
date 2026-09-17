@@ -40,6 +40,18 @@ test("uses shared OpenAI capabilities for routed OpenAI models", () => {
   assert.equal(getOpenRouterContextWindow("openai/gpt-5.4"), 1050000);
   assert.equal(getOpenRouterMaxOutputTokens("openai/gpt-5.4"), 128000);
 
+  assert.equal(getOpenRouterContextWindow("openai/o4-mini"), 200000);
+  assert.equal(getOpenRouterMaxOutputTokens("openai/o4-mini"), 100000);
+
+  assert.equal(
+    getOpenRouterContextWindow("openai/o4-mini-2025-04-16"),
+    200000,
+  );
+  assert.equal(
+    getOpenRouterMaxOutputTokens("openai/o4-mini-2025-04-16"),
+    100000,
+  );
+
   for (const model of [
     "openai/gpt-5.6",
     "openai/gpt-5.6-sol",
@@ -68,6 +80,9 @@ test("OpenRouter routing variants retain base-model capabilities", () => {
 
   assert.equal(getOpenRouterContextWindow("openai/gpt-4.1-mini:online"), 1047576);
   assert.equal(getOpenRouterMaxOutputTokens("openai/gpt-4.1-mini:online"), 32768);
+
+  assert.equal(getOpenRouterContextWindow("openai/o4-mini:nitro"), 200000);
+  assert.equal(getOpenRouterMaxOutputTokens("openai/o4-mini:nitro"), 100000);
 
   assert.equal(
     getOpenRouterContextWindow("anthropic/claude-fable-5:floor"),
