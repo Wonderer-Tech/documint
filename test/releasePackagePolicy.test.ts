@@ -75,3 +75,30 @@ test("README scanner extensions stay aligned with C and C++ header support", () 
   assert.match(readme, /C\+\+ \(`\.cc`, `\.cpp`, `\.cxx`, `\.hh`, `\.hpp`, `\.hxx`\)/);
   assert.match(readme, /C# \(`\.cs`\)/);
 });
+
+test("README project structure documents public facades and implementation modules", () => {
+  const readme = readFileSync(join(process.cwd(), "README.md"), "utf8");
+
+  for (const required of [
+    "sourceAnalyzer.ts",
+    "sourceAnalyzerBase.ts",
+    "extension.ts",
+    "extensionBase.ts",
+    "extensionPolicy.ts",
+    "openAICapabilities.ts",
+    "docGenerator.ts",
+    "docGeneratorBase.ts",
+    "generationCacheIdentity.ts",
+  ]) {
+    assert.ok(readme.includes(required), `README project structure missing ${required}`);
+  }
+
+  assert.match(
+    readme,
+    /The `\*Base\.ts` modules are implementation details\./,
+  );
+  assert.match(
+    readme,
+    /Runtime code should import the public facade modules/,
+  );
+});
