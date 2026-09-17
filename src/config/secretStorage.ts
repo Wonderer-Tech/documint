@@ -39,7 +39,10 @@ export class SecretStorageManager {
 
   public async storeApiKey(provider: string, apiKey: string): Promise<boolean> {
     try {
-      await this.secretStorage.store(`${provider}-api-key`, apiKey);
+      // Validation already treats leading/trailing whitespace as paste noise.
+      // Persist the same normalized value so a key that passes validation does
+      // not later fail authentication because invisible whitespace was stored.
+      await this.secretStorage.store(`${provider}-api-key`, apiKey.trim());
       SecretStorageManager.bumpCredentialRevision(provider);
       return true;
     } catch (error) {
