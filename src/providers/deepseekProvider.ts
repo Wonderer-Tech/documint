@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import {
   BaseAIProvider,
   ApiCallParams,
@@ -12,6 +12,7 @@ import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 import { runProviderRequestWithRetry } from "./providerRetry";
 import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
 import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
+import { normalizeProviderRequestError } from "./providerHttpError";
 
 /**
  * DeepSeek provider using the official OpenAI-compatible Chat Completions API.
@@ -96,45 +97,7 @@ export class DeepSeekProvider extends BaseAIProvider {
         model: params.model,
       };
     } catch (error) {
-      const axErr = error as AxiosError<{
-        error?: { message?: string; code?: string; type?: string };
-      }>;
-
-      if (axErr.response) {
-        const status = axErr.response.status;
-        const apiMessage =
-          axErr.response.data?.error?.message ?? axErr.response.statusText;
-
-        if (status === 401) {
-          throw new Error(
-            `DeepSeek API authentication failed: ${apiMessage}. ` +
-              `Use the "Configure API Key" command to update your DeepSeek key.`,
-          );
-        }
-
-        if (status === 429) {
-          throw new Error(
-            `DeepSeek API rate limit exceeded: ${apiMessage}. ` +
-              `Lower aiDocGenerator.concurrentRequests or increase aiDocGenerator.rateLimitDelay.`,
-          );
-        }
-
-        throw new Error(`DeepSeek API error (${status}): ${apiMessage}`);
-      }
-
-      if (axErr.request) {
-        throw new Error(
-          `Network error: Could not reach DeepSeek API. ` +
-            `Check your internet connection and firewall settings.\n\n` +
-            `Original error: ${axErr.message}`,
-        );
-      }
-
-      if (error instanceof Error) {
-        throw error;
-      }
-
-      throw new Error(`Unexpected DeepSeek API error: ${axErr.message}`);
+      throw normalizeProviderRequestError(error, "DeepSeek");
     }
   }
 }
