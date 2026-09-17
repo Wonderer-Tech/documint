@@ -81,9 +81,12 @@ export class SecretStorageManager {
   }
 
   public async validateApiKey(
-    _provider: string,
+    provider: string,
     apiKey: string,
   ): Promise<boolean> {
-    return validateApiKeyValue(apiKey).valid;
+    const isCustom = SecretStorageManager.normalizeProvider(provider) === "custom";
+    return validateApiKeyValue(apiKey, {
+      minimumLength: isCustom ? 1 : 12,
+    }).valid;
   }
 }
