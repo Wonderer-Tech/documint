@@ -126,3 +126,16 @@ test("custom provider keeps API keys optional for inherited raw-prompt generatio
   );
   assert.match(source, /const apiKey = await this\.getApiKey\(\);/);
 });
+
+test("custom provider resolves endpoint locality from current settings", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/providers/customProvider.ts"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /get isLocal\(\): boolean \{\s*return this\.getEndpointPolicy\(\)\.isLocal;\s*\}/,
+  );
+  assert.doesNotMatch(source, /this\.isLocal\s*=/);
+});
