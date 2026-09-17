@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { getOpenAIModelCapabilities } from "../src/providers/openAICapabilities";
 import {
   estimateModelContextWindow,
   getKnownModelContext,
@@ -16,17 +17,46 @@ test("model context catalog separates current and legacy exact IDs", () => {
   });
 });
 
-test("GPT-4.1 family keeps the provider runtime context window", () => {
+test("GPT-4.1 family uses one canonical 1M capability source", () => {
   for (const model of ["gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano"]) {
-    assert.deepEqual(getKnownModelContext(model), {
-      contextWindow: 1000000,
+    assert.deepEqual(getOpenAIModelCapabilities(model), {
+      contextWindow: 1047576,
+      maxOutputTokens: 32768,
       lifecycle: "current",
     });
-    assert.equal(estimateModelContextWindow(model), 1000000);
+    assert.deepEqual(getKnownModelContext(model), {
+      contextWindow: 1047576,
+      lifecycle: "current",
+    });
+    assert.equal(estimateModelContextWindow(model), 1047576);
   }
 
-  assert.equal(estimateModelContextWindow("gpt-4.1-preview"), 1000000);
-  assert.equal(estimateModelContextWindow("gpt-4-1-preview"), 1000000);
+  assert.equal(estimateModelContextWindow("gpt-4.1-preview"), 1047576);
+  assert.equal(estimateModelContextWindow("gpt-4-1-preview"), 1047576);
+});
+
+test("GPT-5 and GPT-5.4 capability limits match provider budgeting", () => {
+  for (const model of ["gpt-5", "gpt-5-mini", "gpt-5-nano"]) {
+    assert.deepEqual(getOpenAIModelCapabilities(model), {
+      contextWindow: 400000,
+      maxOutputTokens: 128000,
+      lifecycle: "current",
+    });
+    assert.equal(estimateModelContextWindow(model), 400000);
+  }
+
+  assert.deepEqual(getOpenAIModelCapabilities("gpt-5.4"), {
+    contextWindow: 1050000,
+    maxOutputTokens: 128000,
+    lifecycle: "current",
+  });
+  for (const model of ["gpt-5.4-mini", "gpt-5.4-nano"]) {
+    assert.deepEqual(getOpenAIModelCapabilities(model), {
+      contextWindow: 400000,
+      maxOutputTokens: 128000,
+      lifecycle: "current",
+    });
+  }
 });
 
 test("model context catalog keeps inference conservative", () => {
