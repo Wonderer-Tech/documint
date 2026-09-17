@@ -1,3 +1,5 @@
+import { normalizeDocumentationDepth } from "./generationDepth";
+
 export const GENERATION_CACHE_POLICY_VERSION = "generation-cache-policy-v11";
 /**
  * Bump whenever generation prompts, evidence formatting, validation rules,
@@ -41,8 +43,10 @@ export function buildGenerationCacheIdentity(
 ): GenerationCacheIdentity {
   const provider = input.providerName.trim().toLowerCase() || "openai";
   const model = input.model?.trim() || settings.model?.trim() || "";
-  const depth =
-    input.depth?.trim() || settings.documentationDepth?.trim() || "standard";
+  const depth = normalizeDocumentationDepth(
+    input.depth,
+    settings.documentationDepth,
+  );
   const maxTokens = normalizePositiveInteger(settings.maxTokens, 4000);
   const temperature = normalizeFiniteNumber(settings.temperature, 0.3);
   const contextWindow =
