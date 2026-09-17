@@ -84,6 +84,10 @@ export function normalizeProviderModel(
   return isClearlyForeignToOpenRouter(model) ? fallbackModel : requested;
 }
 
+function isOpenAIReasoningFamily(model: string): boolean {
+  return /^o\d(?:$|-)/.test(model);
+}
+
 function isClearlyForeignToOpenAI(model: string): boolean {
   return (
     model.startsWith("claude-") ||
@@ -95,8 +99,7 @@ function isClearlyForeignToOpenAI(model: string): boolean {
 function isClearlyForeignToAnthropic(model: string): boolean {
   return (
     model.startsWith("gpt-") ||
-    model.startsWith("o1") ||
-    model.startsWith("o3") ||
+    isOpenAIReasoningFamily(model) ||
     model.startsWith("deepseek-") ||
     model.includes("/")
   );
@@ -109,8 +112,7 @@ function isClearlyForeignToOpenRouter(model: string): boolean {
 
   return (
     model.startsWith("gpt-") ||
-    model.startsWith("o1") ||
-    model.startsWith("o3") ||
+    isOpenAIReasoningFamily(model) ||
     model.startsWith("claude-") ||
     model.startsWith("deepseek-")
   );
