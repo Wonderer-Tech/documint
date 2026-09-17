@@ -30,6 +30,28 @@ test("provider model guard replaces retired DeepSeek aliases", () => {
   );
 });
 
+test("provider model guard replaces retired Anthropic model ids", () => {
+  for (const model of [
+    "claude-opus-4-1-20250805",
+    "claude-opus-4-20250514",
+    "claude-sonnet-4-20250514",
+    "claude-3-7-sonnet-20250219",
+    "claude-3-5-sonnet-20240620",
+    "claude-3-5-haiku-20241022",
+    "claude-3-opus-20240229",
+    "claude-3-sonnet-20240229",
+    "claude-3-haiku-20240307",
+    "claude-2.1",
+    "claude-2.0",
+  ]) {
+    assert.equal(
+      normalizeProviderModel("anthropic", model, "claude-sonnet-5"),
+      "claude-sonnet-5",
+      model,
+    );
+  }
+});
+
 test("provider model guard preserves provider-native model choices", () => {
   assert.equal(
     normalizeProviderModel(
@@ -38,6 +60,10 @@ test("provider model guard preserves provider-native model choices", () => {
       "claude-default",
     ),
     "claude-sonnet-5",
+  );
+  assert.equal(
+    normalizeProviderModel("anthropic", "claude-opus-4-8", "claude-default"),
+    "claude-opus-4-8",
   );
   assert.equal(
     normalizeProviderModel("deepseek", "deepseek-flash", "fallback"),
