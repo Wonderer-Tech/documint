@@ -24,6 +24,7 @@ import "./openRouterCapabilities.test";
 import "./providerNamePolicy.test";
 import "./manifestMetadata.test";
 import "./generationMode.test";
+import "./generationDepth.test";
 import "./localFileDocumentation.test";
 import "./localProjectDocumentation.test";
 import "./localArchitectureDocumentation.test";
