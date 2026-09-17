@@ -37,12 +37,19 @@ export class SecretStorageManager {
     return provider.trim().toLowerCase();
   }
 
+  private static secretKey(provider: string): string {
+    return `${this.normalizeProvider(provider)}-api-key`;
+  }
+
   public async storeApiKey(provider: string, apiKey: string): Promise<boolean> {
     try {
       // Validation already treats leading/trailing whitespace as paste noise.
       // Persist the same normalized value so a key that passes validation does
       // not later fail authentication because invisible whitespace was stored.
-      await this.secretStorage.store(`${provider}-api-key`, apiKey.trim());
+      await this.secretStorage.store(
+        SecretStorageManager.secretKey(provider),
+        apiKey.trim(),
+      );
       SecretStorageManager.bumpCredentialRevision(provider);
       return true;
     } catch (error) {
@@ -53,7 +60,9 @@ export class SecretStorageManager {
 
   public async getApiKey(provider: string): Promise<string | undefined> {
     try {
-      return await this.secretStorage.get(`${provider}-api-key`);
+      return await this.secretStorage.get(
+        SecretStorageManager.secretKey(provider),
+      );
     } catch (error) {
       console.error(`Failed to retrieve API key for ${provider}:`, error);
       return undefined;
@@ -62,7 +71,7 @@ export class SecretStorageManager {
 
   public async deleteApiKey(provider: string): Promise<boolean> {
     try {
-      await this.secretStorage.delete(`${provider}-api-key`);
+      await this.secretStorage.delete(SecretStorageManager.secretKey(provider));
       SecretStorageManager.bumpCredentialRevision(provider);
       return true;
     } catch (error) {
