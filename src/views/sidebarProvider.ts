@@ -658,7 +658,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       <option value="ai" selected>AI Documentation</option>
       <option value="local">Local Documentation — No AI</option>
     </select>
-    <div class="field-help hidden" id="localModeHelp">Runs entirely on this machine. No API key, internet connection, or AI model required. Local generation will be enabled when the local pipeline connection slice is complete.</div>
+    <div class="field-help hidden" id="localModeHelp">Runs entirely on this machine. No API key, internet connection, or AI model required.</div>
   </div>
 
   <div class="field">
@@ -788,10 +788,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
 
   function updateActionAvailability() {
-    var localPending = isLocalMode();
-    generateBtn.disabled = state.isGenerating || localPending;
+    generateBtn.disabled = state.isGenerating;
     document.querySelectorAll('.scope-btn').forEach(function(btn) {
-      btn.disabled = state.isGenerating || localPending;
+      btn.disabled = state.isGenerating;
     });
   }
 
@@ -956,7 +955,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   });
 
   generateBtn.addEventListener('click', function() {
-    if (isLocalMode() || !validateCustomEndpointForRun()) return;
+    if (!validateCustomEndpointForRun()) return;
     var payload = {
       generationMode: generationModeSel.value,
       provider: providerSel.value,
@@ -1010,7 +1009,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   document.querySelectorAll('.scope-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      if (isLocalMode()) return;
       var scope = btn.getAttribute('data-scope');
       var payload = {
         generationMode: generationModeSel.value,
