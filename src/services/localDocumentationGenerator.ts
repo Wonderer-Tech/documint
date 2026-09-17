@@ -6,7 +6,17 @@ import {
   type GenerationProgress,
 } from "../types";
 import type { GeneratedOutputPaths } from "./docGenerator";
+import {
+  buildLocalDocumentationCacheKey,
+  createLocalDocumentationCacheManifest,
+  hashLocalDocumentationOutput,
+  LOCAL_DOCUMENTATION_CACHE_FILE,
+  parseLocalDocumentationCacheManifest,
+  type LocalDocumentationCacheManifest,
+  type LocalDocumentationOutputHashes,
+} from "./localDocumentationCache";
 import { buildLocalDocumentationDocument } from "./localDocumentationDocument";
+import { sanitizeGeneratedOutputs } from "./outputSanitizer";
 
 export interface LocalDocumentationGeneratorOptions {
   outputFormat?: "markdown" | "html" | "both";
@@ -58,6 +68,37 @@ export class LocalDocumentationGenerator {
     }
 
     this.throwIfCancelled("parse");
+    const outputFormat = options.outputFormat ?? "both";
+    const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, "docs");
+    const cacheKey = buildLocalDocumentationCacheKey(workspaceFolder.name, files);
+
+    this.report({
+      phase: "parsing",
+      currentFile: "",
+      totalFiles: files.length,
+      processedFiles: files.length,
+      percentage: 22,
+      message: "Checking Local Documentation cache...",
+    });
+
+    const cachedOutputPaths = await this.tryReuseCachedOutputs(
+      docsFolder,
+      outputFormat,
+      cacheKey,
+    );
+    if (cachedOutputPaths) {
+      this.throwIfCancelled("format");
+      this.report({
+        phase: "complete",
+        currentFile: "",
+        totalFiles: files.length,
+        processedFiles: files.length,
+        percentage: 100,
+        message: `Reused cached Local Documentation for ${files.length} file${files.length === 1 ? "" : "s"}.`,
+      });
+      return cachedOutputPaths;
+    }
+
     this.report({
       phase: "parsing",
       currentFile: "",
@@ -91,11 +132,10 @@ export class LocalDocumentationGenerator {
       currentFile: "documentation files",
       totalFiles: files.length,
       processedFiles: files.length,
-      percentage: 85,
+      percentage: 82,
       message: "Writing Local Documentation files...",
     });
 
-    const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, "docs");
     try {
       await vscode.workspace.fs.createDirectory(docsFolder);
     } catch (error) {
@@ -107,7 +147,6 @@ export class LocalDocumentationGenerator {
       );
     }
 
-    const outputFormat = options.outputFormat ?? "both";
     const outputPaths: GeneratedOutputPaths = {};
 
     if (outputFormat === "markdown" || outputFormat === "both") {
@@ -124,6 +163,20 @@ export class LocalDocumentationGenerator {
       outputPaths.html = htmlFile.fsPath;
     }
 
+    this.throwIfCancelled("write");
+    this.report({
+      phase: "writing",
+      currentFile: "documentation files",
+      totalFiles: files.length,
+      processedFiles: files.length,
+      percentage: 92,
+      message: "Sanitizing Local Documentation output...",
+    });
+    await sanitizeGeneratedOutputs(outputPaths);
+
+    this.throwIfCancelled("write");
+    await this.writeCacheManifest(docsFolder, cacheKey, outputPaths);
+
     this.report({
       phase: "complete",
       currentFile: "",
@@ -134,6 +187,107 @@ export class LocalDocumentationGenerator {
     });
 
     return outputPaths;
+  }
+
+  private async tryReuseCachedOutputs(
+    docsFolder: vscode.Uri,
+    outputFormat: "markdown" | "html" | "both",
+    cacheKey: string,
+  ): Promise<GeneratedOutputPaths | undefined> {
+    const manifest = await this.readCacheManifest(docsFolder);
+    if (!manifest || manifest.key !== cacheKey) {
+      return undefined;
+    }
+
+    const requested = this.outputUrisForFormat(docsFolder, outputFormat);
+    for (const [kind, uri] of requested) {
+      const expectedHash = manifest.outputs[kind];
+      if (!expectedHash) {
+        return undefined;
+      }
+
+      const actualHash = await this.readOutputHash(uri);
+      if (!actualHash || actualHash !== expectedHash) {
+        return undefined;
+      }
+    }
+
+    const outputPaths: GeneratedOutputPaths = {};
+    for (const [kind, uri] of requested) {
+      outputPaths[kind] = uri.fsPath;
+    }
+    return outputPaths;
+  }
+
+  private async readCacheManifest(
+    docsFolder: vscode.Uri,
+  ): Promise<LocalDocumentationCacheManifest | undefined> {
+    const uri = vscode.Uri.joinPath(docsFolder, LOCAL_DOCUMENTATION_CACHE_FILE);
+    try {
+      const content = await vscode.workspace.fs.readFile(uri);
+      return parseLocalDocumentationCacheManifest(
+        Buffer.from(content).toString("utf-8"),
+      );
+    } catch {
+      return undefined;
+    }
+  }
+
+  private async writeCacheManifest(
+    docsFolder: vscode.Uri,
+    cacheKey: string,
+    outputPaths: GeneratedOutputPaths,
+  ): Promise<void> {
+    const hashes: LocalDocumentationOutputHashes = {};
+
+    if (outputPaths.markdown) {
+      const hash = await this.readOutputHash(vscode.Uri.file(outputPaths.markdown));
+      if (hash) hashes.markdown = hash;
+    }
+    if (outputPaths.html) {
+      const hash = await this.readOutputHash(vscode.Uri.file(outputPaths.html));
+      if (hash) hashes.html = hash;
+    }
+
+    const manifest = createLocalDocumentationCacheManifest(cacheKey, hashes);
+    const uri = vscode.Uri.joinPath(docsFolder, LOCAL_DOCUMENTATION_CACHE_FILE);
+    try {
+      await vscode.workspace.fs.writeFile(
+        uri,
+        Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`, "utf-8"),
+      );
+    } catch (error) {
+      console.warn("[Documint] Failed to write Local Documentation cache:", error);
+    }
+  }
+
+  private async readOutputHash(uri: vscode.Uri): Promise<string | undefined> {
+    try {
+      const content = await vscode.workspace.fs.readFile(uri);
+      return hashLocalDocumentationOutput(content);
+    } catch {
+      return undefined;
+    }
+  }
+
+  private outputUrisForFormat(
+    docsFolder: vscode.Uri,
+    outputFormat: "markdown" | "html" | "both",
+  ): Array<["markdown" | "html", vscode.Uri]> {
+    const requested: Array<["markdown" | "html", vscode.Uri]> = [];
+    if (outputFormat === "markdown" || outputFormat === "both") {
+      requested.push([
+        "markdown",
+        vscode.Uri.joinPath(docsFolder, "documentation.md"),
+      ]);
+    }
+    if (outputFormat === "html" || outputFormat === "both") {
+      requested.push([
+        "html",
+        vscode.Uri.joinPath(docsFolder, "documentation.html"),
+      ]);
+    }
+    return requested;
   }
 
   private async writeOutput(uri: vscode.Uri, content: string): Promise<void> {
