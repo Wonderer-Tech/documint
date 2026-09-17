@@ -37,6 +37,49 @@ test("parses multipart text content", () => {
   assert.equal(result.tokensUsed, 0);
 });
 
+test("falls back to split token usage fields for compatible providers", () => {
+  assert.equal(
+    parseOpenAICompatibleResponse(
+      {
+        choices: [{ message: { content: "docs" } }],
+        usage: { prompt_tokens: 100.9, completion_tokens: 24.8 },
+      },
+      "Custom provider",
+    ).tokensUsed,
+    124,
+  );
+
+  assert.equal(
+    parseOpenAICompatibleResponse(
+      {
+        choices: [{ message: { content: "docs" } }],
+        usage: { input_tokens: 50, output_tokens: 12 },
+      },
+      "Custom provider",
+    ).tokensUsed,
+    62,
+  );
+});
+
+test("explicit total token usage wins over split usage fields", () => {
+  assert.equal(
+    parseOpenAICompatibleResponse(
+      {
+        choices: [{ message: { content: "docs" } }],
+        usage: {
+          total_tokens: 90,
+          prompt_tokens: 60,
+          completion_tokens: 40,
+          input_tokens: 70,
+          output_tokens: 50,
+        },
+      },
+      "Provider",
+    ).tokensUsed,
+    90,
+  );
+});
+
 test("rejects malformed or empty completion content", () => {
   assert.throws(
     () => parseOpenAICompatibleResponse({ choices: [] }, "DeepSeek"),
