@@ -31,6 +31,9 @@ export function normalizeProviderModel(
   }
 
   if (provider === "deepseek") {
+    if (model === "deepseek-chat" || model === "deepseek-reasoner") {
+      return fallbackModel;
+    }
     return model.startsWith("deepseek-") ? requested : fallbackModel;
   }
 
