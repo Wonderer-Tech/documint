@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   buildLocalDocumentationCacheKey,
   createLocalDocumentationCacheManifest,
@@ -71,5 +73,35 @@ test("Local cache parser rejects stale or malformed manifests", () => {
       }),
     ),
     undefined,
+  );
+});
+
+test("Local generator sanitizes before committing verified cache metadata", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/services/localDocumentationGenerator.ts"),
+    "utf8",
+  );
+  const sanitize = source.indexOf("await sanitizeGeneratedOutputs(outputPaths);");
+  const cacheCommit = source.indexOf(
+    "await this.writeCacheManifest(docsFolder, cacheKey, outputPaths);",
+  );
+
+  assert.match(source, /buildLocalDocumentationCacheKey/);
+  assert.match(source, /tryReuseCachedOutputs/);
+  assert.match(source, /Reused cached Local Documentation/);
+  assert.ok(sanitize >= 0, "missing Local output sanitization");
+  assert.ok(cacheCommit > sanitize, "Local cache must commit after sanitization");
+});
+
+test("shared Clear Cache removes the separate Local cache manifest", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/extensionBase.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /LOCAL_DOCUMENTATION_CACHE_FILE/);
+  assert.match(
+    source,
+    /"\.documint-generation-cache-key\.json",\s*LOCAL_DOCUMENTATION_CACHE_FILE/,
   );
 });
