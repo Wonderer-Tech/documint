@@ -9,6 +9,7 @@ import {
   hasExplicitContextWindow,
   RequestContextWindowScope,
 } from "./contextWindowPolicy";
+import { generationRunContext } from "../services/generationRunContext";
 import { ModelMetadataService } from "../services/modelMetadataService";
 
 type MetadataProviderName = GuardedProviderName | "custom";
@@ -111,6 +112,13 @@ export function withModelMetadata(
   };
 
   provider.generateMarkdownFromPrompt = async (params) => {
+    const runContextWindow = generationRunContext.getContextWindow();
+    if (hasExplicitContextWindow(runContextWindow)) {
+      return requestContextWindow.run(runContextWindow!, () =>
+        originalGenerateMarkdownFromPrompt(params),
+      );
+    }
+
     await warmContextWindow(params.model);
     return originalGenerateMarkdownFromPrompt(params);
   };
