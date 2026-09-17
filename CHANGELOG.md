@@ -8,6 +8,7 @@ All notable changes to DocuMint are documented here.
 
 - Hardened provider runtime behavior so OpenAI-compatible providers normalize cancellation, timeout, authentication, rate-limit, and HTTP failure handling consistently.
 - Centralized provider/model defaults to reduce stale cross-provider model behavior.
+- Kept custom OpenAI-compatible API keys optional across both file generation and project-summary/raw-prompt generation paths.
 - Improved generated HTML resilience when optional CDN assets fail to load.
 - Preserved Mermaid source for editable/exportable diagram workflows.
 - Removed legacy hard-coded Code Workflow output so generated documentation remains source-grounded.
@@ -18,7 +19,7 @@ All notable changes to DocuMint are documented here.
 
 ### Tests
 
-- Added regression coverage for provider runtime normalization, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
+- Added regression coverage for provider runtime normalization, optional custom-provider API keys, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
 
 ## 1.0.4
 
