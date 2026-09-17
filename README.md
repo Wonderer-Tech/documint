@@ -4,7 +4,7 @@
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
 ![Version](https://img.shields.io/badge/version-1.0.4-green)
 
-DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file using providers such as OpenAI, Anthropic, OpenRouter, DeepSeek, or a custom OpenAI-compatible endpoint.
+DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file. Generate deterministic documentation entirely on your machine with **Local Documentation — No AI**, or use AI providers such as OpenAI, Anthropic, OpenRouter, DeepSeek, or a custom OpenAI-compatible endpoint for enhanced explanations.
 
 ![DocuMint Demo](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/demo.gif)
 
@@ -40,15 +40,22 @@ It produces:
 
 ## What It Does
 
-DocuMint scans source files, sends code to the configured provider, and builds project-level documentation with:
+DocuMint scans and analyzes source files first, then follows one of two generation paths:
+
+- **Local Documentation — No AI:** generates deterministic documentation from detected source facts only. No API key, internet connection, AI model, or external provider is required.
+- **AI Documentation:** sends selected source/code context to the configured provider after consent and generates richer semantic explanations.
+
+Both paths support workspace, folder, and file scope and can produce:
 
 - Project overview and stats
 - Per-file documentation sections
-- Detected imports, exports, symbols, and project links
-- Quality notes when generated docs miss detected source facts
+- Detected imports, exports, symbols, TODO/FIXME/HACK comments, and project links
+- Source-derived architecture and dependency information
 - Markdown and/or HTML output
 - HTML table of contents with navigation and search
 - Mermaid diagram rendering support in generated HTML
+
+Local mode also maintains its own source/output fingerprint cache so unchanged Local documentation can be reused without touching AI-generation cache state.
 
 The extension runs directly inside VS Code through a sidebar webview.
 
@@ -109,28 +116,41 @@ Editable Diagram Export:
 
 ## How It Works
 
-1. Resolve provider and model from sidebar payload or VS Code settings.
-2. Verify that cached AI documentation was generated with compatible provider/model/generation settings; reset that cache when those settings materially change.
-3. Scan workspace files through `WorkspaceScanner`.
-4. Optionally narrow generation directly to a selected file/folder path.
-5. Analyze source files for imports, exports, symbols, TODOs, and internal links.
-6. Build a project map and file-level context from verified source facts.
-7. Prepare local CPU context for each file, including dependency graph links, symbols, imports, and prompt inputs.
-8. Generate detailed file documentation in parallel via the selected provider.
-9. Validate generated docs against detected symbols.
-10. Save output into `docs/` as Markdown, HTML, or both.
+Common first steps:
 
-Public generation facade: `src/services/docGenerator.ts`. The orchestration implementation lives in `src/services/docGeneratorBase.ts`, with the facade binding runtime cache semantics to the canonical generation identity.
+1. Select Workspace, Folder, or File scope.
+2. Scan source files through `WorkspaceScanner` using the exact selected target paths when applicable.
+3. Analyze source files for imports, exports, symbols, TODOs, entry points, and resolved internal dependencies.
+
+**Local Documentation — No AI** then:
+
+4. Builds deterministic project, architecture, dependency, and per-file sections from source-analysis facts.
+5. Renders Markdown and/or HTML without resolving a provider or model.
+6. Sanitizes the generated output and records a separate Local cache fingerprint plus sanitized-output hashes.
+7. Reuses the Local output only when the source fingerprint and requested output-file hashes still match.
+
+**AI Documentation** instead:
+
+4. Resolves provider/model and verifies external-provider consent when required.
+5. Verifies compatible AI-generation cache identity and resets stale AI cache when material generation settings change.
+6. Builds prompt context from verified source facts and generates detailed file documentation through the selected provider.
+7. Validates and sanitizes generated documentation before writing output.
+
+Both modes save normal DocuMint output into `docs/`.
+
+Public AI-generation facade: `src/services/docGenerator.ts`. Local runtime orchestration lives in `src/services/localDocumentationGenerator.ts` and uses deterministic renderers under `src/services/local*Documentation.ts`.
 
 ## Supported Providers
 
-Configured using `aiDocGenerator.aiProvider`:
+AI mode is configured using `aiDocGenerator.aiProvider`:
 
 - `openai`
 - `anthropic` — current fallback model: `claude-sonnet-5`
 - `openrouter`
 - `deepseek` — current fallback model: `deepseek-flash`
 - `custom`
+
+Local mode does not use a provider.
 
 Provider implementations live in `src/providers/`.
 
@@ -199,10 +219,11 @@ npm run compile
 
 1. Open a project folder in VS Code.
 2. Open the **Documint** view in the activity bar.
-3. Select provider and model.
-4. Run **Configure API Key** if using a cloud provider.
-5. Click **Generate Documentation** for workspace scope, or use **File** / **Folder** quick buttons.
-6. Open generated files from `docs/`.
+3. Choose **Local Documentation — No AI** or **AI Documentation**.
+4. For Local mode, choose Output Format and generate immediately. No API key or model setup is required.
+5. For AI mode, select provider/model and run **Configure API Key** when required.
+6. Click **Generate Documentation** / **Generate Local Documentation** for workspace scope, or use **File** / **Folder** quick buttons.
+7. Open generated files from `docs/`.
 
 ## Commands
 
@@ -211,7 +232,7 @@ Contributed commands:
 - `aiDocGenerator.generateDocumentation` - Generate documentation
 - `aiDocGenerator.cancelGeneration` - Cancel generation
 - `aiDocGenerator.configureApiKey` - Configure API key
-- `aiDocGenerator.clearCache` - Clear documentation, visual, and generation-settings cache markers
+- `aiDocGenerator.clearCache` - Clear AI documentation, visual, generation-settings, and Local documentation cache markers
 
 Internal scope commands used by sidebar:
 
@@ -224,9 +245,10 @@ All settings are under `aiDocGenerator`.
 
 ### Key Settings
 
-- `aiDocGenerator.aiProvider` (`openai` by default)
-- `aiDocGenerator.model` (`gpt-5.4-nano` by default)
-- `aiDocGenerator.documentationDepth` (`simple | basic | standard | comprehensive`)
+- `aiDocGenerator.generationMode` (`ai | local`, `ai` by default)
+- `aiDocGenerator.aiProvider` (`openai` by default; AI mode only)
+- `aiDocGenerator.model` (`gpt-5.4-nano` by default; AI mode only)
+- `aiDocGenerator.documentationDepth` (`simple | basic | standard | comprehensive`; AI mode only)
 - `aiDocGenerator.outputFormat` (`markdown | html | both`)
 - `aiDocGenerator.targetLanguages` (all listed supported scanner languages by default)
 - `aiDocGenerator.maxTokens`
@@ -236,10 +258,20 @@ All settings are under `aiDocGenerator`.
 - `aiDocGenerator.excludePatterns`
 - `aiDocGenerator.customApiEndpoint`
 
-### Example `settings.json`
+### Local `settings.json`
 
 ```json
 {
+  "aiDocGenerator.generationMode": "local",
+  "aiDocGenerator.outputFormat": "both"
+}
+```
+
+### AI `settings.json`
+
+```json
+{
+  "aiDocGenerator.generationMode": "ai",
   "aiDocGenerator.aiProvider": "openai",
   "aiDocGenerator.model": "gpt-5.4-nano",
   "aiDocGenerator.documentationDepth": "standard",
@@ -261,6 +293,7 @@ Anthropic example:
 
 ```json
 {
+  "aiDocGenerator.generationMode": "ai",
   "aiDocGenerator.aiProvider": "anthropic",
   "aiDocGenerator.model": "claude-sonnet-5"
 }
@@ -270,6 +303,7 @@ DeepSeek example:
 
 ```json
 {
+  "aiDocGenerator.generationMode": "ai",
   "aiDocGenerator.aiProvider": "deepseek",
   "aiDocGenerator.model": "deepseek-flash"
 }
@@ -279,6 +313,7 @@ Custom endpoint example:
 
 ```json
 {
+  "aiDocGenerator.generationMode": "ai",
   "aiDocGenerator.aiProvider": "custom",
   "aiDocGenerator.model": "your-model-name",
   "aiDocGenerator.customApiEndpoint": "https://api.example.com/v1/chat/completions"
@@ -287,9 +322,20 @@ Custom endpoint example:
 
 ## Documentation Modes
 
-Use `aiDocGenerator.documentationDepth` to control how detailed the generated documentation should be.
+### Generation Mode
 
-| Mode | Best For | What It Generates |
+| Mode | Network / API Key | What It Generates |
+|------|-------------------|-------------------|
+| `local` | None required | Deterministic project facts, source tree, detected APIs/symbols/imports/TODOs, resolved dependencies, module relationships, and source-derived Mermaid/D2 diagrams. No semantic AI inference is added. |
+| `ai` | Depends on provider | Source-grounded documentation enhanced with provider-generated explanations, examples, architecture/design notes, and other semantic sections when supported by source evidence. |
+
+Local mode deliberately hides provider/model/authentication and Documentation Depth controls because they do not affect Local output.
+
+### AI Documentation Depth
+
+`aiDocGenerator.documentationDepth` applies only to AI mode.
+
+| Depth | Best For | What It Generates |
 |------|----------|-------------------|
 | `simple` | Fast plain-English understanding | Short purpose, key capabilities, and input/output summary for each file. |
 | `basic` | Lightweight developer reference | Module metadata, overview, exported API reference, quick start, and related modules. |
@@ -298,8 +344,7 @@ Use `aiDocGenerator.documentationDepth` to control how detailed the generated do
 
 Notes:
 
-- Project tree, source-derived architecture visuals, whiteboard-style diagrams, and interactive dependency graphs are available in generated HTML output across all modes.
-- `simple`, `basic`, and `standard` can batch small files for faster generation.
+- `simple`, `basic`, and `standard` can batch small files for faster AI generation.
 - `comprehensive` can batch small files, but large files are not truncated. They are generated as full single-file requests, and files that exceed the provider context window are split into chunks before the output is merged.
 
 ## Output
@@ -308,6 +353,8 @@ Generated output is written to a `docs/` directory in the workspace root:
 
 - `documentation.md`
 - `documentation.html`
+
+Local and AI modes use the same output paths, so the latest successful generation replaces the previous rendered documentation files.
 
 The HTML renderer includes:
 
@@ -319,12 +366,11 @@ The HTML renderer includes:
 - Syntax highlighting
 - Mermaid rendering
 - Project tree
-- Architecture blueprint
-- Draw.io export for Mermaid diagrams
-- D2 source export
-- Excalidraw-style whiteboard diagram
-- Interactive dependency graph
+- Architecture/dependency sections
+- D2 source
 - Copy-to-clipboard for code blocks
+
+AI output can additionally include richer source-grounded visual/semantic sections depending on the selected depth and available evidence.
 
 ## Project Structure
 
@@ -334,7 +380,7 @@ src/
 |   |-- sourceAnalyzer.ts          # Public analyzer facade + modern module compatibility
 |   `-- sourceAnalyzerBase.ts      # Core cross-language import/export/symbol analysis
 |-- extension.ts                   # Public VS Code activation entry point
-|-- extensionBase.ts               # Activation, commands, and canonical custom-endpoint validation/consent
+|-- extensionBase.ts               # Activation, commands, AI/Local routing, consent, cache clearing
 |-- types.ts                       # Shared types and error models
 |-- config/
 |   `-- secretStorage.ts           # VS Code secret storage wrapper
@@ -354,19 +400,26 @@ src/
 |   |-- deepseekProvider.ts
 |   `-- customProvider.ts
 |-- services/
-|   |-- docGenerator.ts            # Public generator facade + canonical prompt-cache binding
-|   |-- docGeneratorBase.ts        # Core orchestration + writing docs output
-|   |-- generationCacheIdentity.ts # Canonical generation/cache identity versions
-|   |-- generationCachePolicy.ts   # Invalidates AI-doc cache on material generation changes
-|   |-- documentationValidator.ts  # Checks generated docs against source facts
-|   |-- outputSanitizer.ts         # Removes unsafe/non-source-grounded output sections
-|   |-- htmlTemplate.ts            # Full HTML document template
-|   `-- modelMetadataService.ts    # Context window metadata fetch/cache
+|   |-- docGenerator.ts                 # Public AI generator facade + prompt-cache binding
+|   |-- docGeneratorBase.ts             # AI orchestration + writing docs output
+|   |-- generationMode.ts               # Canonical AI/Local mode normalization
+|   |-- localDocumentationGenerator.ts  # Local scan/analyze/write/cache runtime
+|   |-- localDocumentationDocument.ts   # Complete deterministic Local document assembly
+|   |-- localProjectDocumentation.ts    # Deterministic Local project overview
+|   |-- localArchitectureDocumentation.ts # Deterministic dependency diagrams/edges
+|   |-- localFileDocumentation.ts       # Deterministic per-file facts/API sections
+|   |-- localDocumentationCache.ts      # Separate Local source/output fingerprint cache
+|   |-- generationCacheIdentity.ts      # Canonical AI generation/cache identity versions
+|   |-- generationCachePolicy.ts        # Invalidates AI-doc cache on material generation changes
+|   |-- documentationValidator.ts       # Checks AI docs against source facts
+|   |-- outputSanitizer.ts              # Removes unsafe/non-source-grounded output sections
+|   |-- htmlTemplate.ts                 # Full HTML document template
+|   `-- modelMetadataService.ts         # Context window metadata fetch/cache
 `-- views/
-    `-- sidebarProvider.ts         # Sidebar UI webview and state sync
+    `-- sidebarProvider.ts              # Sidebar UI webview and state sync
 ```
 
-The `*Base.ts` modules are implementation details. Runtime code should import the public facade modules (`extension.ts`, `analyzer/sourceAnalyzer.ts`, and `services/docGenerator.ts`) so endpoint, dependency-resolution, and cache-version policies cannot be bypassed.
+The `*Base.ts` modules are implementation details. Runtime AI code should import the public facade modules (`extension.ts`, `analyzer/sourceAnalyzer.ts`, and `services/docGenerator.ts`) so endpoint, dependency-resolution, and cache-version policies cannot be bypassed.
 
 ## Development
 
@@ -394,10 +447,11 @@ npx @vscode/vsce package
 
 ## Known Limitations
 
-- Static analysis is intentionally lightweight. It improves accuracy, but it is not a full compiler for every language.
-- Documentation quality still depends on the selected model and the source code that is available in the workspace.
-- Cloud providers receive selected source code after confirmation. Use a localhost custom endpoint when code must stay local.
-- `aiDocGenerator.concurrentRequests` defaults to `15` for faster generation. Lower it in settings if your cloud provider rate-limits requests.
+- Static analysis is intentionally lightweight. Local mode reports detected source facts; it is not a full compiler or semantic program prover for every language.
+- Local mode does not invent business-logic explanations, intent, usage examples, or architectural rationale that cannot be established from static source evidence.
+- AI documentation quality depends on the selected model and the source code/context available in the workspace.
+- Cloud providers receive selected source code only after confirmation. Use Local Documentation when code must remain entirely on the machine.
+- `aiDocGenerator.concurrentRequests` defaults to `15` for faster AI generation. Lower it in settings if your cloud provider rate-limits requests.
 
 ## Contributing
 
