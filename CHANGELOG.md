@@ -23,12 +23,14 @@ All notable changes to DocuMint are documented here.
 - Removed legacy hard-coded Code Workflow output so generated documentation remains source-grounded.
 - Expanded scanner coverage for common C and C++ source/header extensions, including `.h`, `.cc`, `.cxx`, `.hh`, `.hpp`, and `.hxx`.
 - Expanded JavaScript/TypeScript discovery to include modern module extensions: `.mjs`, `.cjs`, `.mts`, and `.cts`.
+- Resolved extensionless JavaScript/TypeScript imports and directory index imports into `.mjs`, `.cjs`, `.mts`, and `.cts` files so the project dependency graph matches scanner coverage.
+- Bound the generator's per-entry prompt cache version to the canonical `GENERATION_PROMPT_SCHEMA_VERSION`, removing runtime drift between internal and release-level cache identities.
 - Bumped the generation cache compatibility policy to v3 so documentation generated under older release semantics is safely regenerated.
 - Kept README-only demo media out of the packaged VSIX while retaining runtime icons.
 
 ### Tests
 
-- Added regression coverage for provider runtime normalization, transient retry error reporting, optional custom-provider API keys, custom-endpoint transport and URL-shape policy, API-key storage normalization, normalized Secret Storage keys, GPT-4.1 context metadata, OpenAI-compatible usage/text fallbacks, Anthropic cache-token accounting, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
+- Added regression coverage for provider runtime normalization, transient retry error reporting, optional custom-provider API keys, custom-endpoint transport and URL-shape policy, API-key storage normalization, normalized Secret Storage keys, GPT-4.1 context metadata, OpenAI-compatible usage/text fallbacks, Anthropic cache-token accounting, modern module dependency resolution, canonical generator prompt-cache binding, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
 
 ## 1.0.4
 
