@@ -11,6 +11,8 @@
 AGENTS.md
 CLAUDE.md
 plans/**
+.cache/**
+.nyc_output/**
 
 # Source and build inputs not needed at runtime
 src/**
@@ -18,9 +20,12 @@ dist/**
 !dist/extension.js
 tsconfig.json
 *.tsbuildinfo
+*.map
+node_modules/**
 
 # Package/build artifacts
 *.vsix
+*.tgz
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
@@ -31,6 +36,13 @@ test/**
 tests/**
 test-results/**
 test-reports/**
+
+# README-only media is loaded from the public repository, not the VSIX
+resources/demo.gif
+resources/screenshot1.png
+resources/s2.png
+resources/s3.png
+resources/s4.png
 
 # Logs and local secrets
 *.log
