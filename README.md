@@ -138,8 +138,8 @@ Provider implementations live in `src/providers/`.
 
 The following scanner languages are enabled by default on new installs:
 
-- TypeScript (`.ts`, `.tsx`)
-- JavaScript (`.js`, `.jsx`)
+- TypeScript (`.ts`, `.mts`, `.cts`, `.tsx`)
+- JavaScript (`.js`, `.mjs`, `.cjs`, `.jsx`)
 - Python (`.py`)
 - Java (`.java`)
 - C (`.c`, `.h`)
