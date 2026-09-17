@@ -1,4 +1,5 @@
 import { classifyProviderFailure } from "./providerErrorPolicy";
+import { extractProviderHttpStatus } from "./providerHttpStatus";
 
 const TIMEOUT_CODES = new Set([
   "ECONNABORTED",
@@ -15,7 +16,7 @@ export function normalizeProviderRequestError(
 ): Error {
   const record = getRecord(error);
   const response = getRecord(record?.response);
-  const status = asFiniteInteger(response?.status ?? record?.status);
+  const status = extractProviderHttpStatus(error);
   const code = typeof record?.code === "string" ? record.code : undefined;
   const name = typeof record?.name === "string" ? record.name : undefined;
   const originalMessage =
@@ -116,10 +117,6 @@ function extractProviderMessage(value: unknown): string | undefined {
     }
   }
   return undefined;
-}
-
-function asFiniteInteger(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isInteger(value) ? value : undefined;
 }
 
 function getRecord(value: unknown): Record<string, unknown> | undefined {
