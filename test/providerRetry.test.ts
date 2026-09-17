@@ -29,6 +29,35 @@ test("retries transient server failures and eventually succeeds", async () => {
   assert.deepEqual(sleeps, [1000, 2000]);
 });
 
+test("honors an explicit zero Retry-After delay", async () => {
+  let calls = 0;
+  const sleeps: number[] = [];
+
+  const result = await runProviderRequestWithRetry(
+    async () => {
+      calls++;
+      if (calls === 1) {
+        throw {
+          response: {
+            status: 429,
+            headers: { "retry-after": "0" },
+          },
+        };
+      }
+      return "ok";
+    },
+    {
+      sleep: async (delayMs) => {
+        sleeps.push(delayMs);
+      },
+    },
+  );
+
+  assert.equal(result, "ok");
+  assert.equal(calls, 2);
+  assert.deepEqual(sleeps, [0]);
+});
+
 test("does not retry permanent client failures", async () => {
   let calls = 0;
 
@@ -84,6 +113,10 @@ test("parses Retry-After seconds and HTTP dates", () => {
   assert.equal(
     getRetryAfterMs({ response: { headers: { "retry-after": "2.5" } } }, 0),
     2500,
+  );
+  assert.equal(
+    getRetryAfterMs({ response: { headers: { "retry-after": "0" } } }, 0),
+    0,
   );
 
   const now = Date.parse("2026-09-16T12:00:00Z");
