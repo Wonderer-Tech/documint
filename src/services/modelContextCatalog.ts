@@ -1,25 +1,11 @@
+import { getOpenAIModelCapabilities } from "../providers/openAICapabilities";
+
 export interface KnownModelContext {
   contextWindow: number;
   lifecycle: "current" | "legacy";
 }
 
 const CURRENT_MODEL_CONTEXT_WINDOWS: Record<string, number> = {
-  // OpenAI current/default families used by DocuMint.
-  "gpt-5.4-nano": 128000,
-  "gpt-5.4-mini": 128000,
-  "gpt-5.4": 200000,
-  "gpt-5-nano": 128000,
-  "gpt-5-mini": 128000,
-  "gpt-5": 200000,
-  "gpt-4.1": 1000000,
-  "gpt-4.1-mini": 1000000,
-  "gpt-4.1-nano": 1000000,
-  "gpt-4o": 128000,
-  "gpt-4o-mini": 128000,
-  "o1": 200000,
-  "o3": 200000,
-  "o3-mini": 200000,
-
   // Anthropic current families used by DocuMint.
   "claude-sonnet-5": 1000000,
   "claude-opus-5": 1000000,
@@ -35,12 +21,6 @@ const CURRENT_MODEL_CONTEXT_WINDOWS: Record<string, number> = {
 };
 
 const LEGACY_MODEL_CONTEXT_WINDOWS: Record<string, number> = {
-  // OpenAI legacy compatibility entries.
-  "gpt-4-turbo": 128000,
-  "gpt-4": 8192,
-  "gpt-3.5-turbo": 16385,
-  "o1-mini": 128000,
-
   // Anthropic legacy compatibility entries.
   "claude-3-5-sonnet-20241022": 200000,
   "claude-3-5-haiku-20241022": 200000,
@@ -63,6 +43,14 @@ export function getKnownModelContext(
     return undefined;
   }
 
+  const openai = getOpenAIModelCapabilities(normalized);
+  if (openai) {
+    return {
+      contextWindow: openai.contextWindow,
+      lifecycle: openai.lifecycle,
+    };
+  }
+
   const current = CURRENT_MODEL_CONTEXT_WINDOWS[normalized];
   if (current) {
     return { contextWindow: current, lifecycle: "current" };
@@ -80,6 +68,11 @@ export function estimateModelContextWindow(model: string): number {
   const normalized = model.trim().toLowerCase();
   if (!normalized) {
     return 8192;
+  }
+
+  const openai = getOpenAIModelCapabilities(normalized);
+  if (openai) {
+    return openai.contextWindow;
   }
 
   const known = getKnownModelContext(normalized);
@@ -100,9 +93,7 @@ export function estimateModelContextWindow(model: string): number {
     normalized.includes("claude-sonnet-4-6") ||
     normalized.includes("claude-opus-4-8") ||
     normalized.includes("claude-opus-4-7") ||
-    normalized.includes("claude-opus-4-6") ||
-    normalized.includes("gpt-4.1") ||
-    normalized.includes("gpt-4-1")
+    normalized.includes("claude-opus-4-6")
   ) {
     return 1000000;
   }
@@ -111,13 +102,7 @@ export function estimateModelContextWindow(model: string): number {
     return 200000;
   }
 
-  if (
-    normalized.includes("128k") ||
-    normalized.includes("gpt-5") ||
-    normalized.includes("gpt-4o") ||
-    normalized.includes("o1") ||
-    normalized.includes("o3")
-  ) {
+  if (normalized.includes("128k")) {
     return 128000;
   }
 
