@@ -85,6 +85,19 @@ test("OpenAI concrete provider uses the shared default model source", () => {
   );
 });
 
+test("DeepSeek concrete provider uses canonical model capabilities", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/providers/deepseekProvider.ts"),
+    "utf8",
+  );
+
+  assert.equal(PROVIDER_DEFAULT_MODELS.deepseek, "deepseek-flash");
+  assert.match(source, /getDeepSeekModelCapabilities/);
+  assert.match(source, /\.maxOutputTokens/);
+  assert.match(source, /\.contextWindow/);
+  assert.doesNotMatch(source, /return 32768;/);
+});
+
 test("custom provider keeps API keys optional for inherited raw-prompt generation", () => {
   const source = readFileSync(
     join(process.cwd(), "src/providers/customProvider.ts"),
