@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import manifest from "../package.json";
 
 test("marketplace metadata advertises implemented documentation capabilities", () => {
@@ -22,6 +24,46 @@ test("command activation events cover contributed command-palette entry points",
   assert.ok(activationEvents.has("onCommand:aiDocGenerator.configureApiKey"));
   assert.ok(activationEvents.has("onCommand:aiDocGenerator.clearCache"));
   assert.ok(activationEvents.has("onCommand:aiDocGenerator.cancelGeneration"));
+});
+
+test("manifest commands stay aligned with runtime registration and internal scope commands", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/extensionBase.ts"),
+    "utf8",
+  );
+  const registered = new Set(
+    [...source.matchAll(/vscode\.commands\.registerCommand\(\s*["']([^"']+)["']/g)].map(
+      (match) => match[1],
+    ),
+  );
+  const contributed = new Set(
+    manifest.contributes.commands.map((entry) => entry.command),
+  );
+  const activationEvents = new Set(manifest.activationEvents);
+
+  for (const command of contributed) {
+    assert.ok(registered.has(command), `contributed command is not registered: ${command}`);
+    assert.ok(
+      activationEvents.has(`onCommand:${command}`),
+      `contributed command has no activation event: ${command}`,
+    );
+  }
+
+  for (const command of [
+    "aiDocGenerator.pickAndGenerateFile",
+    "aiDocGenerator.pickAndGenerateFolder",
+  ]) {
+    assert.ok(registered.has(command), `internal scope command is not registered: ${command}`);
+    assert.ok(
+      activationEvents.has(`onCommand:${command}`),
+      `internal scope command has no activation event: ${command}`,
+    );
+    assert.equal(
+      contributed.has(command),
+      false,
+      `internal scope command must stay out of the Command Palette: ${command}`,
+    );
+  }
 });
 
 test("manifest prevents negative provider request spacing", () => {
