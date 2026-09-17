@@ -2,6 +2,7 @@ import {
   classifyProviderFailure,
   getProviderRetryDelayMs,
 } from "./providerErrorPolicy";
+import { extractProviderHttpStatus } from "./providerHttpStatus";
 
 export interface ProviderRetryOptions {
   /** Number of retries after the initial attempt. */
@@ -94,11 +95,9 @@ function getProviderFailureInput(error: unknown): {
   message?: string;
 } {
   const record = getRecord(error);
-  const response = getRecord(record?.response);
-  const status = response?.status ?? record?.status;
 
   return {
-    status: typeof status === "number" ? status : undefined,
+    status: extractProviderHttpStatus(error),
     code: typeof record?.code === "string" ? record.code : undefined,
     name: typeof record?.name === "string" ? record.name : undefined,
     message: typeof record?.message === "string" ? record.message : undefined,
