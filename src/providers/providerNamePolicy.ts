@@ -22,3 +22,16 @@ export function normalizeProviderName(value: string | undefined): ProviderName {
   const normalized = value?.trim().toLowerCase() as ProviderName | undefined;
   return normalized && PROVIDER_NAMES.has(normalized) ? normalized : "openai";
 }
+
+/**
+ * Resolves an optional per-run provider override against the configured provider.
+ * Whitespace-only overrides are treated as absent rather than as an unknown
+ * provider that would otherwise normalize to OpenAI.
+ */
+export function resolveProviderNameWithFallback(
+  optionProvider: string | undefined,
+  configuredProvider: string | undefined,
+): ProviderName {
+  const override = optionProvider?.trim();
+  return normalizeProviderName(override || configuredProvider);
+}
