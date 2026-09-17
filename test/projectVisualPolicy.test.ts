@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const source = readFileSync(
-  join(process.cwd(), "src/services/docGenerator.ts"),
-  "utf8",
-);
+const source = [
+  readFileSync(join(process.cwd(), "src/services/docGenerator.ts"), "utf8"),
+  readFileSync(join(process.cwd(), "src/services/docGeneratorBase.ts"), "utf8"),
+].join("\n");
 
 test("project visuals no longer generate the hard-coded DocuMint workflow", () => {
   for (const forbidden of [
