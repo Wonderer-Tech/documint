@@ -37,6 +37,26 @@ test("GPT-4.1 family uses one canonical 1M capability source", () => {
   assert.equal(estimateModelContextWindow("gpt-4-1-preview"), 1047576);
 });
 
+test("GPT-5.6 family uses one canonical 1.05M capability source", () => {
+  for (const model of [
+    "gpt-5.6",
+    "gpt-5.6-sol",
+    "gpt-5.6-terra",
+    "gpt-5.6-luna",
+  ]) {
+    assert.deepEqual(getOpenAIModelCapabilities(model), {
+      contextWindow: 1050000,
+      maxOutputTokens: 128000,
+      lifecycle: "current",
+    });
+    assert.deepEqual(getKnownModelContext(model), {
+      contextWindow: 1050000,
+      lifecycle: "current",
+    });
+    assert.equal(estimateModelContextWindow(model), 1050000);
+  }
+});
+
 test("GPT-5 and GPT-5.4 capability limits match provider budgeting", () => {
   for (const model of ["gpt-5", "gpt-5-mini", "gpt-5-nano"]) {
     assert.deepEqual(getOpenAIModelCapabilities(model), {
