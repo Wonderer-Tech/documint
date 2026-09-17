@@ -36,23 +36,55 @@ test("sidebar exposes Local mode while suppressing provider and authentication c
   assert.match(source, /providerSection\.classList\.toggle\('hidden', local\)/);
   assert.match(source, /generationMode:\s*generationModeSel\.value/);
   assert.match(source, /updates\.push\(\["generationMode", normalizeGenerationMode/);
+  assert.doesNotMatch(source, /state\.isGenerating \|\| localPending/);
+  assert.doesNotMatch(source, /if \(isLocalMode\(\)\) return;/);
 });
 
-test("Local mode is guarded before provider selection until its pipeline is connected", () => {
+test("Local mode executes its own generator before provider selection", () => {
   const source = readFileSync(
     join(process.cwd(), "src/extensionBase.ts"),
     "utf8",
   );
-  const localGuard = source.indexOf('if (generationMode === "local")');
+  const localBranch = source.indexOf('if (generationMode === "local")');
   const providerSelection = source.indexOf(
     "const runSelection = resolveProviderSelection(",
   );
 
-  assert.ok(localGuard >= 0, "missing Local generation guard");
+  assert.ok(localBranch >= 0, "missing Local generation branch");
   assert.ok(providerSelection >= 0, "missing provider-selection path");
   assert.ok(
-    localGuard < providerSelection,
-    "Local mode must stop before provider selection and external-provider flow",
+    localBranch < providerSelection,
+    "Local mode must branch before provider selection and external-provider flow",
   );
-  assert.match(source, /No code was sent to an AI provider/);
+
+  const localSource = source.slice(localBranch, providerSelection);
+  assert.match(localSource, /localDocGenerator\.generateDocumentation/);
+  assert.match(localSource, /sanitizeGeneratedOutputs\(outputPaths\)/);
+  assert.doesNotMatch(localSource, /resolveRunProvider\(/);
+  assert.doesNotMatch(localSource, /ensureGenerationAllowed\(/);
+  assert.doesNotMatch(localSource, /prepareGenerationCacheCompatibility\(/);
+});
+
+test("Local File and Folder scopes pass exact target paths to the scanner", () => {
+  const generatorSource = readFileSync(
+    join(process.cwd(), "src/services/localDocumentationGenerator.ts"),
+    "utf8",
+  );
+  const extensionSource = readFileSync(
+    join(process.cwd(), "src/extensionBase.ts"),
+    "utf8",
+  );
+
+  assert.match(
+    generatorSource,
+    /scanWorkspace\(\s*workspaceFolder,\s*options\.targetPaths,\s*\)/,
+  );
+  assert.match(
+    extensionSource,
+    /scope: "current-file",\s*targetPaths: \[uris\[0\]\.fsPath\]/,
+  );
+  assert.match(
+    extensionSource,
+    /scope: "folder",\s*targetPaths: \[uris\[0\]\.fsPath\]/,
+  );
 });
