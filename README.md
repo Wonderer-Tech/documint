@@ -346,6 +346,8 @@ src/
 |   |-- providerModelGuard.ts      # Prevents stale cross-provider model IDs
 |   |-- providerMetadataDecorator.ts # Context-window metadata/override layer
 |   |-- openAICapabilities.ts      # Canonical OpenAI context/output capability table
+|   |-- anthropicCapabilities.ts   # Canonical Anthropic context/output capability table
+|   |-- deepSeekCapabilities.ts    # Canonical DeepSeek context/output capability table
 |   |-- openaiProvider.ts
 |   |-- anthropicProvider.ts
 |   |-- openrouterProvider.ts
