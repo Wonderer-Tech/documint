@@ -115,6 +115,11 @@ const INTERNAL_IMPORT_EXTENSIONS = [
   "sql",
 ];
 
+interface PythonImportBuffer {
+  line: number;
+  text: string;
+}
+
 export class SourceAnalyzer {
   analyzeProject(files: WorkspaceFile[]): ProjectAnalysis {
     const analyses = files.map((file) => this.analyzeFile(file));
@@ -162,12 +167,45 @@ export class SourceAnalyzer {
     const symbols: SourceSymbol[] = [];
     const todos: TodoComment[] = [];
     let inGoImportBlock = false;
+    let pythonImportBuffer: PythonImportBuffer | undefined;
 
-    lines.forEach((line, index) => {
+    for (let index = 0; index < lines.length; index++) {
+      const line = lines[index];
       const lineNumber = index + 1;
+      const trimmed = line.trim();
+      let importHandled = false;
 
-      if (file.language === "go") {
-        const trimmed = line.trim();
+      if (file.language === "python") {
+        if (pythonImportBuffer) {
+          pythonImportBuffer.text = this.appendPythonImportLine(
+            pythonImportBuffer.text,
+            trimmed,
+          );
+          if (!this.pythonImportNeedsContinuation(trimmed, pythonImportBuffer.text)) {
+            this.extractImports(
+              pythonImportBuffer.text,
+              pythonImportBuffer.line,
+              file.language,
+              imports,
+            );
+            pythonImportBuffer = undefined;
+          }
+          importHandled = true;
+        } else if (this.startsPythonMultilineImport(trimmed)) {
+          const normalized = this.normalizePythonImportLine(trimmed);
+          if (this.pythonImportNeedsContinuation(trimmed, normalized)) {
+            pythonImportBuffer = {
+              line: lineNumber,
+              text: normalized,
+            };
+          } else {
+            this.extractImports(normalized, lineNumber, file.language, imports);
+          }
+          importHandled = true;
+        }
+      }
+
+      if (!importHandled && file.language === "go") {
         if (/^import\s*\(\s*$/.test(trimmed)) {
           inGoImportBlock = true;
         } else if (inGoImportBlock && trimmed === ")") {
@@ -177,13 +215,22 @@ export class SourceAnalyzer {
         } else {
           this.extractImports(line, lineNumber, file.language, imports);
         }
-      } else {
+      } else if (!importHandled) {
         this.extractImports(line, lineNumber, file.language, imports);
       }
 
       this.extractSymbols(line, lineNumber, file.language, symbols);
       this.extractTodos(line, lineNumber, file.language, todos);
-    });
+    }
+
+    if (pythonImportBuffer) {
+      this.extractImports(
+        pythonImportBuffer.text,
+        pythonImportBuffer.line,
+        file.language,
+        imports,
+      );
+    }
 
     return {
       path: file.path,
@@ -442,24 +489,7 @@ export class SourceAnalyzer {
     if (language === "rust") {
       const useMatch = trimmed.match(/^use\s+([^;]+);/);
       if (useMatch) {
-        const useTarget = useMatch[1].trim();
-        const braceMatch = useTarget.match(/^(.+?)::\{([^}]+)\}$/);
-        const rawSource = (braceMatch?.[1] ?? useTarget)
-          .split(/\s+as\s+/)[0]
-          .replace(/::\*$/, "")
-          .trim();
-        const symbols = braceMatch
-          ? braceMatch[2]
-              .split(",")
-              .map((value) => value.trim().split(/\s+as\s+/)[0])
-              .filter(Boolean)
-          : [rawSource.split("::").pop() ?? rawSource].filter(Boolean);
-        const source = rawSource.startsWith("self::")
-          ? `./${rawSource.slice("self::".length).replace(/::/g, "/")}`
-          : rawSource.startsWith("super::")
-            ? `../${rawSource.slice("super::".length).replace(/::/g, "/")}`
-            : rawSource;
-        imports.push({ line: lineNumber, source, symbols });
+        this.extractRustUseImports(useMatch[1].trim(), lineNumber, imports);
         return;
       }
 
@@ -631,8 +661,8 @@ export class SourceAnalyzer {
         "interface",
         symbols,
       );
-      for (let index = startIndex; index < symbols.length; index++) {
-        symbols[index].exported = /^[A-Z]/.test(symbols[index].name);
+      for (let symbolIndex = startIndex; symbolIndex < symbols.length; symbolIndex++) {
+        symbols[symbolIndex].exported = /^[A-Z]/.test(symbols[symbolIndex].name);
       }
       return;
     }
@@ -719,8 +749,8 @@ export class SourceAnalyzer {
 
       if (language === "java" || language === "csharp") {
         const isPublic = /^public\b/.test(trimmed);
-        for (let index = startIndex; index < symbols.length; index++) {
-          symbols[index].exported = isPublic;
+        for (let symbolIndex = startIndex; symbolIndex < symbols.length; symbolIndex++) {
+          symbols[symbolIndex].exported = isPublic;
         }
       }
       return;
@@ -922,6 +952,125 @@ export class SourceAnalyzer {
       .filter(Boolean);
   }
 
+  private startsPythonMultilineImport(trimmed: string): boolean {
+    return /^(?:from\s+[\w.]+\s+import|import\s+)/.test(trimmed) &&
+      (trimmed.endsWith("\\") || this.hasUnclosedParentheses(trimmed));
+  }
+
+  private normalizePythonImportLine(value: string): string {
+    return value.replace(/\\\s*$/, "").trim();
+  }
+
+  private appendPythonImportLine(current: string, next: string): string {
+    return `${current} ${this.normalizePythonImportLine(next)}`.trim();
+  }
+
+  private pythonImportNeedsContinuation(
+    rawLine: string,
+    combinedValue: string,
+  ): boolean {
+    return rawLine.trimEnd().endsWith("\\") ||
+      this.hasUnclosedParentheses(combinedValue);
+  }
+
+  private hasUnclosedParentheses(value: string): boolean {
+    let depth = 0;
+    for (const character of value) {
+      if (character === "(") {
+        depth++;
+      } else if (character === ")") {
+        depth = Math.max(0, depth - 1);
+      }
+    }
+    return depth > 0;
+  }
+
+  private extractRustUseImports(
+    useTarget: string,
+    lineNumber: number,
+    imports: SourceImport[],
+  ): void {
+    for (const expanded of this.expandRustUseTargets(useTarget)) {
+      let target = expanded.trim();
+      if (!target) {
+        continue;
+      }
+
+      target = target.split(/\s+as\s+/)[0].trim();
+      const isGlob = target.endsWith("::*");
+      if (isGlob) {
+        target = target.slice(0, -3);
+      }
+      if (!target || target === "self") {
+        continue;
+      }
+
+      const source = target.startsWith("self::")
+        ? `./${target.slice("self::".length).replace(/::/g, "/")}`
+        : target.startsWith("super::")
+          ? `../${target.slice("super::".length).replace(/::/g, "/")}`
+          : target;
+      const symbol = target.split("::").pop() ?? target;
+      imports.push({
+        line: lineNumber,
+        source,
+        symbols: isGlob || symbol === "*" ? [] : [symbol],
+      });
+    }
+  }
+
+  private expandRustUseTargets(value: string): string[] {
+    const openIndex = value.indexOf("{");
+    if (openIndex < 0) {
+      return [value];
+    }
+
+    const closeIndex = this.findMatchingBrace(value, openIndex);
+    if (closeIndex < 0) {
+      return [value];
+    }
+
+    const prefix = value.slice(0, openIndex);
+    const suffix = value.slice(closeIndex + 1);
+    const inner = value.slice(openIndex + 1, closeIndex);
+    return this.splitTopLevel(inner).flatMap((part) =>
+      this.expandRustUseTargets(`${prefix}${part.trim()}${suffix}`),
+    );
+  }
+
+  private findMatchingBrace(value: string, openIndex: number): number {
+    let depth = 0;
+    for (let index = openIndex; index < value.length; index++) {
+      if (value[index] === "{") {
+        depth++;
+      } else if (value[index] === "}") {
+        depth--;
+        if (depth === 0) {
+          return index;
+        }
+      }
+    }
+    return -1;
+  }
+
+  private splitTopLevel(value: string): string[] {
+    const parts: string[] = [];
+    let depth = 0;
+    let start = 0;
+    for (let index = 0; index < value.length; index++) {
+      if (value[index] === "{") {
+        depth++;
+      } else if (value[index] === "}") {
+        depth--;
+      } else if (value[index] === "," && depth === 0) {
+        parts.push(value.slice(start, index));
+        start = index + 1;
+      }
+    }
+    parts.push(value.slice(start));
+    return parts.filter((part) => part.trim().length > 0);
+  }
+
   private extractGoBlockImport(
     trimmed: string,
     lineNumber: number,
@@ -960,14 +1109,47 @@ export class SourceAnalyzer {
   }
 
   private findEntryPoints(files: FileAnalysis[]): string[] {
-    const entryPatterns = [
-      /(^|\/)(index|main|app|server|extension)\.[^.]+$/,
-      /(^|\/)src\/(index|main|app|server|extension)\.[^.]+$/,
-    ];
     return files
-      .filter((file) => entryPatterns.some((pattern) => pattern.test(file.path)))
+      .filter((file) => this.isLanguageEntryPoint(file))
       .map((file) => file.path)
       .sort();
+  }
+
+  private isLanguageEntryPoint(file: FileAnalysis): boolean {
+    const fileName = path.posix.basename(this.normalize(file.path)).toLowerCase();
+
+    if (this.isJavaScriptLike(file.language)) {
+      return /^(index|main|app|server|extension)\.(?:[cm]?[jt]sx?)$/.test(fileName);
+    }
+
+    switch (file.language) {
+      case "python":
+        return /^(?:__main__|main|app|manage|wsgi|asgi)\.py$/.test(fileName);
+      case "go":
+        return fileName === "main.go";
+      case "rust":
+        return fileName === "main.rs" || fileName === "lib.rs";
+      case "java":
+        return fileName === "main.java" || fileName === "application.java";
+      case "kotlin":
+        return fileName === "main.kt" || fileName === "application.kt";
+      case "csharp":
+        return fileName === "program.cs" || fileName === "startup.cs";
+      case "c":
+        return fileName === "main.c";
+      case "cpp":
+        return /^(?:main)\.(?:cc|cpp|cxx)$/.test(fileName);
+      case "php":
+        return fileName === "index.php";
+      case "ruby":
+        return fileName === "main.rb" || fileName === "app.rb";
+      case "swift":
+        return fileName === "main.swift";
+      case "shell":
+        return fileName === "main.sh";
+      default:
+        return false;
+    }
   }
 
   private resolveInternalImport(
@@ -1073,6 +1255,22 @@ export class SourceAnalyzer {
     }
     if (language === "rust") {
       return importSource.split("::")[0];
+    }
+    if (language === "java" || language === "kotlin") {
+      const segments = importSource.replace(/\.\*$/, "").split(".").filter(Boolean);
+      if (segments.length === 0) {
+        return importSource;
+      }
+      if (["java", "javax", "kotlin", "android", "androidx"].includes(segments[0])) {
+        return segments[0];
+      }
+      if (["com", "org", "io", "net"].includes(segments[0]) && segments.length > 1) {
+        return segments.slice(0, 2).join(".");
+      }
+      return segments[0];
+    }
+    if (language === "c" || language === "cpp") {
+      return importSource.split(/[\\/]/)[0];
     }
     if (importSource.startsWith("@")) {
       return importSource.split("/").slice(0, 2).join("/");
