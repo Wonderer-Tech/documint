@@ -5,6 +5,7 @@ import {
   DocGeneratorService,
   GeneratedOutputPaths,
 } from "./services/docGenerator";
+import { LocalDocumentationGenerator } from "./services/localDocumentationGenerator";
 import { sanitizeGeneratedOutputs } from "./services/outputSanitizer";
 import {
   commitGenerationCacheCompatibility,
@@ -55,6 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   const docGenerator = new DocGeneratorService(context, secretManager);
+  const localDocGenerator = new LocalDocumentationGenerator();
   let activeCancellationSource: vscode.CancellationTokenSource | undefined;
 
   function resolveRunProvider(provider?: string): string {
@@ -194,12 +196,95 @@ export function activate(context: vscode.ExtensionContext) {
           .get<string>("generationMode"),
     );
     if (generationMode === "local") {
-      const message =
-        "Local Documentation mode is prepared but not connected to the generation pipeline yet. No code was sent to an AI provider.";
-      sidebarProvider.setGeneratingState(false);
-      sidebarProvider.reportError(message);
-      sidebarProvider.addLogEntry(message, "info");
-      vscode.window.showInformationMessage(message);
+      if (!vscode.workspace.isTrusted) {
+        const message =
+          "DocuMint requires a trusted workspace before reading project files.";
+        sidebarProvider.setGeneratingState(false);
+        sidebarProvider.reportError(message);
+        sidebarProvider.addLogEntry(message, "error");
+        vscode.window.showErrorMessage(message);
+        return;
+      }
+
+      const cancellationSource = new vscode.CancellationTokenSource();
+      activeCancellationSource = cancellationSource;
+      localDocGenerator.setCancellationToken(cancellationSource.token);
+      localDocGenerator.setProgressCallback((progress) => {
+        sidebarProvider.updateProgress(progress);
+        sidebarProvider.addLogEntry(progress.message || "Processing locally...", "info");
+      });
+      sidebarProvider.setGeneratingState(true);
+
+      try {
+        const outputPaths: GeneratedOutputPaths =
+          await localDocGenerator.generateDocumentation(workspaceFolder, {
+            outputFormat:
+              (payload.outputFormat as "markdown" | "html" | "both") || "both",
+            targetPaths: payload.targetPaths,
+          });
+
+        await sanitizeGeneratedOutputs(outputPaths);
+
+        sidebarProvider.setGeneratingState(false);
+        sidebarProvider.completeGeneration();
+        sidebarProvider.addLogEntry(
+          "Local Documentation generation completed!",
+          "success",
+        );
+
+        const actions: string[] = [];
+        if (outputPaths.html) actions.push("Open HTML");
+        if (outputPaths.markdown) actions.push("Open Markdown");
+
+        const fileCount =
+          (outputPaths.html ? 1 : 0) + (outputPaths.markdown ? 1 : 0);
+        vscode.window
+          .showInformationMessage(
+            `Local Documentation generated successfully (${fileCount} file${fileCount > 1 ? "s" : ""})`,
+            ...actions,
+          )
+          .then((selection) => {
+            if (selection === "Open HTML" && outputPaths.html) {
+              vscode.commands.executeCommand(
+                "vscode.open",
+                vscode.Uri.file(outputPaths.html),
+              );
+            } else if (selection === "Open Markdown" && outputPaths.markdown) {
+              vscode.commands.executeCommand(
+                "vscode.open",
+                vscode.Uri.file(outputPaths.markdown),
+              );
+            }
+          })
+          .then(undefined, (err) =>
+            console.error("[Documint] showInformationMessage error:", err),
+          );
+      } catch (error) {
+        const wasCancelled = cancellationSource.token.isCancellationRequested;
+        const docError = wasCancelled
+          ? new DocumentationError("Generation cancelled by user", "scan")
+          : error instanceof DocumentationError
+            ? error
+            : new DocumentationError(
+                error instanceof Error ? error.message : String(error),
+                "format",
+              );
+        sidebarProvider.setGeneratingState(false);
+        sidebarProvider.reportError(docError.message);
+        sidebarProvider.addLogEntry(`Error: ${docError.message}`, "error");
+        if (wasCancelled) {
+          vscode.window.showInformationMessage("Local Documentation generation cancelled");
+        } else {
+          vscode.window.showErrorMessage(
+            `Local Documentation generation failed: ${docError.message}`,
+          );
+        }
+      } finally {
+        if (activeCancellationSource === cancellationSource) {
+          activeCancellationSource = undefined;
+        }
+        cancellationSource.dispose();
+      }
       return;
     }
 
