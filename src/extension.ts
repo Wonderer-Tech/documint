@@ -14,7 +14,15 @@ import { generationRunContext } from "./services/generationRunContext";
 import { ProviderFactory } from "./providers/providerFactory";
 import { resolveProviderSelection } from "./providers/providerSelection";
 import { setWorkspaceScannerRunTargets } from "./scanner/workspaceScanner";
+import {
+  getDefaultTargetLanguages,
+  getTargetExtensions,
+} from "./scanner/scannerPolicy";
 import { DocumentationError } from "./types";
+
+const SOURCE_FILE_PICKER_EXTENSIONS = getTargetExtensions(
+  getDefaultTargetLanguages(),
+);
 
 interface GenerationCommandPayload {
   provider?: string;
@@ -465,33 +473,7 @@ export function activate(context: vscode.ExtensionContext) {
           canSelectMany: false,
           openLabel: "Generate Docs for This File",
           filters: {
-            "Source Files": [
-              "ts",
-              "tsx",
-              "js",
-              "jsx",
-              "py",
-              "java",
-              "go",
-              "rs",
-              "rb",
-              "cs",
-              "cpp",
-              "c",
-              "kt",
-              "swift",
-              "php",
-              "scala",
-              "sh",
-              "yaml",
-              "yml",
-              "json",
-              "xml",
-              "html",
-              "css",
-              "scss",
-              "sql",
-            ],
+            "Source Files": SOURCE_FILE_PICKER_EXTENSIONS,
           },
         });
         if (!uris || uris.length === 0) {
