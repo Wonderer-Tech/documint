@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildGenerationCacheIdentity } from "../src/services/generationCacheIdentity";
+import {
+  buildGenerationCacheIdentity,
+  GENERATION_CACHE_POLICY_VERSION,
+  GENERATION_PROMPT_SCHEMA_VERSION,
+} from "../src/services/generationCacheIdentity";
 
 const baseSettings = {
   model: "gpt-5.4-nano",
@@ -23,6 +27,16 @@ test("generation cache identity tracks content-affecting settings", () => {
   assert.equal(changed.maxTokens, 8000);
   assert.equal(changed.temperature, 0.1);
   assert.equal(changed.contextWindow, 64000);
+});
+
+test("generation cache identity includes prompt schema version", () => {
+  const identity = buildGenerationCacheIdentity(baseSettings, {
+    providerName: "openai",
+  });
+
+  assert.equal(identity.version, GENERATION_CACHE_POLICY_VERSION);
+  assert.equal(identity.promptSchemaVersion, GENERATION_PROMPT_SCHEMA_VERSION);
+  assert.match(identity.promptSchemaVersion, /^documint-prompts-/);
 });
 
 test("non-custom providers ignore custom endpoint in cache identity", () => {
