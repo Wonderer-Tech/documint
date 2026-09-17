@@ -12,11 +12,26 @@ import {
 test("scanner target language expansion covers language aliases and extensions", () => {
   assert.deepEqual(
     getTargetExtensions(["typescript", "yaml"]),
-    ["ts", "tsx", "yaml", "yml"],
+    ["cts", "mts", "ts", "tsx", "yaml", "yml"],
   );
   assert.deepEqual(getTargetExtensions([".py"]), ["py"]);
   assert.equal(getLanguageFromPath("src/App.TSX"), "typescriptreact");
   assert.equal(getLanguageFromPath("schema.sql"), "sql");
+});
+
+test("scanner includes modern Node and TypeScript module extensions", () => {
+  assert.deepEqual(
+    getTargetExtensions(["javascript"]),
+    ["cjs", "js", "jsx", "mjs"],
+  );
+  assert.deepEqual(
+    getTargetExtensions(["typescript"]),
+    ["cts", "mts", "ts", "tsx"],
+  );
+  assert.equal(getLanguageFromPath("src/server.MJS"), "javascript");
+  assert.equal(getLanguageFromPath("src/config.CJS"), "javascript");
+  assert.equal(getLanguageFromPath("src/worker.MTS"), "typescript");
+  assert.equal(getLanguageFromPath("src/legacy.CTS"), "typescript");
 });
 
 test("scanner expands common C and C++ source/header extensions", () => {
