@@ -111,31 +111,6 @@ interface ArchitectureBlueprint {
   };
 }
 
-interface CodeWorkflowStep {
-  id: string;
-  title: string;
-  detail: string;
-  files: string[];
-}
-
-interface CodeWorkflowLane {
-  id: string;
-  title: string;
-  role: string;
-  steps: CodeWorkflowStep[];
-}
-
-interface CodeWorkflowBlueprint {
-  projectName: string;
-  lanes: CodeWorkflowLane[];
-  edges: Array<{
-    from: string;
-    to: string;
-    label: string;
-  }>;
-  keyFiles: ArchitectureFileNode[];
-}
-
 interface PreparedFileDocumentationTask {
   index: number;
   file: WorkspaceFile;
@@ -173,7 +148,7 @@ interface DocumentationAssets {
 export class DocGeneratorService {
   private static readonly CACHE_VERSION = "documint-cache-v2";
   private static readonly PROMPT_VERSION = "lean-prompts-2026-06-02";
-  private static readonly VISUAL_CACHE_VERSION = "project-visuals-v2";
+  private static readonly VISUAL_CACHE_VERSION = "project-visuals-v3";
 
   private scanner: WorkspaceScanner;
   private sourceAnalyzer: SourceAnalyzer;
@@ -617,9 +592,6 @@ export class DocGeneratorService {
     );
     const mermaidSource = this.generateArchitectureMermaid(blueprint);
     const d2Source = this.generateArchitectureD2(blueprint);
-    const workflow = this.buildCodeWorkflowBlueprint(blueprint);
-    const workflowMermaid = this.generateCodeWorkflowMermaid(workflow);
-    const workflowD2 = this.generateCodeWorkflowD2(workflow);
     return [
       "### Visual Blueprint: Architecture Map",
       "",
@@ -643,30 +615,6 @@ export class DocGeneratorService {
       "",
       "```d2",
       d2Source,
-      "```",
-      "",
-      "### Visual Blueprint: Code Workflow",
-      "",
-      "This workflow shows how code moves from user action through local analysis, generation, validation, visual rendering, and final documentation output.",
-      "",
-      "```code-workflow",
-      this.stringifyVisualJson(workflow),
-      "```",
-      "",
-      "### Editable Code Workflow Diagram",
-      "",
-      "The HTML version renders this workflow as Mermaid with SVG, source copy, fullscreen, and draw.io export controls.",
-      "",
-      "```mermaid",
-      workflowMermaid,
-      "```",
-      "",
-      "### D2 Code Workflow Source",
-      "",
-      "Copy or download this D2 workflow source for D2-compatible editors.",
-      "",
-      "```d2",
-      workflowD2,
       "```",
       "",
       "### Whiteboard Architecture Sketch",
@@ -903,205 +851,6 @@ export class DocGeneratorService {
     for (const module of blueprint.modules.slice(0, 3)) {
       lines.push(
         `${this.quoteD2Label(module.name)} -> ${this.quoteD2Label("Documentation Output")}: documented`,
-      );
-    }
-
-    return lines.join("\n");
-  }
-
-  private buildCodeWorkflowBlueprint(
-    blueprint: ArchitectureBlueprint,
-  ): CodeWorkflowBlueprint {
-    const keyFiles = blueprint.importantFiles.slice(0, 10);
-    const findFiles = (patterns: RegExp[]): string[] =>
-      keyFiles
-        .filter((file) => patterns.some((pattern) => pattern.test(file.path)))
-        .map((file) => file.path)
-        .slice(0, 4);
-
-    const commandFiles = findFiles([
-      /extension\./i,
-      /sidebar/i,
-      /view/i,
-      /command/i,
-    ]);
-    const scanFiles = findFiles([/scanner/i, /workspace/i]);
-    const analysisFiles = findFiles([/analyzer/i, /validator/i]);
-    const generatorFiles = findFiles([/docgenerator/i, /documentation/i, /service/i]);
-    const providerFiles = findFiles([/provider/i, /openai/i, /anthropic/i, /deepseek/i]);
-    const outputFiles = findFiles([/htmltemplate/i, /markdown/i, /writer/i]);
-
-    const fallbackFile = (index: number): string[] =>
-      keyFiles[index] ? [keyFiles[index].path] : [];
-
-    const lanes: CodeWorkflowLane[] = [
-      {
-        id: "user",
-        title: "User Action",
-        role: "VS Code",
-        steps: [
-          {
-            id: "command",
-            title: "Run documentation command",
-            detail: "Sidebar or command palette starts generation for the selected scope.",
-            files: commandFiles.length ? commandFiles : fallbackFile(0),
-          },
-        ],
-      },
-      {
-        id: "local",
-        title: "Local CPU Prep",
-        role: "Workspace Analysis",
-        steps: [
-          {
-            id: "scan",
-            title: "Scan supported files",
-            detail: "Workspace files are filtered by language, size, scope, and exclude patterns.",
-            files: scanFiles.length ? scanFiles : fallbackFile(1),
-          },
-          {
-            id: "analyze",
-            title: "Analyze symbols and dependencies",
-            detail: "Imports, exports, symbols, entry points, and internal links are mapped locally.",
-            files: analysisFiles.length ? analysisFiles : fallbackFile(2),
-          },
-          {
-            id: "prepare",
-            title: "Prepare prompts and cache keys",
-            detail: "File context, dependency facts, and cache hashes are prepared before provider calls.",
-            files: generatorFiles.length ? generatorFiles : fallbackFile(3),
-          },
-        ],
-      },
-      {
-        id: "provider",
-        title: "Generation",
-        role: "Provider Layer",
-        steps: [
-          {
-            id: "provider",
-            title: "Resolve provider and model",
-            detail: "ProviderFactory routes requests to OpenAI, Anthropic, DeepSeek, OpenRouter, or a custom OpenAI-compatible endpoint.",
-            files: providerFiles.length ? providerFiles : fallbackFile(4),
-          },
-          {
-            id: "parallel",
-            title: "Generate in parallel",
-            detail: "File documentation jobs run concurrently while preserving cache reuse and cancellation checks.",
-            files: generatorFiles.length ? generatorFiles : fallbackFile(5),
-          },
-        ],
-      },
-      {
-        id: "quality",
-        title: "Quality Gate",
-        role: "Validation",
-        steps: [
-          {
-            id: "validate",
-            title: "Validate generated sections",
-            detail: "Generated docs are checked against detected symbols and source facts before final assembly.",
-            files: analysisFiles.length ? analysisFiles : fallbackFile(6),
-          },
-          {
-            id: "cache",
-            title: "Reuse and update cache",
-            detail: "Unchanged files reuse cached documentation; changed files update cache entries.",
-            files: generatorFiles.length ? generatorFiles : fallbackFile(7),
-          },
-        ],
-      },
-      {
-        id: "output",
-        title: "Output",
-        role: "Documentation",
-        steps: [
-          {
-            id: "render",
-            title: "Render Markdown and HTML",
-            detail: "Markdown is converted to HTML with visual blueprints, search, theme, exports, and client-focused branding.",
-            files: outputFiles.length ? outputFiles : fallbackFile(8),
-          },
-          {
-            id: "write",
-            title: "Write docs folder output",
-            detail: "Final files are saved to docs/documentation.md and/or docs/documentation.html.",
-            files: generatorFiles.length ? generatorFiles : fallbackFile(9),
-          },
-        ],
-      },
-    ];
-
-    return {
-      projectName: blueprint.projectName,
-      lanes,
-      edges: [
-        { from: "command", to: "scan", label: "scope" },
-        { from: "scan", to: "analyze", label: "files" },
-        { from: "analyze", to: "prepare", label: "facts" },
-        { from: "prepare", to: "provider", label: "context" },
-        { from: "provider", to: "parallel", label: "model" },
-        { from: "parallel", to: "validate", label: "sections" },
-        { from: "validate", to: "cache", label: "quality notes" },
-        { from: "cache", to: "render", label: "assembled docs" },
-        { from: "render", to: "write", label: "md/html" },
-      ],
-      keyFiles,
-    };
-  }
-
-  private generateCodeWorkflowMermaid(workflow: CodeWorkflowBlueprint): string {
-    const lines = ["flowchart LR"];
-    const laneId = (id: string): string => this.safeMermaidId(`lane-${id}`);
-    const stepId = (id: string): string => this.safeMermaidId(`step-${id}`);
-    for (const lane of workflow.lanes) {
-      lines.push(`  subgraph ${laneId(lane.id)} [${this.quoteMermaidLabel(lane.title)}]`);
-      for (const step of lane.steps) {
-        lines.push(
-          `    ${stepId(step.id)}[${this.quoteMermaidLabel(step.title)}]`,
-        );
-      }
-      lines.push("  end");
-    }
-
-    for (const edge of workflow.edges) {
-      lines.push(
-        `  ${stepId(edge.from)} -->|${this.cleanMermaidEdgeLabel(edge.label)}| ${stepId(edge.to)}`,
-      );
-    }
-
-    return lines.join("\n");
-  }
-
-  private generateCodeWorkflowD2(workflow: CodeWorkflowBlueprint): string {
-    const lines = ["direction: right", ""];
-    for (const lane of workflow.lanes) {
-      lines.push(`${this.quoteD2Label(lane.title)}: {`);
-      lines.push(`  label: ${this.quoteD2Label(`${lane.title}\\n${lane.role}`)}`);
-      for (const step of lane.steps) {
-        lines.push(`  ${this.quoteD2Label(step.title)}: {`);
-        lines.push(`    label: ${this.quoteD2Label(`${step.title}\\n${step.detail}`)}`);
-        lines.push("  }");
-      }
-      lines.push("}");
-    }
-
-    lines.push("");
-    const stepById = new Map<string, { lane: string; title: string }>();
-    for (const lane of workflow.lanes) {
-      for (const step of lane.steps) {
-        stepById.set(step.id, { lane: lane.title, title: step.title });
-      }
-    }
-
-    for (const edge of workflow.edges) {
-      const from = stepById.get(edge.from);
-      const to = stepById.get(edge.to);
-      if (!from || !to) {
-        continue;
-      }
-      lines.push(
-        `${this.quoteD2Label(from.lane)}.${this.quoteD2Label(from.title)} -> ${this.quoteD2Label(to.lane)}.${this.quoteD2Label(to.title)}: ${this.cleanVisualText(edge.label)}`,
       );
     }
 
