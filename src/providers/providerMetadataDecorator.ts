@@ -1,12 +1,14 @@
 import * as vscode from "vscode";
-import { AsyncLocalStorage } from "async_hooks";
 import { BaseAIProvider } from "./aiProvider";
 import {
   GuardedProviderName,
   normalizeProviderModel,
 } from "./providerModelGuard";
 import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
-import { hasExplicitContextWindow } from "./contextWindowPolicy";
+import {
+  hasExplicitContextWindow,
+  RequestContextWindowScope,
+} from "./contextWindowPolicy";
 import { ModelMetadataService } from "../services/modelMetadataService";
 
 type MetadataProviderName = GuardedProviderName | "custom";
@@ -40,7 +42,7 @@ export function withModelMetadata(
 
   const metadataService = ModelMetadataService.getInstance(context);
   const resolvedWindows = new Map<string, number>();
-  const requestContextWindow = new AsyncLocalStorage<number>();
+  const requestContextWindow = new RequestContextWindowScope();
   const originalGetMaxContextWindow =
     provider.getMaxContextWindow.bind(provider);
   const originalGenerateDocumentation =
@@ -85,7 +87,7 @@ export function withModelMetadata(
   };
 
   provider.getMaxContextWindow = (model?: string): number => {
-    const explicitWindow = requestContextWindow.getStore();
+    const explicitWindow = requestContextWindow.current();
     if (explicitWindow !== undefined) {
       return explicitWindow;
     }
@@ -99,8 +101,7 @@ export function withModelMetadata(
 
   provider.generateDocumentation = async (documentationContext) => {
     if (hasExplicitContextWindow(documentationContext.contextWindow)) {
-      const explicitWindow = Math.floor(documentationContext.contextWindow!);
-      return requestContextWindow.run(explicitWindow, () =>
+      return requestContextWindow.run(documentationContext.contextWindow!, () =>
         originalGenerateDocumentation(documentationContext),
       );
     }
