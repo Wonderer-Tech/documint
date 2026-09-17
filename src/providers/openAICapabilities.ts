@@ -13,11 +13,17 @@ interface CapabilityPattern extends OpenAIModelCapabilities {
  * budgeting and shared model metadata. Keep more-specific families before
  * broader matchers so Mini/Nano variants cannot inherit flagship limits.
  *
- * Values for GPT-4.1, GPT-5, and GPT-5.4 families are aligned with current
- * OpenAI model documentation. Older families retain DocuMint's compatibility
- * limits until their support is intentionally removed.
+ * Values for GPT-4.1, GPT-5, GPT-5.4, and GPT-5.6 families are aligned with
+ * current OpenAI model documentation. Older families retain DocuMint's
+ * compatibility limits until their support is intentionally removed.
  */
 const CAPABILITY_PATTERNS: CapabilityPattern[] = [
+  {
+    match: (m) => isFamily(m, "gpt-5.6"),
+    contextWindow: 1050000,
+    maxOutputTokens: 128000,
+    lifecycle: "current",
+  },
   {
     match: (m) => isFamily(m, "gpt-5.4-nano"),
     contextWindow: 400000,
