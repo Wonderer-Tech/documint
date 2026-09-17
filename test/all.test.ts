@@ -27,6 +27,7 @@ import "./generationMode.test";
 import "./localFileDocumentation.test";
 import "./localProjectDocumentation.test";
 import "./localArchitectureDocumentation.test";
+import "./localDocumentationDocument.test";
 import "./sourceAnalyzer.test";
 import "./sourceAnalyzerTypedLanguages.test";
 import "./sourceAnalyzerDependencySemantics.test";
