@@ -85,6 +85,22 @@ test("OpenAI concrete provider uses the shared default model source", () => {
   );
 });
 
+test("Anthropic concrete provider uses canonical model capabilities", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/providers/anthropicProvider.ts"),
+    "utf8",
+  );
+
+  assert.equal(PROVIDER_DEFAULT_MODELS.anthropic, "claude-sonnet-5");
+  assert.match(source, /getAnthropicModelCapabilities/);
+  assert.match(source, /\.maxOutputTokens/);
+  assert.match(source, /\.contextWindow/);
+  assert.doesNotMatch(
+    source,
+    /m\.includes\("claude-sonnet-5"\)\s*\|\|\s*m\.includes\("claude-opus-5"\)/,
+  );
+});
+
 test("DeepSeek concrete provider uses canonical model capabilities", () => {
   const source = readFileSync(
     join(process.cwd(), "src/providers/deepseekProvider.ts"),
