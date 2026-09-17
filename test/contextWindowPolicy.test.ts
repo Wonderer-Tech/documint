@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   hasExplicitContextWindow,
   RequestContextWindowScope,
+  resolveMetadataContextWindow,
   resolveRequestContextWindow,
 } from "../src/providers/contextWindowPolicy";
 
@@ -17,6 +18,26 @@ test("explicit context windows override provider defaults only when valid", () =
   assert.equal(hasExplicitContextWindow(0), false);
   assert.equal(hasExplicitContextWindow(-1), false);
   assert.equal(hasExplicitContextWindow(Number.NaN), false);
+});
+
+test("estimated metadata cannot shrink a provider context window", () => {
+  assert.equal(
+    resolveMetadataContextWindow(8192, "estimated", 1050000),
+    1050000,
+  );
+  assert.equal(
+    resolveMetadataContextWindow(2000000, "estimated", 1050000),
+    2000000,
+  );
+  assert.equal(
+    resolveMetadataContextWindow(Number.NaN, "estimated", 128000),
+    128000,
+  );
+});
+
+test("provider API metadata remains authoritative", () => {
+  assert.equal(resolveMetadataContextWindow(64000, "api", 1050000), 64000);
+  assert.equal(resolveMetadataContextWindow(2000000, "api", 1050000), 2000000);
 });
 
 test("request context window scope isolates overlapping async requests", async () => {
