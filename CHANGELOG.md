@@ -16,7 +16,8 @@ All notable changes to DocuMint are documented here.
 - Applied the canonical custom-endpoint policy at the public generation-command boundary so sidebar, command-palette, and programmatic runs share the same validation before generation starts; local `127.x`, IPv6 loopback, and `*.localhost` endpoints no longer inherit external-provider consent behavior.
 - Trimmed leading/trailing paste whitespace before API keys are persisted so a locally valid key is not later sent with invisible whitespace.
 - Normalized provider names before building Secret Storage keys so store/get/delete operations cannot drift by casing or surrounding whitespace.
-- Centralized OpenAI context/output limits in one capability table used by both provider budgeting and shared model metadata, including current GPT-4.1, GPT-5, and GPT-5.4 families.
+- Centralized OpenAI context/output limits in one capability table used by both provider budgeting and shared model metadata, including current GPT-4.1, GPT-5, GPT-5.4, and GPT-5.6 families.
+- Added canonical GPT-5.6 Sol/Terra/Luna capability support (1.05M context, 128K max output) for both direct OpenAI and OpenRouter-routed generation without changing DocuMint's default OpenAI model.
 - Reused the canonical OpenAI capability table for OpenRouter-routed OpenAI models so routed GPT/o-series context and max-output budgeting no longer diverge from direct OpenAI behavior.
 - Normalized OpenRouter routing variants such as `:free`, `:online`, `:nitro`, and `:floor` before capability lookup so variant-tagged models retain their base model's context and output limits.
 - Centralized DeepSeek capability metadata so direct DeepSeek and OpenRouter-routed DeepSeek models share the current 1M context and 384K max-output limits; current `deepseek-flash`/`deepseek-v4-pro` IDs are distinguished from retained V4 Flash compatibility aliases.
@@ -33,12 +34,12 @@ All notable changes to DocuMint are documented here.
 - Expanded JavaScript/TypeScript discovery to include modern module extensions: `.mjs`, `.cjs`, `.mts`, and `.cts`.
 - Resolved extensionless JavaScript/TypeScript imports and directory index imports into `.mjs`, `.cjs`, `.mts`, and `.cts` files so the project dependency graph matches scanner coverage.
 - Bound the generator's per-entry prompt cache version to the canonical `GENERATION_PROMPT_SCHEMA_VERSION`, removing runtime drift between internal and release-level cache identities.
-- Bumped the generation cache compatibility policy to v8 so documentation generated under earlier capability/generation semantics is safely regenerated.
+- Bumped the generation cache compatibility policy to v9 so documentation generated under earlier capability/generation semantics is safely regenerated.
 - Kept README-only demo media out of the packaged VSIX while retaining runtime icons.
 
 ### Tests
 
-- Added regression coverage for provider runtime normalization, transient retry/error/header handling, optional custom-provider API keys, custom-endpoint transport/URL-shape/command-boundary policy, API-key storage normalization, normalized Secret Storage keys, canonical OpenAI, Anthropic, DeepSeek, and OpenRouter-routed model capabilities including routing variants, retired DeepSeek and Anthropic model replacement, OpenAI-compatible usage/text fallbacks, Anthropic cache-token accounting, modern module dependency resolution, canonical generator prompt-cache binding, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
+- Added regression coverage for provider runtime normalization, transient retry/error/header handling, optional custom-provider API keys, custom-endpoint transport/URL-shape/command-boundary policy, API-key storage normalization, normalized Secret Storage keys, canonical OpenAI, Anthropic, DeepSeek, and OpenRouter-routed model capabilities including GPT-5.6 and routing variants, retired DeepSeek and Anthropic model replacement, OpenAI-compatible usage/text fallbacks, Anthropic cache-token accounting, modern module dependency resolution, canonical generator prompt-cache binding, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
 
 ## 1.0.4
 
