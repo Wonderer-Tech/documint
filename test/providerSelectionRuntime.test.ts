@@ -52,7 +52,10 @@ test("extension uses canonical model for both cache identity and generation", ()
   const source = readFileSync(join(process.cwd(), "src/extension.ts"), "utf8");
 
   assert.match(source, /const runSelection = resolveProviderSelection\(/);
-  assert.match(source, /model: modelName,[\s\S]*prepareGenerationCacheCompatibility/);
+  assert.match(
+    source,
+    /prepareGenerationCacheCompatibility\([\s\S]*model: modelName/,
+  );
   assert.match(
     source,
     /docGenerator\.generateDocumentation\([\s\S]*provider: providerName,[\s\S]*model: modelName/,
