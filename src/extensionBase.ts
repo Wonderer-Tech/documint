@@ -146,7 +146,7 @@ export function activate(context: vscode.ExtensionContext) {
         .get<string>("aiProvider"),
     );
     const apiKey = await secretManager.getApiKey(provider);
-    sidebarProvider.updateApiKeyStatus(!!apiKey);
+    sidebarProvider.updateApiKeyStatus(!!apiKey, provider);
   }
 
   void refreshConfiguredApiKeyStatus();
