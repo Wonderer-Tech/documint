@@ -123,7 +123,23 @@ function readHeader(headers: unknown, name: string): unknown {
   }
 
   const record = getRecord(headers);
-  return record?.[name] ?? record?.[toHeaderCase(name)];
+  if (!record) {
+    return undefined;
+  }
+
+  const exact = record[name] ?? record[toHeaderCase(name)];
+  if (exact !== undefined) {
+    return exact;
+  }
+
+  const normalizedName = name.toLowerCase();
+  for (const [headerName, value] of Object.entries(record)) {
+    if (headerName.toLowerCase() === normalizedName) {
+      return value;
+    }
+  }
+
+  return undefined;
 }
 
 function parseNonNegativeNumber(value: unknown): number | undefined {
