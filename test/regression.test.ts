@@ -19,6 +19,26 @@ test("provider model guard replaces clearly foreign stale models", () => {
   );
 });
 
+test("provider model guard treats all OpenAI o-series as foreign outside OpenAI", () => {
+  for (const model of ["o1", "o3-mini", "o4-mini", "o4-mini-deep-research"]) {
+    assert.equal(
+      normalizeProviderModel("anthropic", model, "claude-sonnet-5"),
+      "claude-sonnet-5",
+      model,
+    );
+    assert.equal(
+      normalizeProviderModel("openrouter", model, "openai/gpt-4o"),
+      "openai/gpt-4o",
+      model,
+    );
+  }
+
+  assert.equal(
+    normalizeProviderModel("openai", "o4-mini", "gpt-5.4-nano"),
+    "o4-mini",
+  );
+});
+
 test("provider model guard replaces retired DeepSeek aliases", () => {
   assert.equal(
     normalizeProviderModel("deepseek", "deepseek-chat", "deepseek-flash"),
