@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   normalizeProviderName,
   resolveProviderNameWithFallback,
@@ -35,5 +37,22 @@ test("blank per-run provider overrides preserve the configured provider", () => 
   assert.equal(
     resolveProviderNameWithFallback(" custom ", "anthropic"),
     "custom",
+  );
+});
+
+test("provider factory uses fallback-aware provider resolution", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/providers/providerFactory.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /resolveProviderNameWithFallback/);
+  assert.match(
+    source,
+    /return resolveProviderNameWithFallback\(optionProvider, configuredProvider\);/,
+  );
+  assert.doesNotMatch(
+    source,
+    /normalizeProviderName\(optionProvider \|\| configuredProvider\)/,
   );
 });
