@@ -30,3 +30,4 @@ import "./projectVisualPolicy.test";
 import "./scannerRunIsolation.test";
 import "./htmlOfflineHardening.test";
 import "./releasePackagePolicy.test";
+import "./providerRuntimeNormalization.test";
