@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { DocumentationContext, DocumentationResult } from "../types";
 import { SecretStorageManager } from "../config/secretStorage";
+import { mergeChunkDocumentation } from "./chunkDocumentationMerge";
 
 export interface AIProvider {
   name: string;
@@ -463,7 +464,7 @@ export abstract class BaseAIProvider implements AIProvider {
     signal?: AbortSignal,
   ): Promise<DocumentationResult> {
     const chunks = this.chunkCode(context.code, maxCodeTokens);
-    let combined = "";
+    const documentationParts: string[] = [];
     let totalTokens = 0;
 
     for (let i = 0; i < chunks.length; i++) {
@@ -493,11 +494,15 @@ export abstract class BaseAIProvider implements AIProvider {
         maxTokens,
         signal,
       });
-      combined += `\n\n${result.documentation}`;
+      documentationParts.push(result.documentation);
       totalTokens += result.tokensUsed;
     }
 
-    return { documentation: combined.trim(), tokensUsed: totalTokens, model };
+    return {
+      documentation: mergeChunkDocumentation(documentationParts),
+      tokensUsed: totalTokens,
+      model,
+    };
   }
 
   private async waitForRateLimitSlot(
