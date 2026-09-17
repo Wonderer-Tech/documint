@@ -1,3 +1,4 @@
+import { getDeepSeekModelCapabilities } from "../providers/deepSeekCapabilities";
 import { getOpenAIModelCapabilities } from "../providers/openAICapabilities";
 
 export interface KnownModelContext {
@@ -15,9 +16,6 @@ const CURRENT_MODEL_CONTEXT_WINDOWS: Record<string, number> = {
   "claude-opus-4-6": 1000000,
   "claude-sonnet-4-5-20250929": 200000,
   "claude-haiku-4-5-20251001": 200000,
-
-  // DeepSeek current/default family.
-  "deepseek-flash": 1000000,
 };
 
 const LEGACY_MODEL_CONTEXT_WINDOWS: Record<string, number> = {
@@ -29,10 +27,6 @@ const LEGACY_MODEL_CONTEXT_WINDOWS: Record<string, number> = {
   "claude-3-haiku-20240307": 200000,
   "claude-2.1": 200000,
   "claude-2.0": 100000,
-
-  // DeepSeek legacy aliases retained for explicit old configurations.
-  "deepseek-v4-flash": 1000000,
-  "deepseek-v4-pro": 1000000,
 };
 
 export function getKnownModelContext(
@@ -48,6 +42,14 @@ export function getKnownModelContext(
     return {
       contextWindow: openai.contextWindow,
       lifecycle: openai.lifecycle,
+    };
+  }
+
+  const deepseek = getDeepSeekModelCapabilities(normalized);
+  if (deepseek) {
+    return {
+      contextWindow: deepseek.contextWindow,
+      lifecycle: deepseek.lifecycle,
     };
   }
 
@@ -75,16 +77,14 @@ export function estimateModelContextWindow(model: string): number {
     return openai.contextWindow;
   }
 
+  const deepseek = getDeepSeekModelCapabilities(normalized);
+  if (deepseek) {
+    return deepseek.contextWindow;
+  }
+
   const known = getKnownModelContext(normalized);
   if (known) {
     return known.contextWindow;
-  }
-
-  if (
-    normalized.includes("deepseek-v4") ||
-    normalized.includes("deepseek-flash")
-  ) {
-    return 1000000;
   }
 
   if (
