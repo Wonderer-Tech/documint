@@ -29,6 +29,26 @@ export function evaluateCustomEndpoint(
       };
     }
 
+    if (url.username || url.password) {
+      return {
+        valid: false,
+        normalizedEndpoint,
+        isLocal: false,
+        reason:
+          "Custom Endpoint URL must not include embedded credentials. Configure API credentials separately instead.",
+      };
+    }
+
+    if (url.hash) {
+      return {
+        valid: false,
+        normalizedEndpoint,
+        isLocal: false,
+        reason:
+          "Custom Endpoint URL must not include a fragment (#...). URL fragments are not sent to the provider.",
+      };
+    }
+
     const isLocal = isLoopbackHost(url.hostname);
     if (url.protocol === "http:" && !isLocal) {
       return {
