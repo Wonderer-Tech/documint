@@ -8,6 +8,7 @@ import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
 import {
   hasExplicitContextWindow,
   RequestContextWindowScope,
+  resolveMetadataContextWindow,
 } from "./contextWindowPolicy";
 import { generationRunContext } from "../services/generationRunContext";
 import { ModelMetadataService } from "../services/modelMetadataService";
@@ -24,6 +25,9 @@ const CUSTOM_DEFAULT_MODEL = "default";
  * Explicit context-window overrides are scoped to the current async generation
  * request. They never enter the shared per-model metadata cache, so parallel or
  * later requests cannot inherit a previous request's override.
+ *
+ * Estimated metadata is never allowed to reduce a provider's own known context
+ * window. Provider API metadata may override the static fallback when available.
  *
  * Custom endpoints intentionally do not receive inferred remote-model metadata:
  * their real context window is unknown, so they keep their provider fallback
@@ -79,12 +83,12 @@ export function withModelMetadata(
       providerName,
       model,
     );
-    if (
-      Number.isFinite(metadata.contextWindow) &&
-      metadata.contextWindow > 0
-    ) {
-      resolvedWindows.set(key, Math.floor(metadata.contextWindow));
-    }
+    const resolvedContextWindow = resolveMetadataContextWindow(
+      metadata.contextWindow,
+      metadata.source,
+      originalGetMaxContextWindow(model),
+    );
+    resolvedWindows.set(key, resolvedContextWindow);
   };
 
   provider.getMaxContextWindow = (model?: string): number => {
