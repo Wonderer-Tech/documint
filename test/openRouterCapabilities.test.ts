@@ -6,13 +6,27 @@ import {
 } from "../src/providers/openRouterCapabilities";
 
 test("recognizes current Claude routed models", () => {
+  for (const model of [
+    "anthropic/claude-fable-5",
+    "anthropic/claude-mythos-5",
+    "anthropic/claude-opus-5",
+    "anthropic/claude-sonnet-5",
+    "anthropic/claude-opus-4-8",
+    "anthropic/claude-opus-4-7",
+    "anthropic/claude-opus-4-6",
+    "anthropic/claude-sonnet-4-6",
+  ]) {
+    assert.equal(getOpenRouterContextWindow(model), 1000000, model);
+    assert.equal(getOpenRouterMaxOutputTokens(model), 128000, model);
+  }
+
   assert.equal(
-    getOpenRouterContextWindow("anthropic/claude-sonnet-5"),
-    1000000,
+    getOpenRouterContextWindow("anthropic/claude-haiku-4-5-20251001"),
+    200000,
   );
   assert.equal(
-    getOpenRouterMaxOutputTokens("anthropic/claude-sonnet-5"),
-    128000,
+    getOpenRouterMaxOutputTokens("anthropic/claude-haiku-4-5-20251001"),
+    64000,
   );
 });
 
@@ -43,11 +57,11 @@ test("OpenRouter routing variants retain base-model capabilities", () => {
   assert.equal(getOpenRouterMaxOutputTokens("openai/gpt-4.1-mini:online"), 32768);
 
   assert.equal(
-    getOpenRouterContextWindow("anthropic/claude-sonnet-5:floor"),
+    getOpenRouterContextWindow("anthropic/claude-fable-5:floor"),
     1000000,
   );
   assert.equal(
-    getOpenRouterMaxOutputTokens("anthropic/claude-sonnet-5:floor"),
+    getOpenRouterMaxOutputTokens("anthropic/claude-fable-5:floor"),
     128000,
   );
 
