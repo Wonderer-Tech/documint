@@ -85,6 +85,8 @@ test("README project structure documents public facades and implementation modul
     "extension.ts",
     "extensionBase.ts",
     "openAICapabilities.ts",
+    "anthropicCapabilities.ts",
+    "deepSeekCapabilities.ts",
     "docGenerator.ts",
     "docGeneratorBase.ts",
     "generationCacheIdentity.ts",
