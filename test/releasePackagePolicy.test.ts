@@ -51,6 +51,14 @@ test("README-only media stays out of VSIX while runtime icons remain packageable
 
   assert.match(readme, /raw\.githubusercontent\.com\/Wonderer-Tech\/documint\/main\/resources\/demo\.gif/);
   assert.match(readme, /raw\.githubusercontent\.com\/Wonderer-Tech\/documint\/main\/resources\/screenshot1\.png/);
+  assert.match(
+    readme,
+    /Cleaner VSIX output: generated docs and README-only demo media are excluded from the packaged extension\./,
+  );
+  assert.doesNotMatch(
+    readme,
+    /Very large demo media can make the VSIX larger than the extension code itself\./,
+  );
   assert.equal(manifest.icon, "resources/icon.png");
   assert.equal(
     manifest.contributes.viewsContainers.activitybar[0].icon,
@@ -58,4 +66,12 @@ test("README-only media stays out of VSIX while runtime icons remain packageable
   );
   assert.equal(ignored.has("resources/icon.png"), false);
   assert.equal(ignored.has("resources/sidebar-icon.svg"), false);
+});
+
+test("README scanner extensions stay aligned with C and C++ header support", () => {
+  const readme = readFileSync(join(process.cwd(), "README.md"), "utf8");
+
+  assert.match(readme, /C \(`\.c`, `\.h`\)/);
+  assert.match(readme, /C\+\+ \(`\.cc`, `\.cpp`, `\.cxx`, `\.hh`, `\.hpp`, `\.hxx`\)/);
+  assert.match(readme, /C# \(`\.cs`\)/);
 });
