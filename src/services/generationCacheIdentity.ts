@@ -1,4 +1,4 @@
-export const GENERATION_CACHE_POLICY_VERSION = "generation-cache-policy-v8";
+export const GENERATION_CACHE_POLICY_VERSION = "generation-cache-policy-v9";
 /**
  * Bump whenever generation prompts, evidence formatting, validation rules,
  * provider capability limits, or other release-level generation semantics
