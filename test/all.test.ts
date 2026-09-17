@@ -20,3 +20,4 @@ import "./providerNamePolicy.test";
 import "./manifestMetadata.test";
 import "./sourceAnalyzer.test";
 import "./sourceAnalyzerTypedLanguages.test";
+import "./sourceAnalyzerDependencySemantics.test";
