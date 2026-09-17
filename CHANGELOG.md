@@ -22,6 +22,7 @@ All notable changes to DocuMint are documented here.
 - Centralized DeepSeek capability metadata so direct DeepSeek and OpenRouter-routed DeepSeek models share the current 1M context and 384K max-output limits; current `deepseek-flash`/`deepseek-v4-pro` IDs are distinguished from retained V4 Flash compatibility aliases.
 - Replaced retired `deepseek-chat` and `deepseek-reasoner` selections with the current DeepSeek fallback model before requests are sent.
 - Replaced retired Anthropic model selections (including retired Claude 2/3, Sonnet 3.7, Sonnet 4, Opus 4, and Opus 4.1 IDs) with the current Anthropic fallback before requests are sent, while preserving active Claude 4.5+ and Claude 5 model choices.
+- Centralized verified Anthropic context/output limits in one capability table used by direct Anthropic generation, shared model metadata, and OpenRouter-routed Claude models, including current Claude 5, Claude 4.6-4.8, and Haiku 4.5 families.
 - Preserved token-usage reporting across OpenAI-compatible providers that expose split `prompt_tokens`/`completion_tokens` or `input_tokens`/`output_tokens` fields instead of `total_tokens`.
 - Accepted legacy `choices[0].text` output from OpenAI-compatible completion gateways while keeping chat-message content authoritative when both are present.
 - Included Anthropic prompt-cache creation/read tokens in usage totals when the Messages API reports them.
@@ -32,12 +33,12 @@ All notable changes to DocuMint are documented here.
 - Expanded JavaScript/TypeScript discovery to include modern module extensions: `.mjs`, `.cjs`, `.mts`, and `.cts`.
 - Resolved extensionless JavaScript/TypeScript imports and directory index imports into `.mjs`, `.cjs`, `.mts`, and `.cts` files so the project dependency graph matches scanner coverage.
 - Bound the generator's per-entry prompt cache version to the canonical `GENERATION_PROMPT_SCHEMA_VERSION`, removing runtime drift between internal and release-level cache identities.
-- Bumped the generation cache compatibility policy to v7 so documentation generated under earlier capability/generation semantics is safely regenerated.
+- Bumped the generation cache compatibility policy to v8 so documentation generated under earlier capability/generation semantics is safely regenerated.
 - Kept README-only demo media out of the packaged VSIX while retaining runtime icons.
 
 ### Tests
 
-- Added regression coverage for provider runtime normalization, transient retry/error/header handling, optional custom-provider API keys, custom-endpoint transport/URL-shape/command-boundary policy, API-key storage normalization, normalized Secret Storage keys, canonical OpenAI, DeepSeek, and OpenRouter-routed model capabilities including routing variants, retired DeepSeek and Anthropic model replacement, OpenAI-compatible usage/text fallbacks, Anthropic cache-token accounting, modern module dependency resolution, canonical generator prompt-cache binding, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
+- Added regression coverage for provider runtime normalization, transient retry/error/header handling, optional custom-provider API keys, custom-endpoint transport/URL-shape/command-boundary policy, API-key storage normalization, normalized Secret Storage keys, canonical OpenAI, Anthropic, DeepSeek, and OpenRouter-routed model capabilities including routing variants, retired DeepSeek and Anthropic model replacement, OpenAI-compatible usage/text fallbacks, Anthropic cache-token accounting, modern module dependency resolution, canonical generator prompt-cache binding, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
 
 ## 1.0.4
 
