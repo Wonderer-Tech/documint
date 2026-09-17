@@ -1,3 +1,4 @@
+import { getAnthropicModelCapabilities } from "./anthropicCapabilities";
 import { getDeepSeekModelCapabilities } from "./deepSeekCapabilities";
 import { getOpenAIModelCapabilities } from "./openAICapabilities";
 import {
@@ -13,16 +14,14 @@ export function getOpenRouterMaxOutputTokens(model?: string): number {
     return openai.maxOutputTokens;
   }
 
+  const anthropic = getAnthropicModelCapabilities(normalized);
+  if (anthropic) {
+    return anthropic.maxOutputTokens;
+  }
+
   const deepseek = getDeepSeekModelCapabilities(normalized);
   if (deepseek) {
     return deepseek.maxOutputTokens;
-  }
-
-  if (
-    normalized.includes("claude-sonnet-5") ||
-    normalized.includes("claude-opus-5")
-  ) {
-    return 128000;
   }
 
   if (
