@@ -43,3 +43,19 @@ test("workspace scanner has no mutable module-level target array", () => {
   assert.match(source, /scannerRunTargetScope\.current\(\)/);
   assert.match(source, /targetPaths\s*\?\?\s*scannerRunTargetScope\.current\(\)/);
 });
+
+test("native source picker derives its filter from scanner policy", () => {
+  const source = readFileSync(join(process.cwd(), "src/extension.ts"), "utf8");
+
+  assert.match(source, /getDefaultTargetLanguages/);
+  assert.match(source, /getTargetExtensions/);
+  assert.match(
+    source,
+    /SOURCE_FILE_PICKER_EXTENSIONS\s*=\s*getTargetExtensions\([\s\S]*getDefaultTargetLanguages\(\)/,
+  );
+  assert.match(source, /"Source Files": SOURCE_FILE_PICKER_EXTENSIONS/);
+  assert.doesNotMatch(
+    source,
+    /"Source Files":\s*\[\s*"ts"[\s\S]*"sql"\s*\]/,
+  );
+});
