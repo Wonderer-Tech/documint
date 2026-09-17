@@ -15,6 +15,34 @@ test("custom endpoint policy accepts remote HTTPS and rejects remote HTTP", () =
   assert.match(insecure.reason ?? "", /remote custom endpoints must use HTTPS/i);
 });
 
+test("custom endpoint policy preserves query strings", () => {
+  assert.deepEqual(
+    evaluateCustomEndpoint(
+      "https://api.example.com/openai/deployments/docs/chat/completions?api-version=2026-01-01",
+    ),
+    {
+      valid: true,
+      normalizedEndpoint:
+        "https://api.example.com/openai/deployments/docs/chat/completions?api-version=2026-01-01",
+      isLocal: false,
+    },
+  );
+});
+
+test("custom endpoint policy rejects embedded credentials and fragments", () => {
+  const credentials = evaluateCustomEndpoint(
+    "https://user:password@api.example.com/v1/chat/completions",
+  );
+  assert.equal(credentials.valid, false);
+  assert.match(credentials.reason ?? "", /must not include embedded credentials/i);
+
+  const fragment = evaluateCustomEndpoint(
+    "https://api.example.com/v1/chat/completions#debug",
+  );
+  assert.equal(fragment.valid, false);
+  assert.match(fragment.reason ?? "", /must not include a fragment/i);
+});
+
 test("custom endpoint policy detects localhost and loopback hosts", () => {
   for (const endpoint of [
     "http://localhost:11434/v1/chat/completions",
