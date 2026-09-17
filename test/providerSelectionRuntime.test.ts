@@ -23,6 +23,27 @@ test("provider selection replaces stale cross-provider model ids", () => {
   });
 });
 
+test("provider selection migrates retired provider-native model ids", () => {
+  assert.deepEqual(
+    resolveProviderSelection("anthropic", "claude-opus-4-1-20250805"),
+    {
+      provider: "anthropic",
+      model: "claude-sonnet-5",
+    },
+  );
+  assert.deepEqual(
+    resolveProviderSelection("anthropic", "claude-sonnet-4-20250514"),
+    {
+      provider: "anthropic",
+      model: "claude-sonnet-5",
+    },
+  );
+  assert.deepEqual(resolveProviderSelection("deepseek", "deepseek-chat"), {
+    provider: "deepseek",
+    model: "deepseek-flash",
+  });
+});
+
 test("provider selection preserves routed and custom model ids", () => {
   assert.deepEqual(
     resolveProviderSelection("openrouter", "anthropic/claude-sonnet-5"),
