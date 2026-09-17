@@ -14,6 +14,7 @@ All notable changes to DocuMint are documented here.
 - Rejected custom endpoint URLs that embed credentials or URL fragments, while preserving legitimate query strings such as provider API-version parameters.
 - Trimmed leading/trailing paste whitespace before API keys are persisted so a locally valid key is not later sent with invisible whitespace.
 - Aligned GPT-4.1, GPT-4.1 Mini, and GPT-4.1 Nano metadata with the provider runtime so their 1,000,000-token context window is not collapsed to the conservative 8,192-token fallback.
+- Preserved token-usage reporting across OpenAI-compatible providers that expose split `prompt_tokens`/`completion_tokens` or `input_tokens`/`output_tokens` fields instead of `total_tokens`.
 - Improved generated HTML resilience when optional CDN assets fail to load.
 - Preserved Mermaid source for editable/exportable diagram workflows.
 - Removed legacy hard-coded Code Workflow output so generated documentation remains source-grounded.
@@ -24,7 +25,7 @@ All notable changes to DocuMint are documented here.
 
 ### Tests
 
-- Added regression coverage for provider runtime normalization, transient retry error reporting, optional custom-provider API keys, custom-endpoint transport and URL-shape policy, API-key storage normalization, GPT-4.1 context metadata, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
+- Added regression coverage for provider runtime normalization, transient retry error reporting, optional custom-provider API keys, custom-endpoint transport and URL-shape policy, API-key storage normalization, GPT-4.1 context metadata, OpenAI-compatible usage fallbacks, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
 
 ## 1.0.4
 
