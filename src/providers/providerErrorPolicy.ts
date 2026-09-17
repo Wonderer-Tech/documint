@@ -74,7 +74,8 @@ export function classifyProviderFailure(
 
 /**
  * Deterministic bounded exponential backoff. A provider Retry-After value wins
- * when it is a positive finite duration, while still respecting the max cap.
+ * when it is a non-negative finite duration, including an explicit zero-delay
+ * retry, while still respecting the max cap.
  */
 export function getProviderRetryDelayMs(
   attempt: number,
@@ -83,8 +84,8 @@ export function getProviderRetryDelayMs(
   maxDelayMs = 30000,
 ): number {
   const safeMax = normalizePositiveInteger(maxDelayMs, 30000);
-  const explicitRetryAfter = normalizePositiveInteger(retryAfterMs, 0);
-  if (explicitRetryAfter > 0) {
+  const explicitRetryAfter = normalizeNonNegativeInteger(retryAfterMs);
+  if (explicitRetryAfter !== undefined) {
     return Math.min(explicitRetryAfter, safeMax);
   }
 
@@ -93,6 +94,12 @@ export function getProviderRetryDelayMs(
     ? Math.max(0, Math.floor(attempt))
     : 0;
   return Math.min(safeBase * 2 ** safeAttempt, safeMax);
+}
+
+function normalizeNonNegativeInteger(value: number | undefined): number | undefined {
+  return Number.isFinite(value) && (value ?? -1) >= 0
+    ? Math.floor(value!)
+    : undefined;
 }
 
 function normalizePositiveInteger(value: number | undefined, fallback: number): number {
