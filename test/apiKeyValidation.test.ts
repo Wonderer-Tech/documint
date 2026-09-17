@@ -27,7 +27,27 @@ test("API key validation treats surrounding paste whitespace as noise", () => {
   );
   assert.match(
     source,
-    /secretStorage\.store\(`\$\{provider\}-api-key`, apiKey\.trim\(\)\)/,
+    /secretStorage\.store\(\s*SecretStorageManager\.secretKey\(provider\),\s*apiKey\.trim\(\),?\s*\)/,
+  );
+});
+
+test("secret storage normalizes provider names for every key operation", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/config/secretStorage.ts"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /private static secretKey\(provider: string\): string \{\s*return `\$\{this\.normalizeProvider\(provider\)\}-api-key`;\s*\}/,
+  );
+  assert.match(
+    source,
+    /secretStorage\.get\(\s*SecretStorageManager\.secretKey\(provider\),?\s*\)/,
+  );
+  assert.match(
+    source,
+    /secretStorage\.delete\(SecretStorageManager\.secretKey\(provider\)\)/,
   );
 });
 
