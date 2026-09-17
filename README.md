@@ -333,9 +333,8 @@ src/
 |-- analyzer/
 |   |-- sourceAnalyzer.ts          # Public analyzer facade + modern module compatibility
 |   `-- sourceAnalyzerBase.ts      # Core cross-language import/export/symbol analysis
-|-- extension.ts                   # Public activation + generation-command policy boundary
-|-- extensionBase.ts               # Core activation and command implementation
-|-- extensionPolicy.ts             # Shared custom-endpoint command preflight/consent policy
+|-- extension.ts                   # Public VS Code activation entry point
+|-- extensionBase.ts               # Activation, commands, and canonical custom-endpoint validation/consent
 |-- types.ts                       # Shared types and error models
 |-- config/
 |   `-- secretStorage.ts           # VS Code secret storage wrapper
