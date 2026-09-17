@@ -20,6 +20,29 @@ test("normalizes provider authentication and permission errors", () => {
   );
 });
 
+test("normalizes gateway statusCode and numeric-string status shapes", () => {
+  assert.match(
+    normalizeProviderRequestError(
+      { statusCode: "401", message: "gateway rejected key" },
+      "Custom gateway",
+    ).message,
+    /authentication failed.*gateway rejected key/i,
+  );
+
+  assert.match(
+    normalizeProviderRequestError(
+      {
+        response: {
+          status: "503",
+          data: { message: "gateway unavailable" },
+        },
+      },
+      "Custom gateway",
+    ).message,
+    /server error \(503\).*gateway unavailable.*retried/i,
+  );
+});
+
 test("normalizes exhausted rate-limit and server failures", () => {
   assert.match(
     normalizeProviderRequestError(
