@@ -52,3 +52,16 @@ test("OpenAI concrete provider uses the shared default model source", () => {
     /protected defaultModel\(\): string \{\s*return PROVIDER_DEFAULT_MODELS\.openai;\s*\}/,
   );
 });
+
+test("custom provider keeps API keys optional for inherited raw-prompt generation", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/providers/customProvider.ts"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /protected async getApiKey\(\): Promise<string> \{\s*return \(await this\.secretManager\.getApiKey\(this\.name\)\) \|\| "";\s*\}/,
+  );
+  assert.match(source, /const apiKey = await this\.getApiKey\(\);/);
+});
