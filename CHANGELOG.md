@@ -13,8 +13,11 @@ All notable changes to DocuMint are documented here.
 - Required HTTPS for remote custom OpenAI-compatible endpoints while keeping plain HTTP available for localhost/loopback development servers; IPv6 loopback detection now correctly recognizes `[::1]`.
 - Rejected custom endpoint URLs that embed credentials or URL fragments, while preserving legitimate query strings such as provider API-version parameters.
 - Trimmed leading/trailing paste whitespace before API keys are persisted so a locally valid key is not later sent with invisible whitespace.
+- Normalized provider names before building Secret Storage keys so store/get/delete operations cannot drift by casing or surrounding whitespace.
 - Aligned GPT-4.1, GPT-4.1 Mini, and GPT-4.1 Nano metadata with the provider runtime so their 1,000,000-token context window is not collapsed to the conservative 8,192-token fallback.
 - Preserved token-usage reporting across OpenAI-compatible providers that expose split `prompt_tokens`/`completion_tokens` or `input_tokens`/`output_tokens` fields instead of `total_tokens`.
+- Accepted legacy `choices[0].text` output from OpenAI-compatible completion gateways while keeping chat-message content authoritative when both are present.
+- Included Anthropic prompt-cache creation/read tokens in usage totals when the Messages API reports them.
 - Improved generated HTML resilience when optional CDN assets fail to load.
 - Preserved Mermaid source for editable/exportable diagram workflows.
 - Removed legacy hard-coded Code Workflow output so generated documentation remains source-grounded.
@@ -25,7 +28,7 @@ All notable changes to DocuMint are documented here.
 
 ### Tests
 
-- Added regression coverage for provider runtime normalization, transient retry error reporting, optional custom-provider API keys, custom-endpoint transport and URL-shape policy, API-key storage normalization, GPT-4.1 context metadata, OpenAI-compatible usage fallbacks, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
+- Added regression coverage for provider runtime normalization, transient retry error reporting, optional custom-provider API keys, custom-endpoint transport and URL-shape policy, API-key storage normalization, normalized Secret Storage keys, GPT-4.1 context metadata, OpenAI-compatible usage/text fallbacks, Anthropic cache-token accounting, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
 
 ## 1.0.4
 
