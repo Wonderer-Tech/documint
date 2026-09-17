@@ -11,6 +11,9 @@ const CURRENT_MODEL_CONTEXT_WINDOWS: Record<string, number> = {
   "gpt-5-nano": 128000,
   "gpt-5-mini": 128000,
   "gpt-5": 200000,
+  "gpt-4.1": 1000000,
+  "gpt-4.1-mini": 1000000,
+  "gpt-4.1-nano": 1000000,
   "gpt-4o": 128000,
   "gpt-4o-mini": 128000,
   "o1": 200000,
@@ -97,7 +100,9 @@ export function estimateModelContextWindow(model: string): number {
     normalized.includes("claude-sonnet-4-6") ||
     normalized.includes("claude-opus-4-8") ||
     normalized.includes("claude-opus-4-7") ||
-    normalized.includes("claude-opus-4-6")
+    normalized.includes("claude-opus-4-6") ||
+    normalized.includes("gpt-4.1") ||
+    normalized.includes("gpt-4-1")
   ) {
     return 1000000;
   }
