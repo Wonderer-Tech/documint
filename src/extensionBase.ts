@@ -6,6 +6,7 @@ import {
   GeneratedOutputPaths,
 } from "./services/docGenerator";
 import { LocalDocumentationGenerator } from "./services/localDocumentationGenerator";
+import { LOCAL_DOCUMENTATION_CACHE_FILE } from "./services/localDocumentationCache";
 import { sanitizeGeneratedOutputs } from "./services/outputSanitizer";
 import {
   commitGenerationCacheCompatibility,
@@ -156,9 +157,6 @@ export function activate(context: vscode.ExtensionContext) {
     }),
   );
 
-  // ── Commands ───────────────────────────────────────────────────────────────
-
-  // ── Shared generation runner ───────────────────────────────────────────────
   async function runGeneration(payload: GenerationCommandPayload = {}) {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
@@ -222,8 +220,6 @@ export function activate(context: vscode.ExtensionContext) {
               (payload.outputFormat as "markdown" | "html" | "both") || "both",
             targetPaths: payload.targetPaths,
           });
-
-        await sanitizeGeneratedOutputs(outputPaths);
 
         sidebarProvider.setGeneratingState(false);
         sidebarProvider.completeGeneration();
@@ -482,6 +478,7 @@ export function activate(context: vscode.ExtensionContext) {
       ".documint-cache.json",
       ".documint-visual-cache.json",
       ".documint-generation-cache-key.json",
+      LOCAL_DOCUMENTATION_CACHE_FILE,
     ];
     let deletedCount = 0;
 
