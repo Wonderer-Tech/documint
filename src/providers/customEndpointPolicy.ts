@@ -29,12 +29,16 @@ export function evaluateCustomEndpoint(
       };
     }
 
-    const host = url.hostname.toLowerCase();
-    const isLocal =
-      host === "localhost" ||
-      host === "127.0.0.1" ||
-      host === "::1" ||
-      host.endsWith(".localhost");
+    const isLocal = isLoopbackHost(url.hostname);
+    if (url.protocol === "http:" && !isLocal) {
+      return {
+        valid: false,
+        normalizedEndpoint,
+        isLocal: false,
+        reason:
+          "Remote custom endpoints must use HTTPS. Plain HTTP is allowed only for localhost or loopback endpoints.",
+      };
+    }
 
     return {
       valid: true,
@@ -49,4 +53,13 @@ export function evaluateCustomEndpoint(
       reason: "Custom Endpoint URL must be a valid http or https URL.",
     };
   }
+}
+
+function isLoopbackHost(hostname: string): boolean {
+  const host = hostname.trim().toLowerCase().replace(/^\[|\]$/g, "");
+  if (host === "localhost" || host === "::1" || host.endsWith(".localhost")) {
+    return true;
+  }
+
+  return /^127(?:\.\d{1,3}){3}$/.test(host);
 }
