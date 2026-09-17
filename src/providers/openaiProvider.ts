@@ -9,6 +9,7 @@ import { runProviderRequestWithRetry } from "./providerRetry";
 import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
 import { normalizeProviderRequestError } from "./providerHttpError";
 import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
+import { getOpenAIModelCapabilities } from "./openAICapabilities";
 
 /**
  * Model aliases map known shorthand names to their full OpenAI model IDs.
@@ -57,7 +58,7 @@ const MODEL_ALIASE: Record<string, string> = {
   o3: "o3",
   "o3-mini": "o3-mini",
   "o3-mini-2025-01-31": "o3-mini-2025-01-31",
-  // GPT-5 family (forward compatibility)
+  // GPT-5 family
   "gpt-5": "gpt-5",
   "gpt-5-nano": "gpt-5-nano",
   "gpt-5-mini": "gpt-5-mini",
@@ -67,116 +68,6 @@ const MODEL_ALIASE: Record<string, string> = {
   "5": "gpt-5",
   "5-nano": "gpt-5-nano",
   "5-mini": "gpt-5-mini",
-};
-
-/**
- * Known model patterns used for capability detection (context window, max output).
- * More specific variants must appear before their broader family matchers.
- * New models should be added here as they become available.
- */
-const MODEL_PATTERNS = {
-  // GPT-5 family
-  gpt5Nano: {
-    match: (m: string) => m.includes("gpt-5") && m.includes("nano"),
-    contextWindow: 128000,
-    maxOutput: 16384,
-  },
-  gpt5Mini: {
-    match: (m: string) => m.includes("gpt-5") && m.includes("mini"),
-    contextWindow: 128000,
-    maxOutput: 32768,
-  },
-  gpt5: {
-    match: (m: string) => m.includes("gpt-5") || m.includes("gpt-5.4"),
-    contextWindow: 200000,
-    maxOutput: 32768,
-  },
-  // GPT-4.1 family
-  gpt41Nano: {
-    match: (m: string) =>
-      (m.includes("gpt-4.1") || m.includes("gpt-4-1")) && m.includes("nano"),
-    contextWindow: 128000,
-    maxOutput: 32768,
-  },
-  gpt41Mini: {
-    match: (m: string) =>
-      (m.includes("gpt-4.1") || m.includes("gpt-4-1")) && m.includes("mini"),
-    contextWindow: 128000,
-    maxOutput: 32768,
-  },
-  gpt41: {
-    match: (m: string) => m.includes("gpt-4.1") || m.includes("gpt-4-1"),
-    contextWindow: 1000000,
-    maxOutput: 32768,
-  },
-  // GPT-4o family
-  gpt4oMini: {
-    match: (m: string) => m.includes("gpt-4o") && m.includes("mini"),
-    contextWindow: 128000,
-    maxOutput: 16384,
-  },
-  gpt4o: {
-    match: (m: string) => m.includes("gpt-4o"),
-    contextWindow: 128000,
-    maxOutput: 16384,
-  },
-  // o1 series
-  o1Mini: {
-    match: (m: string) => m.includes("o1-mini"),
-    contextWindow: 128000,
-    maxOutput: 65536,
-  },
-  o1Preview: {
-    match: (m: string) => m.includes("o1-preview"),
-    contextWindow: 128000,
-    maxOutput: 32768,
-  },
-  o1: {
-    match: (m: string) => m === "o1" || m.startsWith("o1-"),
-    contextWindow: 200000,
-    maxOutput: 100000,
-  },
-  // o3 series
-  o3Mini: {
-    match: (m: string) => m.includes("o3-mini"),
-    contextWindow: 128000,
-    maxOutput: 65536,
-  },
-  o3: {
-    match: (m: string) => m === "o3" || m.startsWith("o3-"),
-    contextWindow: 200000,
-    maxOutput: 100000,
-  },
-  // GPT-4 Turbo
-  gpt4Turbo: {
-    match: (m: string) =>
-      m.includes("gpt-4-turbo") ||
-      m.includes("gpt-4-0125") ||
-      m.includes("gpt-4-1106"),
-    contextWindow: 128000,
-    maxOutput: 4096,
-  },
-  // GPT-4 base
-  gpt432k: {
-    match: (m: string) => m.includes("gpt-4-32k"),
-    contextWindow: 32768,
-    maxOutput: 8192,
-  },
-  gpt4: {
-    match: (m: string) =>
-      m.includes("gpt-4") &&
-      !m.includes("turbo") &&
-      !m.includes("4o") &&
-      !m.includes("4.1"),
-    contextWindow: 8192,
-    maxOutput: 8192,
-  },
-  // GPT-3.5
-  gpt35: {
-    match: (m: string) => m.includes("gpt-3.5"),
-    contextWindow: 16385,
-    maxOutput: 4096,
-  },
 };
 
 export class OpenAIProvider extends BaseAIProvider {
@@ -259,28 +150,12 @@ export class OpenAIProvider extends BaseAIProvider {
   }
 
   protected getMaxOutputTokens(model?: string): number {
-    const m = this.resolveModelName(model || this.defaultModel()).toLowerCase();
-
-    for (const [, pattern] of Object.entries(MODEL_PATTERNS)) {
-      if (pattern.match(m)) {
-        return pattern.maxOutput;
-      }
-    }
-
-    // Safe default for unknown models
-    return 8192;
+    const resolvedModel = this.resolveModelName(model || this.defaultModel());
+    return getOpenAIModelCapabilities(resolvedModel)?.maxOutputTokens ?? 8192;
   }
 
   getMaxContextWindow(model?: string): number {
-    const m = this.resolveModelName(model || this.defaultModel()).toLowerCase();
-
-    for (const [, pattern] of Object.entries(MODEL_PATTERNS)) {
-      if (pattern.match(m)) {
-        return pattern.contextWindow;
-      }
-    }
-
-    // Safe default for unknown models
-    return 8192;
+    const resolvedModel = this.resolveModelName(model || this.defaultModel());
+    return getOpenAIModelCapabilities(resolvedModel)?.contextWindow ?? 8192;
   }
 }
