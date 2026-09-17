@@ -2,8 +2,12 @@ import * as path from "path";
 
 export const EXTENSION_TO_LANGUAGE: Record<string, string> = {
   ts: "typescript",
+  mts: "typescript",
+  cts: "typescript",
   tsx: "typescriptreact",
   js: "javascript",
+  mjs: "javascript",
+  cjs: "javascript",
   jsx: "javascriptreact",
   py: "python",
   java: "java",
@@ -35,9 +39,9 @@ export const EXTENSION_TO_LANGUAGE: Record<string, string> = {
 };
 
 export const LANGUAGE_TO_EXTENSIONS: Record<string, string[]> = {
-  typescript: ["ts", "tsx"],
+  typescript: ["ts", "mts", "cts", "tsx"],
   typescriptreact: ["tsx"],
-  javascript: ["js", "jsx"],
+  javascript: ["js", "mjs", "cjs", "jsx"],
   javascriptreact: ["jsx"],
   python: ["py"],
   java: ["java"],
