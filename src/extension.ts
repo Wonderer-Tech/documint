@@ -13,6 +13,7 @@ import {
 import { generationRunContext } from "./services/generationRunContext";
 import { ProviderFactory } from "./providers/providerFactory";
 import { resolveProviderSelection } from "./providers/providerSelection";
+import { evaluateCustomEndpoint } from "./providers/customEndpointPolicy";
 import { setWorkspaceScannerRunTargets } from "./scanner/workspaceScanner";
 import {
   getDefaultTargetLanguages,
@@ -58,31 +59,12 @@ export function activate(context: vscode.ExtensionContext) {
     return ProviderFactory.resolveProviderName(provider);
   }
 
-  function isLocalEndpoint(endpoint?: string): boolean {
-    if (!endpoint) {
-      return false;
-    }
-
-    try {
-      const url = new URL(endpoint);
-      const host = url.hostname.toLowerCase();
-      return (
-        host === "localhost" ||
-        host === "127.0.0.1" ||
-        host === "::1" ||
-        host.endsWith(".localhost")
-      );
-    } catch {
-      return false;
-    }
-  }
-
   function sendsCodeToExternalProvider(provider: string): boolean {
     if (provider === "custom") {
       const endpoint = vscode.workspace
         .getConfiguration("aiDocGenerator")
         .get<string>("customApiEndpoint");
-      return !isLocalEndpoint(endpoint);
+      return !evaluateCustomEndpoint(endpoint).isLocal;
     }
 
     return true;
@@ -222,32 +204,23 @@ export function activate(context: vscode.ExtensionContext) {
 
     if (providerName === "custom") {
       const configuration = vscode.workspace.getConfiguration("aiDocGenerator");
-      const endpoint =
+      const endpointInput =
         payload.customApiEndpoint?.trim() ||
         configuration.get<string>("customApiEndpoint")?.trim() ||
         "";
+      const endpointPolicy = evaluateCustomEndpoint(endpointInput);
 
-      if (!endpoint) {
-        const message = "Custom provider requires a Custom Endpoint URL.";
+      if (!endpointPolicy.valid) {
+        const message =
+          endpointPolicy.reason ??
+          "Custom Endpoint URL must be a valid supported endpoint.";
         sidebarProvider.reportError(message);
         sidebarProvider.addLogEntry(message, "error");
         vscode.window.showErrorMessage(message);
         return;
       }
 
-      try {
-        const parsed = new URL(endpoint);
-        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-          throw new Error("Unsupported protocol");
-        }
-      } catch {
-        const message = "Custom Endpoint URL must be a valid http or https URL.";
-        sidebarProvider.reportError(message);
-        sidebarProvider.addLogEntry(message, "error");
-        vscode.window.showErrorMessage(message);
-        return;
-      }
-
+      const endpoint = endpointPolicy.normalizedEndpoint;
       if (payload.customApiEndpoint?.trim()) {
         await configuration.update(
           "customApiEndpoint",
