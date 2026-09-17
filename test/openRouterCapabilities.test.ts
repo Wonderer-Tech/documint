@@ -39,6 +39,16 @@ test("uses shared OpenAI capabilities for routed OpenAI models", () => {
 
   assert.equal(getOpenRouterContextWindow("openai/gpt-5.4"), 1050000);
   assert.equal(getOpenRouterMaxOutputTokens("openai/gpt-5.4"), 128000);
+
+  for (const model of [
+    "openai/gpt-5.6",
+    "openai/gpt-5.6-sol",
+    "openai/gpt-5.6-terra",
+    "openai/gpt-5.6-luna",
+  ]) {
+    assert.equal(getOpenRouterContextWindow(model), 1050000, model);
+    assert.equal(getOpenRouterMaxOutputTokens(model), 128000, model);
+  }
 });
 
 test("uses shared DeepSeek capabilities for routed DeepSeek models", () => {
@@ -50,6 +60,9 @@ test("uses shared DeepSeek capabilities for routed DeepSeek models", () => {
 });
 
 test("OpenRouter routing variants retain base-model capabilities", () => {
+  assert.equal(getOpenRouterContextWindow("openai/gpt-5.6-sol:nitro"), 1050000);
+  assert.equal(getOpenRouterMaxOutputTokens("openai/gpt-5.6-sol:nitro"), 128000);
+
   assert.equal(getOpenRouterContextWindow("openai/gpt-5.4:nitro"), 1050000);
   assert.equal(getOpenRouterMaxOutputTokens("openai/gpt-5.4:nitro"), 128000);
 
