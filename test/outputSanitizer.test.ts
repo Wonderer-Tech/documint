@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   sanitizeHtml,
   sanitizeMarkdown,
@@ -45,4 +46,31 @@ test("html sanitizer removes unsafe workflow section and keeps following content
   assert.equal(output.includes("unsafe body"), false);
   assert.equal(output.includes("Interactive Dependency Graph"), true);
   assert.equal(output.includes("keep me"), true);
+});
+
+test("fresh outputs are not workflow-filtered while legacy caches remain sanitized", () => {
+  const source = readFileSync("src/services/outputSanitizer.ts", "utf8");
+
+  assert.equal(
+    source.includes(
+      "sanitizeFile(vscode.Uri.file(paths.markdown), sanitizeMarkdown)",
+    ),
+    false,
+  );
+  assert.equal(
+    source.includes("hardenGeneratedHtmlForOffline(sanitizeHtml(content))"),
+    false,
+  );
+  assert.match(
+    source,
+    /sanitizeFile\([\s\S]*vscode\.Uri\.file\(paths\.html\)[\s\S]*hardenGeneratedHtmlForOffline[\s\S]*\)/,
+  );
+  assert.match(
+    source,
+    /\.documint-visual-cache\.json[\s\S]*sanitizeCachedSection\(cache\.entry\)/,
+  );
+  assert.match(
+    source,
+    /\.documint-cache\.json[\s\S]*sanitizeCachedSection\(cache\.projectVisuals\)/,
+  );
 });
