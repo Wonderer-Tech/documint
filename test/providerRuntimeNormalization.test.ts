@@ -139,3 +139,16 @@ test("custom provider resolves endpoint locality from current settings", () => {
   );
   assert.doesNotMatch(source, /this\.isLocal\s*=/);
 });
+
+test("provider metadata decorator preserves stronger provider fallbacks", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/providers/providerMetadataDecorator.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /resolveMetadataContextWindow/);
+  assert.match(
+    source,
+    /resolveMetadataContextWindow\([\s\S]*metadata\.contextWindow,[\s\S]*metadata\.source,[\s\S]*originalGetMaxContextWindow\(model\)/,
+  );
+});
