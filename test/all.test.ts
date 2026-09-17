@@ -25,6 +25,8 @@ import "./providerNamePolicy.test";
 import "./manifestMetadata.test";
 import "./generationMode.test";
 import "./localFileDocumentation.test";
+import "./localProjectDocumentation.test";
+import "./localArchitectureDocumentation.test";
 import "./sourceAnalyzer.test";
 import "./sourceAnalyzerTypedLanguages.test";
 import "./sourceAnalyzerDependencySemantics.test";
