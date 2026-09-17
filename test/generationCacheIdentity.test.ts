@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   buildGenerationCacheIdentity,
   GENERATION_CACHE_POLICY_VERSION,
@@ -37,6 +39,25 @@ test("generation cache identity includes prompt schema version", () => {
   assert.equal(identity.version, GENERATION_CACHE_POLICY_VERSION);
   assert.equal(identity.promptSchemaVersion, GENERATION_PROMPT_SCHEMA_VERSION);
   assert.match(identity.promptSchemaVersion, /^documint-prompts-/);
+});
+
+test("generator per-entry cache binds to the canonical prompt schema", () => {
+  const wrapper = readFileSync(
+    join(process.cwd(), "src/services/docGenerator.ts"),
+    "utf8",
+  );
+  const base = readFileSync(
+    join(process.cwd(), "src/services/docGeneratorBase.ts"),
+    "utf8",
+  );
+
+  assert.match(wrapper, /GENERATION_PROMPT_SCHEMA_VERSION/);
+  assert.match(
+    wrapper,
+    /runtimeGenerator\.PROMPT_VERSION\s*=\s*GENERATION_PROMPT_SCHEMA_VERSION/,
+  );
+  assert.match(base, /promptVersion:\s*DocGeneratorService\.PROMPT_VERSION/);
+  assert.doesNotMatch(wrapper, /lean-prompts-\d{4}-\d{2}-\d{2}/);
 });
 
 test("release cache epoch stays on v3 until generation semantics change again", () => {
