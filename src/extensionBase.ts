@@ -14,6 +14,7 @@ import {
 } from "./services/generationCachePolicy";
 import { generationRunContext } from "./services/generationRunContext";
 import { normalizeGenerationMode } from "./services/generationMode";
+import { normalizeDocumentationDepth } from "./services/generationDepth";
 import { ProviderFactory } from "./providers/providerFactory";
 import { resolveProviderSelection } from "./providers/providerSelection";
 import { evaluateCustomEndpoint } from "./providers/customEndpointPolicy";
@@ -284,9 +285,12 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const configuredModel = vscode.workspace
-      .getConfiguration("aiDocGenerator")
-      .get<string>("model");
+    const configuration = vscode.workspace.getConfiguration("aiDocGenerator");
+    const configuredModel = configuration.get<string>("model");
+    const normalizedDepth = normalizeDocumentationDepth(
+      payload.depth,
+      configuration.get<string>("documentationDepth"),
+    );
     const runSelection = resolveProviderSelection(
       resolveRunProvider(payload.provider),
       payload.model ?? configuredModel,
@@ -351,7 +355,7 @@ export function activate(context: vscode.ExtensionContext) {
         {
           providerName,
           model: modelName,
-          depth: payload.depth,
+          depth: normalizedDepth,
           contextWindow: payload.contextWindow,
           customApiEndpoint: payload.customApiEndpoint,
         },
@@ -369,11 +373,7 @@ export function activate(context: vscode.ExtensionContext) {
           docGenerator.generateDocumentation(workspaceFolder, {
             provider: providerName,
             model: modelName,
-            depth: payload.depth as
-              | "simple"
-              | "basic"
-              | "standard"
-              | "comprehensive",
+            depth: normalizedDepth,
             outputFormat:
               (payload.outputFormat as "markdown" | "html" | "both") || "both",
             scope:
