@@ -12,6 +12,7 @@ import {
 } from "./services/generationCachePolicy";
 import { generationRunContext } from "./services/generationRunContext";
 import { ProviderFactory } from "./providers/providerFactory";
+import { resolveProviderSelection } from "./providers/providerSelection";
 import { setWorkspaceScannerRunTargets } from "./scanner/workspaceScanner";
 import { DocumentationError } from "./types";
 
@@ -143,10 +144,11 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   async function refreshConfiguredApiKeyStatus(): Promise<void> {
-    const provider =
+    const provider = resolveRunProvider(
       vscode.workspace
         .getConfiguration("aiDocGenerator")
-        .get<string>("aiProvider") || "openai";
+        .get<string>("aiProvider"),
+    );
     const apiKey = await secretManager.getApiKey(provider);
     sidebarProvider.updateApiKeyStatus(!!apiKey);
   }
@@ -193,7 +195,22 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const providerName = resolveRunProvider(payload.provider);
+    const configuredModel = vscode.workspace
+      .getConfiguration("aiDocGenerator")
+      .get<string>("model");
+    const runSelection = resolveProviderSelection(
+      resolveRunProvider(payload.provider),
+      payload.model ?? configuredModel,
+    );
+    const providerName = runSelection.provider;
+    const modelName = runSelection.model;
+
+    if (payload.model?.trim() && payload.model.trim() !== modelName) {
+      sidebarProvider.addLogEntry(
+        `Model adjusted to ${modelName} for ${providerName}.`,
+        "info",
+      );
+    }
 
     if (providerName === "custom") {
       const configuration = vscode.workspace.getConfiguration("aiDocGenerator");
@@ -253,7 +270,7 @@ export function activate(context: vscode.ExtensionContext) {
         workspaceFolder,
         {
           providerName,
-          model: payload.model,
+          model: modelName,
           depth: payload.depth,
           contextWindow: payload.contextWindow,
           customApiEndpoint: payload.customApiEndpoint,
@@ -270,8 +287,8 @@ export function activate(context: vscode.ExtensionContext) {
         payload.contextWindow,
         () =>
           docGenerator.generateDocumentation(workspaceFolder, {
-            provider: payload.provider,
-            model: payload.model,
+            provider: providerName,
+            model: modelName,
             depth: payload.depth as
               | "simple"
               | "basic"
@@ -517,7 +534,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "aiDocGenerator.configureApiKey",
       async (provider?: string) => {
-        const targetProvider = provider || "openai";
+        const targetProvider = resolveRunProvider(provider);
         const apiKey = await vscode.window.showInputBox({
           prompt: `Enter your ${targetProvider} API Key`,
           placeHolder: targetProvider === "anthropic" ? "sk-ant-..." : "sk-...",
