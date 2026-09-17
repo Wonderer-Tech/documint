@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { getAnthropicModelCapabilities } from "../src/providers/anthropicCapabilities";
 import { getDeepSeekModelCapabilities } from "../src/providers/deepSeekCapabilities";
 import { getOpenAIModelCapabilities } from "../src/providers/openAICapabilities";
 import {
@@ -57,6 +58,39 @@ test("GPT-5 and GPT-5.4 capability limits match provider budgeting", () => {
       maxOutputTokens: 128000,
       lifecycle: "current",
     });
+  }
+});
+
+test("Anthropic current families use one canonical capability source", () => {
+  for (const model of [
+    "claude-fable-5",
+    "claude-mythos-5",
+    "claude-opus-5",
+    "claude-sonnet-5",
+    "claude-opus-4-8",
+    "claude-opus-4-7",
+    "claude-opus-4-6",
+    "claude-sonnet-4-6",
+  ]) {
+    assert.deepEqual(getAnthropicModelCapabilities(model), {
+      contextWindow: 1000000,
+      maxOutputTokens: 128000,
+      lifecycle: "current",
+    });
+    assert.deepEqual(getKnownModelContext(model), {
+      contextWindow: 1000000,
+      lifecycle: "current",
+    });
+    assert.equal(estimateModelContextWindow(model), 1000000);
+  }
+
+  for (const model of ["claude-haiku-4-5", "claude-haiku-4-5-20251001"]) {
+    assert.deepEqual(getAnthropicModelCapabilities(model), {
+      contextWindow: 200000,
+      maxOutputTokens: 64000,
+      lifecycle: "current",
+    });
+    assert.equal(estimateModelContextWindow(model), 200000);
   }
 });
 
