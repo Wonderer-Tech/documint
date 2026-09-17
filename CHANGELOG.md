@@ -11,6 +11,7 @@ All notable changes to DocuMint are documented here.
 - Centralized provider/model defaults to reduce stale cross-provider model behavior.
 - Kept custom OpenAI-compatible API keys optional across both file generation and project-summary/raw-prompt generation paths.
 - Required HTTPS for remote custom OpenAI-compatible endpoints while keeping plain HTTP available for localhost/loopback development servers; IPv6 loopback detection now correctly recognizes `[::1]`.
+- Rejected custom endpoint URLs that embed credentials or URL fragments, while preserving legitimate query strings such as provider API-version parameters.
 - Trimmed leading/trailing paste whitespace before API keys are persisted so a locally valid key is not later sent with invisible whitespace.
 - Aligned GPT-4.1, GPT-4.1 Mini, and GPT-4.1 Nano metadata with the provider runtime so their 1,000,000-token context window is not collapsed to the conservative 8,192-token fallback.
 - Improved generated HTML resilience when optional CDN assets fail to load.
@@ -23,7 +24,7 @@ All notable changes to DocuMint are documented here.
 
 ### Tests
 
-- Added regression coverage for provider runtime normalization, transient retry error reporting, optional custom-provider API keys, custom-endpoint transport policy, API-key storage normalization, GPT-4.1 context metadata, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
+- Added regression coverage for provider runtime normalization, transient retry error reporting, optional custom-provider API keys, custom-endpoint transport and URL-shape policy, API-key storage normalization, GPT-4.1 context metadata, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
 
 ## 1.0.4
 
