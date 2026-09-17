@@ -13,6 +13,7 @@ import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
 import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
 import { parseAnthropicResponse } from "./anthropicResponse";
 import { normalizeProviderRequestError } from "./providerHttpError";
+import { getAnthropicModelCapabilities } from "./anthropicCapabilities";
 
 /**
  * Anthropic Claude provider.
@@ -101,25 +102,29 @@ export class AnthropicProvider extends BaseAIProvider {
   }
 
   protected getMaxOutputTokens(model?: string): number {
-    const m = (model || "").toLowerCase();
-    if (m.includes("claude-sonnet-5") || m.includes("claude-opus-5")) {
-      return 128000;
+    const capabilities = getAnthropicModelCapabilities(model);
+    if (capabilities) {
+      return capabilities.maxOutputTokens;
     }
-    if (m.includes("claude-3-5") || m.includes("claude-3.5")) {
+
+    const normalized = (model || "").toLowerCase();
+    if (normalized.includes("claude-3-5") || normalized.includes("claude-3.5")) {
       return 8192;
     }
     return 4096;
   }
 
   getMaxContextWindow(model?: string): number {
-    const m = (model || "").toLowerCase();
-    if (m.includes("claude-sonnet-5") || m.includes("claude-opus-5")) {
-      return 1000000;
+    const capabilities = getAnthropicModelCapabilities(model);
+    if (capabilities) {
+      return capabilities.contextWindow;
     }
-    if (m.includes("claude-3") || m.includes("claude-3-5")) {
+
+    const normalized = (model || "").toLowerCase();
+    if (normalized.includes("claude-3") || normalized.includes("claude-3-5")) {
       return 200000;
     }
-    if (m.includes("claude-2") || m.includes("instant")) {
+    if (normalized.includes("claude-2") || normalized.includes("instant")) {
       return 100000;
     }
     return 200000;
