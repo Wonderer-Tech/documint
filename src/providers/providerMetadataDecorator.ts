@@ -1,10 +1,12 @@
 import * as vscode from "vscode";
+import { AsyncLocalStorage } from "async_hooks";
 import { BaseAIProvider } from "./aiProvider";
 import {
   GuardedProviderName,
   normalizeProviderModel,
 } from "./providerModelGuard";
 import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
+import { hasExplicitContextWindow } from "./contextWindowPolicy";
 import { ModelMetadataService } from "../services/modelMetadataService";
 
 type MetadataProviderName = GuardedProviderName | "custom";
@@ -15,6 +17,10 @@ const CUSTOM_DEFAULT_MODEL = "default";
  * Makes ModelMetadataService part of the real generation path without changing
  * each provider's token-budgeting implementation. Metadata is cached by actual
  * provider/model, and existing provider fallbacks remain the safety net.
+ *
+ * Explicit context-window overrides are scoped to the current async generation
+ * request. They never enter the shared per-model metadata cache, so parallel or
+ * later requests cannot inherit a previous request's override.
  *
  * Custom endpoints intentionally do not receive inferred remote-model metadata:
  * their real context window is unknown, so they keep their provider fallback
@@ -34,6 +40,7 @@ export function withModelMetadata(
 
   const metadataService = ModelMetadataService.getInstance(context);
   const resolvedWindows = new Map<string, number>();
+  const requestContextWindow = new AsyncLocalStorage<number>();
   const originalGetMaxContextWindow =
     provider.getMaxContextWindow.bind(provider);
   const originalGenerateDocumentation =
@@ -58,19 +65,6 @@ export function withModelMetadata(
     );
   };
 
-  const rememberExplicitContextWindow = (
-    requestedModel: string | undefined,
-    contextWindow: number | undefined,
-  ): boolean => {
-    if (!Number.isFinite(contextWindow) || (contextWindow ?? 0) <= 0) {
-      return false;
-    }
-
-    const model = resolveModel(requestedModel);
-    resolvedWindows.set(model.toLowerCase(), Math.floor(contextWindow!));
-    return true;
-  };
-
   const warmContextWindow = async (requestedModel?: string): Promise<void> => {
     const model = resolveModel(requestedModel);
     const key = model.toLowerCase();
@@ -86,11 +80,16 @@ export function withModelMetadata(
       Number.isFinite(metadata.contextWindow) &&
       metadata.contextWindow > 0
     ) {
-      resolvedWindows.set(key, metadata.contextWindow);
+      resolvedWindows.set(key, Math.floor(metadata.contextWindow));
     }
   };
 
   provider.getMaxContextWindow = (model?: string): number => {
+    const explicitWindow = requestContextWindow.getStore();
+    if (explicitWindow !== undefined) {
+      return explicitWindow;
+    }
+
     const resolvedModel = resolveModel(model);
     return (
       resolvedWindows.get(resolvedModel.toLowerCase()) ??
@@ -99,13 +98,14 @@ export function withModelMetadata(
   };
 
   provider.generateDocumentation = async (documentationContext) => {
-    const hasExplicitWindow = rememberExplicitContextWindow(
-      documentationContext.model,
-      documentationContext.contextWindow,
-    );
-    if (!hasExplicitWindow) {
-      await warmContextWindow(documentationContext.model);
+    if (hasExplicitContextWindow(documentationContext.contextWindow)) {
+      const explicitWindow = Math.floor(documentationContext.contextWindow!);
+      return requestContextWindow.run(explicitWindow, () =>
+        originalGenerateDocumentation(documentationContext),
+      );
     }
+
+    await warmContextWindow(documentationContext.model);
     return originalGenerateDocumentation(documentationContext);
   };
 
