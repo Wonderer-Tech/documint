@@ -39,6 +39,10 @@ test("generation cache identity includes prompt schema version", () => {
   assert.match(identity.promptSchemaVersion, /^documint-prompts-/);
 });
 
+test("release cache epoch stays on v3 until generation semantics change again", () => {
+  assert.equal(GENERATION_CACHE_POLICY_VERSION, "generation-cache-policy-v3");
+});
+
 test("non-custom providers ignore custom endpoint in cache identity", () => {
   const first = buildGenerationCacheIdentity(
     { ...baseSettings, customApiEndpoint: "https://one.invalid" },
