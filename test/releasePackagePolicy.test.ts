@@ -84,7 +84,6 @@ test("README project structure documents public facades and implementation modul
     "sourceAnalyzerBase.ts",
     "extension.ts",
     "extensionBase.ts",
-    "extensionPolicy.ts",
     "openAICapabilities.ts",
     "docGenerator.ts",
     "docGeneratorBase.ts",
@@ -93,6 +92,7 @@ test("README project structure documents public facades and implementation modul
     assert.ok(readme.includes(required), `README project structure missing ${required}`);
   }
 
+  assert.doesNotMatch(readme, /extensionPolicy\.ts/);
   assert.match(
     readme,
     /The `\*Base\.ts` modules are implementation details\./,
