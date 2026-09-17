@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { evaluateCustomEndpoint } from "../src/providers/customEndpointPolicy";
 
 test("custom endpoint policy accepts remote HTTPS and rejects remote HTTP", () => {
@@ -61,4 +63,17 @@ test("custom endpoint policy rejects missing, malformed, and non-http URLs", () 
   assert.equal(evaluateCustomEndpoint(undefined).valid, false);
   assert.equal(evaluateCustomEndpoint("not a url").valid, false);
   assert.equal(evaluateCustomEndpoint("file:///tmp/model").valid, false);
+});
+
+test("extension command boundary uses the shared custom endpoint policy", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/extension.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /import \{ evaluateCustomEndpoint \} from "\.\/providers\/customEndpointPolicy";/);
+  assert.match(source, /const endpointPolicy = evaluateCustomEndpoint\(endpointInput\);/);
+  assert.match(source, /return !evaluateCustomEndpoint\(endpoint\)\.isLocal;/);
+  assert.doesNotMatch(source, /function isLocalEndpoint\(/);
+  assert.doesNotMatch(source, /const parsed = new URL\(endpoint\)/);
 });
