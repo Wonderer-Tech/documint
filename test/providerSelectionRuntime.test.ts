@@ -24,6 +24,14 @@ test("provider selection replaces stale cross-provider model ids", () => {
 });
 
 test("provider selection migrates retired provider-native model ids", () => {
+  assert.deepEqual(resolveProviderSelection("openai", "gpt-4.5-preview"), {
+    provider: "openai",
+    model: "gpt-5.4-nano",
+  });
+  assert.deepEqual(resolveProviderSelection("openai", "gpt-4-0314"), {
+    provider: "openai",
+    model: "gpt-5.4-nano",
+  });
   assert.deepEqual(
     resolveProviderSelection("anthropic", "claude-opus-4-1-20250805"),
     {
