@@ -61,6 +61,7 @@ test("provider retry delay uses bounded exponential backoff", () => {
   assert.equal(getProviderRetryDelayMs(1), 2000);
   assert.equal(getProviderRetryDelayMs(4), 16000);
   assert.equal(getProviderRetryDelayMs(10), 30000);
+  assert.equal(getProviderRetryDelayMs(2, 0), 0);
   assert.equal(getProviderRetryDelayMs(2, 7500), 7500);
   assert.equal(getProviderRetryDelayMs(2, 90000), 30000);
 });
