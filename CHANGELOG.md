@@ -12,6 +12,7 @@ All notable changes to DocuMint are documented here.
 - Preserved Mermaid source for editable/exportable diagram workflows.
 - Removed legacy hard-coded Code Workflow output so generated documentation remains source-grounded.
 - Expanded scanner coverage for common C and C++ source/header extensions, including `.h`, `.cc`, `.cxx`, `.hh`, `.hpp`, and `.hxx`.
+- Expanded JavaScript/TypeScript discovery to include modern module extensions: `.mjs`, `.cjs`, `.mts`, and `.cts`.
 - Bumped the generation cache compatibility policy to v3 so documentation generated under older release semantics is safely regenerated.
 - Kept README-only demo media out of the packaged VSIX while retaining runtime icons.
 
