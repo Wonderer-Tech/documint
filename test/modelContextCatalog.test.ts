@@ -81,6 +81,23 @@ test("GPT-5 and GPT-5.4 capability limits match provider budgeting", () => {
   }
 });
 
+test("o4-mini uses canonical reasoning-model capability limits", () => {
+  for (const model of ["o4-mini", "o4-mini-2025-04-16"]) {
+    assert.deepEqual(getOpenAIModelCapabilities(model), {
+      contextWindow: 200000,
+      maxOutputTokens: 100000,
+      lifecycle: "current",
+    });
+    assert.deepEqual(getKnownModelContext(model), {
+      contextWindow: 200000,
+      lifecycle: "current",
+    });
+    assert.equal(estimateModelContextWindow(model), 200000);
+  }
+
+  assert.equal(getOpenAIModelCapabilities("o4-mini-deep-research"), undefined);
+});
+
 test("Anthropic current families use one canonical capability source", () => {
   for (const model of [
     "claude-fable-5",
