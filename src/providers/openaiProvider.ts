@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { BaseAIProvider, ApiCallParams } from "./aiProvider";
 import { DocumentationResult } from "../types";
 import { normalizeProviderModel } from "./providerModelGuard";
@@ -7,6 +7,8 @@ import { capRequestedOutputTokens } from "./outputTokenLimit";
 import { parseOpenAICompatibleResponse } from "./openAICompatibleResponse";
 import { runProviderRequestWithRetry } from "./providerRetry";
 import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
+import { normalizeProviderRequestError } from "./providerHttpError";
+import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
 
 /**
  * Model aliases map known shorthand names to their full OpenAI model IDs.
@@ -198,7 +200,7 @@ export class OpenAIProvider extends BaseAIProvider {
   }
 
   protected defaultModel(): string {
-    return "gpt-5.4-nano";
+    return PROVIDER_DEFAULT_MODELS.openai;
   }
 
   /**
@@ -252,66 +254,7 @@ export class OpenAIProvider extends BaseAIProvider {
         model: resolvedModel,
       };
     } catch (error) {
-      const axErr = error as AxiosError<{
-        error?: { message?: string; code?: string; type?: string };
-      }>;
-
-      if (axErr.response) {
-        const status = axErr.response.status;
-        const apiError = axErr.response.data?.error;
-        const apiMessage = apiError?.message ?? axErr.response.statusText;
-
-        if (status === 400) {
-          throw new Error(
-            `OpenAI API rejected the request (400 Bad Request): ${apiMessage}\n\n` +
-              `This usually means the model "${params.model}" is not valid or not available. ` +
-              `Check your model name in VS Code settings (aiDocGenerator.model).`,
-          );
-        }
-
-        if (status === 401) {
-          throw new Error(
-            `OpenAI API authentication failed (401 Unauthorized): ${apiMessage}\n\n` +
-              `Your API key may be invalid or expired. ` +
-              `Use the "Configure API Key" command to update it.`,
-          );
-        }
-
-        if (status === 403) {
-          throw new Error(
-            `OpenAI API access denied (403 Forbidden): ${apiMessage}\n\n` +
-              `Your account may not have permission to use model "${resolvedModel}". ` +
-              `Check your OpenAI account settings and billing status.`,
-          );
-        }
-
-        if (status === 429) {
-          throw new Error(
-            `OpenAI API rate limit exceeded (429 Too Many Requests): ${apiMessage}\n\n` +
-              `You have sent too many requests. Wait a moment and try again. ` +
-              `Consider increasing aiDocGenerator.rateLimitDelay in settings.`,
-          );
-        }
-
-        if (status >= 500) {
-          throw new Error(
-            `OpenAI API server error (${status} Server Error): ${apiMessage}\n\n` +
-              `This is a temporary issue on OpenAI's side. Try again later.`,
-          );
-        }
-
-        throw new Error(`OpenAI API error (${status}): ${apiMessage}`);
-      }
-
-      if (axErr.request) {
-        throw new Error(
-          `Network error: Could not reach OpenAI API. ` +
-            `Check your internet connection and firewall settings.\n\n` +
-            `Original error: ${axErr.message}`,
-        );
-      }
-
-      throw new Error(`Unexpected error during API call: ${axErr.message}`);
+      throw normalizeProviderRequestError(error, "OpenAI");
     }
   }
 
