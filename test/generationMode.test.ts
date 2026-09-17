@@ -23,7 +23,7 @@ test("manifest exposes AI and Local generation modes with AI as the compatibilit
   assert.equal(property.default, "ai");
 });
 
-test("sidebar exposes Local mode while suppressing provider and authentication controls", () => {
+test("sidebar keeps Local mode focused on controls that affect Local output", () => {
   const source = readFileSync(
     join(process.cwd(), "src/views/sidebarProvider.ts"),
     "utf8",
@@ -32,8 +32,12 @@ test("sidebar exposes Local mode while suppressing provider and authentication c
   assert.match(source, /Local Documentation — No AI/);
   assert.match(source, /id="authSection"/);
   assert.match(source, /id="providerSection"/);
+  assert.match(source, /id="depthField"/);
+  assert.match(source, /id="generateBtnText"/);
   assert.match(source, /authSection\.classList\.toggle\('hidden', local\)/);
   assert.match(source, /providerSection\.classList\.toggle\('hidden', local\)/);
+  assert.match(source, /depthField\.classList\.toggle\('hidden', local\)/);
+  assert.match(source, /Generate Local Documentation/);
   assert.match(source, /generationMode:\s*generationModeSel\.value/);
   assert.match(source, /updates\.push\(\["generationMode", normalizeGenerationMode/);
   assert.doesNotMatch(source, /state\.isGenerating \|\| localPending/);
@@ -43,6 +47,10 @@ test("sidebar exposes Local mode while suppressing provider and authentication c
 test("Local mode executes its own generator before provider selection", () => {
   const source = readFileSync(
     join(process.cwd(), "src/extensionBase.ts"),
+    "utf8",
+  );
+  const generatorSource = readFileSync(
+    join(process.cwd(), "src/services/localDocumentationGenerator.ts"),
     "utf8",
   );
   const localBranch = source.indexOf('if (generationMode === "local")');
@@ -59,10 +67,11 @@ test("Local mode executes its own generator before provider selection", () => {
 
   const localSource = source.slice(localBranch, providerSelection);
   assert.match(localSource, /localDocGenerator\.generateDocumentation/);
-  assert.match(localSource, /sanitizeGeneratedOutputs\(outputPaths\)/);
   assert.doesNotMatch(localSource, /resolveRunProvider\(/);
   assert.doesNotMatch(localSource, /ensureGenerationAllowed\(/);
   assert.doesNotMatch(localSource, /prepareGenerationCacheCompatibility\(/);
+  assert.doesNotMatch(localSource, /sanitizeGeneratedOutputs\(outputPaths\)/);
+  assert.match(generatorSource, /sanitizeGeneratedOutputs\(outputPaths\)/);
 });
 
 test("Local File and Folder scopes pass exact target paths to the scanner", () => {
