@@ -4,6 +4,22 @@ export type GuardedProviderName =
   | "deepseek"
   | "openrouter";
 
+const RETIRED_OPENAI_MODELS = new Set([
+  "gpt-3.5-turbo-0301",
+  "gpt-3.5-turbo-0613",
+  "gpt-3.5-turbo-16k-0613",
+  "gpt-4-0314",
+  "gpt-4-0125-preview",
+  "gpt-4-turbo-preview",
+  "gpt-4-turbo-preview-completions",
+  "gpt-4.5-preview",
+  "gpt-4-32k",
+  "gpt-4-32k-0314",
+  "gpt-4-32k-0613",
+  "gpt-4-vision-preview",
+  "gpt-4-1106-vision-preview",
+]);
+
 const RETIRED_ANTHROPIC_MODELS = new Set([
   "claude-opus-4-1-20250805",
   "claude-opus-4-20250514",
@@ -45,6 +61,9 @@ export function normalizeProviderModel(
   const model = requested.toLowerCase();
 
   if (provider === "openai") {
+    if (RETIRED_OPENAI_MODELS.has(model)) {
+      return fallbackModel;
+    }
     return isClearlyForeignToOpenAI(model) ? fallbackModel : requested;
   }
 
