@@ -9,11 +9,19 @@ test("provider selection replaces stale cross-provider model ids", () => {
     provider: "anthropic",
     model: "claude-sonnet-5",
   });
+  assert.deepEqual(resolveProviderSelection("anthropic", "o4-mini"), {
+    provider: "anthropic",
+    model: "claude-sonnet-5",
+  });
   assert.deepEqual(resolveProviderSelection("deepseek", "claude-sonnet-5"), {
     provider: "deepseek",
     model: "deepseek-flash",
   });
   assert.deepEqual(resolveProviderSelection("openrouter", "gpt-5.4-nano"), {
+    provider: "openrouter",
+    model: "openai/gpt-4o",
+  });
+  assert.deepEqual(resolveProviderSelection("openrouter", "o4-mini"), {
     provider: "openrouter",
     model: "openai/gpt-4o",
   });
@@ -67,6 +75,10 @@ test("provider selection preserves routed and custom model ids", () => {
       model: "anthropic/claude-sonnet-5",
     },
   );
+  assert.deepEqual(resolveProviderSelection("openrouter", "openai/o4-mini"), {
+    provider: "openrouter",
+    model: "openai/o4-mini",
+  });
   assert.deepEqual(resolveProviderSelection("custom", "local-model"), {
     provider: "custom",
     model: "local-model",
