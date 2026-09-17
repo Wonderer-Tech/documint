@@ -1,5 +1,14 @@
 import { classifyProviderFailure } from "./providerErrorPolicy";
 
+const TIMEOUT_CODES = new Set([
+  "ECONNABORTED",
+  "ESOCKETTIMEDOUT",
+  "ETIMEDOUT",
+  "UND_ERR_CONNECT_TIMEOUT",
+  "UND_ERR_HEADERS_TIMEOUT",
+  "UND_ERR_BODY_TIMEOUT",
+]);
+
 export function normalizeProviderRequestError(
   error: unknown,
   providerLabel: string,
@@ -50,6 +59,20 @@ export function normalizeProviderRequestError(
     );
   }
 
+  if (status === 408) {
+    return new Error(
+      `${providerLabel} request timed out (408): ${originalMessage}. ` +
+        `DocuMint already retried the transient request within its retry limit.`,
+    );
+  }
+
+  if (status === 425) {
+    return new Error(
+      `${providerLabel} request remained too early to process (425): ${originalMessage}. ` +
+        `DocuMint already retried the transient request within its retry limit.`,
+    );
+  }
+
   if (status !== undefined && status >= 500) {
     return new Error(
       `${providerLabel} server error (${status}): ${originalMessage}. ` +
@@ -62,9 +85,7 @@ export function normalizeProviderRequestError(
   }
 
   if (classification.kind === "network") {
-    const timedOut =
-      code?.toUpperCase().includes("TIMEOUT") ||
-      code?.toUpperCase() === "ECONNABORTED";
+    const timedOut = isTimeoutCode(code);
     return new Error(
       timedOut
         ? `${providerLabel} request timed out after retrying: ${originalMessage}`
@@ -75,6 +96,10 @@ export function normalizeProviderRequestError(
   return error instanceof Error
     ? error
     : new Error(`${providerLabel} request failed: ${originalMessage}`);
+}
+
+function isTimeoutCode(code: string | undefined): boolean {
+  return code ? TIMEOUT_CODES.has(code.trim().toUpperCase()) : false;
 }
 
 function extractProviderMessage(value: unknown): string | undefined {
