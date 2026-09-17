@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from "async_hooks";
+
 export function resolveRequestContextWindow(
   explicitContextWindow: number | undefined,
   providerContextWindow: number,
@@ -20,4 +22,17 @@ export function hasExplicitContextWindow(
   contextWindow: number | undefined,
 ): boolean {
   return Number.isFinite(contextWindow) && (contextWindow ?? 0) > 0;
+}
+
+export class RequestContextWindowScope {
+  private storage = new AsyncLocalStorage<number>();
+
+  current(): number | undefined {
+    return this.storage.getStore();
+  }
+
+  run<T>(contextWindow: number, operation: () => T): T {
+    const normalized = resolveRequestContextWindow(contextWindow, 8192);
+    return this.storage.run(normalized, operation);
+  }
 }
