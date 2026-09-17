@@ -98,6 +98,19 @@
     "configuration": {
       "title": "Documint",
       "properties": {
+        "aiDocGenerator.generationMode": {
+          "type": "string",
+          "enum": [
+            "ai",
+            "local"
+          ],
+          "enumDescriptions": [
+            "Generate enhanced documentation with the selected AI provider.",
+            "Generate deterministic documentation locally without an AI provider or API key."
+          ],
+          "default": "ai",
+          "description": "Documentation generation mode. AI preserves the existing provider-backed workflow; Local is fully on-device and uses source analysis only."
+        },
         "aiDocGenerator.aiProvider": {
           "type": "string",
           "enum": [
