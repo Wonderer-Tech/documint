@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { getDeepSeekModelCapabilities } from "../src/providers/deepSeekCapabilities";
 import { getOpenAIModelCapabilities } from "../src/providers/openAICapabilities";
 import {
   estimateModelContextWindow,
@@ -55,6 +56,33 @@ test("GPT-5 and GPT-5.4 capability limits match provider budgeting", () => {
       contextWindow: 400000,
       maxOutputTokens: 128000,
       lifecycle: "current",
+    });
+  }
+});
+
+test("DeepSeek current and compatibility IDs use one capability source", () => {
+  for (const model of ["deepseek-flash", "deepseek-v4-pro"]) {
+    assert.deepEqual(getDeepSeekModelCapabilities(model), {
+      contextWindow: 1000000,
+      maxOutputTokens: 384000,
+      lifecycle: "current",
+    });
+    assert.deepEqual(getKnownModelContext(model), {
+      contextWindow: 1000000,
+      lifecycle: "current",
+    });
+    assert.equal(estimateModelContextWindow(model), 1000000);
+  }
+
+  for (const model of ["deepseek-v4-flash", "deepseek-v4-flash-vision-exp"]) {
+    assert.deepEqual(getDeepSeekModelCapabilities(model), {
+      contextWindow: 1000000,
+      maxOutputTokens: 384000,
+      lifecycle: "legacy",
+    });
+    assert.deepEqual(getKnownModelContext(model), {
+      contextWindow: 1000000,
+      lifecycle: "legacy",
     });
   }
 });
