@@ -27,6 +27,38 @@ test("Axios-style timeout with request metadata is reported as timeout", () => {
   assert.match(normalized.message, /DeepSeek request timed out after retrying/i);
 });
 
+test("all retryable transport timeout codes retain timeout wording", () => {
+  for (const code of [
+    "ESOCKETTIMEDOUT",
+    "ETIMEDOUT",
+    "UND_ERR_CONNECT_TIMEOUT",
+    "UND_ERR_HEADERS_TIMEOUT",
+    "UND_ERR_BODY_TIMEOUT",
+  ]) {
+    const normalized = normalizeProviderRequestError(
+      Object.assign(new Error(`transport failed: ${code}`), { code }),
+      "OpenRouter",
+    );
+    assert.match(normalized.message, /request timed out after retrying/i, code);
+  }
+});
+
+test("retryable HTTP timeout/too-early responses report exhausted retry context", () => {
+  const timeout = normalizeProviderRequestError(
+    { response: { status: 408, data: { message: "request timeout" } } },
+    "Anthropic",
+  );
+  const tooEarly = normalizeProviderRequestError(
+    { response: { status: 425, data: { message: "too early" } } },
+    "OpenAI",
+  );
+
+  assert.match(timeout.message, /request timed out \(408\)/i);
+  assert.match(timeout.message, /already retried/i);
+  assert.match(tooEarly.message, /too early to process \(425\)/i);
+  assert.match(tooEarly.message, /already retried/i);
+});
+
 test("OpenAI and DeepSeek provider call paths use the shared error normalizer", () => {
   for (const filename of ["openaiProvider.ts", "deepseekProvider.ts"]) {
     const source = readFileSync(
