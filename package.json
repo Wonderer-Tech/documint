@@ -1,7 +1,7 @@
 {
   "name": "documint",
   "displayName": "DocuMint — Code Documentation Generator",
-  "description": "Generate source-grounded code documentation in one click. Create Markdown and HTML docs with project overviews, architecture visuals, dependency graphs, API references, and usage examples directly inside VS Code.",
+  "description": "Generate source-grounded Markdown and HTML documentation locally with no AI, or enhance it with OpenAI, Anthropic, OpenRouter, DeepSeek, and custom providers directly inside VS Code.",
   "version": "1.0.4",
   "publisher": "wonderertech",
   "icon": "resources/icon.png",
@@ -12,6 +12,8 @@
   },
   "keywords": [
     "ai documentation",
+    "local documentation",
+    "offline documentation",
     "code documentation",
     "documentation generator",
     "architecture documentation",
@@ -109,7 +111,7 @@
             "Generate deterministic documentation locally without an AI provider or API key."
           ],
           "default": "ai",
-          "description": "Documentation generation mode. AI preserves the existing provider-backed workflow; Local is fully on-device and uses source analysis only."
+          "description": "Documentation generation mode. AI preserves the provider-backed workflow; Local runs entirely on-device from source analysis."
         },
         "aiDocGenerator.aiProvider": {
           "type": "string",
@@ -121,12 +123,12 @@
             "custom"
           ],
           "default": "openai",
-          "description": "Provider for documentation generation"
+          "description": "AI mode only: provider for documentation generation."
         },
         "aiDocGenerator.model": {
           "type": "string",
           "default": "gpt-5.4-nano",
-          "description": "Model to use for documentation generation"
+          "description": "AI mode only: model to use for documentation generation."
         },
         "aiDocGenerator.documentationDepth": {
           "type": "string",
@@ -136,7 +138,8 @@
             "standard",
             "comprehensive"
           ],
-          "default": "standard"
+          "default": "standard",
+          "description": "AI mode only: controls the depth of provider-generated documentation. Local mode is deterministic and does not use this setting."
         },
         "aiDocGenerator.outputFormat": {
           "type": "string",
@@ -146,7 +149,7 @@
             "both"
           ],
           "default": "both",
-          "description": "Documentation files to generate. Defaults to both Markdown and HTML across all generation entry points."
+          "description": "Documentation files to generate. Applies to both AI and Local modes."
         },
         "aiDocGenerator.targetLanguages": {
           "type": "array",
@@ -177,32 +180,33 @@
             "scss",
             "sql"
           ],
-          "description": "Languages and source-file types included in workspace/folder scanning. All listed defaults are enabled unless you narrow this setting."
+          "description": "Languages and source-file types included in workspace/folder scanning. Applies to both AI and Local modes."
         },
         "aiDocGenerator.maxTokens": {
           "type": "number",
           "minimum": 1,
           "default": 4000,
-          "description": "Maximum output tokens requested per provider response. Provider and context-window safety limits can reduce this further."
+          "description": "AI mode only: maximum output tokens requested per provider response. Provider and context-window safety limits can reduce this further."
         },
         "aiDocGenerator.temperature": {
           "type": "number",
           "minimum": 0,
           "maximum": 1,
-          "default": 0.3
+          "default": 0.3,
+          "description": "AI mode only: provider sampling temperature."
         },
         "aiDocGenerator.rateLimitDelay": {
           "type": "number",
           "minimum": 0,
           "default": 1000,
-          "description": "Delay between API requests in milliseconds"
+          "description": "AI mode only: delay between provider API request starts in milliseconds."
         },
         "aiDocGenerator.concurrentRequests": {
           "type": "number",
           "minimum": 1,
           "maximum": 15,
           "default": 15,
-          "description": "Maximum number of detailed file documentation requests to run at the same time. Defaults to 15 for faster generation; lower it in settings if requests are rate-limited."
+          "description": "AI mode only: maximum number of detailed file documentation requests to run at the same time. Defaults to 15; lower it if requests are rate-limited."
         },
         "aiDocGenerator.excludePatterns": {
           "type": "array",
@@ -214,11 +218,12 @@
             "**/dist/**",
             "**/build/**",
             "**/.git/**"
-          ]
+          ],
+          "description": "Additional source-scan exclusions used by both AI and Local modes."
         },
         "aiDocGenerator.customApiEndpoint": {
           "type": "string",
-          "description": "Custom OpenAI-compatible chat completions URL, for example https://api.example.com/v1/chat/completions"
+          "description": "AI mode only: custom OpenAI-compatible chat completions URL, for example https://api.example.com/v1/chat/completions"
         }
       }
     }
