@@ -123,6 +123,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
             this._state.settings = { ...this._state.settings, ...payload } as typeof this._state.settings;
             await this._persistSettings(payload);
+            if (typeof payload.provider === "string") {
+              await this._refreshSelectedProviderApiKeyStatus();
+            }
             this._post({
               type: "settings-normalized",
               settings: this._state.settings,
@@ -162,9 +165,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     this._post({ type: "error", message });
   }
 
-  public updateApiKeyStatus(configured: boolean) {
+  public updateApiKeyStatus(
+    configured: boolean,
+    provider: string = this._state.settings.provider,
+  ) {
     this._state.apiKeyConfigured = configured;
-    this._post({ type: "api-key-status", configured });
+    this._post({ type: "api-key-status", configured, provider });
   }
 
   public setGeneratingState(generating: boolean) {
@@ -257,6 +263,16 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
   }
 
+  private async _refreshSelectedProviderApiKeyStatus(): Promise<void> {
+    try {
+      const provider = this._state.settings.provider;
+      const key = await this._secretManager.getApiKey(provider);
+      this.updateApiKeyStatus(!!key, provider);
+    } catch {
+      this.updateApiKeyStatus(false, this._state.settings.provider);
+    }
+  }
+
   private async _saveApiKeyFromPanel(provider: string, apiKey: string) {
     const normalizedProvider = resolveProviderSelection(provider, undefined).provider;
     const trimmedKey = apiKey.trim();
@@ -293,7 +309,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     this._state.apiKeyConfigured = true;
-    this._post({ type: "api-key-status", configured: true });
+    this._post({
+      type: "api-key-status",
+      configured: true,
+      provider: normalizedProvider,
+    });
     this._post({
       type: "api-key-save-result",
       ok: true,
@@ -398,6 +418,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     background: rgba(241,76,76,.08);
     border-color: rgba(241,76,76,.3);
     color: var(--error);
+  }
+  .auth-status.optional {
+    background: rgba(55,148,255,.08);
+    border-color: rgba(55,148,255,.3);
+    color: var(--accent);
   }
   .auth-status svg { flex-shrink: 0; }
 
@@ -786,11 +811,16 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     updateActionAvailability();
   }
 
-  function setApiKeyStatus(configured) {
+  function setApiKeyStatus(configured, provider) {
+    var selectedProvider = provider || providerSel.value;
     if (configured) {
       authStatus.className = 'auth-status ok';
       authText.textContent = 'API Key configured';
       authIcon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+    } else if (selectedProvider === 'custom') {
+      authStatus.className = 'auth-status optional';
+      authText.textContent = 'API Key optional';
+      authIcon.innerHTML = '<path d="M7 14a5 5 0 1 1 3.9 4.9L8 22H5v-3H2v-3l5.1-5.1A5 5 0 0 1 7 14z"/>';
     } else {
       authStatus.className = 'auth-status missing';
       authText.textContent = 'API Key not configured';
@@ -1029,7 +1059,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         if (s.settings) {
           applyNormalizedSettings(s.settings);
         }
-        setApiKeyStatus(s.apiKeyConfigured);
+        setApiKeyStatus(s.apiKeyConfigured, s.settings && s.settings.provider);
         if (s.isGenerating) setGenerating(true);
         if (s.logs && s.logs.length) {
           s.logs.forEach(function(l) { addLog(l.message, l.type, l.timestamp); });
@@ -1041,7 +1071,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         break;
 
       case 'api-key-status':
-        setApiKeyStatus(msg.configured);
+        setApiKeyStatus(msg.configured, msg.provider);
         break;
 
       case 'show-api-key-form':
