@@ -1,4 +1,10 @@
-export const GENERATION_CACHE_POLICY_VERSION = "generation-cache-policy-v1";
+export const GENERATION_CACHE_POLICY_VERSION = "generation-cache-policy-v2";
+/**
+ * Bump whenever generation prompts, evidence formatting, or validation rules
+ * materially change generated documentation. This invalidates persisted AI
+ * sections even when provider/model settings and source files are unchanged.
+ */
+export const GENERATION_PROMPT_SCHEMA_VERSION = "documint-prompts-2026-09-17";
 
 export interface GenerationCacheIdentityInput {
   providerName: string;
@@ -18,6 +24,7 @@ export interface GenerationCacheSettings {
 
 export interface GenerationCacheIdentity {
   version: string;
+  promptSchemaVersion: string;
   provider: string;
   model: string;
   depth: string;
@@ -50,6 +57,7 @@ export function buildGenerationCacheIdentity(
 
   return {
     version: GENERATION_CACHE_POLICY_VERSION,
+    promptSchemaVersion: GENERATION_PROMPT_SCHEMA_VERSION,
     provider,
     model,
     depth,
