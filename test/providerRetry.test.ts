@@ -112,3 +112,18 @@ test("prefers retry-after-ms when provided", () => {
     1750,
   );
 });
+
+test("plain retry headers are case-insensitive", () => {
+  assert.equal(
+    getRetryAfterMs({ response: { headers: { "RETRY-AFTER": "3" } } }, 0),
+    3000,
+  );
+  assert.equal(
+    getRetryAfterMs({ response: { headers: { "Retry-After-Ms": "2250" } } }, 0),
+    2250,
+  );
+  assert.equal(
+    getRetryAfterMs({ response: { headers: { "rEtRy-AfTeR": "0.75" } } }, 0),
+    750,
+  );
+});
