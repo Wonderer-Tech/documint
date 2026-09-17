@@ -30,6 +30,30 @@ test("provider model guard replaces retired DeepSeek aliases", () => {
   );
 });
 
+test("provider model guard replaces retired OpenAI model ids", () => {
+  for (const model of [
+    "gpt-3.5-turbo-0301",
+    "gpt-3.5-turbo-0613",
+    "gpt-3.5-turbo-16k-0613",
+    "gpt-4-0314",
+    "gpt-4-0125-preview",
+    "gpt-4-turbo-preview",
+    "gpt-4-turbo-preview-completions",
+    "gpt-4.5-preview",
+    "gpt-4-32k",
+    "gpt-4-32k-0314",
+    "gpt-4-32k-0613",
+    "gpt-4-vision-preview",
+    "gpt-4-1106-vision-preview",
+  ]) {
+    assert.equal(
+      normalizeProviderModel("openai", model, "gpt-5.4-nano"),
+      "gpt-5.4-nano",
+      model,
+    );
+  }
+});
+
 test("provider model guard replaces retired Anthropic model ids", () => {
   for (const model of [
     "claude-opus-4-1-20250805",
@@ -65,6 +89,10 @@ test("provider model guard preserves provider-native model choices", () => {
   assert.equal(
     normalizeProviderModel("anthropic", "claude-opus-4-8", "claude-default"),
     "claude-opus-4-8",
+  );
+  assert.equal(
+    normalizeProviderModel("openai", "gpt-4-0613", "gpt-5.4-nano"),
+    "gpt-4-0613",
   );
   assert.equal(
     normalizeProviderModel("deepseek", "deepseek-flash", "fallback"),
