@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as vscode from "vscode";
+import { hardenGeneratedHtmlForOffline } from "./htmlOfflineHardening";
 import { sanitizeHtml, sanitizeMarkdown } from "./outputSanitizerCore";
 
 interface CachedSection {
@@ -24,7 +25,9 @@ export async function sanitizeGeneratedOutputs(paths: {
     await sanitizeFile(vscode.Uri.file(paths.markdown), sanitizeMarkdown);
   }
   if (paths.html) {
-    await sanitizeFile(vscode.Uri.file(paths.html), sanitizeHtml);
+    await sanitizeFile(vscode.Uri.file(paths.html), (content) =>
+      hardenGeneratedHtmlForOffline(sanitizeHtml(content)),
+    );
   }
 
   const outputPath = paths.markdown ?? paths.html;
