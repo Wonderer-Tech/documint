@@ -26,3 +26,4 @@ import "./modelMetadataCacheEpoch.test";
 import "./generationRunPipeline.test";
 import "./chunkDocumentationMerge.test";
 import "./providerSelectionRuntime.test";
+import "./projectVisualPolicy.test";
