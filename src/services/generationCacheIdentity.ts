@@ -1,9 +1,9 @@
-export const GENERATION_CACHE_POLICY_VERSION = "generation-cache-policy-v3";
+export const GENERATION_CACHE_POLICY_VERSION = "generation-cache-policy-v4";
 /**
- * Bump whenever generation prompts, evidence formatting, validation rules, or
- * other release-level generation semantics materially change generated
- * documentation. This invalidates persisted AI sections even when
- * provider/model settings and source files are unchanged.
+ * Bump whenever generation prompts, evidence formatting, validation rules,
+ * provider capability limits, or other release-level generation semantics
+ * materially change generated documentation. This invalidates persisted AI
+ * sections even when provider/model settings and source files are unchanged.
  */
 export const GENERATION_PROMPT_SCHEMA_VERSION = "documint-prompts-2026-09-17";
 
