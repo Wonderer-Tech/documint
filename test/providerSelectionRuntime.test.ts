@@ -38,6 +38,13 @@ test("provider selection migrates retired provider-native model ids", () => {
       model: "claude-sonnet-5",
     },
   );
+  assert.deepEqual(
+    resolveProviderSelection("anthropic", "claude-3-5-sonnet-20241022"),
+    {
+      provider: "anthropic",
+      model: "claude-sonnet-5",
+    },
+  );
   assert.deepEqual(resolveProviderSelection("deepseek", "deepseek-chat"), {
     provider: "deepseek",
     model: "deepseek-flash",
