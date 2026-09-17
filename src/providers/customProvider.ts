@@ -20,11 +20,14 @@ import { normalizeProviderRequestError } from "./providerHttpError";
  */
 export class CustomProvider extends BaseAIProvider {
   name = "custom";
-  isLocal: boolean;
 
-  constructor(context: vscode.ExtensionContext) {
-    super(context);
-    this.isLocal = this.getEndpointPolicy().isLocal;
+  /**
+   * Locality follows the current endpoint setting instead of being captured at
+   * construction time. This keeps consent and request-pacing behavior correct
+   * when a user switches a custom endpoint between loopback and remote URLs.
+   */
+  get isLocal(): boolean {
+    return this.getEndpointPolicy().isLocal;
   }
 
   private get endpoint(): string {
