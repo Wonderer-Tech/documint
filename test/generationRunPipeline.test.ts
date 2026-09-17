@@ -36,7 +36,7 @@ test("generation run context ignores invalid overrides", async () => {
 });
 
 test("extension commits generation cache identity only after sanitized success", () => {
-  const source = readFileSync("src/extension.ts", "utf-8");
+  const source = readFileSync("src/extensionBase.ts", "utf-8");
   const prepareIndex = source.indexOf("prepareGenerationCacheCompatibility(");
   const generateIndex = source.indexOf("docGenerator.generateDocumentation(");
   const sanitizeIndex = source.indexOf("await sanitizeGeneratedOutputs(outputPaths);");
