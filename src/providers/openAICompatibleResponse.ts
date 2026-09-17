@@ -11,7 +11,10 @@ export function parseOpenAICompatibleResponse(
   const choices = Array.isArray(root?.choices) ? root.choices : [];
   const firstChoice = asRecord(choices[0]);
   const message = asRecord(firstChoice?.message);
-  const documentation = extractContentText(message?.content).trim();
+  const documentation = (
+    extractContentText(message?.content) ||
+    (typeof firstChoice?.text === "string" ? firstChoice.text : "")
+  ).trim();
 
   if (!documentation) {
     throw new Error(`${providerLabel} returned no text documentation content.`);
