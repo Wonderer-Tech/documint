@@ -37,6 +37,36 @@ test("parses multipart text content", () => {
   assert.equal(result.tokensUsed, 0);
 });
 
+test("accepts legacy choices text from compatible completion gateways", () => {
+  assert.deepEqual(
+    parseOpenAICompatibleResponse(
+      {
+        choices: [{ text: "  legacy documentation  " }],
+        usage: { total_tokens: 17 },
+      },
+      "Custom provider",
+    ),
+    { documentation: "legacy documentation", tokensUsed: 17 },
+  );
+});
+
+test("chat message content wins over legacy choices text when both exist", () => {
+  assert.equal(
+    parseOpenAICompatibleResponse(
+      {
+        choices: [
+          {
+            message: { content: "chat documentation" },
+            text: "legacy documentation",
+          },
+        ],
+      },
+      "Provider",
+    ).documentation,
+    "chat documentation",
+  );
+});
+
 test("falls back to split token usage fields for compatible providers", () => {
   assert.equal(
     parseOpenAICompatibleResponse(
