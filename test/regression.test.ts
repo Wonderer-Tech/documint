@@ -19,6 +19,17 @@ test("provider model guard replaces clearly foreign stale models", () => {
   );
 });
 
+test("provider model guard replaces retired DeepSeek aliases", () => {
+  assert.equal(
+    normalizeProviderModel("deepseek", "deepseek-chat", "deepseek-flash"),
+    "deepseek-flash",
+  );
+  assert.equal(
+    normalizeProviderModel("deepseek", "deepseek-reasoner", "deepseek-flash"),
+    "deepseek-flash",
+  );
+});
+
 test("provider model guard preserves provider-native model choices", () => {
   assert.equal(
     normalizeProviderModel(
@@ -31,6 +42,10 @@ test("provider model guard preserves provider-native model choices", () => {
   assert.equal(
     normalizeProviderModel("deepseek", "deepseek-flash", "fallback"),
     "deepseek-flash",
+  );
+  assert.equal(
+    normalizeProviderModel("deepseek", "deepseek-v4-pro", "fallback"),
+    "deepseek-v4-pro",
   );
   assert.equal(
     normalizeProviderModel("openrouter", "anthropic/claude-sonnet", "fallback"),
