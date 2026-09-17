@@ -66,14 +66,20 @@ test("custom endpoint policy rejects missing, malformed, and non-http URLs", () 
 });
 
 test("extension command boundary uses the shared custom endpoint policy", () => {
-  const source = readFileSync(
+  const entrySource = readFileSync(
     join(process.cwd(), "src/extension.ts"),
     "utf8",
   );
+  const policySource = readFileSync(
+    join(process.cwd(), "src/extensionPolicy.ts"),
+    "utf8",
+  );
 
-  assert.match(source, /import \{ evaluateCustomEndpoint \} from "\.\/providers\/customEndpointPolicy";/);
-  assert.match(source, /const endpointPolicy = evaluateCustomEndpoint\(endpointInput\);/);
-  assert.match(source, /return !evaluateCustomEndpoint\(endpoint\)\.isLocal;/);
-  assert.doesNotMatch(source, /function isLocalEndpoint\(/);
-  assert.doesNotMatch(source, /const parsed = new URL\(endpoint\)/);
+  assert.match(entrySource, /resolveGenerationCustomEndpointPolicy/);
+  assert.match(entrySource, /runWithTemporaryLocalCustomConsent/);
+  assert.match(entrySource, /GENERATION_COMMANDS/);
+  assert.match(policySource, /evaluateCustomEndpoint/);
+  assert.match(policySource, /CUSTOM_CONSENT_PREFIX/);
+  assert.doesNotMatch(entrySource, /function isLocalEndpoint\(/);
+  assert.doesNotMatch(entrySource, /new URL\(/);
 });
