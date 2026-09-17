@@ -34,6 +34,8 @@ export function parseAnthropicResponse(
     documentation,
     tokensUsed:
       normalizeTokenCount(usage?.input_tokens) +
+      normalizeTokenCount(usage?.cache_creation_input_tokens) +
+      normalizeTokenCount(usage?.cache_read_input_tokens) +
       normalizeTokenCount(usage?.output_tokens),
   };
 }
