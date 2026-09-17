@@ -6,7 +6,11 @@ import {
   GeneratedOutputPaths,
 } from "./services/docGenerator";
 import { sanitizeGeneratedOutputs } from "./services/outputSanitizer";
-import { ensureGenerationCacheCompatibility } from "./services/generationCachePolicy";
+import {
+  commitGenerationCacheCompatibility,
+  prepareGenerationCacheCompatibility,
+} from "./services/generationCachePolicy";
+import { generationRunContext } from "./services/generationRunContext";
 import { ProviderFactory } from "./providers/providerFactory";
 import { setWorkspaceScannerRunTargets } from "./scanner/workspaceScanner";
 import { DocumentationError } from "./types";
@@ -245,7 +249,7 @@ export function activate(context: vscode.ExtensionContext) {
     setWorkspaceScannerRunTargets(payload.targetPaths);
 
     try {
-      const cacheReset = await ensureGenerationCacheCompatibility(
+      const cachePreparation = await prepareGenerationCacheCompatibility(
         workspaceFolder,
         {
           providerName,
@@ -255,34 +259,41 @@ export function activate(context: vscode.ExtensionContext) {
           customApiEndpoint: payload.customApiEndpoint,
         },
       );
-      if (cacheReset) {
+      if (cachePreparation.cacheReset) {
         sidebarProvider.addLogEntry(
           "Generation settings changed; regenerated documentation cache will be used.",
           "info",
         );
       }
 
-      const outputPaths: GeneratedOutputPaths =
-        await docGenerator.generateDocumentation(workspaceFolder, {
-          provider: payload.provider,
-          model: payload.model,
-          depth: payload.depth as
-            | "simple"
-            | "basic"
-            | "standard"
-            | "comprehensive",
-          outputFormat:
-            (payload.outputFormat as "markdown" | "html" | "both") || "both",
-          scope:
-            (payload.scope as "workspace" | "folder" | "current-file") ??
-            "workspace",
-          targetPaths: payload.targetPaths,
-          contextWindow: payload.contextWindow,
-          concurrentRequests: payload.concurrentRequests,
-          rateLimitDelay: payload.rateLimitDelay,
-        });
+      const outputPaths: GeneratedOutputPaths = await generationRunContext.run(
+        payload.contextWindow,
+        () =>
+          docGenerator.generateDocumentation(workspaceFolder, {
+            provider: payload.provider,
+            model: payload.model,
+            depth: payload.depth as
+              | "simple"
+              | "basic"
+              | "standard"
+              | "comprehensive",
+            outputFormat:
+              (payload.outputFormat as "markdown" | "html" | "both") || "both",
+            scope:
+              (payload.scope as "workspace" | "folder" | "current-file") ??
+              "workspace",
+            targetPaths: payload.targetPaths,
+            contextWindow: payload.contextWindow,
+            concurrentRequests: payload.concurrentRequests,
+            rateLimitDelay: payload.rateLimitDelay,
+          }),
+      );
 
       await sanitizeGeneratedOutputs(outputPaths);
+      await commitGenerationCacheCompatibility(
+        workspaceFolder,
+        cachePreparation,
+      );
 
       sidebarProvider.setGeneratingState(false);
       sidebarProvider.completeGeneration();
