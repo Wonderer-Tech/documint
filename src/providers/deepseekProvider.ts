@@ -13,6 +13,7 @@ import { runProviderRequestWithRetry } from "./providerRetry";
 import { CLOUD_PROVIDER_REQUEST_TIMEOUT_MS } from "./providerRequestPolicy";
 import { PROVIDER_DEFAULT_MODELS } from "./providerDefaults";
 import { normalizeProviderRequestError } from "./providerHttpError";
+import { getDeepSeekModelCapabilities } from "./deepSeekCapabilities";
 
 /**
  * DeepSeek provider using the official OpenAI-compatible Chat Completions API.
@@ -57,12 +58,18 @@ export class DeepSeekProvider extends BaseAIProvider {
     );
   }
 
-  protected getMaxOutputTokens(_model?: string): number {
-    return 32768;
+  protected getMaxOutputTokens(model?: string): number {
+    return (
+      getDeepSeekModelCapabilities(model ?? this.defaultModel())
+        ?.maxOutputTokens ?? 32768
+    );
   }
 
-  getMaxContextWindow(_model?: string): number {
-    return 1000000;
+  getMaxContextWindow(model?: string): number {
+    return (
+      getDeepSeekModelCapabilities(model ?? this.defaultModel())
+        ?.contextWindow ?? 1000000
+    );
   }
 
   protected async callApi(params: ApiCallParams): Promise<DocumentationResult> {
