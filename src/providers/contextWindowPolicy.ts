@@ -1,5 +1,7 @@
 import { AsyncLocalStorage } from "async_hooks";
 
+export type ContextWindowMetadataSource = "api" | "estimated";
+
 export function resolveRequestContextWindow(
   explicitContextWindow: number | undefined,
   providerContextWindow: number,
@@ -16,6 +18,29 @@ export function resolveRequestContextWindow(
   }
 
   return 8192;
+}
+
+export function resolveMetadataContextWindow(
+  metadataContextWindow: number | undefined,
+  metadataSource: ContextWindowMetadataSource,
+  providerContextWindow: number,
+): number {
+  const providerWindow = resolveRequestContextWindow(
+    undefined,
+    providerContextWindow,
+  );
+
+  if (
+    !Number.isFinite(metadataContextWindow) ||
+    (metadataContextWindow ?? 0) <= 0
+  ) {
+    return providerWindow;
+  }
+
+  const metadataWindow = Math.floor(metadataContextWindow!);
+  return metadataSource === "api"
+    ? metadataWindow
+    : Math.max(metadataWindow, providerWindow);
 }
 
 export function hasExplicitContextWindow(
