@@ -1,3 +1,4 @@
+import { getAnthropicModelCapabilities } from "../providers/anthropicCapabilities";
 import { getDeepSeekModelCapabilities } from "../providers/deepSeekCapabilities";
 import { getOpenAIModelCapabilities } from "../providers/openAICapabilities";
 
@@ -7,15 +8,10 @@ export interface KnownModelContext {
 }
 
 const CURRENT_MODEL_CONTEXT_WINDOWS: Record<string, number> = {
-  // Anthropic current families used by DocuMint.
-  "claude-sonnet-5": 1000000,
-  "claude-opus-5": 1000000,
-  "claude-sonnet-4-6": 1000000,
-  "claude-opus-4-8": 1000000,
-  "claude-opus-4-7": 1000000,
-  "claude-opus-4-6": 1000000,
+  // Current Anthropic models not yet represented by the canonical capability
+  // table retain explicit metadata here until their output limits are verified.
   "claude-sonnet-4-5-20250929": 200000,
-  "claude-haiku-4-5-20251001": 200000,
+  "claude-opus-4-5-20251101": 200000,
 };
 
 const LEGACY_MODEL_CONTEXT_WINDOWS: Record<string, number> = {
@@ -42,6 +38,14 @@ export function getKnownModelContext(
     return {
       contextWindow: openai.contextWindow,
       lifecycle: openai.lifecycle,
+    };
+  }
+
+  const anthropic = getAnthropicModelCapabilities(normalized);
+  if (anthropic) {
+    return {
+      contextWindow: anthropic.contextWindow,
+      lifecycle: anthropic.lifecycle,
     };
   }
 
@@ -77,6 +81,11 @@ export function estimateModelContextWindow(model: string): number {
     return openai.contextWindow;
   }
 
+  const anthropic = getAnthropicModelCapabilities(normalized);
+  if (anthropic) {
+    return anthropic.contextWindow;
+  }
+
   const deepseek = getDeepSeekModelCapabilities(normalized);
   if (deepseek) {
     return deepseek.contextWindow;
@@ -85,17 +94,6 @@ export function estimateModelContextWindow(model: string): number {
   const known = getKnownModelContext(normalized);
   if (known) {
     return known.contextWindow;
-  }
-
-  if (
-    normalized.includes("claude-sonnet-5") ||
-    normalized.includes("claude-opus-5") ||
-    normalized.includes("claude-sonnet-4-6") ||
-    normalized.includes("claude-opus-4-8") ||
-    normalized.includes("claude-opus-4-7") ||
-    normalized.includes("claude-opus-4-6")
-  ) {
-    return 1000000;
   }
 
   if (normalized.includes("200k") || normalized.includes("claude")) {
