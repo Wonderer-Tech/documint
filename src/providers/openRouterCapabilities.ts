@@ -1,3 +1,4 @@
+import { getDeepSeekModelCapabilities } from "./deepSeekCapabilities";
 import { getOpenAIModelCapabilities } from "./openAICapabilities";
 import {
   estimateModelContextWindow,
@@ -10,6 +11,11 @@ export function getOpenRouterMaxOutputTokens(model?: string): number {
   const openai = getOpenAIModelCapabilities(normalized);
   if (openai) {
     return openai.maxOutputTokens;
+  }
+
+  const deepseek = getDeepSeekModelCapabilities(normalized);
+  if (deepseek) {
+    return deepseek.maxOutputTokens;
   }
 
   if (
