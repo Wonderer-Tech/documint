@@ -73,7 +73,7 @@ DocuMint 1.0.4 is focused on speed, cache reuse, and a cleaner premium generated
 - UI Storyboard removed from generated HTML so the output stays source-grounded and avoids fake-looking UI mockups.
 - Better provider support: OpenAI, Anthropic, OpenRouter, DeepSeek, and custom OpenAI-compatible endpoints are supported.
 - Updated defaults: OpenAI starts with `gpt-5.4-nano`; Anthropic fallback uses the active `claude-sonnet-5`; DeepSeek fallback uses `deepseek-flash`.
-- Cleaner VSIX output: generated docs are excluded from the packaged extension.
+- Cleaner VSIX output: generated docs and README-only demo media are excluded from the packaged extension.
 
 ### Estimated 100-Page Website Generation Time
 
@@ -142,7 +142,9 @@ The following scanner languages are enabled by default on new installs:
 - JavaScript (`.js`, `.jsx`)
 - Python (`.py`)
 - Java (`.java`)
-- C / C++ / C# (`.c`, `.cpp`, `.cs`)
+- C (`.c`, `.h`)
+- C++ (`.cc`, `.cpp`, `.cxx`, `.hh`, `.hpp`, `.hxx`)
+- C# (`.cs`)
 - Go (`.go`)
 - Rust (`.rs`)
 - PHP (`.php`)
@@ -387,7 +389,6 @@ npx @vscode/vsce package
 - Documentation quality still depends on the selected model and the source code that is available in the workspace.
 - Cloud providers receive selected source code after confirmation. Use a localhost custom endpoint when code must stay local.
 - `aiDocGenerator.concurrentRequests` defaults to `15` for faster generation. Lower it in settings if your cloud provider rate-limits requests.
-- Very large demo media can make the VSIX larger than the extension code itself.
 
 ## Contributing
 
