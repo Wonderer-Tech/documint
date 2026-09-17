@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { SecretStorageManager } from "../config/secretStorage";
 import { resolveProviderSelection } from "../providers/providerSelection";
+import { normalizeGenerationMode } from "../services/generationMode";
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
@@ -17,6 +18,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       processedFiles: 0,
     },
     settings: {
+      generationMode: "ai",
       provider: "openai",
       model: "gpt-5.4-nano",
       customApiEndpoint: "",
@@ -96,6 +98,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
               msg.payload && typeof msg.payload === "object"
                 ? { ...msg.payload }
                 : {};
+
+            if (typeof payload.generationMode === "string") {
+              payload.generationMode = normalizeGenerationMode(
+                payload.generationMode,
+              );
+            }
 
             if (
               typeof payload.provider === "string" ||
@@ -199,6 +207,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
     this._state.settings = {
       ...this._state.settings,
+      generationMode: normalizeGenerationMode(
+        config.get<string>("generationMode"),
+      ),
       provider: selection.provider,
       model: selection.model,
       customApiEndpoint:
@@ -227,6 +238,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     const config = vscode.workspace.getConfiguration("aiDocGenerator");
     const updates: Array<[string, unknown]> = [];
 
+    if (typeof payload.generationMode === "string") {
+      updates.push(["generationMode", normalizeGenerationMode(payload.generationMode)]);
+    }
     if (typeof payload.provider === "string") {
       updates.push(["aiProvider", payload.provider]);
     }
@@ -489,7 +503,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     border-radius: var(--radius); cursor: pointer; color: var(--fg-muted);
     transition: all .15s; text-align: center; font-family: inherit;
   }
-  .scope-btn:hover { border-color: var(--input-focus); color: var(--fg); }
+  .scope-btn:hover:not(:disabled) { border-color: var(--input-focus); color: var(--fg); }
+  .scope-btn:disabled { opacity: .45; cursor: not-allowed; }
 
   /* ── Progress ── */
   .progress-section { display: none; }
@@ -569,7 +584,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 </div>
 
 <!-- Authentication -->
-<div class="section">
+<div class="section" id="authSection">
   <div class="section-label">
     Authentication
     <div class="section-label-line"></div>
@@ -601,7 +616,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 </div>
 
 <!-- Provider & Model -->
-<div class="section">
+<div class="section" id="providerSection">
   <div class="section-label">
     Provider &amp; Model
     <div class="section-label-line"></div>
@@ -635,6 +650,15 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   <div class="section-label">
     Generation
     <div class="section-label-line"></div>
+  </div>
+
+  <div class="field">
+    <label class="field-label">Generation Mode</label>
+    <select id="generationMode">
+      <option value="ai" selected>AI Documentation</option>
+      <option value="local">Local Documentation — No AI</option>
+    </select>
+    <div class="field-help hidden" id="localModeHelp">Runs entirely on this machine. No API key, internet connection, or AI model required. Local generation will be enabled when the local pipeline connection slice is complete.</div>
   </div>
 
   <div class="field">
@@ -729,9 +753,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   var statusDot    = $('statusDot');
   var statusText   = $('statusText');
+  var authSection  = $('authSection');
   var authStatus   = $('authStatus');
   var authText     = $('authText');
   var authIcon     = $('authIcon');
+  var providerSection = $('providerSection');
+  var generationModeSel = $('generationMode');
+  var localModeHelp = $('localModeHelp');
   var providerSel  = $('provider');
   var modelInput   = $('model');
   var customEndpointField = $('customEndpointField');
@@ -754,6 +782,28 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   var saveApiKeyBtn = $('saveApiKeyBtn');
   var cancelApiKeyBtn = $('cancelApiKeyBtn');
   var apiKeyFeedback = $('apiKeyFeedback');
+
+  function isLocalMode() {
+    return generationModeSel && generationModeSel.value === 'local';
+  }
+
+  function updateActionAvailability() {
+    var localPending = isLocalMode();
+    generateBtn.disabled = state.isGenerating || localPending;
+    document.querySelectorAll('.scope-btn').forEach(function(btn) {
+      btn.disabled = state.isGenerating || localPending;
+    });
+  }
+
+  function updateGenerationModeVisibility() {
+    var local = isLocalMode();
+    authSection.classList.toggle('hidden', local);
+    providerSection.classList.toggle('hidden', local);
+    localModeHelp.classList.toggle('hidden', !local);
+    if (local) setApiKeyPanelVisible(false);
+    updateCustomEndpointVisibility();
+    updateActionAvailability();
+  }
 
   // ── API key status ─────────────────────────────────────────────────────────
   function setApiKeyStatus(configured) {
@@ -795,7 +845,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   // ── Generating state ───────────────────────────────────────────────────────
   function setGenerating(on) {
     state.isGenerating = on;
-    generateBtn.disabled = on;
+    updateActionAvailability();
     cancelBtn.disabled = !on;
     clearCacheBtn.disabled = on;
     progressSec.classList.toggle('visible', on);
@@ -834,21 +884,25 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   function updateCustomEndpointVisibility() {
     if (!customEndpointField) return;
-    customEndpointField.classList.toggle('hidden', providerSel.value !== 'custom');
+    customEndpointField.classList.toggle(
+      'hidden',
+      isLocalMode() || providerSel.value !== 'custom'
+    );
   }
 
   function applyNormalizedSettings(settings) {
     if (!settings) return;
+    if (settings.generationMode) generationModeSel.value = settings.generationMode;
     if (settings.provider) providerSel.value = settings.provider;
     if (settings.model) modelInput.value = settings.model;
     if (typeof settings.customApiEndpoint === 'string') customEndpointInput.value = settings.customApiEndpoint;
     if (settings.depth) $('depth').value = settings.depth;
     if (settings.outputFormat) $('outputFormat').value = settings.outputFormat;
-    updateCustomEndpointVisibility();
+    updateGenerationModeVisibility();
   }
 
   function validateCustomEndpointForRun() {
-    if (providerSel.value !== 'custom') return true;
+    if (isLocalMode() || providerSel.value !== 'custom') return true;
 
     var endpoint = getCustomEndpoint();
     if (!endpoint) {
@@ -873,6 +927,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   // ── Event listeners ────────────────────────────────────────────────────────
 
+  generationModeSel.addEventListener('change', function() {
+    updateGenerationModeVisibility();
+    vscode.postMessage({
+      type: 'update-settings',
+      payload: { generationMode: generationModeSel.value }
+    });
+  });
+
   providerSel.addEventListener('change', function() {
     updateCustomEndpointVisibility();
     vscode.postMessage({
@@ -894,8 +956,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   });
 
   generateBtn.addEventListener('click', function() {
-    if (!validateCustomEndpointForRun()) return;
+    if (isLocalMode() || !validateCustomEndpointForRun()) return;
     var payload = {
+      generationMode: generationModeSel.value,
       provider: providerSel.value,
       model: modelInput.value.trim(),
       customApiEndpoint: getCustomEndpoint(),
@@ -947,8 +1010,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   document.querySelectorAll('.scope-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
+      if (isLocalMode()) return;
       var scope = btn.getAttribute('data-scope');
       var payload = {
+        generationMode: generationModeSel.value,
         provider: providerSel.value,
         model: modelInput.value.trim(),
         customApiEndpoint: getCustomEndpoint(),
@@ -990,10 +1055,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       case 'restore-state':
         if (!msg.state) break;
         var s = msg.state;
-        setApiKeyStatus(s.apiKeyConfigured);
         if (s.settings) {
           applyNormalizedSettings(s.settings);
         }
+        setApiKeyStatus(s.apiKeyConfigured);
         if (s.isGenerating) setGenerating(true);
         if (s.logs && s.logs.length) {
           s.logs.forEach(function(l) { addLog(l.message, l.type, l.timestamp); });
@@ -1009,7 +1074,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         break;
 
       case 'show-api-key-form':
-        setApiKeyPanelVisible(true);
+        if (!isLocalMode()) setApiKeyPanelVisible(true);
         break;
 
       case 'api-key-save-result':
