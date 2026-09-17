@@ -15,7 +15,23 @@ test("marketplace metadata advertises implemented documentation capabilities", (
   assert.doesNotMatch(searchable, /\buml\b/);
   assert.ok(manifest.keywords.includes("architecture documentation"));
   assert.ok(manifest.keywords.includes("dependency graph"));
+  assert.ok(manifest.keywords.includes("local documentation"));
+  assert.ok(manifest.keywords.includes("offline documentation"));
+  assert.match(manifest.description, /locally with no AI/i);
   assert.equal(manifest.categories.includes("Formatters"), false);
+});
+
+test("manifest distinguishes shared settings from AI-only controls", () => {
+  const properties = manifest.contributes.configuration.properties;
+
+  assert.match(properties["aiDocGenerator.aiProvider"].description, /AI mode only/i);
+  assert.match(properties["aiDocGenerator.model"].description, /AI mode only/i);
+  assert.match(
+    properties["aiDocGenerator.documentationDepth"].description,
+    /AI mode only/i,
+  );
+  assert.match(properties["aiDocGenerator.outputFormat"].description, /both AI and Local/i);
+  assert.match(properties["aiDocGenerator.targetLanguages"].description, /both AI and Local/i);
 });
 
 test("command activation events cover contributed command-palette entry points", () => {
