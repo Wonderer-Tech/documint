@@ -31,3 +31,4 @@ import "./scannerRunIsolation.test";
 import "./htmlOfflineHardening.test";
 import "./releasePackagePolicy.test";
 import "./providerRuntimeNormalization.test";
+import "./publicFacadeBoundary.test";
