@@ -9,6 +9,7 @@ All notable changes to DocuMint are documented here.
 - Hardened provider runtime behavior so OpenAI-compatible providers normalize cancellation, timeout, authentication, rate-limit, and HTTP failure handling consistently.
 - Improved exhausted-retry reporting for transient provider failures so HTTP 408/425 responses and transport timeout codes retain accurate timeout/retry context.
 - Read `Retry-After` and `Retry-After-Ms` case-insensitively from plain provider response-header objects so retry timing is preserved across compatible HTTP clients/gateways.
+- Honored explicit zero-delay `Retry-After` responses instead of replacing them with exponential backoff, allowing providers to request an immediate bounded retry.
 - Centralized provider/model defaults to reduce stale cross-provider model behavior.
 - Kept custom OpenAI-compatible API keys optional across both file generation and project-summary/raw-prompt generation paths.
 - Required HTTPS for remote custom OpenAI-compatible endpoints while keeping plain HTTP available for localhost/loopback development servers; IPv6 loopback detection now correctly recognizes `[::1]`.
@@ -41,7 +42,7 @@ All notable changes to DocuMint are documented here.
 
 ### Tests
 
-- Added regression coverage for provider runtime normalization, transient retry/error/header handling, optional custom-provider API keys, dynamic custom-endpoint locality, custom-endpoint transport/URL-shape/command-boundary policy, API-key storage normalization, normalized Secret Storage keys, canonical OpenAI, Anthropic, DeepSeek, and OpenRouter-routed model capabilities including GPT-5.6 and routing variants, metadata/provider context-window precedence, retired DeepSeek and Anthropic model replacement, OpenAI-compatible usage/text fallbacks, Anthropic cache-token accounting, modern module dependency resolution, canonical generator prompt-cache binding, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
+- Added regression coverage for provider runtime normalization, transient retry/error/header handling including zero-delay `Retry-After`, optional custom-provider API keys, dynamic custom-endpoint locality, custom-endpoint transport/URL-shape/command-boundary policy, API-key storage normalization, normalized Secret Storage keys, canonical OpenAI, Anthropic, DeepSeek, and OpenRouter-routed model capabilities including GPT-5.6 and routing variants, metadata/provider context-window precedence, retired DeepSeek and Anthropic model replacement, OpenAI-compatible usage/text fallbacks, Anthropic cache-token accounting, modern module dependency resolution, canonical generator prompt-cache binding, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
 
 ## 1.0.4
 
