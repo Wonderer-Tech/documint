@@ -49,6 +49,38 @@ test("JS/TS re-exports and dynamic imports become dependency evidence", () => {
   );
 });
 
+test("extensionless JS/TS imports resolve modern module extensions and index files", () => {
+  const project = analyzer.analyzeProject([
+    file(
+      "src/main.ts",
+      "typescript",
+      [
+        'import { esm } from "./esm";',
+        'import { common } from "./common";',
+        'import { typed } from "./typed";',
+        'import { legacy } from "./legacy";',
+        'import { feature } from "./feature";',
+      ].join("\n"),
+    ),
+    file("src/esm.mjs", "javascript", "export const esm = true;"),
+    file("src/common.cjs", "javascript", "exports.common = true;"),
+    file("src/typed.mts", "typescript", "export const typed = true;"),
+    file("src/legacy.cts", "typescript", "export const legacy = true;"),
+    file("src/feature/index.mjs", "javascript", "export const feature = true;"),
+  ]);
+
+  assert.deepEqual(
+    project.internalDependencies.map((edge) => [edge.source, edge.to]),
+    [
+      ["./esm", "src/esm.mjs"],
+      ["./common", "src/common.cjs"],
+      ["./typed", "src/typed.mts"],
+      ["./legacy", "src/legacy.cts"],
+      ["./feature", "src/feature/index.mjs"],
+    ],
+  );
+});
+
 test("JS/TS exported arrow functions are classified as functions", () => {
   const analysis = analyzer.analyzeFile(
     file(
