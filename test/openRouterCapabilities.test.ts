@@ -16,9 +16,15 @@ test("recognizes current Claude routed models", () => {
   );
 });
 
-test("uses shared context catalog for routed OpenAI models", () => {
+test("uses shared OpenAI capabilities for routed OpenAI models", () => {
   assert.equal(getOpenRouterContextWindow("openai/gpt-4o"), 128000);
-  assert.equal(getOpenRouterContextWindow("openai/gpt-5.4"), 200000);
+  assert.equal(getOpenRouterMaxOutputTokens("openai/gpt-4o"), 16384);
+
+  assert.equal(getOpenRouterContextWindow("openai/gpt-4.1-mini"), 1047576);
+  assert.equal(getOpenRouterMaxOutputTokens("openai/gpt-4.1-mini"), 32768);
+
+  assert.equal(getOpenRouterContextWindow("openai/gpt-5.4"), 1050000);
+  assert.equal(getOpenRouterMaxOutputTokens("openai/gpt-5.4"), 128000);
 });
 
 test("preserves conservative non-catalog fallbacks", () => {
@@ -30,5 +36,4 @@ test("preserves conservative non-catalog fallbacks", () => {
 
 test("keeps output defaults bounded for unknown models", () => {
   assert.equal(getOpenRouterMaxOutputTokens("vendor/unknown-model"), 4096);
-  assert.equal(getOpenRouterMaxOutputTokens("openai/gpt-4o"), 16384);
 });
