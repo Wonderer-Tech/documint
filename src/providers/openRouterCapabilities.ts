@@ -1,3 +1,4 @@
+import { getOpenAIModelCapabilities } from "./openAICapabilities";
 import {
   estimateModelContextWindow,
   getKnownModelContext,
@@ -6,20 +7,16 @@ import {
 export function getOpenRouterMaxOutputTokens(model?: string): number {
   const normalized = normalizeRoutedModel(model);
 
+  const openai = getOpenAIModelCapabilities(normalized);
+  if (openai) {
+    return openai.maxOutputTokens;
+  }
+
   if (
     normalized.includes("claude-sonnet-5") ||
     normalized.includes("claude-opus-5")
   ) {
     return 128000;
-  }
-
-  if (
-    normalized.includes("gpt-4o") ||
-    normalized.includes("gpt-5") ||
-    normalized.includes("o1") ||
-    normalized.includes("o3")
-  ) {
-    return 16384;
   }
 
   if (
