@@ -9,6 +9,7 @@ import { withModelMetadata } from "./providerMetadataDecorator";
 import {
   normalizeProviderName,
   ProviderName,
+  resolveProviderNameWithFallback,
 } from "./providerNamePolicy";
 
 /**
@@ -53,6 +54,6 @@ export class ProviderFactory {
     const configuredProvider = vscode.workspace
       .getConfiguration("aiDocGenerator")
       .get<string>("aiProvider");
-    return normalizeProviderName(optionProvider || configuredProvider);
+    return resolveProviderNameWithFallback(optionProvider, configuredProvider);
   }
 }
