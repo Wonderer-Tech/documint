@@ -29,6 +29,37 @@ test("retries transient server failures and eventually succeeds", async () => {
   assert.deepEqual(sleeps, [1000, 2000]);
 });
 
+test("retries transient gateway statusCode and numeric-string statuses", async () => {
+  let statusCodeCalls = 0;
+  const statusCodeResult = await runProviderRequestWithRetry(
+    async () => {
+      statusCodeCalls++;
+      if (statusCodeCalls === 1) {
+        throw { statusCode: "503" };
+      }
+      return "status-code-ok";
+    },
+    { sleep: async () => undefined },
+  );
+
+  let stringStatusCalls = 0;
+  const stringStatusResult = await runProviderRequestWithRetry(
+    async () => {
+      stringStatusCalls++;
+      if (stringStatusCalls === 1) {
+        throw { response: { status: "429" } };
+      }
+      return "string-status-ok";
+    },
+    { sleep: async () => undefined },
+  );
+
+  assert.equal(statusCodeResult, "status-code-ok");
+  assert.equal(statusCodeCalls, 2);
+  assert.equal(stringStatusResult, "string-status-ok");
+  assert.equal(stringStatusCalls, 2);
+});
+
 test("honors an explicit zero Retry-After delay", async () => {
   let calls = 0;
   const sleeps: number[] = [];
