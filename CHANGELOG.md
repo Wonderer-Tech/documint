@@ -18,6 +18,7 @@ All notable changes to DocuMint are documented here.
 - Normalized provider names before building Secret Storage keys so store/get/delete operations cannot drift by casing or surrounding whitespace.
 - Centralized OpenAI context/output limits in one capability table used by both provider budgeting and shared model metadata, including current GPT-4.1, GPT-5, and GPT-5.4 families.
 - Reused the canonical OpenAI capability table for OpenRouter-routed OpenAI models so routed GPT/o-series context and max-output budgeting no longer diverge from direct OpenAI behavior.
+- Normalized OpenRouter routing variants such as `:free`, `:online`, `:nitro`, and `:floor` before capability lookup so variant-tagged models retain their base model's context and output limits.
 - Preserved token-usage reporting across OpenAI-compatible providers that expose split `prompt_tokens`/`completion_tokens` or `input_tokens`/`output_tokens` fields instead of `total_tokens`.
 - Accepted legacy `choices[0].text` output from OpenAI-compatible completion gateways while keeping chat-message content authoritative when both are present.
 - Included Anthropic prompt-cache creation/read tokens in usage totals when the Messages API reports them.
@@ -28,12 +29,12 @@ All notable changes to DocuMint are documented here.
 - Expanded JavaScript/TypeScript discovery to include modern module extensions: `.mjs`, `.cjs`, `.mts`, and `.cts`.
 - Resolved extensionless JavaScript/TypeScript imports and directory index imports into `.mjs`, `.cjs`, `.mts`, and `.cts` files so the project dependency graph matches scanner coverage.
 - Bound the generator's per-entry prompt cache version to the canonical `GENERATION_PROMPT_SCHEMA_VERSION`, removing runtime drift between internal and release-level cache identities.
-- Bumped the generation cache compatibility policy to v5 so documentation generated under earlier capability/generation semantics is safely regenerated.
+- Bumped the generation cache compatibility policy to v6 so documentation generated under earlier capability/generation semantics is safely regenerated.
 - Kept README-only demo media out of the packaged VSIX while retaining runtime icons.
 
 ### Tests
 
-- Added regression coverage for provider runtime normalization, transient retry/error/header handling, optional custom-provider API keys, custom-endpoint transport/URL-shape/command-boundary policy, API-key storage normalization, normalized Secret Storage keys, canonical OpenAI and OpenRouter-routed model capabilities, OpenAI-compatible usage/text fallbacks, Anthropic cache-token accounting, modern module dependency resolution, canonical generator prompt-cache binding, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
+- Added regression coverage for provider runtime normalization, transient retry/error/header handling, optional custom-provider API keys, custom-endpoint transport/URL-shape/command-boundary policy, API-key storage normalization, normalized Secret Storage keys, canonical OpenAI and OpenRouter-routed model capabilities including routing variants, OpenAI-compatible usage/text fallbacks, Anthropic cache-token accounting, modern module dependency resolution, canonical generator prompt-cache binding, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
 
 ## 1.0.4
 
