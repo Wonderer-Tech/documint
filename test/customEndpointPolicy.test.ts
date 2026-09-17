@@ -2,19 +2,24 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { evaluateCustomEndpoint } from "../src/providers/customEndpointPolicy";
 
-test("custom endpoint policy accepts remote http and https URLs", () => {
+test("custom endpoint policy accepts remote HTTPS and rejects remote HTTP", () => {
   assert.deepEqual(evaluateCustomEndpoint(" https://api.example.com/v1/chat "), {
     valid: true,
     normalizedEndpoint: "https://api.example.com/v1/chat",
     isLocal: false,
   });
-  assert.equal(evaluateCustomEndpoint("http://api.example.com").valid, true);
+
+  const insecure = evaluateCustomEndpoint("http://api.example.com/v1/chat");
+  assert.equal(insecure.valid, false);
+  assert.equal(insecure.isLocal, false);
+  assert.match(insecure.reason ?? "", /remote custom endpoints must use HTTPS/i);
 });
 
-test("custom endpoint policy detects supported local hosts", () => {
+test("custom endpoint policy detects localhost and loopback hosts", () => {
   for (const endpoint of [
     "http://localhost:11434/v1/chat/completions",
     "http://127.0.0.1:1234/v1/chat/completions",
+    "http://127.0.0.2:1234/v1/chat/completions",
     "http://[::1]:8080/v1/chat/completions",
     "https://model.localhost/v1/chat/completions",
   ]) {
