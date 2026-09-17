@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { SecretStorageManager } from "../config/secretStorage";
+import { resolveProviderSelection } from "../providers/providerSelection";
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
@@ -90,10 +91,36 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             );
             break;
 
-          case "update-settings":
-            this._state.settings = { ...this._state.settings, ...msg.payload };
-            await this._persistSettings(msg.payload);
+          case "update-settings": {
+            const payload: Record<string, unknown> =
+              msg.payload && typeof msg.payload === "object"
+                ? { ...msg.payload }
+                : {};
+
+            if (
+              typeof payload.provider === "string" ||
+              typeof payload.model === "string"
+            ) {
+              const selection = resolveProviderSelection(
+                typeof payload.provider === "string"
+                  ? payload.provider
+                  : this._state.settings.provider,
+                typeof payload.model === "string"
+                  ? payload.model
+                  : this._state.settings.model,
+              );
+              payload.provider = selection.provider;
+              payload.model = selection.model;
+            }
+
+            this._state.settings = { ...this._state.settings, ...payload } as typeof this._state.settings;
+            await this._persistSettings(payload);
+            this._post({
+              type: "settings-normalized",
+              settings: this._state.settings,
+            });
             break;
+          }
         }
       } catch (e) {
         console.error("[Documint] webview message handler error:", e);
@@ -165,10 +192,15 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   private async _restoreState() {
     const config = vscode.workspace.getConfiguration("aiDocGenerator");
+    const selection = resolveProviderSelection(
+      config.get<string>("aiProvider") || this._state.settings.provider,
+      config.get<string>("model") || this._state.settings.model,
+    );
+
     this._state.settings = {
       ...this._state.settings,
-      provider: config.get<string>("aiProvider") || this._state.settings.provider,
-      model: config.get<string>("model") || this._state.settings.model,
+      provider: selection.provider,
+      model: selection.model,
       customApiEndpoint:
         config.get<string>("customApiEndpoint") ||
         this._state.settings.customApiEndpoint,
@@ -217,6 +249,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
 
   private async _saveApiKeyFromPanel(provider: string, apiKey: string) {
+    const normalizedProvider = resolveProviderSelection(provider, undefined).provider;
     const trimmedKey = apiKey.trim();
     if (!trimmedKey) {
       this._post({
@@ -228,24 +261,24 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     const isValid = await this._secretManager.validateApiKey(
-      provider,
+      normalizedProvider,
       trimmedKey,
     );
     if (!isValid) {
       this._post({
         type: "api-key-save-result",
         ok: false,
-        message: `Invalid API key format for ${provider}.`,
+        message: `Invalid API key format for ${normalizedProvider}.`,
       });
       return;
     }
 
-    const stored = await this._secretManager.storeApiKey(provider, trimmedKey);
+    const stored = await this._secretManager.storeApiKey(normalizedProvider, trimmedKey);
     if (!stored) {
       this._post({
         type: "api-key-save-result",
         ok: false,
-        message: `Failed to store API key for ${provider}.`,
+        message: `Failed to store API key for ${normalizedProvider}.`,
       });
       return;
     }
@@ -255,7 +288,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     this._post({
       type: "api-key-save-result",
       ok: true,
-      message: `API key for ${provider} saved.`,
+      message: `API key for ${normalizedProvider} saved.`,
     });
   }
 
@@ -429,7 +462,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   .api-key-feedback.ok { color: var(--success); }
   .api-key-feedback.error { color: var(--error); }
 
-
   /* ── Buttons ── */
   .btn {
     display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -588,7 +620,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   <div class="field">
     <label class="field-label">Model</label>
-    <input type="text" id="model" value="gpt-5.4-nano" placeholder="e.g. gpt-5.4-nano, gpt-4o, claude-3-5-sonnet-20241022">
+    <input type="text" id="model" value="gpt-5.4-nano" placeholder="e.g. gpt-5.4-nano, claude-sonnet-5, anthropic/claude-sonnet-5">
   </div>
 
   <div class="field hidden" id="customEndpointField">
@@ -597,7 +629,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     <div class="field-help">Use an OpenAI-compatible chat completions URL.</div>
   </div>
 </div>
-
 
 <!-- Generation Settings -->
 <div class="section">
@@ -806,6 +837,16 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     customEndpointField.classList.toggle('hidden', providerSel.value !== 'custom');
   }
 
+  function applyNormalizedSettings(settings) {
+    if (!settings) return;
+    if (settings.provider) providerSel.value = settings.provider;
+    if (settings.model) modelInput.value = settings.model;
+    if (typeof settings.customApiEndpoint === 'string') customEndpointInput.value = settings.customApiEndpoint;
+    if (settings.depth) $('depth').value = settings.depth;
+    if (settings.outputFormat) $('outputFormat').value = settings.outputFormat;
+    updateCustomEndpointVisibility();
+  }
+
   function validateCustomEndpointForRun() {
     if (providerSel.value !== 'custom') return true;
 
@@ -833,14 +874,15 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   // ── Event listeners ────────────────────────────────────────────────────────
 
   providerSel.addEventListener('change', function() {
-    var providerDefaults = {
-      deepseek: 'deepseek-flash'
-    };
-    if (providerDefaults[providerSel.value] && (!modelInput.value.trim() || modelInput.value.trim() === 'gpt-5.4-nano' || modelInput.value.trim() === 'gpt-4o')) {
-      modelInput.value = providerDefaults[providerSel.value];
-    }
     updateCustomEndpointVisibility();
-    vscode.postMessage({ type: 'update-settings', payload: { provider: providerSel.value, model: modelInput.value.trim(), customApiEndpoint: getCustomEndpoint() } });
+    vscode.postMessage({
+      type: 'update-settings',
+      payload: {
+        provider: providerSel.value,
+        model: modelInput.value.trim(),
+        customApiEndpoint: getCustomEndpoint()
+      }
+    });
   });
 
   modelInput.addEventListener('change', function() {
@@ -950,17 +992,16 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         var s = msg.state;
         setApiKeyStatus(s.apiKeyConfigured);
         if (s.settings) {
-          if (s.settings.provider) providerSel.value = s.settings.provider;
-          if (s.settings.model) modelInput.value = s.settings.model;
-          if (s.settings.customApiEndpoint) customEndpointInput.value = s.settings.customApiEndpoint;
-          if (s.settings.depth) $('depth').value = s.settings.depth;
-          if (s.settings.outputFormat) $('outputFormat').value = s.settings.outputFormat;
-          updateCustomEndpointVisibility();
+          applyNormalizedSettings(s.settings);
         }
         if (s.isGenerating) setGenerating(true);
         if (s.logs && s.logs.length) {
           s.logs.forEach(function(l) { addLog(l.message, l.type, l.timestamp); });
         }
+        break;
+
+      case 'settings-normalized':
+        applyNormalizedSettings(msg.settings);
         break;
 
       case 'api-key-status':
