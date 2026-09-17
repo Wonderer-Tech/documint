@@ -120,7 +120,7 @@ Editable Diagram Export:
 9. Validate generated docs against detected symbols.
 10. Save output into `docs/` as Markdown, HTML, or both.
 
-Core pipeline entry point: `src/services/docGenerator.ts`.
+Public generation facade: `src/services/docGenerator.ts`. The orchestration implementation lives in `src/services/docGeneratorBase.ts`, with the facade binding runtime cache semantics to the canonical generation identity.
 
 ## Supported Providers
 
@@ -331,33 +331,41 @@ The HTML renderer includes:
 ```text
 src/
 |-- analyzer/
-|   `-- sourceAnalyzer.ts         # Static import/export/symbol discovery
-|-- extension.ts                  # Activation and command wiring
-|-- types.ts                      # Shared types and error models
+|   |-- sourceAnalyzer.ts          # Public analyzer facade + modern module compatibility
+|   `-- sourceAnalyzerBase.ts      # Core cross-language import/export/symbol analysis
+|-- extension.ts                   # Public activation + generation-command policy boundary
+|-- extensionBase.ts               # Core activation and command implementation
+|-- extensionPolicy.ts             # Shared custom-endpoint command preflight/consent policy
+|-- types.ts                       # Shared types and error models
 |-- config/
-|   `-- secretStorage.ts          # VS Code secret storage wrapper
+|   `-- secretStorage.ts           # VS Code secret storage wrapper
 |-- scanner/
-|   `-- workspaceScanner.ts       # Workspace/selected-path discovery and filtering
+|   `-- workspaceScanner.ts        # Workspace/selected-path discovery and filtering
 |-- providers/
-|   |-- aiProvider.ts             # Base provider and prompt/chunking pipeline
-|   |-- providerFactory.ts        # Provider resolution and creation
-|   |-- providerModelGuard.ts     # Prevents stale cross-provider model IDs
+|   |-- aiProvider.ts              # Base provider and prompt/chunking pipeline
+|   |-- providerFactory.ts         # Provider resolution and creation
+|   |-- providerModelGuard.ts      # Prevents stale cross-provider model IDs
 |   |-- providerMetadataDecorator.ts # Context-window metadata/override layer
+|   |-- openAICapabilities.ts      # Canonical OpenAI context/output capability table
 |   |-- openaiProvider.ts
 |   |-- anthropicProvider.ts
 |   |-- openrouterProvider.ts
 |   |-- deepseekProvider.ts
 |   `-- customProvider.ts
 |-- services/
-|   |-- docGenerator.ts           # Orchestration + writing docs output
-|   |-- generationCachePolicy.ts  # Invalidates AI-doc cache on material generation changes
-|   |-- documentationValidator.ts # Checks generated docs against source facts
-|   |-- outputSanitizer.ts        # Removes unsafe/non-source-grounded output sections
-|   |-- htmlTemplate.ts           # Full HTML document template
-|   `-- modelMetadataService.ts   # Context window metadata fetch/cache
+|   |-- docGenerator.ts            # Public generator facade + canonical prompt-cache binding
+|   |-- docGeneratorBase.ts        # Core orchestration + writing docs output
+|   |-- generationCacheIdentity.ts # Canonical generation/cache identity versions
+|   |-- generationCachePolicy.ts   # Invalidates AI-doc cache on material generation changes
+|   |-- documentationValidator.ts  # Checks generated docs against source facts
+|   |-- outputSanitizer.ts         # Removes unsafe/non-source-grounded output sections
+|   |-- htmlTemplate.ts            # Full HTML document template
+|   `-- modelMetadataService.ts    # Context window metadata fetch/cache
 `-- views/
-    `-- sidebarProvider.ts        # Sidebar UI webview and state sync
+    `-- sidebarProvider.ts         # Sidebar UI webview and state sync
 ```
+
+The `*Base.ts` modules are implementation details. Runtime code should import the public facade modules (`extension.ts`, `analyzer/sourceAnalyzer.ts`, and `services/docGenerator.ts`) so endpoint, dependency-resolution, and cache-version policies cannot be bypassed.
 
 ## Development
 
