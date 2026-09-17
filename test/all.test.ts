@@ -1,3 +1,8 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import "./regression.test";
 import "./outputTokenLimit.test";
 import "./apiKeyValidation.test";
@@ -32,3 +37,20 @@ import "./htmlOfflineHardening.test";
 import "./releasePackagePolicy.test";
 import "./providerRuntimeNormalization.test";
 import "./publicFacadeBoundary.test";
+
+test("aggregate regression entry imports every sibling test module", () => {
+  const testDirectory = join(process.cwd(), "test");
+  const aggregateSource = readFileSync(join(testDirectory, "all.test.ts"), "utf8");
+  const siblingTests = readdirSync(testDirectory)
+    .filter((name) => name.endsWith(".test.ts") && name !== "all.test.ts")
+    .sort();
+
+  for (const filename of siblingTests) {
+    const modulePath = `./${filename.slice(0, -3)}`;
+    assert.ok(
+      aggregateSource.includes(`import "${modulePath}";`) ||
+        aggregateSource.includes(`import '${modulePath}';`),
+      `test/all.test.ts is missing ${modulePath}`,
+    );
+  }
+});
