@@ -7,6 +7,7 @@ All notable changes to DocuMint are documented here.
 ### Changed
 
 - Hardened provider runtime behavior so OpenAI-compatible providers normalize cancellation, timeout, authentication, rate-limit, and HTTP failure handling consistently.
+- Improved exhausted-retry reporting for transient provider failures so HTTP 408/425 responses and transport timeout codes retain accurate timeout/retry context.
 - Centralized provider/model defaults to reduce stale cross-provider model behavior.
 - Kept custom OpenAI-compatible API keys optional across both file generation and project-summary/raw-prompt generation paths.
 - Improved generated HTML resilience when optional CDN assets fail to load.
@@ -19,7 +20,7 @@ All notable changes to DocuMint are documented here.
 
 ### Tests
 
-- Added regression coverage for provider runtime normalization, optional custom-provider API keys, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
+- Added regression coverage for provider runtime normalization, transient retry error reporting, optional custom-provider API keys, HTML offline hardening, package contents, scanner extension policy, and release documentation accuracy.
 
 ## 1.0.4
 
