@@ -10,15 +10,15 @@ import {
   isInsideWorkspace,
   normalizeFsPath,
 } from "./scannerPolicy";
+import { scannerRunTargetScope } from "./scannerRunTargetScope";
 
-// Extension generation is single-run (concurrent runs are rejected), so this
-// transient scope safely bridges the selected picker paths to the scanner
-// without persisting them in user/workspace settings.
-let activeRunTargetPaths: string[] | undefined;
-
+/**
+ * Compatibility bridge for the extension command runner. Target state lives in
+ * AsyncLocalStorage, so it is scoped to the current async command flow rather
+ * than shared through a mutable module variable.
+ */
 export function setWorkspaceScannerRunTargets(targetPaths?: string[]): void {
-  activeRunTargetPaths =
-    targetPaths && targetPaths.length > 0 ? [...targetPaths] : undefined;
+  scannerRunTargetScope.enter(targetPaths);
 }
 
 export interface ScannerConfig {
@@ -49,7 +49,7 @@ export class WorkspaceScanner {
     const resolvedConfig = this.resolveConfig(workspaceFolder);
     const includeGlob = this.buildIncludeGlob(resolvedConfig);
     const explicitFiles = new Set<string>();
-    const effectiveTargetPaths = targetPaths ?? activeRunTargetPaths;
+    const effectiveTargetPaths = targetPaths ?? scannerRunTargetScope.current();
 
     let excludePatterns = resolvedConfig.excludePatterns;
     let allFiles: vscode.Uri[];
