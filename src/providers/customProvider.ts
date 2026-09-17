@@ -49,13 +49,22 @@ export class CustomProvider extends BaseAIProvider {
     return "default";
   }
 
+  /**
+   * Custom OpenAI-compatible endpoints may be intentionally unauthenticated,
+   * including remote/self-hosted servers. Keep API keys optional across both
+   * normal file generation and inherited raw-prompt/project-summary paths.
+   */
+  protected async getApiKey(): Promise<string> {
+    return (await this.secretManager.getApiKey(this.name)) || "";
+  }
+
   public async generateDocumentation(
     context: DocumentationContext,
   ): Promise<DocumentationResult> {
     const cfg = vscode.workspace.getConfiguration("aiDocGenerator");
     const model =
       context.model || cfg.get<string>("model") || this.defaultModel();
-    const apiKey = (await this.secretManager.getApiKey(this.name)) || "";
+    const apiKey = await this.getApiKey();
     return this.generateWithMessages(context, model, apiKey);
   }
 
