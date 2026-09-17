@@ -60,8 +60,8 @@ test("generator per-entry cache binds to the canonical prompt schema", () => {
   assert.doesNotMatch(wrapper, /lean-prompts-\d{4}-\d{2}-\d{2}/);
 });
 
-test("release cache epoch stays on v9 until generation semantics change again", () => {
-  assert.equal(GENERATION_CACHE_POLICY_VERSION, "generation-cache-policy-v9");
+test("release cache epoch stays on v10 until generation semantics change again", () => {
+  assert.equal(GENERATION_CACHE_POLICY_VERSION, "generation-cache-policy-v10");
 });
 
 test("non-custom providers ignore custom endpoint in cache identity", () => {
