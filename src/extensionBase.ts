@@ -11,6 +11,7 @@ import {
   prepareGenerationCacheCompatibility,
 } from "./services/generationCachePolicy";
 import { generationRunContext } from "./services/generationRunContext";
+import { normalizeGenerationMode } from "./services/generationMode";
 import { ProviderFactory } from "./providers/providerFactory";
 import { resolveProviderSelection } from "./providers/providerSelection";
 import { evaluateCustomEndpoint } from "./providers/customEndpointPolicy";
@@ -26,6 +27,7 @@ const SOURCE_FILE_PICKER_EXTENSIONS = getTargetExtensions(
 );
 
 interface GenerationCommandPayload {
+  generationMode?: string;
   provider?: string;
   model?: string;
   customApiEndpoint?: string;
@@ -182,6 +184,22 @@ export function activate(context: vscode.ExtensionContext) {
       sidebarProvider.reportError(message);
       sidebarProvider.addLogEntry(message, "error");
       vscode.window.showErrorMessage(message);
+      return;
+    }
+
+    const generationMode = normalizeGenerationMode(
+      payload.generationMode ??
+        vscode.workspace
+          .getConfiguration("aiDocGenerator")
+          .get<string>("generationMode"),
+    );
+    if (generationMode === "local") {
+      const message =
+        "Local Documentation mode is prepared but not connected to the generation pipeline yet. No code was sent to an AI provider.";
+      sidebarProvider.setGeneratingState(false);
+      sidebarProvider.reportError(message);
+      sidebarProvider.addLogEntry(message, "info");
+      vscode.window.showInformationMessage(message);
       return;
     }
 
