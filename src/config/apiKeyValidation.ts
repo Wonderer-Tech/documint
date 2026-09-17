@@ -3,6 +3,10 @@ export interface ApiKeyValidationResult {
   reason?: string;
 }
 
+export interface ApiKeyValidationOptions {
+  minimumLength?: number;
+}
+
 const PLACEHOLDER_VALUES = new Set([
   "api-key",
   "apikey",
@@ -19,16 +23,25 @@ const PLACEHOLDER_VALUES = new Set([
 /**
  * Performs only local sanity checks. Provider key formats evolve over time, so
  * DocuMint deliberately avoids hard-coding provider-specific prefixes here.
- * Definitive authentication still happens when the provider is contacted.
+ * Callers may lower the default length sanity check for custom endpoints whose
+ * bearer-token format is intentionally provider-defined. Definitive
+ * authentication still happens when the provider is contacted.
  */
-export function validateApiKeyValue(apiKey: string): ApiKeyValidationResult {
+export function validateApiKeyValue(
+  apiKey: string,
+  options: ApiKeyValidationOptions = {},
+): ApiKeyValidationResult {
   const value = apiKey.trim();
+  const minimumLength =
+    Number.isFinite(options.minimumLength) && (options.minimumLength ?? 0) > 0
+      ? Math.max(1, Math.floor(options.minimumLength!))
+      : 12;
 
   if (!value) {
     return { valid: false, reason: "API key cannot be empty." };
   }
 
-  if (value.length < 12) {
+  if (value.length < minimumLength) {
     return { valid: false, reason: "API key is too short." };
   }
 
