@@ -17,10 +17,29 @@ test("parses Anthropic text blocks and ignores non-text blocks", () => {
   assert.equal(result.tokensUsed, 150);
 });
 
+test("includes Anthropic prompt-cache token usage when reported", () => {
+  const result = parseAnthropicResponse({
+    content: [{ type: "text", text: "Docs" }],
+    usage: {
+      input_tokens: 20,
+      cache_creation_input_tokens: 100,
+      cache_read_input_tokens: 250,
+      output_tokens: 30,
+    },
+  });
+
+  assert.equal(result.tokensUsed, 400);
+});
+
 test("normalizes missing or invalid Anthropic token usage", () => {
   const result = parseAnthropicResponse({
     content: [{ type: "text", text: "Docs" }],
-    usage: { input_tokens: -1, output_tokens: Number.NaN },
+    usage: {
+      input_tokens: -1,
+      cache_creation_input_tokens: Number.NaN,
+      cache_read_input_tokens: -5,
+      output_tokens: Number.NaN,
+    },
   });
 
   assert.equal(result.tokensUsed, 0);
