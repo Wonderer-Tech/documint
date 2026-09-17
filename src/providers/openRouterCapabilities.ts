@@ -63,5 +63,7 @@ export function getOpenRouterContextWindow(model?: string): number {
 function normalizeRoutedModel(model?: string): string {
   const normalized = model?.trim().toLowerCase() ?? "";
   const slashIndex = normalized.indexOf("/");
-  return slashIndex >= 0 ? normalized.slice(slashIndex + 1) : normalized;
+  const routedModel = slashIndex >= 0 ? normalized.slice(slashIndex + 1) : normalized;
+  const variantIndex = routedModel.indexOf(":");
+  return variantIndex >= 0 ? routedModel.slice(0, variantIndex) : routedModel;
 }
