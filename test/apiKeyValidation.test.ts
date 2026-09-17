@@ -51,6 +51,31 @@ test("secret storage normalizes provider names for every key operation", () => {
   );
 });
 
+test("custom API keys may use short provider-defined bearer tokens", () => {
+  assert.equal(validateApiKeyValue("abc12345").valid, false);
+  assert.equal(
+    validateApiKeyValue("abc12345", { minimumLength: 1 }).valid,
+    true,
+  );
+
+  const source = readFileSync(
+    join(process.cwd(), "src/config/secretStorage.ts"),
+    "utf8",
+  );
+  assert.match(source, /normalizeProvider\(provider\) === "custom"/);
+  assert.match(source, /minimumLength:\s*isCustom \? 1 : 12/);
+});
+
+test("custom API key relaxation still rejects empty, placeholder, whitespace, and junk values", () => {
+  for (const value of ["", "token", "secret", "abc def", "****"]) {
+    assert.equal(
+      validateApiKeyValue(value, { minimumLength: 1 }).valid,
+      false,
+      value,
+    );
+  }
+});
+
 test("API key validation rejects obvious invalid values", () => {
   assert.equal(validateApiKeyValue("").valid, false);
   assert.equal(validateApiKeyValue("short").valid, false);
