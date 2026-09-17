@@ -136,8 +136,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  // ── Public API called from extension.ts ────────────────────────────────────
-
   public updateProgress(progress: {
     phase: string;
     currentFile: string;
@@ -192,8 +190,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  // ── Private helpers ────────────────────────────────────────────────────────
-
   private _post(msg: Record<string, unknown>) {
     this._view?.webview.postMessage(msg);
   }
@@ -221,7 +217,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         config.get<string>("outputFormat") || this._state.settings.outputFormat,
     };
 
-    // Re-validate API key from storage
     try {
       const key = await this._secretManager.getApiKey(
         this._state.settings.provider,
@@ -306,8 +301,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  // ── HTML ───────────────────────────────────────────────────────────────────
-
   private _buildHtml(): string {
     return `<!DOCTYPE html>
 <html lang="en">
@@ -354,7 +347,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     overflow-x: hidden;
   }
 
-  /* ── Header ── */
   .header {
     display: flex; align-items: center; gap: 8px;
     padding: 10px 14px;
@@ -377,7 +369,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   .status-dot.error { background: var(--error); }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
 
-  /* ── Sections ── */
   .section {
     padding: 12px 14px;
     border-bottom: 1px solid var(--border);
@@ -391,7 +382,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     flex: 1; height: 1px; background: var(--border);
   }
 
-  /* ── API Key status ── */
   .auth-status {
     display: flex; align-items: center; gap: 8px;
     padding: 7px 10px; border-radius: var(--radius);
@@ -411,7 +401,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
   .auth-status svg { flex-shrink: 0; }
 
-  /* ── Form controls ── */
   .field { margin-bottom: 8px; }
   .field:last-child { margin-bottom: 0; }
   .field-label {
@@ -476,7 +465,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   .api-key-feedback.ok { color: var(--success); }
   .api-key-feedback.error { color: var(--error); }
 
-  /* ── Buttons ── */
   .btn {
     display: flex; align-items: center; justify-content: center; gap: 6px;
     width: 100%; padding: 7px 12px; margin-bottom: 6px;
@@ -495,7 +483,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   .btn-secondary:hover:not(:disabled) { background: var(--btn-sec-hover); }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
 
-  /* Quick scope buttons */
   .scope-row { display: flex; gap: 5px; margin-top: 8px; }
   .scope-btn {
     flex: 1; padding: 5px 4px; font-size: 11px; font-weight: 500;
@@ -506,7 +493,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   .scope-btn:hover:not(:disabled) { border-color: var(--input-focus); color: var(--fg); }
   .scope-btn:disabled { opacity: .45; cursor: not-allowed; }
 
-  /* ── Progress ── */
   .progress-section { display: none; }
   .progress-section.visible { display: block; }
   .progress-phase {
@@ -531,7 +517,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
-  /* ── Log ── */
   .log-section {
     padding: 0 14px 12px;
     max-height: 180px; overflow-y: auto;
@@ -559,7 +544,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   .log-warning { color: var(--warning); }
   .log-empty { font-size: 11px; color: var(--fg-muted); font-style: italic; padding: 4px 0; }
 
-  /* Scrollbar */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -567,7 +551,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 </head>
 <body>
 
-<!-- Header -->
 <div class="header">
   <svg class="header-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -583,7 +566,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   </div>
 </div>
 
-<!-- Authentication -->
 <div class="section" id="authSection">
   <div class="section-label">
     Authentication
@@ -615,7 +597,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   </div>
 </div>
 
-<!-- Provider & Model -->
 <div class="section" id="providerSection">
   <div class="section-label">
     Provider &amp; Model
@@ -645,7 +626,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   </div>
 </div>
 
-<!-- Generation Settings -->
 <div class="section">
   <div class="section-label">
     Generation
@@ -661,7 +641,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     <div class="field-help hidden" id="localModeHelp">Runs entirely on this machine. No API key, internet connection, or AI model required.</div>
   </div>
 
-  <div class="field">
+  <div class="field" id="depthField">
     <label class="field-label">Documentation Depth</label>
     <select id="depth">
       <option value="simple">Simple — Plain English overview</option>
@@ -685,7 +665,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <polygon points="5 3 19 12 5 21 5 3"/>
       </svg>
-      Generate Documentation
+      <span id="generateBtnText">Generate Documentation</span>
     </button>
     <button class="btn btn-secondary" id="cancelBtn" disabled>
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -712,7 +692,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   </div>
 </div>
 
-<!-- Progress (hidden until generating) -->
 <div class="section progress-section" id="progressSection">
   <div class="section-label">
     Progress
@@ -729,7 +708,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   <div class="progress-file" id="progressFile"></div>
 </div>
 
-<!-- Output Log -->
 <div class="log-section" id="logSection" style="display:none;">
   <div class="log-header">
     <span class="section-label" style="margin:0;">Output</span>
@@ -743,12 +721,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   'use strict';
   var vscode = acquireVsCodeApi();
 
-  // ── State ──────────────────────────────────────────────────────────────────
   var state = {
     isGenerating: false,
   };
 
-  // ── Elements ───────────────────────────────────────────────────────────────
   var $ = function(id) { return document.getElementById(id); };
 
   var statusDot    = $('statusDot');
@@ -760,11 +736,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   var providerSection = $('providerSection');
   var generationModeSel = $('generationMode');
   var localModeHelp = $('localModeHelp');
+  var depthField = $('depthField');
   var providerSel  = $('provider');
   var modelInput   = $('model');
   var customEndpointField = $('customEndpointField');
   var customEndpointInput = $('customApiEndpoint');
   var generateBtn  = $('generateBtn');
+  var generateBtnText = $('generateBtnText');
   var cancelBtn    = $('cancelBtn');
   var clearCacheBtn = $('clearCacheBtn');
   var configureBtn = $('configureBtn');
@@ -798,13 +776,16 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     var local = isLocalMode();
     authSection.classList.toggle('hidden', local);
     providerSection.classList.toggle('hidden', local);
+    depthField.classList.toggle('hidden', local);
     localModeHelp.classList.toggle('hidden', !local);
+    generateBtnText.textContent = local
+      ? 'Generate Local Documentation'
+      : 'Generate Documentation';
     if (local) setApiKeyPanelVisible(false);
     updateCustomEndpointVisibility();
     updateActionAvailability();
   }
 
-  // ── API key status ─────────────────────────────────────────────────────────
   function setApiKeyStatus(configured) {
     if (configured) {
       authStatus.className = 'auth-status ok';
@@ -835,13 +816,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  // ── Status bar ─────────────────────────────────────────────────────────────
   function setStatus(mode, text) {
     statusDot.className = 'status-dot' + (mode ? ' ' + mode : '');
     statusText.textContent = text;
   }
 
-  // ── Generating state ───────────────────────────────────────────────────────
   function setGenerating(on) {
     state.isGenerating = on;
     updateActionAvailability();
@@ -859,7 +838,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  // ── Log ───────────────────────────────────────────────────────────────────
   function addLog(message, type, ts) {
     logSection.style.display = '';
     var entry = document.createElement('div');
@@ -923,8 +901,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
     return true;
   }
-
-  // ── Event listeners ────────────────────────────────────────────────────────
 
   generationModeSel.addEventListener('change', function() {
     updateGenerationModeVisibility();
@@ -1020,10 +996,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       };
       if (!validateCustomEndpointForRun()) return;
       if (scope === 'current-file') {
-        // Open native file picker in extension host — setGenerating called after user confirms
         vscode.postMessage({ type: 'pick-file', payload: payload });
       } else if (scope === 'folder') {
-        // Open native folder picker in extension host — setGenerating called after user confirms
         vscode.postMessage({ type: 'pick-folder', payload: payload });
       } else {
         vscode.postMessage({ type: 'generate-documentation', payload: Object.assign({}, payload, { scope: 'workspace' }) });
@@ -1045,7 +1019,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     logSection.style.display = 'none';
   });
 
-  // ── Messages from extension ────────────────────────────────────────────────
   window.addEventListener('message', function(event) {
     var msg = event.data;
     switch (msg.type) {
@@ -1115,7 +1088,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
   });
 
-  // ── Init ───────────────────────────────────────────────────────────────────
   vscode.postMessage({ type: 'ready' });
 
 })();
