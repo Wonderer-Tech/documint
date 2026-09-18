@@ -1998,65 +1998,101 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
     }
 
+    /* Professional soft sidebar: keep the strong 1.0.4 navigation geometry,
+       while using the softer 1.0.5 surface language. */
     .documint-jelly-ui .sidebar {
-      top: 80px;
-      bottom: 12px;
-      left: 12px;
+      top: 78px;
+      bottom: 0;
+      left: 0;
       width: var(--sidebar-w);
       height: auto;
-      padding: 12px 0;
-      border: 1px solid var(--jelly-border);
-      border-radius: 20px;
-      background: var(--jelly-surface);
-      box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
-      backdrop-filter: blur(18px) saturate(1.08);
-      -webkit-backdrop-filter: blur(18px) saturate(1.08);
+      padding: 14px 0 20px;
+      border: 0;
+      border-right: 1px solid var(--jelly-border);
+      border-radius: 0;
+      background:
+        linear-gradient(180deg, var(--jelly-surface-strong), var(--jelly-surface));
+      box-shadow:
+        12px 0 34px rgba(0, 0, 0, .08),
+        var(--jelly-highlight);
+      backdrop-filter: blur(18px) saturate(1.06);
+      -webkit-backdrop-filter: blur(18px) saturate(1.06);
     }
 
     .documint-jelly-ui .sidebar-shell {
-      padding: 0 10px 18px;
+      padding: 0 12px 22px;
     }
 
     .documint-jelly-ui .sidebar-head {
-      padding: 14px;
-      margin: 0 0 12px;
-      border-color: var(--jelly-border);
-      border-radius: 16px;
+      padding: 13px 13px 14px;
+      margin: 0 0 11px;
+      border: 1px solid var(--jelly-border);
+      border-radius: 12px;
       background:
         linear-gradient(145deg, var(--jelly-surface-strong), var(--jelly-surface-soft));
       box-shadow: var(--jelly-highlight);
     }
 
+    .documint-jelly-ui .sidebar-kicker {
+      letter-spacing: .78px;
+    }
+
     .documint-jelly-ui .sidebar-project-name {
-      margin-top: 6px;
-      font-size: 15px;
-      letter-spacing: -.015em;
+      margin-top: 5px;
+      font-size: 14px;
+      letter-spacing: -.01em;
+    }
+
+    .documint-jelly-ui .sidebar-subtitle {
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+
+    .documint-jelly-ui .sidebar-filter {
+      min-height: 34px;
+      border-radius: 9px;
+      background: var(--jelly-surface-strong);
     }
 
     .documint-jelly-ui .smart-toc-group {
       margin-bottom: 8px;
-      border-color: transparent;
-      border-radius: 13px;
-      background: transparent;
-      box-shadow: none;
-      transition: background .16s ease, border-color .16s ease;
+      border: 1px solid var(--jelly-border);
+      border-radius: 11px;
+      background: color-mix(in srgb, var(--jelly-surface-strong) 66%, transparent);
+      box-shadow: var(--jelly-highlight);
+      overflow: hidden;
+      transition:
+        border-color .16s ease,
+        background .16s ease,
+        box-shadow .16s ease;
     }
 
-    .documint-jelly-ui .smart-toc-group:hover,
-    .documint-jelly-ui .smart-toc-group[open] {
-      border-color: var(--jelly-border);
+    .documint-jelly-ui .smart-toc-group:hover {
+      border-color: color-mix(in srgb, var(--jelly-border-accent) 58%, var(--jelly-border));
       background: var(--jelly-surface-soft);
-      box-shadow: none;
     }
 
-    .documint-jelly-ui .smart-toc-summary,
+    .documint-jelly-ui .smart-toc-group[open] {
+      border-color: var(--jelly-border-accent);
+      background: var(--jelly-surface-soft);
+      box-shadow:
+        inset 3px 0 0 var(--accent),
+        var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .smart-toc-summary {
+      min-height: 37px;
+      padding: 8px 10px;
+      border-radius: 0;
+      letter-spacing: -.005em;
+    }
+
     .documint-jelly-ui .file-tree-summary,
     .documint-jelly-ui .smart-toc-items .toc-link {
-      border-radius: 10px;
+      border-radius: 7px;
       transition:
         background .14s ease,
         color .14s ease,
-        transform .14s ease,
         border-color .14s ease;
     }
 
@@ -2066,24 +2102,44 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       background: var(--jelly-surface-hover);
     }
 
+    .documint-jelly-ui .smart-toc-items {
+      padding: 0 7px 8px;
+    }
+
     .documint-jelly-ui .smart-toc-items .toc-link.active,
     .documint-jelly-ui .toc-link.active {
-      background:
-        linear-gradient(90deg, var(--accent-subtle), transparent);
+      background: linear-gradient(90deg, var(--accent-subtle), transparent 92%);
       border-left-color: var(--accent) !important;
-      box-shadow: inset 0 0 0 1px var(--jelly-border);
+      box-shadow: none;
     }
 
     .documint-jelly-ui .smart-toc-icon {
-      border-radius: 7px;
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
       box-shadow: var(--jelly-highlight);
     }
 
+    .documint-jelly-ui .smart-toc-count {
+      border-color: var(--jelly-border);
+      background: var(--jelly-surface-strong);
+    }
+
+    .documint-jelly-ui .file-tree {
+      padding: 0 1px;
+    }
+
+    .documint-jelly-ui .file-tree-folder-children {
+      border-left: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+      margin-left: 8px;
+      padding-left: 10px;
+    }
+
     .documint-jelly-ui .main {
-      margin-left: calc(var(--sidebar-w) + 28px);
+      margin-left: var(--sidebar-w);
       margin-top: calc(var(--topbar-h) + 32px);
-      width: calc(100% - var(--sidebar-w) - 40px);
-      padding: 30px clamp(24px, 4vw, 58px) 110px;
+      width: calc(100% - var(--sidebar-w));
+      padding: 30px clamp(28px, 4vw, 58px) 110px;
     }
 
     .documint-jelly-ui .main p,
@@ -2126,6 +2182,80 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       gap: 14px;
       padding: 15px 18px;
       margin-bottom: 34px;
+    }
+
+    /* Keep the 1.0.4 module-scale pie chart prominent inside the soft UI.
+       The chart is source-derived and must remain visible in both AI and Local output. */
+    .documint-jelly-ui .architecture-chart-panel {
+      display: block;
+      padding: 18px;
+      background: transparent;
+    }
+
+    .documint-jelly-ui .architecture-chart-head {
+      margin-bottom: 14px;
+    }
+
+    .documint-jelly-ui .architecture-chart-title {
+      font-size: 13px;
+      letter-spacing: -.01em;
+    }
+
+    .documint-jelly-ui .architecture-segmented {
+      border-color: var(--jelly-border);
+      border-radius: 10px;
+      background: var(--jelly-surface-strong);
+      box-shadow: var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .architecture-segment {
+      border-radius: 8px;
+    }
+
+    .documint-jelly-ui .architecture-segment.active {
+      background: var(--jelly-surface-hover);
+      box-shadow: inset 0 0 0 1px var(--jelly-border-accent);
+    }
+
+    .documint-jelly-ui .architecture-pie-panel {
+      display: grid;
+      grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
+      gap: 20px;
+      align-items: center;
+      min-height: 250px;
+      border-color: var(--jelly-border);
+      border-radius: 16px;
+      background:
+        linear-gradient(145deg, var(--jelly-surface-strong), var(--jelly-surface-soft));
+      box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
+      padding: 18px;
+    }
+
+    .documint-jelly-ui .architecture-pie-wrap {
+      width: min(220px, 100%);
+    }
+
+    .documint-jelly-ui .architecture-pie-center {
+      border-color: var(--jelly-border);
+      background: var(--jelly-surface-strong);
+      box-shadow: var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .architecture-pie-legend-item {
+      min-height: 32px;
+      border-radius: 9px;
+      transition:
+        border-color .14s ease,
+        background .14s ease,
+        transform .14s ease,
+        opacity .14s ease;
+    }
+
+    .documint-jelly-ui .architecture-pie-legend-item:hover,
+    .documint-jelly-ui .architecture-pie-legend-item.active {
+      border-color: var(--jelly-border-accent);
+      background: var(--jelly-surface-hover);
+      transform: translateX(2px);
     }
 
     .documint-jelly-ui .stat-item {
@@ -2420,7 +2550,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       }
 
       .documint-jelly-ui .sidebar {
-        left: 8px;
+        left: 0;
       }
 
       .documint-jelly-ui .main {
