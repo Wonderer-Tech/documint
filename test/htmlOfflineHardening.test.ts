@@ -48,11 +48,16 @@ test("HTML template already preserves Mermaid source when rendering fails", () =
   assert.match(source, /function applyHighlighting\(\)[\s\S]*typeof hljs === 'undefined'/);
 });
 
-test("output sanitizer applies offline hardening after HTML sanitization", () => {
+test("output sanitizer hardens fresh HTML while legacy workflow cleanup stays cache-scoped", () => {
   const source = readFileSync(
     join(process.cwd(), "src/services/outputSanitizer.ts"),
     "utf8",
   );
 
-  assert.match(source, /hardenGeneratedHtmlForOffline\(sanitizeHtml\(content\)\)/);
+  assert.match(
+    source,
+    /await sanitizeFile\([\s\S]*vscode\.Uri\.file\(paths\.html\),[\s\S]*hardenGeneratedHtmlForOffline/,
+  );
+  assert.match(source, /sanitizeMarkdown\(entry\.section\)/);
+  assert.doesNotMatch(source, /sanitizeHtml\(content\)/);
 });
