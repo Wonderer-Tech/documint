@@ -68,7 +68,8 @@ DocuMint 1.0.5 adds a complete **Local Documentation — No AI** path and harden
 - **Local Documentation — No AI:** generate source-grounded documentation entirely on-device with no API key, internet connection, model, or provider.
 - **File / Folder / Workspace parity:** Local mode uses the same exact target-path scanner semantics as AI mode.
 - **Deterministic Local project docs:** project facts, language/module summaries, source tree, entry points, dependencies, exported APIs, symbols, imports, dependents, and TODO/FIXME/HACK evidence.
-- **Local architecture diagrams:** source-derived module/file dependency views with Mermaid and D2 output, without invented architecture roles.
+- **Local architecture visuals:** source-derived module/file dependency views now include the interactive architecture dashboard, Files/Lines Module Scale Chart, Mermaid, D2, whiteboard/Excalidraw export, and searchable dependency graph—without invented architecture roles.
+- Local mode now renders the same visual surfaces directly from scanner/analyzer facts; no provider call is made to build those charts or maps.
 - **Separate Local cache:** source fingerprints plus sanitized-output hashes allow safe reuse while keeping Local cache identity isolated from AI caches.
 - **Cleaner Local UX:** provider, model, authentication, custom endpoint, and AI-only Documentation Depth controls disappear in Local mode; the primary action becomes **Generate Local Documentation**.
 - **Safer AI context budgeting:** non-positive chunk budgets fail clearly instead of risking non-advancing loops, and raw/normal/chunked output budgets never exceed the remaining context window.
@@ -92,7 +93,7 @@ DocuMint 1.0.5 adds a complete **Local Documentation — No AI** path and harden
 | File / Folder / Workspace | Yes | Yes |
 | Markdown / HTML | Yes | Yes |
 | Project facts and APIs | Deterministic static analysis | Static analysis + provider enhancement |
-| Architecture/dependencies | Resolved source relationships | Source relationships + AI explanation |
+| Architecture/dependencies | Resolved source relationships + chart/map/whiteboard/dependency visuals | Source relationships + AI explanation |
 | Cache | Separate Local fingerprint/output cache | Provider/model/settings-aware AI cache |
 
 ## How It Works
