@@ -4,6 +4,7 @@ import {
   GenerationCacheIdentityInput,
   GenerationCacheSettings,
 } from "./generationCacheIdentity";
+import { DOCUMINT_OUTPUT_DIRECTORY } from "../outputDirectory";
 
 const MARKER_FILE = ".documint-generation-cache-key.json";
 const DOCUMENTATION_CACHE_FILE = ".documint-cache.json";
@@ -24,7 +25,7 @@ export async function prepareGenerationCacheCompatibility(
   input: GenerationCacheIdentityInput,
 ): Promise<GenerationCachePreparation> {
   const serializedIdentity = buildSerializedIdentity(workspaceFolder, input);
-  const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, "docs");
+  const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, DOCUMINT_OUTPUT_DIRECTORY);
   const markerUri = vscode.Uri.joinPath(docsFolder, MARKER_FILE);
   const cacheUri = vscode.Uri.joinPath(docsFolder, DOCUMENTATION_CACHE_FILE);
 
@@ -61,7 +62,7 @@ export async function commitGenerationCacheCompatibility(
   workspaceFolder: vscode.WorkspaceFolder,
   preparation: GenerationCachePreparation,
 ): Promise<void> {
-  const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, "docs");
+  const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, DOCUMINT_OUTPUT_DIRECTORY);
   const markerUri = vscode.Uri.joinPath(docsFolder, MARKER_FILE);
   await vscode.workspace.fs.createDirectory(docsFolder);
   await vscode.workspace.fs.writeFile(
