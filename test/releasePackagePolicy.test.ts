@@ -22,6 +22,7 @@ test("VSIX excludes bundled dependencies and development-only content", () => {
     "test/**",
     ".github/**",
     "docs/**",
+    "documint/**",
     "coverage/**",
     "*.vsix",
     "*.tgz",
@@ -55,6 +56,9 @@ test("README-only media stays out of VSIX while runtime icons remain packageable
     readme,
     /Cleaner VSIX output: generated docs and README-only demo media are excluded from the packaged extension\./,
   );
+  assert.match(readme, /`documint\/documentation\.md`/);
+  assert.match(readme, /`documint\/documentation\.html`/);
+  assert.doesNotMatch(readme, /`docs\/documentation\.(?:md|html)`/);
   assert.doesNotMatch(
     readme,
     /Very large demo media can make the VSIX larger than the extension code itself\./,
