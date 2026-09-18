@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import type { WorkspaceFile } from "../types";
 
 export const LOCAL_DOCUMENTATION_CACHE_FILE = ".documint-local-cache.json";
-export const LOCAL_DOCUMENTATION_CACHE_VERSION = "local-documentation-cache-v1";
+export const LOCAL_DOCUMENTATION_CACHE_VERSION = "local-documentation-cache-v2";
 
 export interface LocalDocumentationOutputHashes {
   markdown?: string;
