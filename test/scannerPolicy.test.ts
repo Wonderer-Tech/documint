@@ -7,6 +7,7 @@ import {
   getLanguageFromPath,
   getTargetExtensions,
   isInsideWorkspace,
+  isRelativePathInsideExcludedDirectory,
 } from "../src/scanner/scannerPolicy";
 
 test("scanner target language expansion covers language aliases and extensions", () => {
@@ -89,4 +90,25 @@ test("workspace boundary rejects sibling paths", () => {
   assert.equal(isInsideWorkspace("/repo", "/repo"), true);
   assert.equal(isInsideWorkspace("/repo", "/repo-other/index.ts"), false);
   assert.equal(isInsideWorkspace("/repo", "/tmp/index.ts"), false);
+});
+
+test("relative exclusion does not reject a workspace merely because its root is named documint", () => {
+  const excludedDirectories = ["node_modules", "documint", ".git"];
+
+  assert.equal(
+    isRelativePathInsideExcludedDirectory("src/services/htmlTemplate.ts", excludedDirectories),
+    false,
+  );
+  assert.equal(
+    isRelativePathInsideExcludedDirectory("documint/documentation.html", excludedDirectories),
+    true,
+  );
+  assert.equal(
+    isRelativePathInsideExcludedDirectory("src/documint/cache.ts", excludedDirectories),
+    true,
+  );
+  assert.equal(
+    isRelativePathInsideExcludedDirectory("src\\scanner\\workspaceScanner.ts", excludedDirectories),
+    false,
+  );
 });
