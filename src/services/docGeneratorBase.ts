@@ -19,6 +19,7 @@ import {
 import { SecretStorageManager } from "../config/secretStorage";
 import { generateHtmlTemplate } from "./htmlTemplate";
 import { DocumentationValidator } from "./documentationValidator";
+import { DOCUMINT_OUTPUT_DIRECTORY } from "../outputDirectory";
 import { GENERATION_PROMPT_SCHEMA_VERSION } from "./generationCacheIdentity";
 
 export interface DocGeneratorOptions {
@@ -261,12 +262,12 @@ export class DocGeneratorService {
         providerName,
       );
 
-      const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, "docs");
+      const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, DOCUMINT_OUTPUT_DIRECTORY);
       try {
         await vscode.workspace.fs.createDirectory(docsFolder);
       } catch (error) {
         throw new DocumentationError(
-          `Failed to create docs folder: ${error instanceof Error ? error.message : String(error)}`,
+          `Failed to create ${DOCUMINT_OUTPUT_DIRECTORY} folder: ${error instanceof Error ? error.message : String(error)}`,
           "write",
           undefined,
           error instanceof Error ? error : undefined,
