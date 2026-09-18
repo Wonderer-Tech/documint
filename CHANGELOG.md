@@ -4,7 +4,10 @@ All notable changes to DocuMint are documented here.
 
 ## Unreleased
 
-### Changed\n\n- Refreshed generated HTML with a soft Jelly UI visual system: floating translucent navigation surfaces, softer cards/tables/code blocks, calmer borders and shadows, improved spacing and readable line lengths, smoother hover/focus states, responsive mobile treatment, and reduced-motion accessibility without changing document structure or navigation behavior.\n\n_No unreleased changes yet._
+### Changed
+
+- Local Documentation now emits the same deterministic visual payload contract consumed by the generated HTML renderer, enabling the architecture dashboard, Files/Lines Module Scale Chart, source-derived architecture map, whiteboard/Excalidraw export, and searchable interactive dependency graph without invoking AI or inferring semantic module roles. Local cache compatibility was bumped to v2 so existing cached Local output regenerates once with the new visuals.
+- Refreshed generated HTML with a soft Jelly UI visual system: floating translucent navigation surfaces, softer cards/tables/code blocks, calmer borders and shadows, improved spacing and readable line lengths, smoother hover/focus states, responsive mobile treatment, and reduced-motion accessibility without changing document structure or navigation behavior.
 
 ## 1.0.5 — 2026-09-18
 
