@@ -1,4 +1,5 @@
 import * as path from "path";
+import { DOCUMINT_OUTPUT_DIRECTORY } from "../outputDirectory";
 
 export const EXTENSION_TO_LANGUAGE: Record<string, string> = {
   ts: "typescript",
@@ -78,6 +79,7 @@ export const DEFAULT_EXCLUDE_PATTERNS = [
   "**/.vscode/**",
   "**/.idea/**",
   "**/docs/**",
+  `**/${DOCUMINT_OUTPUT_DIRECTORY}/**`,
   "**/coverage/**",
   "**/*.min.*",
   "**/*.test.*",
