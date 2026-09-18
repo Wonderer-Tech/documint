@@ -89,6 +89,7 @@ test("Local generator sanitizes before committing verified cache metadata", () =
   assert.match(source, /buildLocalDocumentationCacheKey/);
   assert.match(source, /tryReuseCachedOutputs/);
   assert.match(source, /Reused cached Local Documentation/);
+  assert.match(source, /DOCUMINT_OUTPUT_DIRECTORY/);
   assert.ok(sanitize >= 0, "missing Local output sanitization");
   assert.ok(cacheCommit > sanitize, "Local cache must commit after sanitization");
 });
