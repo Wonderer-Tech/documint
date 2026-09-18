@@ -16,8 +16,8 @@ Generated documentation preview:
 
 It produces:
 
-- `docs/documentation.md`
-- `docs/documentation.html`
+- `documint/documentation.md`
+- `documint/documentation.html`
 
 ## Table of Contents
 
@@ -116,7 +116,7 @@ Common first steps:
 6. Builds prompt context from verified source facts and generates detailed file documentation through the selected provider.
 7. Validates and sanitizes generated documentation before writing output.
 
-Both modes save normal DocuMint output into `docs/`.
+Both modes save normal DocuMint output into `documint/`.
 
 Public AI-generation facade: `src/services/docGenerator.ts`. Local runtime orchestration lives in `src/services/localDocumentationGenerator.ts` and uses deterministic renderers under `src/services/local*Documentation.ts`.
 
@@ -163,7 +163,7 @@ The following scanner languages are enabled by default on new installs:
 Notes:
 
 - `aiDocGenerator.targetLanguages` controls which languages are scanned.
-- Workspace scans exclude `node_modules`, generated/build folders, `.git`, `docs`, test/spec files, lockfiles, `.env` files, logs, and other common non-source artifacts by default.
+- Workspace scans exclude `node_modules`, generated/build folders, `.git`, `docs`, the generated `documint` folder, test/spec files, lockfiles, `.env` files, logs, and other common non-source artifacts by default.
 - Deliberately selecting a folder relaxes DocuMint's default test/spec exclusion, but explicit user-configured exclusions remain authoritative.
 
 ## Install
@@ -203,7 +203,7 @@ npm run compile
 4. For Local mode, choose Output Format and generate immediately. No API key or model setup is required.
 5. For AI mode, select provider/model and run **Configure API Key** when required.
 6. Click **Generate Documentation** / **Generate Local Documentation** for workspace scope, or use **File** / **Folder** quick buttons.
-7. Open generated files from `docs/`.
+7. Open generated files from `documint/`.
 
 ## Commands
 
@@ -329,10 +329,13 @@ Notes:
 
 ## Output
 
-Generated output is written to a `docs/` directory in the workspace root:
+Generated output is written to a dedicated `documint/` directory in the workspace root:
 
-- `documentation.md`
-- `documentation.html`
+- `documint/documentation.md`
+- `documint/documentation.html`
+- DocuMint cache/compatibility files used by AI and Local generation
+
+DocuMint no longer writes generated output into your project's `docs/` directory. Existing legacy `docs/` files are not moved or deleted automatically.
 
 Local and AI modes use the same output paths, so the latest successful generation replaces the previous rendered documentation files.
 
