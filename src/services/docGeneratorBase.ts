@@ -19,6 +19,7 @@ import {
 import { SecretStorageManager } from "../config/secretStorage";
 import { generateHtmlTemplate } from "./htmlTemplate";
 import { DocumentationValidator } from "./documentationValidator";
+import { GENERATION_PROMPT_SCHEMA_VERSION } from "./generationCacheIdentity";
 
 export interface DocGeneratorOptions {
   provider?: string;
@@ -147,7 +148,7 @@ interface DocumentationAssets {
 
 export class DocGeneratorService {
   private static readonly CACHE_VERSION = "documint-cache-v2";
-  private static readonly PROMPT_VERSION = "lean-prompts-2026-06-02";
+  private static readonly PROMPT_VERSION = GENERATION_PROMPT_SCHEMA_VERSION;
   private static readonly VISUAL_CACHE_VERSION = "project-visuals-v3";
 
   private scanner: WorkspaceScanner;

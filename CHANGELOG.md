@@ -56,6 +56,7 @@ All notable changes to DocuMint are documented here.
 - Expanded JavaScript/TypeScript discovery to include modern module extensions: `.mjs`, `.cjs`, `.mts`, and `.cts`.
 - Resolved extensionless JavaScript/TypeScript imports and directory index imports into `.mjs`, `.cjs`, `.mts`, and `.cts` files so the project dependency graph matches scanner coverage.
 - Bound the generator's per-entry prompt cache version to the canonical `GENERATION_PROMPT_SCHEMA_VERSION`, removing runtime drift between internal and release-level cache identities.
+- Removed the facade-time prompt-version mutation: `docGeneratorBase.ts` now binds its per-entry cache version directly to the canonical prompt schema constant, eliminating the stale internal literal without changing generation semantics.
 - Bumped the generation cache compatibility policy to v11 so documentation generated under earlier capability/generation semantics is safely regenerated.
 - Kept README-only demo media out of the packaged VSIX while retaining runtime icons.
 

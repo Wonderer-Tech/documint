@@ -41,7 +41,7 @@ test("generation cache identity includes prompt schema version", () => {
   assert.match(identity.promptSchemaVersion, /^documint-prompts-/);
 });
 
-test("generator per-entry cache binds to the canonical prompt schema", () => {
+test("generator per-entry cache binds directly to the canonical prompt schema", () => {
   const wrapper = readFileSync(
     join(process.cwd(), "src/services/docGenerator.ts"),
     "utf8",
@@ -51,13 +51,18 @@ test("generator per-entry cache binds to the canonical prompt schema", () => {
     "utf8",
   );
 
-  assert.match(wrapper, /GENERATION_PROMPT_SCHEMA_VERSION/);
   assert.match(
-    wrapper,
-    /runtimeGenerator\.PROMPT_VERSION\s*=\s*GENERATION_PROMPT_SCHEMA_VERSION/,
+    base,
+    /import \{ GENERATION_PROMPT_SCHEMA_VERSION \} from "\.\/generationCacheIdentity";/,
+  );
+  assert.match(
+    base,
+    /private static readonly PROMPT_VERSION = GENERATION_PROMPT_SCHEMA_VERSION;/,
   );
   assert.match(base, /promptVersion:\s*DocGeneratorService\.PROMPT_VERSION/);
-  assert.doesNotMatch(wrapper, /lean-prompts-\d{4}-\d{2}-\d{2}/);
+  assert.doesNotMatch(base, /lean-prompts-\d{4}-\d{2}-\d{2}/);
+  assert.doesNotMatch(wrapper, /PROMPT_VERSION/);
+  assert.doesNotMatch(wrapper, /GENERATION_PROMPT_SCHEMA_VERSION/);
 });
 
 test("release cache epoch stays on v11 until generation semantics change again", () => {
