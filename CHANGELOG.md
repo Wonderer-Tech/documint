@@ -4,6 +4,10 @@ All notable changes to DocuMint are documented here.
 
 ## Unreleased
 
+_No unreleased changes yet._
+
+## 1.0.5 — 2026-09-18
+
 ### Changed
 
 - Hardened provider runtime behavior so OpenAI-compatible providers normalize cancellation, timeout, authentication, rate-limit, and HTTP failure handling consistently.
