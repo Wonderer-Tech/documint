@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/navigation-repair.yml"
       - ".github/repairs/generated-html-navigation.py"
+      - ".github/repairs/generated-html-search.py"
 
 permissions:
   contents: write
@@ -29,7 +30,9 @@ jobs:
         with:
           node-version: 20
       - name: Apply guarded source repair
-        run: python .github/repairs/generated-html-navigation.py
+        run: |
+          python .github/repairs/generated-html-navigation.py
+          python .github/repairs/generated-html-search.py
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Typecheck, bundle and unit regressions
