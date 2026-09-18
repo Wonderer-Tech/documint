@@ -38,19 +38,23 @@ jobs:
 
       - name: Package VSIX
         run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          VSIX="releases/documint-${VERSION}.vsix"
           mkdir -p releases
-          npx @vscode/vsce package --out releases/documint-1.0.4.vsix
-          ls -lh releases/documint-1.0.4.vsix
-          unzip -t releases/documint-1.0.4.vsix
+          npx @vscode/vsce package --out "${VSIX}"
+          ls -lh "${VSIX}"
+          unzip -t "${VSIX}"
 
       - name: Commit VSIX artifact
         run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          VSIX="releases/documint-${VERSION}.vsix"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f releases/documint-1.0.4.vsix
+          git add -f "${VSIX}"
           if git diff --cached --quiet; then
             echo "VSIX artifact unchanged; nothing to commit."
             exit 0
           fi
-          git commit -m "release: add documint 1.0.4 vsix"
+          git commit -m "release: add documint ${VERSION} vsix"
           git push origin HEAD:main
