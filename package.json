@@ -2,7 +2,7 @@
   "name": "documint",
   "displayName": "DocuMint — Code Documentation Generator",
   "description": "Generate source-grounded Markdown and HTML documentation locally with no AI, or enhance it with OpenAI, Anthropic, OpenRouter, DeepSeek, and custom providers directly inside VS Code.",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "publisher": "wonderertech",
   "icon": "resources/icon.png",
   "license": "MIT",
