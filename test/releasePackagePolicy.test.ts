@@ -101,6 +101,6 @@ test("README project structure documents public facades and implementation modul
   );
   assert.match(
     readme,
-    /Runtime code should import the public facade modules/,
+    /Runtime AI code should import the public facade modules/,
   );
 });
