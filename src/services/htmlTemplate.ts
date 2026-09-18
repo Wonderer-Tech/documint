@@ -3305,9 +3305,11 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
 
         var panel = document.createElement('section');
         panel.className = 'visual-blueprint';
+        var isLocalBlueprint = data.source === 'local';
         panel.appendChild(visualHeader(
-          'Auto Architecture Blueprint',
-          modules.length + ' modules | ' + moduleEdges.length + ' dependency routes',
+          isLocalBlueprint ? 'Local Architecture Blueprint' : 'Auto Architecture Blueprint',
+          modules.length + ' modules | ' + moduleEdges.length + ' dependency routes' +
+            (isLocalBlueprint ? ' | source-derived' : ''),
           null,
         ));
 
@@ -3323,9 +3325,19 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
 
         var dashboard = document.createElement('div');
         dashboard.className = 'architecture-dashboard';
-        dashboard.appendChild(dashboardWidget('modules', 'Modules', modules.length.toLocaleString(), 'clustered by folder and role'));
+        dashboard.appendChild(dashboardWidget(
+          'modules',
+          'Modules',
+          modules.length.toLocaleString(),
+          isLocalBlueprint ? 'structural path clusters' : 'clustered by folder and role',
+        ));
         dashboard.appendChild(dashboardWidget('routes', 'Routes', moduleEdges.length.toLocaleString(), 'detected internal dependency paths'));
-        dashboard.appendChild(dashboardWidget('files', 'Key Files', importantFileCount.toLocaleString(), 'highest-signal files surfaced'));
+        dashboard.appendChild(dashboardWidget(
+          'files',
+          'Key Files',
+          importantFileCount.toLocaleString(),
+          isLocalBlueprint ? 'ranked by entry points, exports, and dependency links' : 'highest-signal files surfaced',
+        ));
         dashboard.appendChild(dashboardWidget('languages', 'Languages', languageLabels.length.toLocaleString(), languageLabels.slice(0, 4).join(', ') || 'mixed'));
         panel.appendChild(dashboard);
 
@@ -3354,11 +3366,23 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
           .filter(function (module) { return module.role === 'Provider' || module.role === 'Service'; })
           .slice(0, 5)
           .map(function (module) { return module.name; });
+        var connectedModuleIds = {};
+        moduleEdges.forEach(function (edge) {
+          connectedModuleIds[edge.from] = true;
+          connectedModuleIds[edge.to] = true;
+        });
+        var connectedModules = modules
+          .filter(function (module) { return connectedModuleIds[moduleDomId(module)]; })
+          .slice(0, 5)
+          .map(function (module) { return module.name; });
         flow.appendChild(stage('Entry Points', data.entryPoints || []));
         appendArrow(flow);
         flow.appendChild(stage('Module Clusters', coreModules));
         appendArrow(flow);
-        flow.appendChild(stage('Services / Providers', providers));
+        flow.appendChild(stage(
+          isLocalBlueprint ? 'Connected Modules' : 'Services / Providers',
+          isLocalBlueprint ? connectedModules : providers,
+        ));
         appendArrow(flow);
         flow.appendChild(stage('Output', ['Markdown documentation', 'HTML documentation', 'Editable diagrams']));
         panel.appendChild(flow);
