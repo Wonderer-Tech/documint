@@ -581,8 +581,8 @@ export abstract class BaseAIProvider implements AIProvider {
         flush();
         let rem = line;
         while (rem.length > 0) {
-          chunks.push(rem.substring(0, maxTokens * 4));
-          rem = rem.substring(maxTokens * 4);
+          chunks.push(rem.substring(0, safeMaxTokens * 4));
+          rem = rem.substring(safeMaxTokens * 4);
         }
         continue;
       }
