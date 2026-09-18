@@ -2,6 +2,11 @@ import * as vscode from "vscode";
 import { DocumentationContext, DocumentationResult } from "../types";
 import { SecretStorageManager } from "../config/secretStorage";
 import { mergeChunkDocumentation } from "./chunkDocumentationMerge";
+import {
+  CONTEXT_WINDOW_TOO_SMALL_FOR_PROMPT_ERROR,
+  requirePositiveChunkTokenBudget,
+} from "./chunkTokenBudget";
+import { ProviderRequestStartScheduler } from "./providerRequestStartScheduler";
 
 export interface AIProvider {
   name: string;
@@ -40,7 +45,7 @@ export abstract class BaseAIProvider implements AIProvider {
   public abstract isLocal: boolean;
 
   protected secretManager: SecretStorageManager;
-  private nextApiRequestStart = 0;
+  private readonly requestStartScheduler = new ProviderRequestStartScheduler();
 
   constructor(protected context: vscode.ExtensionContext) {
     this.secretManager = SecretStorageManager.getInstance(context);
@@ -411,6 +416,9 @@ export abstract class BaseAIProvider implements AIProvider {
         this.getTokenCount(promptTemplate.replace("{CODE}", "")) +
         500;
       const maxCodeTokens = maxCtx - overhead - 1024;
+      if (maxCodeTokens <= 0) {
+        throw new Error(CONTEXT_WINDOW_TOO_SMALL_FOR_PROMPT_ERROR);
+      }
 
       if (this.getTokenCount(context.code) > maxCodeTokens) {
         return await this.generateChunked(
@@ -509,19 +517,17 @@ export abstract class BaseAIProvider implements AIProvider {
     context: DocumentationContext,
   ): Promise<void> {
     const delayMs = this.resolveRateLimitDelay(context.rateLimitDelay);
-    if (delayMs <= 0) {
-      return;
-    }
+    await this.requestStartScheduler.waitForSlot(
+      delayMs,
+      (waitMs) => this.waitForRateLimitDelay(waitMs, context.cancellationToken),
+      () => !!context.cancellationToken?.isCancellationRequested,
+    );
+  }
 
-    if (context.cancellationToken?.isCancellationRequested) {
-      throw new Error("Generation cancelled");
-    }
-
-    const now = Date.now();
-    const scheduledStart = Math.max(now, this.nextApiRequestStart);
-    this.nextApiRequestStart = scheduledStart + delayMs;
-    const waitMs = scheduledStart - now;
-
+  private async waitForRateLimitDelay(
+    waitMs: number,
+    cancellationToken?: vscode.CancellationToken,
+  ): Promise<void> {
     if (waitMs <= 0) {
       return;
     }
@@ -533,7 +539,7 @@ export abstract class BaseAIProvider implements AIProvider {
         resolve();
       }, waitMs);
 
-      disposable = context.cancellationToken?.onCancellationRequested(() => {
+      disposable = cancellationToken?.onCancellationRequested(() => {
         clearTimeout(timeout);
         disposable?.dispose();
         reject(new Error("Generation cancelled"));
@@ -554,6 +560,7 @@ export abstract class BaseAIProvider implements AIProvider {
 
   /** Splits code at logical boundaries (function/class declarations, blank lines). */
   protected chunkCode(code: string, maxTokens: number): string[] {
+    const safeMaxTokens = requirePositiveChunkTokenBudget(maxTokens);
     const chunks: string[] = [];
     const lines = code.split("\n");
     let current: string[] = [];
@@ -570,7 +577,7 @@ export abstract class BaseAIProvider implements AIProvider {
     for (const line of lines) {
       const lt = this.getTokenCount(line);
 
-      if (lt > maxTokens) {
+      if (lt > safeMaxTokens) {
         flush();
         let rem = line;
         while (rem.length > 0) {
@@ -580,7 +587,7 @@ export abstract class BaseAIProvider implements AIProvider {
         continue;
       }
 
-      if (currentTokens + lt > maxTokens) {
+      if (currentTokens + lt > safeMaxTokens) {
         let splitAt = -1;
         for (let i = current.length - 1; i >= 0; i--) {
           const p = current[i].trim();
