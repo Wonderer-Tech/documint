@@ -30,6 +30,7 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 docs/**
+documint/**
 out/**
 coverage/**
 test/**
