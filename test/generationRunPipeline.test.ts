@@ -61,3 +61,24 @@ test("raw prompt metadata path consumes the outer generation run context", () =>
     /provider\.generateMarkdownFromPrompt[\s\S]*requestContextWindow\.run/,
   );
 });
+
+
+test("AI and Local runtime use the dedicated DocuMint output directory", () => {
+  const extensionSource = readFileSync("src/extensionBase.ts", "utf-8");
+  const aiSource = readFileSync("src/services/docGeneratorBase.ts", "utf-8");
+  const localSource = readFileSync(
+    "src/services/localDocumentationGenerator.ts",
+    "utf-8",
+  );
+  const cacheSource = readFileSync(
+    "src/services/generationCachePolicy.ts",
+    "utf-8",
+  );
+
+  for (const source of [extensionSource, aiSource, localSource, cacheSource]) {
+    assert.match(source, /DOCUMINT_OUTPUT_DIRECTORY/);
+  }
+  assert.doesNotMatch(aiSource, /workspaceFolder\.uri, "docs"/);
+  assert.doesNotMatch(localSource, /workspaceFolder\.uri, "docs"/);
+  assert.doesNotMatch(cacheSource, /workspaceFolder\.uri, "docs"/);
+});
