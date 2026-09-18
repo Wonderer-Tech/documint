@@ -64,7 +64,7 @@ export function buildLocalDocumentationDocument(
   const languages = Array.from(
     new Set(sortedFiles.map((file) => file.language).filter(Boolean)),
   ).sort((a, b) => a.localeCompare(b));
-  const { contentHtml, tocHtml } = renderMarkdownForTemplate(markdown);
+  const { contentHtml, tocHtml } = renderMarkdownForTemplate(markdown, sortedFiles.map((file) => file.path));
   const generationDate = new Date().toISOString();
   const safeProjectName = cleanText(projectName) || "Project";
 
@@ -86,12 +86,13 @@ export function buildLocalDocumentationDocument(
   };
 }
 
-function renderMarkdownForTemplate(markdown: string): {
+function renderMarkdownForTemplate(markdown: string, filePaths: string[]): {
   contentHtml: string;
   tocHtml: string;
 } {
   const usedIds = new Map<string, number>();
-  const headings: Array<{ level: number; id: string; text: string }> = [];
+  const headings: Array<{ level: number; id: string; text: string; filePath?: string }> = [];
+  const knownFiles = new Set(filePaths.map((filePath) => filePath.replace(/\\/g, "/")));
   let contentHtml = marked.parse(markdown) as string;
 
   contentHtml = contentHtml.replace(
@@ -103,8 +104,11 @@ function renderMarkdownForTemplate(markdown: string): {
       const seen = usedIds.get(base) ?? 0;
       usedIds.set(base, seen + 1);
       const id = seen === 0 ? base : `${base}-${seen + 1}`;
-      headings.push({ level, id, text });
-      return `<h${level} id="${escapeHtmlAttribute(id)}">${innerHtml}</h${level}>`;
+      const filePath = level === 2 && /^<code>[\s\S]*<\/code>$/.test(innerHtml) && knownFiles.has(text)
+        ? text : undefined;
+      headings.push({ level, id, text, filePath });
+      const fileAttribute = filePath ? ` data-documint-file-path="${escapeHtmlAttribute(filePath)}"` : "";
+      return `<h${level} id="${escapeHtmlAttribute(id)}"${fileAttribute}>${innerHtml}</h${level}>`;
     },
   );
 
@@ -112,7 +116,7 @@ function renderMarkdownForTemplate(markdown: string): {
     .filter((heading) => heading.level <= 3)
     .map(
       (heading) =>
-        `<li class="toc-level-${heading.level}"><a href="#${escapeHtmlAttribute(heading.id)}">${escapeHtml(heading.text)}</a></li>`,
+        `<li><a class="toc-link level-${heading.level}" href="#${escapeHtmlAttribute(heading.id)}"${heading.filePath ? ` data-documint-file-path="${escapeHtmlAttribute(heading.filePath)}"` : ""}><span class="toc-text">${escapeHtml(heading.text)}</span></a></li>`,
     )
     .join("");
 

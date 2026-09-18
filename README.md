@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
-![Version](https://img.shields.io/badge/version-1.0.5-green)
+![Version](https://img.shields.io/badge/version-1.0.6-green)
 
 DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file. Generate deterministic documentation entirely on your machine with **Local Documentation — No AI**, or use AI providers such as OpenAI, Anthropic, OpenRouter, DeepSeek, or a custom OpenAI-compatible endpoint for enhanced explanations.
 
@@ -185,7 +185,7 @@ ext install wonderertech.documint
 ### VSIX
 
 ```bash
-code --install-extension documint-1.0.5.vsix
+code --install-extension documint-1.0.6.vsix
 ```
 
 ### Build from Source
@@ -451,3 +451,7 @@ Issues and PRs are welcome.
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## 1.0.6 — Generated navigation repair
+
+Local and AI-format HTML now share working folder-wise collapsible navigation. Local TOCs emit the canonical link classes and explicit file identity, including route-group and spaced filenames. The chart function/map collision is fixed; optional chart failures cannot block navigation or search. Module chart totals include every emitted module. Local cache v4 regenerates older HTML once. Browser acceptance covers collapse, filtering, anchors, themes, charts, offline rendering and failure isolation.

@@ -279,6 +279,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       border-bottom: 1px solid var(--border); margin-bottom: 8px;
     }
     .sidebar-label.legacy-hidden { display: none; }
+    .toc-nav a { color: var(--text-secondary); text-decoration: none; }
     .toc-nav ul { list-style: none; padding: 0 6px; }
     .toc-nav li { margin: 0; position: relative; }
     .toc-nav.smart { padding: 0; }
@@ -2594,6 +2595,10 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
         border-radius: 15px;
       }
 
+      .documint-jelly-ui .architecture-pie-panel {
+        grid-template-columns: 1fr;
+      }
+
       .documint-jelly-ui .main table {
         display: block;
         overflow-x: auto;
@@ -3496,13 +3501,13 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
           .filter(function (module) { return module.role === 'Provider' || module.role === 'Service'; })
           .slice(0, 5)
           .map(function (module) { return module.name; });
-        var connectedModuleIds = {};
+        var connectedModuleIndex = {};
         moduleEdges.forEach(function (edge) {
-          connectedModuleIds[edge.from] = true;
-          connectedModuleIds[edge.to] = true;
+          connectedModuleIndex[edge.from] = true;
+          connectedModuleIndex[edge.to] = true;
         });
         var connectedModules = modules
-          .filter(function (module) { return connectedModuleIds[moduleDomId(module)]; })
+          .filter(function (module) { return connectedModuleIndex[moduleDomId(module)]; })
           .slice(0, 5)
           .map(function (module) { return module.name; });
         flow.appendChild(stage('Entry Points', data.entryPoints || []));
@@ -3660,8 +3665,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
               var av = moduleMetricValue(a, metric);
               var bv = moduleMetricValue(b, metric);
               return bv - av || String(a.name || '').localeCompare(String(b.name || ''));
-            })
-            .slice(0, 8);
+            });
         }
 
         function renderPie(rows, metric) {
@@ -4291,12 +4295,20 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       });
     }
 
+    function safelyEnhance(name, callback) {
+      function report(error) { console.warn('[DocuMint] ' + name + ' unavailable:', error); }
+      try {
+        var result = callback();
+        if (result && typeof result.catch === 'function') result.catch(report);
+      } catch (error) { report(error); }
+    }
+
     function enhanceVisualBlueprints() {
-      enhanceArchitectureBlueprints();
-      enhanceCodeWorkflowBlocks();
-      enhanceD2SourceBlocks();
-      enhanceExcalidrawBlueprints();
-      enhanceDependencyGraphs();
+      safelyEnhance('Architecture charts', enhanceArchitectureBlueprints);
+      safelyEnhance('Code workflow', enhanceCodeWorkflowBlocks);
+      safelyEnhance('D2 diagrams', enhanceD2SourceBlocks);
+      safelyEnhance('Whiteboard', enhanceExcalidrawBlueprints);
+      safelyEnhance('Dependency graph', enhanceDependencyGraphs);
     }
 
     function applyHighlighting() {
@@ -4363,7 +4375,27 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       var nav = document.getElementById('tocNav');
       if (!nav || nav.classList.contains('smart')) return;
 
-      var originalLinks = Array.from(nav.querySelectorAll('.toc-link'));
+      // Normalize canonical and legacy Local TOCs before building the tree.
+      var originalLinks = Array.from(nav.querySelectorAll('a[href^="#"]'));
+      originalLinks.forEach(function (link) {
+        var target = document.getElementById((link.getAttribute('href') || '').slice(1));
+        var item = link.closest('li');
+        var levelMatch = ((item && item.className) || '').match(/toc-level-([1-6])/);
+        var headingLevel = target && /^H[1-6]$/.test(target.tagName) ? target.tagName.slice(1) : '2';
+        if (!link.classList.contains('toc-link')) {
+          link.classList.add('toc-link', 'level-' + (levelMatch ? levelMatch[1] : headingLevel));
+        }
+        if (!link.querySelector('.toc-text')) {
+          var label = document.createElement('span');
+          label.className = 'toc-text';
+          label.textContent = link.textContent || '';
+          link.textContent = '';
+          link.appendChild(label);
+        }
+        if (target && target.hasAttribute('data-documint-file-path')) {
+          link.setAttribute('data-documint-file-path', target.getAttribute('data-documint-file-path'));
+        }
+      });
       if (!originalLinks.length) return;
 
       function linkText(link) {
@@ -4408,6 +4440,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       }
 
       function isFilePath(text, link) {
+        if (link && link.hasAttribute('data-documint-file-path')) return true;
         var value = text.trim();
         if (!value || /[(){}:]/.test(value) || /\s/.test(value)) return false;
         return /(^|\/)[^/]+\.[a-z0-9][a-z0-9-]*$/i.test(value);
@@ -4463,6 +4496,10 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       function cloneLink(link, extraClass, displayText, searchText) {
         var clone = link.cloneNode(true);
         if (extraClass) clone.classList.add(extraClass);
+        if (extraClass === 'file-link') {
+          for (var level = 1; level <= 6; level++) clone.classList.remove('level-' + level);
+          clone.classList.add('level-1');
+        }
         if (displayText) setLinkLabel(clone, displayText);
         clone.setAttribute('data-toc-text', (searchText || linkText(link)).toLowerCase());
         if (searchText) clone.setAttribute('title', searchText);
@@ -4473,7 +4510,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
         var details = document.createElement('details');
         details.className = 'smart-toc-group';
         details.setAttribute('data-group', id);
-        if (open || items.length <= 8) details.open = true;
+        if (open) details.open = true;
 
         var summary = document.createElement('summary');
         summary.className = 'smart-toc-summary';
@@ -4532,7 +4569,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
           .forEach(function (folder) {
             var details = document.createElement('details');
             details.className = 'file-tree-folder';
-            details.open = depth < 2;
+            details.open = depth < 1;
             details.setAttribute('data-folder-text', folder.name.toLowerCase());
 
             var summary = document.createElement('summary');
@@ -4659,20 +4696,25 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
         var text = linkText(link);
         if (!text) return;
 
+        // Source file identity takes precedence over labels containing "d2", etc.
+        if (isFilePath(text, link)) {
+          if (!builtFromProjectTree) {
+            var filePath = link.getAttribute('data-documint-file-path') || text;
+            filePath = filePath.replace(/\\/g, '/');
+            fileSeen = true;
+            fileCount++;
+            var fileName = filePath.split('/').filter(Boolean).pop() || filePath;
+            currentFileNode = insertFileNode(filePath, cloneLink(link, 'file-link', fileName, filePath));
+          }
+          return;
+        }
+
         if (isVisual(text)) {
           visualLinks.push(cloneLink(link, 'visual-link'));
           return;
         }
 
         if (!builtFromProjectTree) {
-          if (isFilePath(text, link)) {
-            fileSeen = true;
-            fileCount++;
-            var fileName = text.replace(/\\/g, '/').split('/').filter(Boolean).pop() || text;
-            currentFileNode = insertFileNode(text, cloneLink(link, 'file-link', fileName, text));
-            return;
-          }
-
           if (currentFileNode && isUsefulFileSection(text)) {
             var key = fileSectionKey(text);
             if (key && !currentFileNode.sectionKeys.has(key)) {
@@ -4703,7 +4745,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
 
       var smartNav = document.createDocumentFragment();
       smartNav.appendChild(makeGroup('project', 'P', 'Project', projectLinks, true));
-      smartNav.appendChild(makeGroup('visuals', 'V', 'Visual Blueprints', visualLinks, true));
+      smartNav.appendChild(makeGroup('visuals', 'V', 'Visual Blueprints', visualLinks, false));
 
       var fileItems = [renderFileTreeNode(fileRoot, 0)];
       smartNav.appendChild(makeGroup('project-tree', 'T', 'Project Tree', fileItems, true, fileCount + ' files'));
@@ -4718,8 +4760,18 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
 
       var filter = document.getElementById('sidebarFilter');
       if (filter) {
+        var openBeforeFilter = null;
+        var noResults = document.createElement('div');
+        noResults.className = 'smart-toc-empty smart-hidden';
+        noResults.textContent = 'No matching files or sections.';
+        noResults.setAttribute('role', 'status');
+        nav.appendChild(noResults);
         filter.addEventListener('input', function () {
           var query = filter.value.trim().toLowerCase();
+          if (query && !openBeforeFilter) {
+            openBeforeFilter = new Map();
+            nav.querySelectorAll('details').forEach(function (item) { openBeforeFilter.set(item, item.open); });
+          }
           nav.querySelectorAll('.toc-link').forEach(function (link) {
             var text = link.getAttribute('data-toc-text') || linkText(link).toLowerCase();
             link.classList.toggle('smart-hidden', !!query && text.indexOf(query) === -1);
@@ -4751,6 +4803,14 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
             group.classList.toggle('smart-hidden', !!query && !visible);
             if (query && visible) group.open = true;
           });
+          var anyMatch = Array.from(nav.querySelectorAll('.toc-link')).some(function (link) {
+            return !link.classList.contains('smart-hidden');
+          });
+          noResults.classList.toggle('smart-hidden', !query || anyMatch);
+          if (!query && openBeforeFilter) {
+            openBeforeFilter.forEach(function (open, item) { item.open = open; });
+            openBeforeFilter = null;
+          }
         });
       }
     }
@@ -4807,7 +4867,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
 
     // ── Active TOC tracking ──────────────────────────────────────────────────
     function initTocTracking() {
-      var headings = document.querySelectorAll('.main h2, .main h3, .main h4, .main h5, .main h6');
+      var headings = document.querySelectorAll('.main h1, .main h2, .main h3, .main h4, .main h5, .main h6');
       var tocLinks = document.querySelectorAll('.toc-link');
       if (!headings.length || !tocLinks.length) return;
 
@@ -4830,11 +4890,11 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
 
     function buildIndex() {
       var currentH2 = '';
-      document.querySelectorAll('.main h2, .main h3, .main h4, .main p').forEach(function (el) {
+      document.querySelectorAll('.main h1, .main h2, .main h3, .main h4, .main h5, .main h6, .main p').forEach(function (el) {
         var tag = el.tagName;
         var text = el.textContent.replace(/#$/, '').trim();
         if (!text || text.length < 3) return;
-        if (tag === 'H2') currentH2 = text;
+        if (tag === 'H1' || tag === 'H2') currentH2 = text;
         searchIndex.push({ text: text, id: el.getAttribute('id'), tag: tag, file: currentH2 });
       });
     }
@@ -4908,16 +4968,16 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     function runInit() {
       if (initDone) return;
       initDone = true;
-      initMermaid();          // async — fire and forget
-      enhanceProjectTreeVisuals();
+      safelyEnhance('Sidebar navigation', enhanceSidebarNavigation);
+      safelyEnhance('Search index', buildIndex);
+      safelyEnhance('Active navigation', initTocTracking);
+      safelyEnhance('Project tree', enhanceProjectTreeVisuals);
       enhanceVisualBlueprints();
-      applyHighlighting();
-      enhanceCodeBlocks();
-      addAnchors();
-      enhanceSidebarNavigation();
-      buildIndex();
-      initTocTracking();
-      enhanceCallouts();
+      safelyEnhance('Mermaid diagrams', initMermaid);
+      safelyEnhance('Syntax highlighting', applyHighlighting);
+      safelyEnhance('Code controls', enhanceCodeBlocks);
+      safelyEnhance('Heading anchors', addAnchors);
+      safelyEnhance('Callouts', enhanceCallouts);
 
       // Modal close button
       var modalClose = document.getElementById('diagramModalClose');

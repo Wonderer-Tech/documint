@@ -1,4 +1,8 @@
 # Changelog
+## 1.0.6 — Generated navigation repair
+
+Local and AI-format HTML now share working folder-wise collapsible navigation. Local TOCs emit the canonical link classes and explicit file identity, including route-group and spaced filenames. The chart function/map collision is fixed; optional chart failures cannot block navigation or search. Module chart totals include every emitted module. Local cache v4 regenerates older HTML once. Browser acceptance covers collapse, filtering, anchors, themes, charts, offline rendering and failure isolation.
+
 
 All notable changes to DocuMint are documented here.
 
