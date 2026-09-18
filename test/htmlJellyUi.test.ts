@@ -19,11 +19,11 @@ test("HTML template carries the soft Jelly UI shell and accessibility states", (
   assert.match(source, /Professional soft sidebar/);
   assert.match(
     source,
-    /\.documint-jelly-ui \.sidebar \{[\s\S]*left: 0;[\s\S]*border-right: 1px solid var\(--jelly-border\);[\s\S]*border-radius: 0;/,
+    /\.documint-jelly-ui \.sidebar \{[^}]*left: 0;[^}]*border-right: 1px solid var\(--jelly-border\);[^}]*border-radius: 0;/,
   );
   assert.doesNotMatch(
     source,
-    /\.documint-jelly-ui \.sidebar \{[\s\S]*?border-radius: 20px;/,
+    /\.documint-jelly-ui \.sidebar \{[^}]*border-radius: 20px;/,
   );
   assert.match(source, /\.documint-jelly-ui \.smart-toc-group\[open\]/);
   assert.match(source, /inset 3px 0 0 var\(--accent\)/);
@@ -64,7 +64,7 @@ test("soft HTML keeps the module scale pie chart visually prominent", () => {
   assert.match(source, /Keep the 1\.0\.4 module-scale pie chart prominent/);
   assert.match(
     source,
-    /\.documint-jelly-ui \.architecture-pie-panel \{[\s\S]*display: grid;[\s\S]*min-height: 250px;[\s\S]*border-radius: 16px;/,
+    /\.documint-jelly-ui \.architecture-pie-panel \{[^}]*display: grid;[^}]*min-height: 250px;[^}]*border-radius: 16px;/,
   );
   assert.match(source, /\.architecture-pie-svg/);
   assert.match(source, /\.architecture-pie-segment/);
