@@ -8,6 +8,7 @@ import {
   getLanguageFromPath,
   getTargetExtensions,
   isInsideWorkspace,
+  isRelativePathInsideExcludedDirectory,
   normalizeFsPath,
 } from "./scannerPolicy";
 import { scannerRunTargetScope } from "./scannerRunTargetScope";
@@ -117,25 +118,21 @@ export class WorkspaceScanner {
     for (const uri of allFiles) {
       const normalizedPath = normalizeFsPath(uri.fsPath);
       const isExplicitFile = explicitFiles.has(normalizedPath);
-      const fsPath = uri.fsPath.toLowerCase();
+      const relativePath = path
+        .relative(workspaceFolder.uri.fsPath, uri.fsPath)
+        .replace(/\\/g, "/");
 
+      // Exclusions are evaluated against the path *inside* the workspace.
+      // Using the absolute fsPath here incorrectly excludes every source file
+      // when the workspace root itself is named like an excluded directory,
+      // e.g. the DocuMint repository root named "documint".
       const shouldSkip =
         !isExplicitFile &&
-        excludedDirs.some(
-          (dir) =>
-            fsPath.includes(`/${dir.toLowerCase()}/`) ||
-            fsPath.includes(`\\${dir.toLowerCase()}\\`) ||
-            fsPath.endsWith(`/${dir.toLowerCase()}`) ||
-            fsPath.endsWith(`\\${dir.toLowerCase()}`),
-        );
+        isRelativePathInsideExcludedDirectory(relativePath, excludedDirs);
 
       if (shouldSkip) {
         continue;
       }
-
-      const relativePath = path
-        .relative(workspaceFolder.uri.fsPath, uri.fsPath)
-        .replace(/\\/g, "/");
 
       try {
         // Large source files should reach the provider layer, which already
