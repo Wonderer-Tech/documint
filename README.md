@@ -80,7 +80,7 @@ DocuMint 1.0.5 adds a complete **Local Documentation — No AI** path and harden
 - **Broader scanner coverage:** C/C++ headers and modern JS/TS module extensions such as `.mjs`, `.cjs`, `.mts`, and `.cts` are included in discovery/dependency resolution.
 - **Output resilience:** generated HTML preserves Mermaid source when rendering/CDN assets fail, and Local TOC anchors decode escaped heading entities correctly.
 - **Soft Jelly UI:** generated HTML now uses floating rounded navigation, softer cards/tables/code surfaces, calmer borders and shadows, improved spacing, smoother focus/hover states, and reduced-motion-aware interactions in both dark and light themes.
-- **Verified build:** current release code passes TypeScript typecheck, esbuild bundle, and the full **214/214 regression suite** in GitHub Actions.
+- **Verified build:** current release code passes TypeScript typecheck, esbuild bundle, and the full **218/218 regression suite** in GitHub Actions.
 - Cleaner VSIX output: generated docs and README-only demo media are excluded from the packaged extension.
 
 ### Local vs AI
