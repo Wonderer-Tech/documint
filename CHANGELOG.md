@@ -10,6 +10,8 @@ _No unreleased changes yet._
 
 ### Changed
 
+- Generated all DocuMint-owned output under a dedicated root-level `documint/` folder instead of the project's `docs/` directory; AI/Local output, cache manifests, cache-compatibility markers, and visual caches now stay together while legacy `docs/` content is left untouched.
+
 - Hardened provider runtime behavior so OpenAI-compatible providers normalize cancellation, timeout, authentication, rate-limit, and HTTP failure handling consistently.
 - Improved exhausted-retry reporting for transient provider failures so HTTP 408/425 responses and transport timeout codes retain accurate timeout/retry context.
 - Normalized gateway-style HTTP status shapes, including `statusCode` and numeric-string statuses, so custom/OpenAI-compatible provider failures retain correct retry and user-facing error handling.
