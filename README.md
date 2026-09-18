@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
-![Version](https://img.shields.io/badge/version-1.0.4-green)
+![Version](https://img.shields.io/badge/version-1.0.5-green)
 
 DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file. Generate deterministic documentation entirely on your machine with **Local Documentation — No AI**, or use AI providers such as OpenAI, Anthropic, OpenRouter, DeepSeek, or a custom OpenAI-compatible endpoint for enhanced explanations.
 
@@ -22,7 +22,7 @@ It produces:
 ## Table of Contents
 
 - [What It Does](#what-it-does)
-- [What's New in 1.0.4](#whats-new-in-104)
+- [What's New in 1.0.5](#whats-new-in-105)
 - [How It Works](#how-it-works)
 - [Supported Providers](#supported-providers)
 - [Supported Languages](#supported-languages)
@@ -59,60 +59,40 @@ Local mode also maintains its own source/output fingerprint cache so unchanged L
 
 The extension runs directly inside VS Code through a sidebar webview.
 
-## What's New in 1.0.4
+## What's New in 1.0.5
 
-DocuMint 1.0.4 is focused on speed, cache reuse, and a cleaner premium generated-document experience.
+DocuMint 1.0.5 adds a complete **Local Documentation — No AI** path and hardens the AI pipeline for safer production use.
 
-**Headline:** super fast generation after the first run. The first generation builds full docs and cache; the second generation can reuse unchanged file docs, project overview data, and visual blueprint cache, so repeat runs are much faster.
+### 1.0.5 Highlights
 
-### 1.0.4 Highlights
-
-- Super fast generation flow: file documentation runs in parallel, with the default parallel request limit set to `15`.
-- Smarter local CPU prep: DocuMint analyzes source structure, dependencies, symbols, imports, and prompt context locally before calling the provider.
-- First run builds cache, second run is fast: unchanged docs, project overview, and visual blueprints can be reused instead of regenerated.
-- Generation-aware cache safety: provider/model/depth/token/temperature/context-window/custom-endpoint changes invalidate AI-generated documentation cache instead of reusing stale output.
-- Old cache wipe button: clear stale documentation and visual cache directly from the sidebar.
-- Cleaner generated HTML: default dark theme, improved layout width, fixed right-side gap, and better dark-mode readability.
-- Premium navigation: wider sidebar, VS Code-style project tree, folder/file icons, and `+` / `-` folder controls.
-- Better project flow: HTML content follows the same order as the Project Tree.
-- Visual upgrades: colored Module Scale Chart pie view, source-derived architecture map, editable diagram exports, whiteboard sketch, and interactive dependency graph.
-- Cleaner output: empty "no data found" style sections are removed when useful data is not available.
-- UI Storyboard removed from generated HTML so the output stays source-grounded and avoids fake-looking UI mockups.
-- Better provider support: OpenAI, Anthropic, OpenRouter, DeepSeek, and custom OpenAI-compatible endpoints are supported.
-- Updated defaults: OpenAI starts with `gpt-5.4-nano`; Anthropic fallback uses the active `claude-sonnet-5`; DeepSeek fallback uses `deepseek-flash`.
+- **Local Documentation — No AI:** generate source-grounded documentation entirely on-device with no API key, internet connection, model, or provider.
+- **File / Folder / Workspace parity:** Local mode uses the same exact target-path scanner semantics as AI mode.
+- **Deterministic Local project docs:** project facts, language/module summaries, source tree, entry points, dependencies, exported APIs, symbols, imports, dependents, and TODO/FIXME/HACK evidence.
+- **Local architecture diagrams:** source-derived module/file dependency views with Mermaid and D2 output, without invented architecture roles.
+- **Separate Local cache:** source fingerprints plus sanitized-output hashes allow safe reuse while keeping Local cache identity isolated from AI caches.
+- **Cleaner Local UX:** provider, model, authentication, custom endpoint, and AI-only Documentation Depth controls disappear in Local mode; the primary action becomes **Generate Local Documentation**.
+- **Safer AI context budgeting:** non-positive chunk budgets fail clearly instead of risking non-advancing loops, and raw/normal/chunked output budgets never exceed the remaining context window.
+- **Cancellation-safe provider pacing:** cancelled requests no longer reserve phantom future rate-limit slots.
+- **Canonical AI depth handling:** blank, mixed-case, or unsupported programmatic depth values normalize once and the same value drives runtime generation and cache identity.
+- **Provider/auth hardening:** custom OpenAI-compatible endpoints may run without a key, keyless custom providers show **API Key optional**, provider switching refreshes the correct Secret Storage state, and custom endpoint locality/URL rules are enforced consistently.
+- **Updated model capability handling:** current OpenAI GPT-5.6 and o4-mini, Anthropic, DeepSeek, and OpenRouter-routed capability metadata share canonical context/output limits and retired model IDs are guarded.
+- **Broader scanner coverage:** C/C++ headers and modern JS/TS module extensions such as `.mjs`, `.cjs`, `.mts`, and `.cts` are included in discovery/dependency resolution.
+- **Output resilience:** generated HTML preserves Mermaid source when rendering/CDN assets fail, and Local TOC anchors decode escaped heading entities correctly.
+- **Verified build:** current release code passes TypeScript typecheck, esbuild bundle, and the full **211/211 regression suite** in GitHub Actions.
 - Cleaner VSIX output: generated docs and README-only demo media are excluded from the packaged extension.
 
-### Estimated 100-Page Website Generation Time
+### Local vs AI
 
-These are practical estimates, not fixed benchmarks. Actual time depends on provider speed, selected model, rate limits, project size, file changes, and network latency.
-
-| Scenario | Before 1.0.4 | 1.0.4 first run | 1.0.4 second run with cache |
-|---|---:|---:|---:|
-| Standard documentation | 45-90 minutes | 10-25 minutes | 1-5 minutes |
-| Comprehensive documentation | 2+ hours | 20-45 minutes | 2-8 minutes |
-
-### Design Improvements
-
-| Area | 1.0.4 improvement |
-|---|---|
-| Generated HTML | Default dark theme, cleaner spacing, stronger visual hierarchy |
-| Sidebar | Wider premium panel with project-tree style navigation |
-| Project Tree | Folder/file icons, better nesting, and `+` / `-` expand controls |
-| Visual Blueprints | Source-derived architecture map, editable diagram exports, whiteboard sketch, and dependency graph |
-| Module Scale Chart | Colored pie chart with clearer module scale comparison |
-| Content Order | Documentation sections follow Project Tree order |
-| Cache Control | Clear Cache button plus automatic invalidation when generation-affecting settings change |
-| Output Cleanliness | Empty or low-value sections are hidden instead of shown as noise |
-
-### Visual Preview
-
-Interactive Dependency Graph:
-
-![DocuMint Interactive Dependency Graph](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/s3.png)
-
-Editable Diagram Export:
-
-![DocuMint Editable Diagram Export](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/s4.png)
+| Area | Local Documentation | AI Documentation |
+|---|---|---|
+| API key | Not required | Depends on provider |
+| Internet | Not required | Required for cloud providers |
+| Semantic inference | None | Yes, source-grounded |
+| File / Folder / Workspace | Yes | Yes |
+| Markdown / HTML | Yes | Yes |
+| Project facts and APIs | Deterministic static analysis | Static analysis + provider enhancement |
+| Architecture/dependencies | Resolved source relationships | Source relationships + AI explanation |
+| Cache | Separate Local fingerprint/output cache | Provider/model/settings-aware AI cache |
 
 ## How It Works
 
@@ -203,7 +183,7 @@ ext install wonderertech.documint
 ### VSIX
 
 ```bash
-code --install-extension documint-1.0.4.vsix
+code --install-extension documint-1.0.5.vsix
 ```
 
 ### Build from Source
@@ -400,8 +380,8 @@ src/
 |   |-- deepseekProvider.ts
 |   `-- customProvider.ts
 |-- services/
-|   |-- docGenerator.ts                 # Public AI generator facade + prompt-cache binding
-|   |-- docGeneratorBase.ts             # AI orchestration + writing docs output
+|   |-- docGenerator.ts                 # Public AI generator facade
+|   |-- docGeneratorBase.ts             # AI orchestration + canonical prompt/cache binding
 |   |-- generationMode.ts               # Canonical AI/Local mode normalization
 |   |-- localDocumentationGenerator.ts  # Local scan/analyze/write/cache runtime
 |   |-- localDocumentationDocument.ts   # Complete deterministic Local document assembly
