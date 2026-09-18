@@ -1,5 +1,6 @@
 import type { ProjectAnalysis } from "../analyzer/sourceAnalyzer";
 import type { WorkspaceFile } from "../types";
+import { renderLocalArchitectureVisualSections } from "./localVisualBlueprint";
 
 export interface LocalArchitectureDocumentationInput {
   projectName: string;
@@ -44,6 +45,8 @@ export function renderLocalArchitectureDocumentation(
     "### Module Relationships",
     "",
     renderModuleRelationshipTable(moduleEdges),
+    "",
+    renderLocalArchitectureVisualSections(input),
     "",
     "### Module Architecture — Mermaid",
     "",
