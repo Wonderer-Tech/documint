@@ -78,7 +78,7 @@ DocuMint 1.0.5 adds a complete **Local Documentation — No AI** path and harden
 - **Updated model capability handling:** current OpenAI GPT-5.6 and o4-mini, Anthropic, DeepSeek, and OpenRouter-routed capability metadata share canonical context/output limits and retired model IDs are guarded.
 - **Broader scanner coverage:** C/C++ headers and modern JS/TS module extensions such as `.mjs`, `.cjs`, `.mts`, and `.cts` are included in discovery/dependency resolution.
 - **Output resilience:** generated HTML preserves Mermaid source when rendering/CDN assets fail, and Local TOC anchors decode escaped heading entities correctly.
-- **Verified build:** current release code passes TypeScript typecheck, esbuild bundle, and the full **211/211 regression suite** in GitHub Actions.
+- **Verified build:** current release code passes TypeScript typecheck, esbuild bundle, and the full **212/212 regression suite** in GitHub Actions.
 - Cleaner VSIX output: generated docs and README-only demo media are excluded from the packaged extension.
 
 ### Local vs AI
@@ -333,7 +333,10 @@ Generated output is written to a dedicated `documint/` directory in the workspac
 
 - `documint/documentation.md`
 - `documint/documentation.html`
-- DocuMint cache/compatibility files used by AI and Local generation
+- `documint/.documint-cache.json` — AI documentation cache
+- `documint/.documint-visual-cache.json` — AI visual cache
+- `documint/.documint-generation-cache-key.json` — AI cache compatibility marker
+- `documint/.documint-local-cache.json` — Local source/output cache manifest
 
 DocuMint no longer writes generated output into your project's `docs/` directory. Existing legacy `docs/` files are not moved or deleted automatically.
 
