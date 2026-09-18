@@ -45,6 +45,7 @@ import "./providerSelectionRuntime.test";
 import "./projectVisualPolicy.test";
 import "./scannerRunIsolation.test";
 import "./htmlOfflineHardening.test";
+import "./htmlJellyUi.test";
 import "./releasePackagePolicy.test";
 import "./providerRuntimeNormalization.test";
 import "./publicFacadeBoundary.test";

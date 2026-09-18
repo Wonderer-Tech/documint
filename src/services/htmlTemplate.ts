@@ -1840,9 +1840,656 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ─── DOCUMINT JELLY UI ───────────────────────────────────────────────
+       A soft, floating visual layer that preserves the existing document
+       structure and behavior while reducing hard borders and dense surfaces.
+    ─────────────────────────────────────────────────────────────────────── */
+    :root[data-theme="dark"] {
+      --topbar-h: 58px;
+      --jelly-surface: rgba(22, 27, 34, .78);
+      --jelly-surface-strong: rgba(24, 30, 39, .94);
+      --jelly-surface-soft: rgba(255, 255, 255, .035);
+      --jelly-surface-hover: rgba(255, 255, 255, .055);
+      --jelly-border: rgba(148, 163, 184, .16);
+      --jelly-border-accent: rgba(88, 166, 255, .32);
+      --jelly-shadow: 0 20px 54px rgba(0, 0, 0, .24);
+      --jelly-shadow-soft: 0 8px 26px rgba(0, 0, 0, .16);
+      --jelly-highlight: inset 0 1px 0 rgba(255, 255, 255, .055);
+      --jelly-glow: rgba(88, 166, 255, .09);
+      --jelly-table-row: rgba(255, 255, 255, .024);
+    }
+
+    :root[data-theme="light"] {
+      --topbar-h: 58px;
+      --jelly-surface: rgba(255, 255, 255, .82);
+      --jelly-surface-strong: rgba(255, 255, 255, .96);
+      --jelly-surface-soft: rgba(9, 105, 218, .035);
+      --jelly-surface-hover: rgba(9, 105, 218, .055);
+      --jelly-border: rgba(71, 85, 105, .14);
+      --jelly-border-accent: rgba(9, 105, 218, .24);
+      --jelly-shadow: 0 18px 48px rgba(15, 23, 42, .10);
+      --jelly-shadow-soft: 0 8px 24px rgba(15, 23, 42, .075);
+      --jelly-highlight: inset 0 1px 0 rgba(255, 255, 255, .9);
+      --jelly-glow: rgba(9, 105, 218, .075);
+      --jelly-table-row: rgba(15, 23, 42, .018);
+    }
+
+    .documint-jelly-ui {
+      background:
+        radial-gradient(circle at 9% 8%, var(--jelly-glow), transparent 24rem),
+        radial-gradient(circle at 92% 24%, var(--jelly-glow), transparent 28rem),
+        var(--bg-primary);
+      letter-spacing: -.005em;
+    }
+
+    .documint-jelly-ui::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        linear-gradient(135deg, transparent 0 36%, var(--jelly-surface-soft) 58%, transparent 78%);
+      opacity: .75;
+    }
+
+    .documint-jelly-ui .topbar {
+      top: 10px;
+      left: 12px;
+      right: 12px;
+      height: var(--topbar-h);
+      padding: 0 16px;
+      border: 1px solid var(--jelly-border);
+      border-radius: 18px;
+      background: var(--jelly-surface);
+      box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
+      backdrop-filter: blur(18px) saturate(1.12);
+      -webkit-backdrop-filter: blur(18px) saturate(1.12);
+    }
+
+    .documint-jelly-ui .topbar-client {
+      padding: 6px 10px 6px 8px;
+      border-radius: 10px;
+      transition: background .16s ease, transform .16s ease;
+    }
+
+    .documint-jelly-ui .topbar-client:hover {
+      background: var(--jelly-surface-hover);
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+
+    .documint-jelly-ui .topbar-client::before {
+      width: 9px;
+      height: 9px;
+      box-shadow: 0 0 0 5px var(--accent-subtle);
+    }
+
+    .documint-jelly-ui .topbar-sep {
+      opacity: .65;
+    }
+
+    .documint-jelly-ui .search-wrap {
+      width: min(300px, 32vw);
+    }
+
+    .documint-jelly-ui .search-input,
+    .documint-jelly-ui .sidebar-filter,
+    .documint-jelly-ui .dependency-search {
+      border-color: var(--jelly-border);
+      border-radius: 12px;
+      background: var(--jelly-surface-strong);
+      box-shadow: var(--jelly-highlight);
+      transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+
+    .documint-jelly-ui .search-input:focus,
+    .documint-jelly-ui .sidebar-filter:focus,
+    .documint-jelly-ui .dependency-search:focus {
+      border-color: var(--jelly-border-accent);
+      box-shadow: 0 0 0 3px var(--accent-subtle), var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .search-dropdown {
+      margin-top: 4px;
+      border-color: var(--jelly-border);
+      border-radius: 16px;
+      background: var(--jelly-surface-strong);
+      box-shadow: var(--jelly-shadow);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .documint-jelly-ui .search-item {
+      border-bottom-color: var(--jelly-border);
+      transition: background .14s ease, padding-left .14s ease;
+    }
+
+    .documint-jelly-ui .search-item:hover {
+      background: var(--jelly-surface-hover);
+      padding-left: 17px;
+    }
+
+    .documint-jelly-ui .theme-btn,
+    .documint-jelly-ui .diagram-btn,
+    .documint-jelly-ui .visual-action-btn,
+    .documint-jelly-ui .copy-btn {
+      border-color: var(--jelly-border);
+      border-radius: 11px;
+      background: var(--jelly-surface-strong);
+      box-shadow: var(--jelly-highlight);
+      transition:
+        transform .16s ease,
+        border-color .16s ease,
+        background .16s ease,
+        color .16s ease,
+        box-shadow .16s ease;
+    }
+
+    .documint-jelly-ui .theme-btn:hover,
+    .documint-jelly-ui .diagram-btn:hover,
+    .documint-jelly-ui .visual-action-btn:hover,
+    .documint-jelly-ui .copy-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--jelly-border-accent);
+      background: var(--jelly-surface-hover);
+      box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .sidebar {
+      top: 80px;
+      bottom: 12px;
+      left: 12px;
+      width: var(--sidebar-w);
+      height: auto;
+      padding: 12px 0;
+      border: 1px solid var(--jelly-border);
+      border-radius: 20px;
+      background: var(--jelly-surface);
+      box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
+      backdrop-filter: blur(18px) saturate(1.08);
+      -webkit-backdrop-filter: blur(18px) saturate(1.08);
+    }
+
+    .documint-jelly-ui .sidebar-shell {
+      padding: 0 10px 18px;
+    }
+
+    .documint-jelly-ui .sidebar-head {
+      padding: 14px;
+      margin: 0 0 12px;
+      border-color: var(--jelly-border);
+      border-radius: 16px;
+      background:
+        linear-gradient(145deg, var(--jelly-surface-strong), var(--jelly-surface-soft));
+      box-shadow: var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .sidebar-project-name {
+      margin-top: 6px;
+      font-size: 15px;
+      letter-spacing: -.015em;
+    }
+
+    .documint-jelly-ui .smart-toc-group {
+      margin-bottom: 8px;
+      border-color: transparent;
+      border-radius: 13px;
+      background: transparent;
+      box-shadow: none;
+      transition: background .16s ease, border-color .16s ease;
+    }
+
+    .documint-jelly-ui .smart-toc-group:hover,
+    .documint-jelly-ui .smart-toc-group[open] {
+      border-color: var(--jelly-border);
+      background: var(--jelly-surface-soft);
+      box-shadow: none;
+    }
+
+    .documint-jelly-ui .smart-toc-summary,
+    .documint-jelly-ui .file-tree-summary,
+    .documint-jelly-ui .smart-toc-items .toc-link {
+      border-radius: 10px;
+      transition:
+        background .14s ease,
+        color .14s ease,
+        transform .14s ease,
+        border-color .14s ease;
+    }
+
+    .documint-jelly-ui .smart-toc-summary:hover,
+    .documint-jelly-ui .file-tree-summary:hover,
+    .documint-jelly-ui .smart-toc-items .toc-link:hover {
+      background: var(--jelly-surface-hover);
+    }
+
+    .documint-jelly-ui .smart-toc-items .toc-link.active,
+    .documint-jelly-ui .toc-link.active {
+      background:
+        linear-gradient(90deg, var(--accent-subtle), transparent);
+      border-left-color: var(--accent) !important;
+      box-shadow: inset 0 0 0 1px var(--jelly-border);
+    }
+
+    .documint-jelly-ui .smart-toc-icon {
+      border-radius: 7px;
+      box-shadow: var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .main {
+      margin-left: calc(var(--sidebar-w) + 28px);
+      margin-top: calc(var(--topbar-h) + 32px);
+      width: calc(100% - var(--sidebar-w) - 40px);
+      padding: 30px clamp(24px, 4vw, 58px) 110px;
+    }
+
+    .documint-jelly-ui .main p,
+    .documint-jelly-ui .main > ul,
+    .documint-jelly-ui .main > ol,
+    .documint-jelly-ui .main blockquote {
+      max-width: 105ch;
+    }
+
+    .documint-jelly-ui .client-heading {
+      margin-bottom: 22px;
+    }
+
+    .documint-jelly-ui .client-name-highlight {
+      padding-bottom: 5px;
+      font-size: clamp(27px, 3vw, 36px);
+      letter-spacing: -.035em;
+      border-bottom: 0;
+      background: linear-gradient(135deg, var(--text-primary), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .documint-jelly-ui .stats-banner,
+    .documint-jelly-ui .project-tree-visual,
+    .documint-jelly-ui .visual-blueprint,
+    .documint-jelly-ui .d2-panel,
+    .documint-jelly-ui .whiteboard-panel,
+    .documint-jelly-ui .dependency-graph-panel,
+    .documint-jelly-ui .code-workflow-panel {
+      border-color: var(--jelly-border);
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, var(--jelly-surface), var(--jelly-surface-soft));
+      box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .stats-banner {
+      gap: 14px;
+      padding: 15px 18px;
+      margin-bottom: 34px;
+    }
+
+    .documint-jelly-ui .stat-item {
+      min-width: 88px;
+      padding: 5px 8px;
+      border-radius: 10px;
+    }
+
+    .documint-jelly-ui .stat-value {
+      letter-spacing: -.02em;
+    }
+
+    .documint-jelly-ui .calendar-chip,
+    .documint-jelly-ui .digital-clock {
+      border-color: var(--jelly-border);
+      border-radius: 12px;
+      background: var(--jelly-surface-strong);
+      box-shadow: var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .project-tree-header,
+    .documint-jelly-ui .visual-panel-header {
+      padding: 13px 16px;
+      border-bottom-color: var(--jelly-border);
+      background: var(--jelly-surface-soft);
+    }
+
+    .documint-jelly-ui .project-tree-row {
+      margin: 1px 7px;
+      padding: 5px 10px;
+      border-radius: 9px;
+      border-left: 0;
+      transition: background .14s ease, transform .14s ease;
+    }
+
+    .documint-jelly-ui .project-tree-row:hover {
+      background: var(--jelly-surface-hover);
+      transform: translateX(2px);
+    }
+
+    .documint-jelly-ui .project-tree-row.root {
+      background: var(--accent-subtle);
+      box-shadow: inset 0 0 0 1px var(--jelly-border-accent);
+    }
+
+    .documint-jelly-ui .architecture-widget,
+    .documint-jelly-ui .architecture-card,
+    .documint-jelly-ui .flow-stage,
+    .documint-jelly-ui .important-file-node,
+    .documint-jelly-ui .architecture-detail-file,
+    .documint-jelly-ui .d2-preview-node {
+      border-color: var(--jelly-border);
+      border-radius: 14px;
+      background: var(--jelly-surface-strong);
+      box-shadow: var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .architecture-widget {
+      padding: 13px 14px;
+    }
+
+    .documint-jelly-ui .architecture-card {
+      padding: 14px;
+      transition:
+        transform .16s ease,
+        border-color .16s ease,
+        box-shadow .16s ease,
+        opacity .16s ease;
+    }
+
+    .documint-jelly-ui .architecture-card:hover,
+    .documint-jelly-ui .architecture-card.active {
+      transform: translateY(-2px);
+      box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .architecture-pie-panel,
+    .documint-jelly-ui .architecture-details,
+    .documint-jelly-ui .dependency-details {
+      background: var(--jelly-surface-soft);
+    }
+
+    .documint-jelly-ui .architecture-pie-panel,
+    .documint-jelly-ui .architecture-segmented,
+    .documint-jelly-ui .architecture-edge,
+    .documint-jelly-ui .workflow-edge,
+    .documint-jelly-ui .meta-chip,
+    .documint-jelly-ui .file-meta-chip {
+      border-color: var(--jelly-border);
+      box-shadow: var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .main h1 {
+      margin: 50px 0 22px;
+      padding: 14px 17px;
+      border: 1px solid var(--jelly-border);
+      border-left: 3px solid var(--accent);
+      border-radius: 16px;
+      background:
+        linear-gradient(135deg, var(--jelly-surface), var(--jelly-surface-soft));
+      box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
+      letter-spacing: -.025em;
+    }
+
+    .documint-jelly-ui .main h2 {
+      margin: 34px 0 13px;
+      padding: 7px 0 7px 14px;
+      border-left-width: 3px;
+      letter-spacing: -.015em;
+    }
+
+    .documint-jelly-ui .main h3 {
+      margin-top: 22px;
+    }
+
+    .documint-jelly-ui .main hr {
+      margin: 42px 0;
+      border-top: 1px solid var(--jelly-border);
+    }
+
+    .documint-jelly-ui .main blockquote,
+    .documint-jelly-ui .callout {
+      border-color: var(--jelly-border);
+      border-left-color: var(--accent);
+      border-radius: 14px;
+      background: var(--jelly-surface-soft);
+      box-shadow: var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .main pre {
+      border-color: var(--jelly-border);
+      border-radius: 15px;
+      background: var(--jelly-surface-strong);
+      box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .code-bar {
+      padding: 8px 14px;
+      border-bottom-color: var(--jelly-border);
+      background: var(--jelly-surface-soft);
+    }
+
+    .documint-jelly-ui .main pre code {
+      padding: 18px 20px;
+      background: transparent;
+    }
+
+    .documint-jelly-ui .main table {
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border: 1px solid var(--jelly-border);
+      border-radius: 14px;
+      background: var(--jelly-surface);
+      box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .main th {
+      border: 0;
+      border-right: 1px solid var(--jelly-border);
+      border-bottom: 1px solid var(--jelly-border);
+      background: var(--jelly-surface-soft);
+    }
+
+    .documint-jelly-ui .main td {
+      border: 0;
+      border-right: 1px solid var(--jelly-border);
+      border-bottom: 1px solid var(--jelly-border);
+    }
+
+    .documint-jelly-ui .main tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .documint-jelly-ui .main th:last-child,
+    .documint-jelly-ui .main td:last-child {
+      border-right: 0;
+    }
+
+    .documint-jelly-ui .main tr:nth-child(even) td {
+      background: var(--jelly-table-row);
+    }
+
+    .documint-jelly-ui .main tbody tr {
+      transition: background .14s ease;
+    }
+
+    .documint-jelly-ui .main tbody tr:hover td {
+      background: var(--jelly-surface-hover);
+    }
+
+    .documint-jelly-ui .diagram-toolbar {
+      padding: 9px 13px;
+      border-color: var(--jelly-border);
+      border-radius: 14px 14px 0 0;
+      background: var(--jelly-surface-soft);
+    }
+
+    .documint-jelly-ui .mermaid-wrap {
+      padding: 30px 24px;
+      border-color: var(--jelly-border);
+      border-radius: 15px;
+      background-color: var(--jelly-surface);
+      background-image: radial-gradient(circle, var(--jelly-border) .8px, transparent .8px);
+      box-shadow: var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .mermaid-wrap.toolbar-attached {
+      border-radius: 0 0 15px 15px;
+    }
+
+    .documint-jelly-ui .dependency-node {
+      border-color: var(--jelly-border);
+      border-radius: 12px;
+      background: var(--jelly-surface-strong);
+      box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
+      transition:
+        transform .14s ease,
+        opacity .14s ease,
+        border-color .14s ease,
+        background .14s ease;
+    }
+
+    .documint-jelly-ui .dependency-node:hover,
+    .documint-jelly-ui .dependency-node.active {
+      transform: translate(-50%, calc(-50% - 2px));
+      border-color: var(--jelly-border-accent);
+    }
+
+    .documint-jelly-ui .diagram-modal {
+      background: rgba(5, 10, 18, .78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .documint-jelly-ui .diagram-modal-inner {
+      border-color: var(--jelly-border);
+      border-radius: 22px;
+      background: var(--jelly-surface-strong);
+      box-shadow: var(--jelly-shadow), var(--jelly-highlight);
+    }
+
+    .documint-jelly-ui .btt {
+      width: 42px;
+      height: 42px;
+      bottom: 22px;
+      right: 22px;
+      border-color: var(--jelly-border);
+      background: var(--jelly-surface);
+      box-shadow: var(--jelly-shadow-soft), var(--jelly-highlight);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .documint-jelly-ui .doc-footer {
+      margin-left: calc(var(--sidebar-w) + 28px);
+      border-top: 0;
+      padding: 16px 42px 30px;
+    }
+
+    .documint-jelly-ui :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .documint-jelly-ui ::selection {
+      background: var(--accent-subtle);
+      color: var(--text-primary);
+    }
+
+    .documint-jelly-ui ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .documint-jelly-ui ::-webkit-scrollbar-thumb {
+      border: 2px solid transparent;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--text-muted) 58%, transparent);
+      background-clip: padding-box;
+    }
+
+    .documint-jelly-ui ::-webkit-scrollbar-thumb:hover {
+      background: color-mix(in srgb, var(--accent) 58%, transparent);
+      background-clip: padding-box;
+    }
+
+    @media (max-width: 920px) {
+      .documint-jelly-ui .topbar {
+        left: 8px;
+        right: 8px;
+      }
+
+      .documint-jelly-ui .sidebar {
+        left: 8px;
+      }
+
+      .documint-jelly-ui .main {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .documint-jelly-ui .topbar {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        padding: 0 10px;
+        border-radius: 15px;
+      }
+
+      .documint-jelly-ui .sidebar {
+        display: none;
+      }
+
+      .documint-jelly-ui .main {
+        margin-left: 0;
+        margin-top: calc(var(--topbar-h) + 24px);
+        width: auto;
+        padding: 20px 14px 64px;
+      }
+
+      .documint-jelly-ui .search-wrap {
+        width: auto;
+      }
+
+      .documint-jelly-ui .stats-banner,
+      .documint-jelly-ui .project-tree-visual,
+      .documint-jelly-ui .visual-blueprint,
+      .documint-jelly-ui .d2-panel,
+      .documint-jelly-ui .whiteboard-panel,
+      .documint-jelly-ui .dependency-graph-panel,
+      .documint-jelly-ui .code-workflow-panel,
+      .documint-jelly-ui .main h1 {
+        border-radius: 15px;
+      }
+
+      .documint-jelly-ui .main table {
+        display: block;
+        overflow-x: auto;
+        white-space: normal;
+      }
+
+      .documint-jelly-ui .doc-footer {
+        margin-left: 0;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .documint-jelly-ui *,
+      .documint-jelly-ui *::before,
+      .documint-jelly-ui *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .001ms !important;
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
   </style>
 </head>
-<body>
+<body class="documint-jelly-ui">
 
   <nav class="topbar">
     <a class="topbar-client" href="#" title="${safeProjectName}">${safeProjectName}</a>

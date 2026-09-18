@@ -4,7 +4,7 @@ All notable changes to DocuMint are documented here.
 
 ## Unreleased
 
-_No unreleased changes yet._
+### Changed\n\n- Refreshed generated HTML with a soft Jelly UI visual system: floating translucent navigation surfaces, softer cards/tables/code blocks, calmer borders and shadows, improved spacing and readable line lengths, smoother hover/focus states, responsive mobile treatment, and reduced-motion accessibility without changing document structure or navigation behavior.\n\n_No unreleased changes yet._
 
 ## 1.0.5 — 2026-09-18
 
