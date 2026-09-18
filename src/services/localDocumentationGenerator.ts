@@ -17,6 +17,7 @@ import {
 } from "./localDocumentationCache";
 import { buildLocalDocumentationDocument } from "./localDocumentationDocument";
 import { sanitizeGeneratedOutputs } from "./outputSanitizer";
+import { DOCUMINT_OUTPUT_DIRECTORY } from "../outputDirectory";
 
 export interface LocalDocumentationGeneratorOptions {
   outputFormat?: "markdown" | "html" | "both";
@@ -69,7 +70,7 @@ export class LocalDocumentationGenerator {
 
     this.throwIfCancelled("parse");
     const outputFormat = options.outputFormat ?? "both";
-    const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, "docs");
+    const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, DOCUMINT_OUTPUT_DIRECTORY);
     const cacheKey = buildLocalDocumentationCacheKey(workspaceFolder.name, files);
 
     this.report({
@@ -140,7 +141,7 @@ export class LocalDocumentationGenerator {
       await vscode.workspace.fs.createDirectory(docsFolder);
     } catch (error) {
       throw new DocumentationError(
-        `Failed to create docs folder: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to create ${DOCUMINT_OUTPUT_DIRECTORY} folder: ${error instanceof Error ? error.message : String(error)}`,
         "write",
         undefined,
         error instanceof Error ? error : undefined,
