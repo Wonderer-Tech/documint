@@ -71,15 +71,17 @@ test("selected-folder policy relaxes only default test/spec exclusions", () => {
   assert.equal(defaults.includes("**/*.test.*"), false);
   assert.equal(defaults.includes("**/*.spec.*"), false);
   assert.equal(defaults.includes("**/node_modules/**"), true);
+  assert.equal(defaults.includes("**/documint/**"), true);
 
   const userExcluded = buildExplicitFolderExcludePatterns(["**/*.test.*"]);
   assert.equal(userExcluded.includes("**/*.test.*"), true);
 });
 
-test("workspace policy keeps default test/spec exclusions", () => {
+test("workspace policy keeps default test/spec and DocuMint output exclusions", () => {
   const excludes = buildWorkspaceExcludePatterns();
   assert.equal(excludes.includes("**/*.test.*"), true);
   assert.equal(excludes.includes("**/*.spec.*"), true);
+  assert.equal(excludes.includes("**/documint/**"), true);
 });
 
 test("workspace boundary rejects sibling paths", () => {
