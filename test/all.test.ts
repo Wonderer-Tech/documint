@@ -32,6 +32,7 @@ import "./sidebarAuthState.test";
 import "./localFileDocumentation.test";
 import "./localProjectDocumentation.test";
 import "./localArchitectureDocumentation.test";
+import "./localVisualBlueprint.test";
 import "./localDocumentationDocument.test";
 import "./localDocumentationCache.test";
 import "./sourceAnalyzer.test";
