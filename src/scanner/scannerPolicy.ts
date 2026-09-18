@@ -172,6 +172,40 @@ export function isInsideWorkspace(
   );
 }
 
+/**
+ * Applies directory exclusions to workspace-relative paths only.
+ * Absolute paths must never be used here because a workspace itself may have
+ * the same name as an excluded generated-output directory (for example,
+ * a DocuMint source checkout named "documint").
+ */
+export function isRelativePathInsideExcludedDirectory(
+  relativePath: string,
+  excludedDirectories: string[],
+): boolean {
+  const normalizedRelative = relativePath
+    .replace(/\\/g, "/")
+    .replace(/^\.\//, "")
+    .replace(/^\/+/, "")
+    .toLowerCase();
+
+  if (!normalizedRelative) {
+    return false;
+  }
+
+  const wrappedRelative = `/${normalizedRelative}`;
+  return excludedDirectories.some((directory) => {
+    const normalizedDirectory = directory
+      .replace(/\\/g, "/")
+      .replace(/^\/+|\/+$/g, "")
+      .toLowerCase();
+
+    return (
+      normalizedDirectory.length > 0 &&
+      wrappedRelative.includes(`/${normalizedDirectory}/`)
+    );
+  });
+}
+
 function uniqueStrings(values: string[]): string[] {
   return Array.from(new Set(values));
 }
