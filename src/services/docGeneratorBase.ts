@@ -384,7 +384,7 @@ export class DocGeneratorService {
         totalFiles,
         processedFiles: totalFiles,
         percentage: 100,
-        message: `Documentation saved to docs/ (${savedCount} file${savedCount > 1 ? "s" : ""})`,
+        message: `Documentation saved to ${DOCUMINT_OUTPUT_DIRECTORY}/ (${savedCount} file${savedCount > 1 ? "s" : ""})`,
       });
 
       return outputPaths;
