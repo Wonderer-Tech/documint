@@ -1,4 +1,9 @@
 # Changelog
+
+## 1.0.7 — Reader navigation
+
+Folder-first navigation now has persistent, report-scoped open/closed state, Expand all / Collapse all, file counts, clearable filtering, keyboard navigation, current-file context and a section selector. Ranked search supports Ctrl/Cmd+K, arrow selection, Enter and Escape; all results point to real document headings. Mobile uses the same folder tree in a focus-managed drawer. Wide tables scroll within the report; charts and documentation facts remain unchanged. Local cache v5 refreshes older generated HTML once.
+
 ## 1.0.6 — Generated navigation repair
 
 Local and AI-format HTML now share working folder-wise collapsible navigation. Local TOCs emit the canonical link classes and explicit file identity, including route-group and spaced filenames. The chart function/map collision is fixed; optional chart failures cannot block navigation or search. Module chart totals include every emitted module. Local cache v4 regenerates older HTML once. Browser acceptance covers collapse, filtering, anchors, themes, charts, offline rendering and failure isolation.

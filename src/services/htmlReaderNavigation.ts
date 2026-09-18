@@ -7,6 +7,16 @@ function readerLabel(element) {
   copy.querySelectorAll('.anchor').forEach(function (anchor) { anchor.remove(); });
   return (copy.textContent || '').trim();
 }
+function readerIsVisible(element) {
+  if (!element.getClientRects().length || getComputedStyle(element).visibility === 'hidden') return false;
+  for (var parent = element.parentElement; parent; parent = parent.parentElement) {
+    if (parent.tagName === 'DETAILS' && !parent.open) {
+      var summary = parent.querySelector(':scope > summary');
+      if (!summary || !summary.contains(element)) return false;
+    }
+  }
+  return true;
+}
 function initializeReaderNavigation() {
   var nav = document.getElementById('tocNav');
   var sidebar = document.querySelector('.sidebar');
@@ -124,7 +134,7 @@ function initializeReaderNavigation() {
   // Native details/summary semantics remain intact; arrow keys speed up browsing.
   nav.addEventListener('keydown', function (event) {
     if (!event.target.matches('summary, a.toc-link') || event.altKey || event.ctrlKey || event.metaKey) return;
-    var targets = Array.from(nav.querySelectorAll('summary, a.toc-link')).filter(function (el) { return el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden'; });
+    var targets = Array.from(nav.querySelectorAll('summary, a.toc-link')).filter(readerIsVisible);
     var at = targets.indexOf(event.target), target;
     if (event.key === 'ArrowDown') target = targets[Math.min(at + 1, targets.length - 1)];
     if (event.key === 'ArrowUp') target = targets[Math.max(at - 1, 0)];
@@ -297,7 +307,7 @@ function initializeReaderNavigation() {
     if (!drawerOpen) return;
     if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); readerOpenDrawer(false); }
     if (event.key === 'Tab') {
-      var focusable = Array.from(sidebar.querySelectorAll('button:not(:disabled), input, summary, a[href], select')).filter(function (el) { return el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden'; });
+      var focusable = Array.from(sidebar.querySelectorAll('button:not(:disabled), input, summary, a[href], select')).filter(readerIsVisible);
       var first = focusable[0], last = focusable[focusable.length - 1];
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }

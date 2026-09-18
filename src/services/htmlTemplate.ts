@@ -1,3 +1,7 @@
+import { READER_STYLES } from "./htmlReaderStyles";
+import { READER_NAVIGATION_SCRIPT } from "./htmlReaderNavigation";
+import { READER_SEARCH_SCRIPT } from "./htmlReaderSearch";
+
 export interface HtmlTemplateOptions {
   title: string;
   tocHtml: string;
@@ -2622,6 +2626,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
         animation-iteration-count: 1 !important;
       }
     }
+    ${READER_STYLES}
   </style>
 </head>
 <body class="documint-jelly-ui">
@@ -4866,102 +4871,8 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     }, { passive: true });
 
     // ── Active TOC tracking ──────────────────────────────────────────────────
-    function initTocTracking() {
-      var headings = document.querySelectorAll('.main h1, .main h2, .main h3, .main h4, .main h5, .main h6');
-      var tocLinks = document.querySelectorAll('.toc-link');
-      if (!headings.length || !tocLinks.length) return;
-
-      var obs = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            var id = entry.target.getAttribute('id');
-            tocLinks.forEach(function (link) {
-              link.classList.toggle('active', link.getAttribute('href') === '#' + id);
-            });
-          }
-        });
-      }, { rootMargin: '-8% 0px -80% 0px' });
-
-      headings.forEach(function (h) { if (h.id) obs.observe(h); });
-    }
-
-    // ── Search ───────────────────────────────────────────────────────────────
-    var searchIndex = [];
-
-    function buildIndex() {
-      var currentH2 = '';
-      document.querySelectorAll('.main h1, .main h2, .main h3, .main h4, .main h5, .main h6, .main p').forEach(function (el) {
-        var tag = el.tagName;
-        var text = el.textContent.replace(/#$/, '').trim();
-        if (!text || text.length < 3) return;
-        if (tag === 'H1' || tag === 'H2') currentH2 = text;
-        searchIndex.push({ text: text, id: el.getAttribute('id'), tag: tag, file: currentH2 });
-      });
-    }
-
-    var inp = document.getElementById('searchInput');
-    var drop = document.getElementById('searchDropdown');
-
-    function escRe(s) { return s.replace(/[.*+?^{}()|[\]\\$]/g, '\\$&'); }
-    function escHtml(s) {
-      return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    if (inp && drop) inp.addEventListener('input', function () {
-      var q = this.value.trim().toLowerCase();
-      if (q.length < 2) { drop.classList.remove('open'); drop.innerHTML = ''; return; }
-
-      var hits = searchIndex.filter(function (it) {
-        return it.text.toLowerCase().indexOf(q) !== -1;
-      }).slice(0, 10);
-
-      if (!hits.length) {
-        drop.innerHTML = '<div class="search-empty">No results for &ldquo;' + escHtml(q) + '&rdquo;</div>';
-        drop.classList.add('open');
-        return;
-      }
-
-      var safeQ = escHtml(q);
-      var re = new RegExp('(' + escRe(safeQ) + ')', 'gi');
-      drop.innerHTML = hits.map(function (it) {
-        var hi = escHtml(it.text).replace(re, '<mark>$1</mark>');
-        var fileNote = it.file && it.file !== it.text
-          ? '<div class="search-item-file">' + escHtml(it.file) + '</div>' : '';
-        return '<div class="search-item" data-id="' + escHtml(it.id || '') + '">'
-          + '<div class="search-item-title">' + hi + '</div>' + fileNote + '</div>';
-      }).join('');
-      drop.classList.add('open');
-
-      drop.querySelectorAll('.search-item').forEach(function (item) {
-        item.addEventListener('click', function () {
-          var id = this.getAttribute('data-id');
-          var el = id ? document.getElementById(id) : null;
-          if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-          drop.classList.remove('open');
-          inp.value = '';
-        });
-      });
-    });
-
-    document.addEventListener('click', function (e) {
-      if (!drop) return;
-      if (!e.target.closest('.search-wrap')) drop.classList.remove('open');
-    });
-
-    // ── Keyboard shortcuts ───────────────────────────────────────────────────
-    document.addEventListener('keydown', function (e) {
-      if (e.target.matches('input, textarea')) {
-        if (e.key === 'Escape' && drop && inp) { drop.classList.remove('open'); inp.blur(); }
-        return;
-      }
-      if (e.key === '/' && inp) { e.preventDefault(); inp.focus(); inp.select(); }
-      if (e.key === 't' || e.key === 'T') { setTheme(theme === 'dark' ? 'light' : 'dark'); }
-    });
+    ${READER_NAVIGATION_SCRIPT}
+    ${READER_SEARCH_SCRIPT}
 
     // ── Init ─────────────────────────────────────────────────────────────────
     var initDone = false;
@@ -4969,8 +4880,8 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       if (initDone) return;
       initDone = true;
       safelyEnhance('Sidebar navigation', enhanceSidebarNavigation);
+      safelyEnhance('Reader controls', initializeReaderNavigation);
       safelyEnhance('Search index', buildIndex);
-      safelyEnhance('Active navigation', initTocTracking);
       safelyEnhance('Project tree', enhanceProjectTreeVisuals);
       enhanceVisualBlueprints();
       safelyEnhance('Mermaid diagrams', initMermaid);
