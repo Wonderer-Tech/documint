@@ -24,6 +24,7 @@ import {
   getTargetExtensions,
 } from "./scanner/scannerPolicy";
 import { DocumentationError } from "./types";
+import { DOCUMINT_OUTPUT_DIRECTORY, LEGACY_DOCUMINT_OUTPUT_DIRECTORY } from "./outputDirectory";
 
 const SOURCE_FILE_PICKER_EXTENSIONS = getTargetExtensions(
   getDefaultTargetLanguages(),
@@ -483,17 +484,22 @@ export function activate(context: vscode.ExtensionContext) {
     let deletedCount = 0;
 
     for (const folder of workspaceFolders) {
-      const docsFolder = vscode.Uri.joinPath(folder.uri, "docs");
-      for (const cacheFile of cacheFiles) {
-        const target = vscode.Uri.joinPath(docsFolder, cacheFile);
-        try {
-          await vscode.workspace.fs.delete(target, {
-            recursive: false,
-            useTrash: false,
-          });
-          deletedCount++;
-        } catch {
-          // Missing cache files are expected for fresh workspaces.
+      for (const outputDirectory of [
+        DOCUMINT_OUTPUT_DIRECTORY,
+        LEGACY_DOCUMINT_OUTPUT_DIRECTORY,
+      ]) {
+        const outputFolder = vscode.Uri.joinPath(folder.uri, outputDirectory);
+        for (const cacheFile of cacheFiles) {
+          const target = vscode.Uri.joinPath(outputFolder, cacheFile);
+          try {
+            await vscode.workspace.fs.delete(target, {
+              recursive: false,
+              useTrash: false,
+            });
+            deletedCount++;
+          } catch {
+            // Missing cache files are expected for fresh or migrated workspaces.
+          }
         }
       }
     }
