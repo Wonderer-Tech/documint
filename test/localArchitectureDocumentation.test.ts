@@ -55,3 +55,24 @@ test("local architecture renderer emits consistent Mermaid and D2 diagrams", () 
   assert.match(output, /### Module Architecture — D2/);
   assert.match(output, /m1 -> m0: "1 link"/);
 });
+
+
+test("local architecture renderer emits HTML visual-enhancer payloads without semantic role guessing", () => {
+  const output = renderLocalArchitectureDocumentation({
+    projectName: "Example Project",
+    files,
+    project,
+  });
+
+  assert.match(output, /### Local Visual Blueprint: Architecture Map/);
+  assert.match(output, /```architecture-blueprint/);
+  assert.match(output, /"source": "local"/);
+  assert.match(output, /"role": "Module"/);
+  assert.doesNotMatch(
+    output,
+    /"role": "(?:Provider|Service|UI|Analysis|Configuration|Assets|Tests)"/,
+  );
+  assert.match(output, /```excalidraw-blueprint/);
+  assert.match(output, /### Interactive Dependency Graph/);
+  assert.match(output, /```dependency-graph/);
+});
