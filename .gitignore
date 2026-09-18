@@ -59,14 +59,16 @@ coverage/
 build/
 release/
 
-# Documentation
+# DocuMint generated output
+documint/**
+
+# Legacy DocuMint output (pre-documint folder)
 docs/documentation.md
 docs/documentation.html
-docs/assets/
-docs/_site/
-docs/.jekyll-cache/
 docs/.documint-cache.json
 docs/.documint-visual-cache.json
+docs/.documint-generation-cache-key.json
+docs/.documint-local-cache.json
 
 # Temporary files
 tmp/
