@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 import "./regression.test";
 import "./outputTokenLimit.test";
+import "./contextOutputBudget.test";
 import "./apiKeyValidation.test";
 import "./modelContextCatalog.test";
 import "./providerDefaults.test";
