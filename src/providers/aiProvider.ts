@@ -7,6 +7,7 @@ import {
   requirePositiveChunkTokenBudget,
 } from "./chunkTokenBudget";
 import { ProviderRequestStartScheduler } from "./providerRequestStartScheduler";
+import { resolveContextOutputTokenBudget } from "./contextOutputBudget";
 
 export interface AIProvider {
   name: string;
@@ -103,10 +104,11 @@ export abstract class BaseAIProvider implements AIProvider {
     const inputTokens =
       this.getTokenCount(params.systemPrompt) +
       this.getTokenCount(params.userPrompt);
-    const maxTokens = Math.min(
-      this.getMaxOutputTokens(model),
-      Math.max(1024, maxCtx - inputTokens - 500),
-    );
+    const maxTokens = resolveContextOutputTokenBudget({
+      contextWindow: maxCtx,
+      inputTokens,
+      providerOutputLimit: this.getMaxOutputTokens(model),
+    });
 
     if (params.cancellationToken?.isCancellationRequested) {
       throw new Error("Generation cancelled");
@@ -435,10 +437,11 @@ export abstract class BaseAIProvider implements AIProvider {
       const userContent = promptTemplate.replace("{CODE}", context.code);
       const inputTokens =
         this.getTokenCount(system) + this.getTokenCount(userContent);
-      const maxTokens = Math.min(
-        this.getMaxOutputTokens(model),
-        Math.max(1024, maxCtx - inputTokens - 500),
-      );
+      const maxTokens = resolveContextOutputTokenBudget({
+        contextWindow: maxCtx,
+        inputTokens,
+        providerOutputLimit: this.getMaxOutputTokens(model),
+      });
 
       await this.waitForRateLimitSlot(context);
       return await this.callApi({
@@ -486,10 +489,11 @@ export abstract class BaseAIProvider implements AIProvider {
         `Parts will be merged.]\n\n${promptTemplate.replace("{CODE}", chunks[i])}`;
       const inputTokens =
         this.getTokenCount(system) + this.getTokenCount(userContent);
-      const maxTokens = Math.min(
-        this.getMaxOutputTokens(model),
-        Math.max(1024, this.getMaxContextWindow(model) - inputTokens - 500),
-      );
+      const maxTokens = resolveContextOutputTokenBudget({
+        contextWindow: this.getMaxContextWindow(model),
+        inputTokens,
+        providerOutputLimit: this.getMaxOutputTokens(model),
+      });
 
       await this.waitForRateLimitSlot(context);
       const result = await this.callApi({
