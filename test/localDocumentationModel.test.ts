@@ -92,3 +92,72 @@ test("canonical module edges aggregate resolved cross-module imports", () => {
     ],
   );
 });
+
+
+test("canonical model extracts package scripts and VS Code extension surface", () => {
+  const manifest: WorkspaceFile = {
+    path: "package.json",
+    language: "json",
+    content: JSON.stringify({
+      main: "./dist/extension.js",
+      scripts: {
+        compile: "npm run typecheck && npm run bundle",
+        test: "npm run compile && npm run test:unit",
+      },
+      contributes: {
+        commands: [
+          {
+            command: "documint.generate",
+            title: "Generate Documentation",
+          },
+        ],
+        configuration: {
+          properties: {
+            "documint.mode": {
+              type: "string",
+              default: "local",
+            },
+          },
+        },
+      },
+    }),
+  };
+
+  const source: WorkspaceFile = {
+    path: "src/extension.ts",
+    language: "typescript",
+    content: "export function activate() {}",
+  };
+  const allFiles = [manifest, source];
+  const project = new SourceAnalyzer().analyzeProject(allFiles);
+  const model = buildLocalDocumentationModel("Example", allFiles, project);
+
+  assert.deepEqual(model.gettingStarted, {
+    packageManager: "npm",
+    scripts: [
+      { name: "compile", command: "npm run typecheck && npm run bundle" },
+      { name: "test", command: "npm run compile && npm run test:unit" },
+    ],
+    vscodeCommands: [
+      { id: "documint.generate", title: "Generate Documentation" },
+    ],
+    vscodeSettings: [
+      { key: "documint.mode", defaultValue: "local" },
+    ],
+    extensionEntry: "./dist/extension.js",
+  });
+});
+
+test("suggested reading path starts from detected entry points and follows dependencies", () => {
+  const project = new SourceAnalyzer().analyzeProject(files);
+  const model = buildLocalDocumentationModel("Example", files, project);
+
+  assert.equal(model.suggestedReadingPath[0]?.path, "src/extension.ts");
+  assert.equal(model.suggestedReadingPath[0]?.entryPoint, true);
+  assert.match(model.suggestedReadingPath[0]?.reason ?? "", /entry point/i);
+  assert.equal(model.suggestedReadingPath[1]?.path, "src/services/run.ts");
+  assert.match(
+    model.suggestedReadingPath[1]?.reason ?? "",
+    /Imported by src\/extension\.ts/,
+  );
+});
