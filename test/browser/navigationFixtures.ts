@@ -21,10 +21,17 @@ const files: WorkspaceFile[] = paths.map((path, i) => ({
 const analyzer = new SourceAnalyzer();
 const project = analyzer.analyzeProject(files);
 const local = buildLocalDocumentationDocument("Browser Fixture", files, project);
-const fixtures: Array<{ name: string; files: number; lines: number; chart: boolean }> = [];
-function emit(name: string, html: string, count: number, lines: number, chart = true) {
+const fixtures: Array<{ name: string; files: number; lines: number; chart: boolean; codeMap?: boolean }> = [];
+function emit(
+  name: string,
+  html: string,
+  count: number,
+  lines: number,
+  chart = true,
+  codeMap = false,
+) {
   writeFileSync(`${output}/${name}.html`, hardenGeneratedHtmlForOffline(sanitizeHtml(html)));
-  fixtures.push({ name, files: count, lines, chart });
+  fixtures.push({ name, files: count, lines, chart, codeMap });
 }
 emit("local", local.html, files.length, local.totalLines);
 emit("malformed-chart", local.html.replace(/(<code class="language-architecture-blueprint">)[\s\S]*?(<\/code>)/,
@@ -32,6 +39,83 @@ emit("malformed-chart", local.html.replace(/(<code class="language-architecture-
 const singleFiles: WorkspaceFile[] = [{ path: "index.ts", language: "typescript", content: "export const single = 1;\n" }];
 const single = buildLocalDocumentationDocument("Single File", singleFiles, analyzer.analyzeProject(singleFiles));
 emit("single-file", single.html, 1, single.totalLines);
+
+const codeMapFiles: WorkspaceFile[] = [
+  {
+    path: "src/index.ts",
+    language: "typescript",
+    content: [
+      'import { run } from "./services/run";',
+      "export { run };",
+    ].join("\n"),
+  },
+  {
+    path: "src/services/run.ts",
+    language: "typescript",
+    content: [
+      'import { ProviderFactory } from "../providers/factory";',
+      'import { SecretStorage } from "../config/secretStorage";',
+      "export function run() {",
+      "  return [new ProviderFactory(), new SecretStorage()];",
+      "}",
+    ].join("\n"),
+  },
+  {
+    path: "src/providers/factory.ts",
+    language: "typescript",
+    content: [
+      "/** Creates provider instances from normalized names. */",
+      "export class ProviderFactory {}",
+    ].join("\n"),
+  },
+  {
+    path: "src/config/secretStorage.ts",
+    language: "typescript",
+    content: "export class SecretStorage {}\n",
+  },
+  {
+    path: "package.json",
+    language: "json",
+    content: JSON.stringify({
+      main: "./dist/extension.js",
+      scripts: {
+        compile: "tsc --noEmit",
+        test: "node --test",
+      },
+      contributes: {
+        commands: [
+          { command: "documint.generate", title: "Generate Documentation" },
+        ],
+      },
+    }),
+  },
+];
+const codeMapProject = analyzer.analyzeProject(codeMapFiles);
+const codeMapReadme = [
+  "```text",
+  "src/",
+  "|-- services/",
+  "|   `-- run.ts            # Runs the documentation pipeline",
+  "|-- providers/",
+  "|   `-- factory.ts        # Provider factory",
+  "`-- config/",
+  "    `-- secretStorage.ts  # Secret storage boundary",
+  "```",
+].join("\n");
+const codeMapDocument = buildLocalDocumentationDocument(
+  "Code Map Fixture",
+  codeMapFiles,
+  codeMapProject,
+  { readme: codeMapReadme },
+);
+emit(
+  "local-code-map",
+  codeMapDocument.html,
+  codeMapFiles.length,
+  codeMapDocument.totalLines,
+  true,
+  true,
+);
 
 // Provider-free fixture for the existing AI renderer contract: H1 file headings,
 // canonical TOC links and the original ASCII project-tree payload.
