@@ -47,6 +47,25 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
     return generationModeSel && generationModeSel.value === 'local';
   }
 
+  function isLocalProvider(provider) {
+    var selected = provider || (providerSel && providerSel.value);
+    return selected === 'ollama' || selected === 'lmstudio';
+  }
+
+  function updateModelPlaceholder() {
+    if (!modelInput || !providerSel) return;
+    if (providerSel.value === 'ollama') {
+      modelInput.placeholder = 'e.g. qwen3:8b';
+      return;
+    }
+    if (providerSel.value === 'lmstudio') {
+      modelInput.placeholder = 'Enter model ID served by LM Studio';
+      return;
+    }
+    modelInput.placeholder =
+      'e.g. gpt-5.4-nano, claude-sonnet-5, anthropic/claude-sonnet-5';
+  }
+
   function updateActionAvailability() {
     generateBtn.disabled = state.isGenerating;
     document.querySelectorAll('.scope-btn').forEach(function(btn) {
@@ -56,15 +75,17 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
 
   function updateGenerationModeVisibility() {
     var local = isLocalMode();
-    authSection.classList.toggle('hidden', local);
+    var localProvider = !local && isLocalProvider();
+    authSection.classList.toggle('hidden', local || localProvider);
     providerSection.classList.toggle('hidden', local);
     depthField.classList.toggle('hidden', local);
     localModeHelp.classList.toggle('hidden', !local);
     generateBtnText.textContent = local
       ? 'Generate Local Documentation'
       : 'Generate Documentation';
-    if (local) setApiKeyPanelVisible(false);
+    if (local || localProvider) setApiKeyPanelVisible(false);
     updateCustomEndpointVisibility();
+    updateModelPlaceholder();
     updateActionAvailability();
   }
 
@@ -74,9 +95,11 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
       authStatus.className = 'auth-status ok';
       authText.textContent = 'API Key configured';
       authIcon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
-    } else if (selectedProvider === 'custom') {
+    } else if (selectedProvider === 'custom' || isLocalProvider(selectedProvider)) {
       authStatus.className = 'auth-status optional';
-      authText.textContent = 'API Key optional';
+      authText.textContent = isLocalProvider(selectedProvider)
+        ? 'No API key required'
+        : 'API Key optional';
       authIcon.innerHTML = '<path d="M7 14a5 5 0 1 1 3.9 4.9L8 22H5v-3H2v-3l5.1-5.1A5 5 0 0 1 7 14z"/>';
     } else {
       authStatus.className = 'auth-status missing';
@@ -158,11 +181,27 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
     if (!settings) return;
     if (settings.generationMode) generationModeSel.value = settings.generationMode;
     if (settings.provider) providerSel.value = settings.provider;
-    if (settings.model) modelInput.value = settings.model;
+    if (typeof settings.model === 'string') modelInput.value = settings.model;
     if (typeof settings.customApiEndpoint === 'string') customEndpointInput.value = settings.customApiEndpoint;
     if (settings.depth) $('depth').value = settings.depth;
     if (settings.outputFormat) $('outputFormat').value = settings.outputFormat;
     updateGenerationModeVisibility();
+  }
+
+  function validateLocalProviderModelForRun() {
+    if (isLocalMode() || !isLocalProvider()) return true;
+
+    var model = modelInput.value.trim();
+    if (model) return true;
+
+    var label = providerSel.value === 'ollama' ? 'Ollama' : 'LM Studio';
+    addLog(
+      'Enter a model name served by ' + label + ' before generating.',
+      'error'
+    );
+    setStatus('error', 'Missing local model');
+    modelInput.focus();
+    return false;
   }
 
   function validateCustomEndpointForRun() {
@@ -198,7 +237,7 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
   });
 
   providerSel.addEventListener('change', function() {
-    updateCustomEndpointVisibility();
+    updateGenerationModeVisibility();
     vscode.postMessage({
       type: 'update-settings',
       payload: {
@@ -219,6 +258,7 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
 
   generateBtn.addEventListener('click', function() {
     if (!validateCustomEndpointForRun()) return;
+    if (!validateLocalProviderModelForRun()) return;
     var payload = {
       generationMode: generationModeSel.value,
       provider: providerSel.value,
@@ -282,6 +322,7 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
         outputFormat: $('outputFormat').value,
       };
       if (!validateCustomEndpointForRun()) return;
+      if (!validateLocalProviderModelForRun()) return;
       if (scope === 'current-file') {
         vscode.postMessage({ type: 'pick-file', payload: payload });
       } else if (scope === 'folder') {
