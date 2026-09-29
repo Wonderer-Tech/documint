@@ -383,21 +383,18 @@ function escapeHeading(value: string): string {
   return cleanText(value).replace(/[#]/g, "\\#");
 }
 
-function documentationFileHref(filePath: string): string {
-  return `#${slugHeading(filePath)}`;
-}
-
 function markdownDocumentationFileLink(filePath: string): string {
-  return `[${inlineCode(filePath)}](${documentationFileHref(filePath)})`;
+  return `[${inlineCode(filePath)}](${relativeSourceHref(filePath)})`;
 }
 
-function slugHeading(value: string): string {
-  return String(value)
-    .toLowerCase()
-    .replace(/[`'"<>]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
+function relativeSourceHref(filePath: string): string {
+  const encoded = String(filePath)
+    .replace(/\\/g, "/")
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  return `../${encoded}`;
 }
 
 function inlineCode(value: string): string {
