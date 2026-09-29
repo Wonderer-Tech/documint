@@ -36,7 +36,7 @@ test("complete Local document combines overview, architecture, and per-file fact
   assert.match(document.markdown, /## Architecture & Dependencies/);
   assert.match(document.markdown, /src\/main\.ts/);
   assert.match(document.markdown, /lib\/format\.ts/);
-  assert.match(document.markdown, /No AI provider was used/);
+  assert.match(document.markdown, /No AI inference, model, API key, or external provider is used/);
   assert.match(document.html, /Example Project — Local Documentation/);
   assert.match(document.html, /href="#architecture-dependencies"/);
   assert.match(document.html, /language-mermaid/);
@@ -49,4 +49,22 @@ test("Local document assembly remains independent of provider/model inputs", () 
 
   assert.doesNotMatch(document.markdown, /gpt-5|claude-|deepseek-|openrouter/i);
   assert.doesNotMatch(document.html, /api key configured/i);
+});
+
+
+test("Markdown stays compact while HTML retains rich Local visual payloads", () => {
+  const analyzer = new SourceAnalyzer();
+  const project = analyzer.analyzeProject(files);
+  const document = buildLocalDocumentationDocument("Example Project", files, project);
+
+  assert.doesNotMatch(document.markdown, /```architecture-blueprint/);
+  assert.doesNotMatch(document.markdown, /```excalidraw-blueprint/);
+  assert.doesNotMatch(document.markdown, /```dependency-graph/);
+  assert.doesNotMatch(document.markdown, /### File Dependency Graph/);
+  assert.doesNotMatch(document.markdown, /### Module Architecture — D2/);
+  assert.match(document.markdown, /### Module Architecture/);
+
+  assert.match(document.html, /architecture-blueprint/);
+  assert.match(document.html, /excalidraw-blueprint/);
+  assert.match(document.html, /dependency-graph/);
 });
