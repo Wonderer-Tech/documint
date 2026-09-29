@@ -53,6 +53,7 @@ const data: LocalCodeMapData = {
     },
   ],
   gettingStarted: {
+    packageManager: "npm",
     extensionEntry: "./dist/extension.js",
     scripts: [
       {
