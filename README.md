@@ -395,10 +395,15 @@ src/
 |   |-- generationCachePolicy.ts        # Invalidates AI-doc cache on material generation changes
 |   |-- documentationValidator.ts       # Checks AI docs against source facts
 |   |-- outputSanitizer.ts              # Removes unsafe/non-source-grounded output sections
-|   |-- htmlTemplate.ts                 # Full HTML document template
+|   |-- htmlTemplate.ts                 # Small HTML document composition shell
+|   |-- htmlTemplatePolicy.ts           # External-asset/timestamp/local-surface policy
+|   |-- htmlBaseStyles.ts               # Generated HTML base/Jelly UI styles
+|   |-- htmlBaseScript.ts               # Generated HTML reader/visual runtime
 |   `-- modelMetadataService.ts         # Context window metadata fetch/cache
 `-- views/
-    `-- sidebarProvider.ts              # Sidebar UI webview and state sync
+    |-- sidebarProvider.ts              # Sidebar host/state/message bridge
+    |-- sidebarStyles.ts                # Sidebar webview styles
+    `-- sidebarClientScript.ts          # Sidebar webview client runtime
 ```
 
 The `*Base.ts` modules are implementation details. Runtime AI code should import the public facade modules (`extension.ts`, `analyzer/sourceAnalyzer.ts`, and `services/docGenerator.ts`) so endpoint, dependency-resolution, and cache-version policies cannot be bypassed.
