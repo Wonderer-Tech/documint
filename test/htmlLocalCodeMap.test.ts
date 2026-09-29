@@ -80,3 +80,16 @@ test("Local code map stays absent when no Local model is supplied", () => {
     script: "",
   });
 });
+
+
+test("Local code map data stays source-factual and relation-driven", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /file\.usedBy\.length/);
+  assert.match(fragments.script, /file\.description/);
+  assert.match(fragments.script, /file\.exports/);
+  assert.match(fragments.script, /setModuleFilter/);
+  assert.match(fragments.script, /renderTreemap/);
+  assert.match(fragments.script, /renderScatter/);
+  assert.doesNotMatch(fragments.script, /good to split|will break|only place that calls/i);
+});
