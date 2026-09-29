@@ -14,13 +14,13 @@ test("generation mode policy preserves local and defaults everything else to AI"
   assert.equal(normalizeGenerationMode(undefined), "ai");
 });
 
-test("manifest exposes AI and Local generation modes with AI as the compatibility default", () => {
+test("manifest exposes AI and Local generation modes with Local as the new-install default", () => {
   const property = manifest.contributes.configuration.properties[
     "aiDocGenerator.generationMode"
   ];
 
   assert.deepEqual(property.enum, ["ai", "local"]);
-  assert.equal(property.default, "ai");
+  assert.equal(property.default, "local");
 });
 
 test("sidebar keeps Local mode focused on controls that affect Local output", () => {
@@ -96,4 +96,14 @@ test("Local File and Folder scopes pass exact target paths to the scanner", () =
     extensionSource,
     /scope: "folder",\s*targetPaths: \[uris\[0\]\.fsPath\]/,
   );
+});
+
+
+test("sidebar initial state matches the Local-first manifest default", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/views/sidebarProvider.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /generationMode:\s*"local"/);
 });
