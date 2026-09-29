@@ -43,6 +43,7 @@ export interface LocalDocumentationFile {
 
 export interface LocalDocumentationModule {
   name: string;
+  description?: LocalDescription;
   filePaths: string[];
   primaryFilePaths: string[];
   fileCount: number;
@@ -177,7 +178,10 @@ export function buildLocalDocumentationModel(
     };
   });
 
-  const modules = buildModules(fileModels);
+  const modules = buildModules(
+    fileModels,
+    readmeFacts.descriptionsByModule,
+  );
   const moduleEdges = buildModuleEdges(project.internalDependencies);
   const gettingStarted = extractGettingStartedFacts(sortedFiles);
   const referencedEnvironmentVariables = uniqueSorted(
@@ -246,12 +250,17 @@ function buildDependencyIndex(project: ProjectAnalysis): {
 
 function buildModules(
   files: LocalDocumentationFile[],
+  descriptionsByModule: Map<
+    string,
+    { text: string; source: "readme" }
+  >,
 ): LocalDocumentationModule[] {
   const rows = new Map<string, LocalDocumentationModule>();
 
   for (const file of files) {
     const current = rows.get(file.module) ?? {
       name: file.module,
+      description: descriptionsByModule.get(file.module),
       filePaths: [],
       primaryFilePaths: [],
       fileCount: 0,
