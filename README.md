@@ -114,7 +114,7 @@ AI mode is configured using `documint.aiProvider`:
 - `lmstudio` — local OpenAI-compatible preset at `http://127.0.0.1:1234/v1/chat/completions`
 - `custom`
 
-Ollama and LM Studio do not require an API key or cloud-source-transfer consent. Set `documint.model` to a model currently served by the selected local runtime. DocuMint does not guess an installed local model name.
+Ollama and LM Studio do not require an API key or cloud-source-transfer consent. When one of these presets is selected, DocuMint queries the fixed loopback `/v1/models` endpoint and offers the models reported by that runtime. If exactly one model is reported it is selected automatically; otherwise choose a suggestion or enter a model ID manually.
 
 Local Documentation mode does not use any AI provider.
 
