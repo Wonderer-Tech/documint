@@ -93,3 +93,5 @@ import "./sidebarAssets.test";
 import "./localProviderPolicy.test";
 
 import "./localProviderRuntime.test";
+
+import "./localProviderDiscovery.test";
