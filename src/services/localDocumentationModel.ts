@@ -78,6 +78,7 @@ export interface LocalVsCodeSetting {
 
 export interface LocalGettingStartedFacts {
   packageJsonPath: string;
+  packageManager: "npm" | "pnpm" | "yarn" | "bun";
   extensionEntry?: string;
   scripts: LocalPackageScript[];
   vscodeCommands: LocalVsCodeCommand[];
@@ -363,6 +364,7 @@ function extractGettingStartedFacts(
     return undefined;
   }
 
+  const packageManager = detectPackageManager(manifest?.packageManager);
   const scripts = Object.entries(
     manifest?.scripts && typeof manifest.scripts === "object"
       ? manifest.scripts
@@ -372,7 +374,7 @@ function extractGettingStartedFacts(
     .map(([name, command]) => ({
       name,
       command,
-      run: `npm run ${name}`,
+      run: `${packageManager} run ${name}`,
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -436,11 +438,23 @@ function extractGettingStartedFacts(
 
   return {
     packageJsonPath: "package.json",
+    packageManager,
     extensionEntry,
     scripts,
     vscodeCommands,
     vscodeSettings,
   };
+}
+
+function detectPackageManager(
+  value: unknown,
+): "npm" | "pnpm" | "yarn" | "bun" {
+  if (typeof value !== "string") {
+    return "npm";
+  }
+
+  const match = value.trim().toLowerCase().match(/^(npm|pnpm|yarn|bun)(?:@|$)/);
+  return (match?.[1] as "npm" | "pnpm" | "yarn" | "bun" | undefined) ?? "npm";
 }
 
 function buildSuggestedReadingPath(
