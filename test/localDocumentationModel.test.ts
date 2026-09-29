@@ -41,9 +41,9 @@ test("canonical Local model centralizes modules, dependencies and trusted descri
       readme: [
         "```text",
         "src/",
-        "|-- providers/",
+        "|-- providers/ # Provider integrations",
         "|   `-- factory.ts # README provider description",
-        "|-- services/",
+        "|-- services/  # Documentation services",
         "|   `-- run.ts     # Runs documentation",
         "`-- extension.ts   # Activation entry point",
         "```",
@@ -54,6 +54,25 @@ test("canonical Local model centralizes modules, dependencies and trusted descri
   assert.deepEqual(
     model.modules.map((module) => module.name).sort(),
     ["src", "src/providers", "src/services"],
+  );
+
+
+
+  assert.deepEqual(
+    model.modules.find((module) => module.name === "src/providers")
+      ?.description,
+    {
+      text: "Provider integrations",
+      source: "readme",
+    },
+  );
+  assert.deepEqual(
+    model.modules.find((module) => module.name === "src/services")
+      ?.description,
+    {
+      text: "Documentation services",
+      source: "readme",
+    },
   );
 
   const factory = model.files.find(
