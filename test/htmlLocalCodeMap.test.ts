@@ -37,7 +37,12 @@ const data: LocalCodeMapData = {
   ],
   modules: [
     { name: "src", files: 1, lines: 12 },
-    { name: "src/services", files: 1, lines: 80 },
+    {
+      name: "src/services",
+      description: "Documentation services",
+      files: 1,
+      lines: 80,
+    },
   ],
   edges: [{ from: "src", to: "src/services", count: 1 }],
   readingPath: [
@@ -211,4 +216,13 @@ test("Local module-map handwritten notes stay metric-backed and conservative", (
     fragments.script,
     /everything passes through|only place that calls|will break|good to split/i,
   );
+});
+
+
+test("Local module map exposes only trusted module descriptions", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /module\.description/);
+  assert.match(fragments.script, /Documentation services/);
+  assert.match(fragments.script, /tooltip\.textContent = module\.name \+ ': ' \+ module\.description/);
 });
