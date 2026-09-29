@@ -36,12 +36,22 @@ export interface LocalCodeMapReadingItem {
   reason: string;
 }
 
+export interface LocalCodeMapRunScript {
+  name: string;
+  run: string;
+  command: string;
+}
+
 export interface LocalCodeMapData {
   projectName: string;
   files: LocalCodeMapFile[];
   modules: LocalCodeMapModule[];
   edges: LocalCodeMapEdge[];
   readingPath: LocalCodeMapReadingItem[];
+  gettingStarted?: {
+    extensionEntry?: string;
+    scripts: LocalCodeMapRunScript[];
+  };
 }
 
 export function buildLocalCodeMapData(
@@ -75,5 +85,15 @@ export function buildLocalCodeMapData(
       path: item.path,
       reason: item.reason,
     })),
+    gettingStarted: model.gettingStarted
+      ? {
+          extensionEntry: model.gettingStarted.extensionEntry,
+          scripts: model.gettingStarted.scripts.map((script) => ({
+            name: script.name,
+            run: script.run,
+            command: script.command,
+          })),
+        }
+      : undefined,
   };
 }
