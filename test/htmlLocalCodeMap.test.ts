@@ -172,3 +172,16 @@ test("Local code map source navigation stays relative and repository-agnostic", 
   assert.doesNotMatch(fragments.script, /vscode:\/\/file/i);
   assert.doesNotMatch(fragments.script, /github\.com\/Wonderer-Tech\/documint/i);
 });
+
+
+test("only the conceptual module map gets an offline sketch treatment", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.styles, /Segoe Print/);
+  assert.match(fragments.script, /feTurbulence/);
+  assert.match(fragments.script, /feDisplacementMap/);
+  assert.match(fragments.script, /localMapSketch/);
+  assert.match(fragments.script, /filter: 'url\(#localMapSketch\)'/);
+  assert.doesNotMatch(fragments.script, /rough\.svg|rough\.canvas/);
+  assert.doesNotMatch(fragments.styles, /local-map-scatter[^}]*filter:/);
+});
