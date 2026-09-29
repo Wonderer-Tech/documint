@@ -43,6 +43,10 @@ export function renderLocalProjectDocumentationFromModel(
     `- **External dependencies:** ${model.externalDependencies.length}`,
     `- **TODO/FIXME/HACK comments:** ${model.totalTodos}`,
     "",
+    "## Where is what",
+    "",
+    renderWhereIsWhat(model),
+    "",
     "## Language Summary",
     "",
     renderLanguageSummary(model),
@@ -62,9 +66,10 @@ export function renderLocalProjectDocumentationFromModel(
       "No external dependencies detected from source imports.",
     ),
     "",
-    "## Structurally Connected Files",
+    "## Core files",
     "",
     renderStructuralFiles(model),
+    ...renderUndocumentedFiles(model),
     "",
     "## Source Tree",
     "",
@@ -72,6 +77,48 @@ export function renderLocalProjectDocumentationFromModel(
     renderSourceTree(model.projectName, model.files.map((file) => file.path)),
     "```",
   ].join("\n");
+}
+
+function renderWhereIsWhat(model: LocalDocumentationModel): string {
+  return [
+    "| Area | Files | Lines | Start with |",
+    "| --- | ---: | ---: | --- |",
+    ...model.modules.map((module) => {
+      const candidates = module.filePaths
+        .map((path) => model.files.find((file) => file.path === path))
+        .filter((file): file is LocalDocumentationFile => Boolean(file))
+        .sort(
+          (a, b) =>
+            Number(b.entryPoint) - Number(a.entryPoint) ||
+            b.usedBy.length - a.usedBy.length ||
+            b.exportedSymbols.length - a.exportedSymbols.length ||
+            a.path.localeCompare(b.path),
+        )
+        .slice(0, 2);
+
+      const startWith = candidates.length
+        ? candidates.map((file) => inlineCode(file.path)).join(", ")
+        : "—";
+
+      return `| ${inlineCode(module.name)} | ${module.fileCount} | ${module.lineCount} | ${startWith} |`;
+    }),
+  ].join("\n");
+}
+
+function renderUndocumentedFiles(model: LocalDocumentationModel): string[] {
+  const undocumented = model.files.filter((file) => !file.description);
+  if (undocumented.length === 0) {
+    return [];
+  }
+
+  return [
+    "",
+    "## Undocumented files",
+    "",
+    `${undocumented.length} file${undocumented.length === 1 ? "" : "s"} have no trusted module-level description yet.`,
+    "",
+    ...undocumented.map((file) => `- ${inlineCode(file.path)}`),
+  ];
 }
 
 function renderLanguageSummary(model: LocalDocumentationModel): string {
