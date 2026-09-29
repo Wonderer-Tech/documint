@@ -273,3 +273,43 @@ test("TypeScript descriptions require explicit file docs or one documented expor
     "First exported API.",
   );
 });
+
+
+test("TypeScript file tags can carry or precede the trusted file description", () => {
+  const tagged = analyzer.analyzeFile(
+    file(
+      "src/tagged.ts",
+      "typescript",
+      [
+        "/**",
+        " * @file Provider selection helpers.",
+        " */",
+        "export const provider = \"openai\";",
+      ].join("\n"),
+    ),
+  );
+  assert.deepEqual(tagged.description, {
+    text: "Provider selection helpers.",
+    source: "file-comment",
+    line: 1,
+  });
+
+  const standaloneTag = analyzer.analyzeFile(
+    file(
+      "src/tagged-later.ts",
+      "typescript",
+      [
+        "/**",
+        " * @module",
+        " * Canonicalizes model metadata before caching.",
+        " */",
+        "export const value = 1;",
+      ].join("\n"),
+    ),
+  );
+  assert.deepEqual(standaloneTag.description, {
+    text: "Canonicalizes model metadata before caching.",
+    source: "file-comment",
+    line: 1,
+  });
+});
