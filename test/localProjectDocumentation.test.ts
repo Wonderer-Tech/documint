@@ -65,3 +65,49 @@ test("local project overview includes module facts and a stable source tree", ()
   assert.match(output, /helper\.ts/);
   assert.match(output, /index\.ts/);
 });
+
+
+test("local project overview renders package scripts and VS Code manifest facts when present", () => {
+  const manifestFiles: WorkspaceFile[] = [
+    {
+      path: "package.json",
+      language: "json",
+      content: JSON.stringify({
+        main: "./dist/extension.js",
+        scripts: {
+          compile: "tsc --noEmit",
+          test: "node --test",
+        },
+        contributes: {
+          commands: [
+            { command: "documint.generate", title: "Generate Documentation" },
+          ],
+          configuration: {
+            properties: {
+              "documint.mode": { default: "local" },
+            },
+          },
+        },
+      }),
+    },
+    {
+      path: "src/extension.ts",
+      language: "typescript",
+      content: "export function activate() {}",
+    },
+  ];
+  const manifestProject = analyzer.analyzeProject(manifestFiles);
+  const output = renderLocalProjectDocumentation({
+    projectName: "Extension",
+    files: manifestFiles,
+    project: manifestProject,
+  });
+
+  assert.match(output, /## How to run/);
+  assert.match(output, /`npm run compile`/);
+  assert.match(output, /`tsc --noEmit`/);
+  assert.match(output, /## VS Code extension surface/);
+  assert.match(output, /`\.\/dist\/extension\.js`/);
+  assert.match(output, /`documint\.generate`/);
+  assert.match(output, /`documint\.mode`/);
+});
