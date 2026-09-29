@@ -21,13 +21,14 @@ All notable changes to DocuMint are documented here.
 - Added trusted description provenance from explicit file/module JSDoc, documented single exports, Python module docstrings, Rust module documentation, Go package comments, and exact README path descriptions.
 - Added second-level structural module grouping such as `src/providers`, `src/services`, and `src/scanner` instead of collapsing the project into a single `src` bucket.
 - Added deterministic **Where is what**, **How to run**, **Suggested reading path**, **Core files**, **Undocumented files**, and conservative **Referenced environment variables** sections to Local project documentation.
+- Extended **How to run** with concrete Makefile targets and Dockerfile source facts (`FROM`, stages, exposed ports, `ENTRYPOINT`, and `CMD`) without inventing Docker commands.
 - Made per-file Local documentation compact: empty fact sections are omitted, Uses / Used by are concise, description provenance is visible, and source/API entries use portable relative links.
 - Split Local Markdown and HTML architecture surfaces. Markdown no longer carries raw architecture, whiteboard, dependency-graph JSON, file-level Mermaid, or D2 payload duplication.
 - Added the question-first Local HTML project map: module overview, file-size treemap, suggested reading path, dependency-reach scatter, file/description/export/environment search, connected file cards, and source links.
 - Added entry-point-driven layered layout, module hover/focus isolation, factual handwritten-style module notes, and cross-view navigation in the Local project map.
 - Local `Ctrl/Cmd+K` now focuses project-file search while `/` continues to search documentation headings.
 - Local HTML is generated with external assets disabled; the Local project-map experience does not require CDN scripts/styles.
-- Bumped Local cache compatibility to v7 so README-backed descriptions and the redesigned Local output regenerate once.
+- Bumped Local cache compatibility to v8 so README-backed descriptions and the redesigned Local output regenerate once.
 - Retired the old source-repair and VSIX self-commit workflows; CI/release automation no longer rewrites application source or force-adds a VSIX through those workflows.
 - Removed obsolete VS Code activation-event declarations and the deprecated `@types/marked` stub dependency.
 - Split the generated HTML shell into dedicated base-style, runtime-script, and policy modules; `htmlTemplate.ts` is now a small composition shell.
