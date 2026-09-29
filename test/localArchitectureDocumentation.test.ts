@@ -35,22 +35,17 @@ test("local architecture renderer derives cross-module relationships from resolv
   assert.match(output, /\| `src` \| `lib` \| 1 \|/);
 });
 
-test("local Markdown architecture keeps one compact module Mermaid graph", () => {
-  const output = renderLocalArchitectureDocumentation(
-    {
-      projectName: "Example Project",
-      files,
-      project,
-    },
-    { surface: "markdown" },
-  );
+test("local Markdown architecture stays compact and module-level", () => {
+  const output = renderLocalArchitectureDocumentation({
+    projectName: "Example Project",
+    files,
+    project,
+  });
 
   assert.match(output, /### Module Architecture/);
-  assert.match(output, /```mermaid/);
   assert.match(output, /m0\["lib \(1 file\)"\]/);
   assert.match(output, /m1\["src \(1 file\)"\]/);
   assert.match(output, /m1 -->\|"1 link"\| m0/);
-
   assert.doesNotMatch(output, /architecture-blueprint/);
   assert.doesNotMatch(output, /excalidraw-blueprint/);
   assert.doesNotMatch(output, /dependency-graph/);
@@ -58,7 +53,7 @@ test("local Markdown architecture keeps one compact module Mermaid graph", () =>
   assert.doesNotMatch(output, /Module Architecture — D2/);
 });
 
-test("summary architecture surface contains facts only and no diagram payload", () => {
+test("summary architecture surface emits facts without a duplicate diagram", () => {
   const output = renderLocalArchitectureDocumentation(
     {
       projectName: "Example Project",
@@ -68,10 +63,9 @@ test("summary architecture surface contains facts only and no diagram payload", 
     { surface: "summary" },
   );
 
+  assert.match(output, /## Architecture & Dependencies/);
   assert.match(output, /### Module Relationships/);
   assert.match(output, /\| `src` \| `lib` \| 1 \|/);
-  assert.doesNotMatch(output, /```mermaid/);
-  assert.doesNotMatch(output, /architecture-blueprint/);
-  assert.doesNotMatch(output, /excalidraw-blueprint/);
-  assert.doesNotMatch(output, /dependency-graph/);
+  assert.doesNotMatch(output, /mermaid/);
+  assert.doesNotMatch(output, /architecture-blueprint|excalidraw-blueprint|dependency-graph/);
 });
