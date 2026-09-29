@@ -74,6 +74,7 @@ test("local project overview renders package scripts and VS Code manifest facts 
       language: "json",
       content: JSON.stringify({
         main: "./dist/extension.js",
+        packageManager: "pnpm@9.15.4",
         scripts: {
           compile: "tsc --noEmit",
           test: "node --test",
