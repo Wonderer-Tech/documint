@@ -91,3 +91,5 @@ import "./htmlBaseScript.test";
 import "./sidebarAssets.test";
 
 import "./localProviderPolicy.test";
+
+import "./localProviderRuntime.test";
