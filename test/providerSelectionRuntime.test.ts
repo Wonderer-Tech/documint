@@ -114,14 +114,19 @@ test("extension uses canonical model for both cache identity and generation", ()
 });
 
 test("sidebar delegates provider-switch model correction to the shared host policy", () => {
-  const source = readFileSync(
+  const hostSource = readFileSync(
     join(process.cwd(), "src/views/sidebarProvider.ts"),
     "utf8",
   );
+  const clientSource = readFileSync(
+    join(process.cwd(), "src/views/sidebarClientScript.ts"),
+    "utf8",
+  );
+  const source = hostSource + "\n" + clientSource;
 
-  assert.match(source, /resolveProviderSelection\(/);
-  assert.match(source, /type: "settings-normalized"/);
-  assert.match(source, /case 'settings-normalized':/);
+  assert.match(hostSource, /resolveProviderSelection\(/);
+  assert.match(hostSource, /type: "settings-normalized"/);
+  assert.match(clientSource, /case 'settings-normalized':/);
   assert.doesNotMatch(source, /var providerDefaults = \{\s*deepseek:/);
-  assert.match(source, /claude-sonnet-5/);
+  assert.match(hostSource, /claude-sonnet-5/);
 });
