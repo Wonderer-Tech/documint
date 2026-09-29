@@ -2,8 +2,13 @@ import * as path from "path";
 import type { WorkspaceFile } from "../types";
 import {
   SourceAnalyzer as BaseSourceAnalyzer,
+  type FileAnalysis,
   type ProjectAnalysis,
 } from "./sourceAnalyzerBase";
+import {
+  analyzeJavaScriptLikeFile,
+  isJavaScriptLikeWorkspaceFile,
+} from "./typescriptSourceAnalyzer";
 
 export type {
   FileAnalysis,
@@ -12,6 +17,7 @@ export type {
   SourceImport,
   SourceSymbol,
   SourceSymbolKind,
+  SourceSymbolScope,
   TodoComment,
 } from "./sourceAnalyzerBase";
 
@@ -33,6 +39,17 @@ const JAVASCRIPT_LIKE_LANGUAGES = new Set([
  * project dependencies too.
  */
 export class SourceAnalyzer extends BaseSourceAnalyzer {
+  analyzeFile(file: WorkspaceFile): FileAnalysis {
+    if (!isJavaScriptLikeWorkspaceFile(file)) {
+      return super.analyzeFile(file);
+    }
+
+    // Preserve the existing comment/TODO behavior while using the TypeScript
+    // compiler AST as the source of truth for JS/TS imports and declarations.
+    const legacyFacts = super.analyzeFile(file);
+    return analyzeJavaScriptLikeFile(file, legacyFacts.todos);
+  }
+
   analyzeProject(files: WorkspaceFile[]): ProjectAnalysis {
     const project = super.analyzeProject(files);
     const pathIndex = new Set(project.files.map((file) => normalize(file.path)));
