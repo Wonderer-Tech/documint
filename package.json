@@ -111,10 +111,21 @@
             "anthropic",
             "openrouter",
             "deepseek",
+            "ollama",
+            "lmstudio",
             "custom"
           ],
           "default": "openai",
-          "description": "AI mode only: provider for documentation generation."
+          "description": "AI mode only: provider for documentation generation. Ollama and LM Studio are local loopback presets and do not require an API key.",
+          "enumDescriptions": [
+            "OpenAI cloud API.",
+            "Anthropic cloud API.",
+            "OpenRouter cloud routing API.",
+            "DeepSeek cloud API.",
+            "Local Ollama OpenAI-compatible server at 127.0.0.1:11434.",
+            "Local LM Studio OpenAI-compatible server at 127.0.0.1:1234.",
+            "Custom OpenAI-compatible endpoint."
+          ]
         },
         "documint.model": {
           "type": "string",
@@ -237,11 +248,22 @@
             "anthropic",
             "openrouter",
             "deepseek",
+            "ollama",
+            "lmstudio",
             "custom"
           ],
           "default": "openai",
-          "description": "AI mode only: provider for documentation generation.",
-          "deprecationMessage": "Deprecated setting key. Use documint.aiProvider instead."
+          "description": "AI mode only: provider for documentation generation. Ollama and LM Studio are local loopback presets and do not require an API key.",
+          "deprecationMessage": "Deprecated setting key. Use documint.aiProvider instead.",
+          "enumDescriptions": [
+            "OpenAI cloud API.",
+            "Anthropic cloud API.",
+            "OpenRouter cloud routing API.",
+            "DeepSeek cloud API.",
+            "Local Ollama OpenAI-compatible server at 127.0.0.1:11434.",
+            "Local LM Studio OpenAI-compatible server at 127.0.0.1:1234.",
+            "Custom OpenAI-compatible endpoint."
+          ]
         },
         "aiDocGenerator.model": {
           "type": "string",
