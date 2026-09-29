@@ -153,3 +153,29 @@ test("canonical model extracts deterministic package scripts and VS Code metadat
   assert.ok(model.suggestedReadingPath.length > 0);
   assert.equal(model.suggestedReadingPath[0].path, "src/extension.ts");
 });
+
+
+test("canonical Local model aggregates verified environment references", () => {
+  const envFile: WorkspaceFile = {
+    path: "src/env.ts",
+    language: "typescript",
+    content: [
+      "export const api = process.env.API_URL;",
+      'export const token = process.env["API_TOKEN"];',
+      'const fake = "process.env.NOT_REAL";',
+    ].join("\n"),
+  };
+  const projectFiles = [...files, envFile];
+  const project = new SourceAnalyzer().analyzeProject(projectFiles);
+  const model = buildLocalDocumentationModel("Example", projectFiles, project);
+
+  assert.deepEqual(model.referencedEnvironmentVariables, [
+    "API_TOKEN",
+    "API_URL",
+  ]);
+  assert.deepEqual(
+    model.files.find((file) => file.path === "src/env.ts")
+      ?.referencedEnvironmentVariables,
+    ["API_TOKEN", "API_URL"],
+  );
+});
