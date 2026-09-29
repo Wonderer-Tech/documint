@@ -61,6 +61,27 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     color: var(--text-secondary);
     font-size: 14px;
   }
+  .local-map-run {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .local-map-run[hidden] { display: none; }
+  .local-map-run code {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 10.5px;
+  }
+  .local-map-run-label {
+    align-self: center;
+    color: var(--text-muted);
+    font-size: 10.5px;
+    font-weight: 700;
+  }
   .local-map-badge {
     flex: none;
     padding: 7px 11px;
@@ -317,6 +338,14 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     align-items: start;
   }
   .local-map-search-wrap { position: relative; }
+  .local-map-shortcut {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: var(--text-muted);
+    font-size: 9px;
+    pointer-events: none;
+  }
   .local-map-search {
     width: 100%;
     border: 1px solid var(--border);
@@ -488,6 +517,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
       <div class="local-map-kicker">Local project map</div>
       <h2>Find your way through the code</h2>
       <p>Every view below is generated from the same source-analysis model: files, exports, resolved imports, descriptions, and entry points.</p>
+      <div class="local-map-run" id="localMapRun" hidden></div>
     </div>
     <span class="local-map-badge" id="localMapFacts"></span>
   </div>
@@ -557,6 +587,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <div class="local-map-lookup">
       <div class="local-map-search-wrap">
         <input class="local-map-search" id="localMapSearch" type="search" autocomplete="off" placeholder="Search files, descriptions, exports…" role="combobox" aria-expanded="false" aria-controls="localMapResults">
+        <span class="local-map-shortcut" aria-hidden="true">Ctrl/⌘ K</span>
         <ul class="local-map-results" id="localMapResults" role="listbox"></ul>
       </div>
       <article class="local-map-card" id="localMapCard" aria-live="polite"></article>
@@ -646,9 +677,37 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
 
   function renderFacts() {
     var facts = document.getElementById('localMapFacts');
-    if (!facts) return;
-    var lines = data.files.reduce(function (sum, file) { return sum + Number(file.lines || 0); }, 0);
-    facts.textContent = formatNumber(data.files.length) + ' files · ' + formatNumber(lines) + ' lines';
+    if (facts) {
+      var lines = data.files.reduce(function (sum, file) { return sum + Number(file.lines || 0); }, 0);
+      facts.textContent = formatNumber(data.files.length) + ' files · ' + formatNumber(lines) + ' lines';
+    }
+
+    var run = document.getElementById('localMapRun');
+    var scripts = data.gettingStarted && Array.isArray(data.gettingStarted.scripts)
+      ? data.gettingStarted.scripts
+      : [];
+    if (run && scripts.length) {
+      var priority = ['compile', 'test', 'watch', 'start', 'dev'];
+      var sorted = scripts.slice().sort(function (a, b) {
+        var ai = priority.indexOf(a.name);
+        var bi = priority.indexOf(b.name);
+        ai = ai < 0 ? priority.length : ai;
+        bi = bi < 0 ? priority.length : bi;
+        return ai - bi || a.name.localeCompare(b.name);
+      }).slice(0, 5);
+
+      var label = document.createElement('span');
+      label.className = 'local-map-run-label';
+      label.textContent = 'Run:';
+      run.appendChild(label);
+      sorted.forEach(function (script) {
+        var code = document.createElement('code');
+        code.textContent = script.run;
+        code.title = script.command;
+        run.appendChild(code);
+      });
+      run.hidden = false;
+    }
   }
 
   function renderModules() {
@@ -1187,6 +1246,23 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
 
   var input = document.getElementById('localMapSearch');
   var results = document.getElementById('localMapResults');
+
+  document.addEventListener('keydown', function (event) {
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      !event.altKey &&
+      event.key.toLowerCase() === 'k' &&
+      input
+    ) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      var lookup = document.getElementById('localMapLookupTitle');
+      if (lookup) lookup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      input.focus();
+      input.select();
+    }
+  }, true);
+
   if (input && results) {
     input.addEventListener('input', renderSearch);
     input.addEventListener('keydown', function (event) {
