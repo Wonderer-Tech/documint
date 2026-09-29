@@ -226,3 +226,11 @@ test("Local module map exposes only trusted module descriptions", () => {
   assert.match(fragments.script, /Documentation services/);
   assert.match(fragments.script, /tooltip\.textContent = module\.name \+ ': ' \+ module\.description/);
 });
+
+
+test("Local code map hero reports trusted-description coverage", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /var described = data\.files\.filter/);
+  assert.match(fragments.script, /' described'/);
+});
