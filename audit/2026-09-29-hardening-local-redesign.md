@@ -30,12 +30,18 @@ _Last updated: 2026-09-30_
 - ✅ Local code-map hero surfaces detected run commands; Local `Ctrl/Cmd+K` focuses file/description/export search while the existing `/` documentation search remains available.
 - ✅ Big Picture uses a deterministic entry-point-driven layered module layout and clips arrows at module boundaries.
 - ✅ Local HTML passes `externalAssets: false`; CDN tags/theme URLs are conditionally omitted from Local output, while AI-format HTML keeps its existing external-asset behavior.
+- ✅ Sidebar webview now uses a per-render nonce CSP (`default-src 'none'`, nonce-locked script/style) and no longer relies on inline `style="..."` attributes.
+- ✅ Local Markdown and HTML file cards use portable workspace-relative source links with optional `#L<line>` fragments; no hard-coded GitHub URL or machine-specific `vscode://file` path is emitted.
+- ✅ Big Picture now has a dependency-free native SVG sketch treatment (turbulence/displacement) while treemap/scatter remain clean quantitative visuals.
+- ✅ Browser acceptance fixtures/assertions now cover Local code-map filtering, reading path, scatter/file-card navigation, search, relation navigation, responsive behavior, and zero external HTTP(S) requests. The browser suite has been authored but not executed in this environment.
 - ✅ Added/expanded targeted regression coverage for analyzer AST behavior, description provenance, README facts, canonical Local model, compact Markdown vs rich HTML, Local offline policy, and code-map interactions.
 - ⏳ Full repository regression execution and VSIX size/scan-latency measurement remain required before release verification. Direct sandbox clone currently fails because the environment cannot resolve `github.com`; this limitation does not affect GitHub connector writes.
 
 ### Current next step
 
-Finish static review of the new Local code-map/data contracts, then move to source navigation/permalink handling and final Local HTML polish. After that, return to repository safety work (lockfile/normal CI) without manually triggering CI.
+1. Complete the remaining static compatibility review for the new Local code-map/source-link contracts.
+2. Execute full unit/browser regression and measure VSIX size + representative Local scan latency in an environment with repository/package access.
+3. Then return to repository safety work: package lock, `npm ci`, normal push/PR CI, and tag-based VSIX release. Do not manually trigger CI in this implementation session.
 
 
 ---
