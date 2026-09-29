@@ -32,7 +32,7 @@ test("HTML template carries the soft Jelly UI shell and accessibility states", (
   assert.match(source, /prefers-reduced-motion: reduce/);
 });
 
-test("Local generated HTML receives the Jelly UI without changing documentation content", () => {
+test("Local generated HTML receives the Jelly UI and question-first code map", () => {
   const files = [
     {
       path: "src/main.ts",
@@ -50,9 +50,16 @@ test("Local generated HTML receives the Jelly UI without changing documentation 
   assert.match(document.html, /class="documint-jelly-ui"/);
   assert.match(document.html, /Jelly Example — Local Documentation/);
   assert.match(document.html, /src\/main\.ts/);
-  assert.match(document.html, /architecture-blueprint/);
-  assert.match(document.html, /architecture-pie-panel/);
-  assert.match(document.html, /Module Scale Chart/);
+  assert.match(document.html, /data-documint-local-code-map/);
+  assert.match(document.html, /Find your way through the code/);
+  assert.doesNotMatch(
+    document.html,
+    /<code class="language-architecture-blueprint"/,
+  );
+  assert.doesNotMatch(
+    document.html,
+    /<code class="language-excalidraw-blueprint"/,
+  );
 });
 
 test("soft HTML keeps the module scale pie chart visually prominent", () => {
