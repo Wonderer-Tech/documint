@@ -235,3 +235,12 @@ test("Local code map hero reports trusted-description coverage", () => {
   assert.match(fragments.script, /var described = data\.files\.filter/);
   assert.match(fragments.script, /' described'/);
 });
+
+
+test("Local code map labels run commands with the detected package manager", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /Run with /);
+  assert.match(fragments.script, /data\.gettingStarted\.packageManager/);
+  assert.match(fragments.script, /npm run compile/);
+});
