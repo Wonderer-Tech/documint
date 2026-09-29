@@ -13,12 +13,15 @@ export type SourceSymbolKind =
   | "struct"
   | "trait";
 
+export type SourceSymbolScope = "module" | "class" | "function" | "unknown";
+
 export interface SourceSymbol {
   name: string;
   kind: SourceSymbolKind;
   line: number;
   exported: boolean;
   signature: string;
+  scope?: SourceSymbolScope;
 }
 
 export interface SourceImport {
