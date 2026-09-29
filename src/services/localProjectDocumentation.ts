@@ -2,7 +2,6 @@ import type { ProjectAnalysis } from "../analyzer/sourceAnalyzer";
 import type { WorkspaceFile } from "../types";
 import {
   buildLocalDocumentationModel,
-  type LocalDocumentationFile,
   type LocalDocumentationModel,
 } from "./localDocumentationModel";
 
@@ -28,7 +27,7 @@ export function renderLocalProjectDocumentation(
 export function renderLocalProjectDocumentationFromModel(
   model: LocalDocumentationModel,
 ): string {
-  const sections = [
+  const sections: string[] = [
     `# ${escapeHeading(model.projectName)} — Local Documentation`,
     "",
     "> Generated entirely from static source analysis. No AI inference, model, API key, or external provider is used.",
@@ -49,6 +48,10 @@ export function renderLocalProjectDocumentationFromModel(
 
   sections.push(
     "",
+    "## Suggested reading path",
+    "",
+    renderSuggestedReadingPath(model),
+    "",
     "## Project Facts",
     "",
     `- **Files:** ${model.files.length}`,
@@ -58,11 +61,6 @@ export function renderLocalProjectDocumentationFromModel(
     `- **Internal dependency links:** ${model.internalDependencies.length}`,
     `- **External dependencies:** ${model.externalDependencies.length}`,
     `- **TODO/FIXME/HACK comments:** ${model.totalTodos}`,
-    ...renderGettingStartedSections(model),
-    "",
-    "## Where is what",
-    "",
-    renderWhereIsWhat(model),
     "",
     "## Language Summary",
     "",
@@ -83,14 +81,17 @@ export function renderLocalProjectDocumentationFromModel(
       "No external dependencies detected from source imports.",
     ),
     "",
-    "## Suggested reading path",
-    "",
-    renderSuggestedReadingPath(model),
-    "",
     "## Core files",
     "",
-    renderStructuralFiles(model),
-    ...renderUndocumentedFiles(model),
+    renderCoreFiles(model),
+  );
+
+  const undocumented = renderUndocumentedFiles(model);
+  if (undocumented) {
+    sections.push("", "## Undocumented files", "", undocumented);
+  }
+
+  sections.push(
     "",
     "## Source Tree",
     "",
@@ -102,146 +103,98 @@ export function renderLocalProjectDocumentationFromModel(
   return sections.join("\n");
 }
 
-function renderGettingStartedSections(
-  model: LocalDocumentationModel,
-): string[] {
-  const facts = model.gettingStarted;
-  if (!facts) {
-    return [];
-  }
-
-  const sections: string[] = [];
-
-  if (facts.scripts.length > 0) {
-    sections.push(
-      "",
-      "## How to run",
-      "",
-      "Commands detected from `package.json` scripts:",
-      "",
-      "| Script | Command |",
-      "| --- | --- |",
-      ...facts.scripts.map(
-        (script) =>
-          `| ${inlineCode(`npm run ${script.name}`)} | ${inlineCode(script.command)} |`,
-      ),
-    );
-  }
-
-  if (
-    facts.extensionEntry ||
-    facts.vscodeCommands.length > 0 ||
-    facts.vscodeSettings.length > 0
-  ) {
-    sections.push("", "## VS Code extension surface", "");
-
-    if (facts.extensionEntry) {
-      sections.push(
-        `- **Extension entry:** ${inlineCode(facts.extensionEntry)}`,
-      );
-    }
-
-    if (facts.vscodeCommands.length > 0) {
-      sections.push(
-        "",
-        "### Commands",
-        "",
-        "| Command ID | Title |",
-        "| --- | --- |",
-        ...facts.vscodeCommands.map(
-          (command) =>
-            `| ${inlineCode(command.id)} | ${escapeTableText(command.title ?? "—")} |`,
-        ),
-      );
-    }
-
-    if (facts.vscodeSettings.length > 0) {
-      sections.push(
-        "",
-        "### Settings",
-        "",
-        "| Setting | Default |",
-        "| --- | --- |",
-        ...facts.vscodeSettings.map(
-          (setting) =>
-            `| ${inlineCode(setting.key)} | ${formatSettingDefault(setting.defaultValue)} |`,
-        ),
-      );
-    }
-  }
-
-  return sections;
-}
-
-function formatSettingDefault(value: unknown): string {
-  if (value === undefined) {
-    return "—";
-  }
-  if (typeof value === "string") {
-    return inlineCode(value);
-  }
-  if (
-    typeof value === "number" ||
-    typeof value === "boolean" ||
-    value === null
-  ) {
-    return inlineCode(String(value));
-  }
-
-  try {
-    return inlineCode(JSON.stringify(value));
-  } catch {
-    return "—";
-  }
-}
-
-function escapeTableText(value: string): string {
-  return String(value)
-    .replace(/\|/g, "\\|")
-    .replace(/[\r\n]+/g, " ")
-    .trim();
-}
-
 function renderWhereIsWhat(model: LocalDocumentationModel): string {
+  if (model.modules.length === 0) {
+    return "No structural modules detected.";
+  }
+
   return [
-    "| Area | Files | Lines | Start with |",
+    "| Module | Files | Lines | Start with |",
     "| --- | ---: | ---: | --- |",
     ...model.modules.map((module) => {
-      const candidates = module.filePaths
-        .map((path) => model.files.find((file) => file.path === path))
-        .filter((file): file is LocalDocumentationFile => Boolean(file))
-        .sort(
-          (a, b) =>
-            Number(b.entryPoint) - Number(a.entryPoint) ||
-            b.usedBy.length - a.usedBy.length ||
-            b.exportedSymbols.length - a.exportedSymbols.length ||
-            a.path.localeCompare(b.path),
-        )
-        .slice(0, 2);
-
-      const startWith = candidates.length
-        ? candidates.map((file) => inlineCode(file.path)).join(", ")
+      const primary = module.primaryFilePaths.length
+        ? module.primaryFilePaths.map(inlineCode).join(", ")
         : "—";
-
-      return `| ${inlineCode(module.name)} | ${module.fileCount} | ${module.lineCount} | ${startWith} |`;
+      return `| ${inlineCode(module.name)} | ${module.fileCount} | ${module.lineCount} | ${primary} |`;
     }),
   ].join("\n");
 }
 
-function renderUndocumentedFiles(model: LocalDocumentationModel): string[] {
-  const undocumented = model.files.filter((file) => !file.description);
-  if (undocumented.length === 0) {
-    return [];
+function renderGettingStarted(model: LocalDocumentationModel): string {
+  const facts = model.gettingStarted;
+  if (!facts) {
+    return "No supported project manifest facts detected.";
   }
 
-  return [
-    "",
-    "## Undocumented files",
-    "",
-    `${undocumented.length} file${undocumented.length === 1 ? "" : "s"} have no trusted module-level description yet.`,
-    "",
-    ...undocumented.map((file) => `- ${inlineCode(file.path)}`),
+  const sections: string[] = [
+    `Detected from ${inlineCode(facts.packageJsonPath)}.`,
   ];
+
+  if (facts.extensionEntry) {
+    sections.push(
+      "",
+      `**Extension entry:** ${inlineCode(facts.extensionEntry)}`,
+    );
+  }
+
+  if (facts.scripts.length > 0) {
+    sections.push(
+      "",
+      "### Package scripts",
+      "",
+      "| Script | Run | Command |",
+      "| --- | --- | --- |",
+      ...facts.scripts.map(
+        (script) =>
+          `| ${inlineCode(script.name)} | ${inlineCode(script.run)} | ${inlineCode(script.command)} |`,
+      ),
+    );
+  }
+
+  if (facts.vscodeCommands.length > 0) {
+    sections.push(
+      "",
+      "### VS Code commands",
+      "",
+      "| Command ID | Title |",
+      "| --- | --- |",
+      ...facts.vscodeCommands.map(
+        (command) =>
+          `| ${inlineCode(command.id)} | ${escapeTableText(command.title)} |`,
+      ),
+    );
+  }
+
+  if (facts.vscodeSettings.length > 0) {
+    sections.push(
+      "",
+      "### VS Code settings",
+      "",
+      "| Setting | Default |",
+      "| --- | --- |",
+      ...facts.vscodeSettings.map(
+        (setting) =>
+          `| ${inlineCode(setting.key)} | ${formatDefaultValue(setting.defaultValue)} |`,
+      ),
+    );
+  }
+
+  return sections.join("\n");
+}
+
+function renderSuggestedReadingPath(
+  model: LocalDocumentationModel,
+): string {
+  if (model.suggestedReadingPath.length === 0) {
+    return "No source-backed reading path could be derived.";
+  }
+
+  return model.suggestedReadingPath
+    .map(
+      (item, index) =>
+        `${index + 1}. ${inlineCode(item.path)} — ${escapeTableText(item.reason)}`,
+    )
+    .join("\n");
 }
 
 function renderLanguageSummary(model: LocalDocumentationModel): string {
@@ -287,22 +240,7 @@ function renderModuleSummary(model: LocalDocumentationModel): string {
   ].join("\n");
 }
 
-function renderSuggestedReadingPath(
-  model: LocalDocumentationModel,
-): string {
-  if (model.suggestedReadingPath.length === 0) {
-    return "No source-backed reading path could be derived.";
-  }
-
-  return model.suggestedReadingPath
-    .map(
-      (item, index) =>
-        `${index + 1}. ${inlineCode(item.path)} — ${escapeTableText(item.reason)}`,
-    )
-    .join("\n");
-}
-
-function renderStructuralFiles(model: LocalDocumentationModel): string {
+function renderCoreFiles(model: LocalDocumentationModel): string {
   const ranked = [...model.files]
     .sort(
       (a, b) =>
@@ -325,6 +263,37 @@ function renderStructuralFiles(model: LocalDocumentationModel): string {
   ].join("\n");
 }
 
+function renderUndocumentedFiles(
+  model: LocalDocumentationModel,
+): string | undefined {
+  const undocumented = model.files.filter((file) => !file.description);
+  if (undocumented.length === 0) {
+    return undefined;
+  }
+
+  return [
+    `${undocumented.length} file${undocumented.length === 1 ? "" : "s"} have no trusted module-level description yet.`,
+    "",
+    ...undocumented.map((file) => `- ${inlineCode(file.path)}`),
+  ].join("\n");
+}
+
+function formatDefaultValue(value: unknown): string {
+  if (value === undefined) {
+    return "—";
+  }
+
+  if (typeof value === "string") {
+    return inlineCode(value);
+  }
+
+  try {
+    return inlineCode(JSON.stringify(value));
+  } catch {
+    return inlineCode(String(value));
+  }
+}
+
 interface TreeNode {
   files: Set<string>;
   children: Map<string, TreeNode>;
@@ -334,7 +303,9 @@ function renderSourceTree(projectName: string, paths: string[]): string {
   const root: TreeNode = { files: new Set(), children: new Map() };
   for (const filePath of paths) {
     const parts = normalizePath(filePath).split("/").filter(Boolean);
-    if (parts.length === 0) continue;
+    if (parts.length === 0) {
+      continue;
+    }
     let node = root;
     for (const part of parts.slice(0, -1)) {
       let child = node.children.get(part);
@@ -352,12 +323,18 @@ function renderSourceTree(projectName: string, paths: string[]): string {
   return lines.join("\n");
 }
 
-function appendTreeChildren(node: TreeNode, prefix: string, lines: string[]): void {
+function appendTreeChildren(
+  node: TreeNode,
+  prefix: string,
+  lines: string[],
+): void {
   const entries = [
     ...Array.from(node.children.keys()).map((name) => ({ name, folder: true })),
     ...Array.from(node.files).map((name) => ({ name, folder: false })),
   ].sort((a, b) => {
-    if (a.folder !== b.folder) return a.folder ? -1 : 1;
+    if (a.folder !== b.folder) {
+      return a.folder ? -1 : 1;
+    }
     return a.name.localeCompare(b.name);
   });
 
@@ -408,7 +385,7 @@ function inlineCode(value: string): string {
   return `\`${cleanText(value).replace(/`/g, "'")}\``;
 }
 
-function escapeTableCell(value: string): string {
+function escapeTableText(value: string): string {
   return String(value)
     .replace(/\|/g, "\\|")
     .replace(/[\r\n]+/g, " ")
