@@ -27,7 +27,7 @@ All notable changes to DocuMint are documented here.
 - Added entry-point-driven layered layout, module hover/focus isolation, factual handwritten-style module notes, and cross-view navigation in the Local project map.
 - Local `Ctrl/Cmd+K` now focuses project-file search while `/` continues to search documentation headings.
 - Local HTML is generated with external assets disabled; the Local project-map experience does not require CDN scripts/styles.
-- Bumped Local cache compatibility to v6 so README-backed descriptions and the redesigned Local output regenerate once.
+- Bumped Local cache compatibility to v7 so README-backed descriptions and the redesigned Local output regenerate once.
 - Retired the old source-repair and VSIX self-commit workflows; CI/release automation no longer rewrites application source or force-adds a VSIX through those workflows.
 - Removed obsolete VS Code activation-event declarations and the deprecated `@types/marked` stub dependency.
 - Made Local Documentation the default generation mode for new/unconfigured installs while retaining AI fallback for malformed/legacy programmatic mode values.
