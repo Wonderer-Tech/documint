@@ -755,7 +755,10 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
 
       var label = document.createElement('span');
       label.className = 'local-map-run-label';
-      label.textContent = 'Run:';
+      label.textContent =
+        'Run with ' +
+        String(data.gettingStarted.packageManager || 'npm') +
+        ':';
       run.appendChild(label);
       sorted.forEach(function (script) {
         var code = document.createElement('code');
