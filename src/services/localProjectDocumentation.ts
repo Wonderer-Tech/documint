@@ -46,6 +46,19 @@ export function renderLocalProjectDocumentationFromModel(
     );
   }
 
+  if (model.referencedEnvironmentVariables.length > 0) {
+    sections.push(
+      "",
+      "## Referenced environment variables",
+      "",
+      "These names are referenced in source code; static analysis does not claim they are required in every run.",
+      "",
+      ...model.referencedEnvironmentVariables.map(
+        (name) => `- ${inlineCode(name)}`,
+      ),
+    );
+  }
+
   sections.push(
     "",
     "## Suggested reading path",
