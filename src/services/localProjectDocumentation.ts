@@ -11,6 +11,10 @@ export interface LocalProjectDocumentationInput {
   project: ProjectAnalysis;
 }
 
+export interface LocalProjectDocumentationRenderOptions {
+  surface?: "markdown" | "html";
+}
+
 /**
  * Compatibility wrapper for callers that still hold scanner/analyzer inputs.
  * Production Local document assembly builds the canonical model once and calls
@@ -26,16 +30,23 @@ export function renderLocalProjectDocumentation(
 
 export function renderLocalProjectDocumentationFromModel(
   model: LocalDocumentationModel,
+  options: LocalProjectDocumentationRenderOptions = {},
 ): string {
+  const surface = options.surface ?? "markdown";
   const sections: string[] = [
     `# ${escapeHeading(model.projectName)} — Local Documentation`,
     "",
     "> Generated entirely from static source analysis. No AI inference, model, API key, or external provider is used.",
-    "",
-    "## Where is what",
-    "",
-    renderWhereIsWhat(model),
   ];
+
+  if (surface === "markdown") {
+    sections.push(
+      "",
+      "## Where is what",
+      "",
+      renderWhereIsWhat(model),
+    );
+  }
 
   if (model.gettingStarted) {
     sections.push(
@@ -59,11 +70,16 @@ export function renderLocalProjectDocumentationFromModel(
     );
   }
 
+  if (surface === "markdown") {
+    sections.push(
+      "",
+      "## Suggested reading path",
+      "",
+      renderSuggestedReadingPath(model),
+    );
+  }
+
   sections.push(
-    "",
-    "## Suggested reading path",
-    "",
-    renderSuggestedReadingPath(model),
     "",
     "## Project Facts",
     "",
@@ -93,11 +109,16 @@ export function renderLocalProjectDocumentationFromModel(
       model.externalDependencies,
       "No external dependencies detected from source imports.",
     ),
-    "",
-    "## Core files",
-    "",
-    renderCoreFiles(model),
   );
+
+  if (surface === "markdown") {
+    sections.push(
+      "",
+      "## Core files",
+      "",
+      renderCoreFiles(model),
+    );
+  }
 
   const undocumented = renderUndocumentedFiles(model);
   if (undocumented) {
