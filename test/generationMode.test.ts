@@ -25,10 +25,15 @@ test("manifest exposes AI and Local generation modes with Local as the new-insta
 });
 
 test("sidebar keeps Local mode focused on controls that affect Local output", () => {
-  const source = readFileSync(
+  const providerSource = readFileSync(
     join(process.cwd(), "src/views/sidebarProvider.ts"),
     "utf8",
   );
+  const clientSource = readFileSync(
+    join(process.cwd(), "src/views/sidebarClientScript.ts"),
+    "utf8",
+  );
+  const source = providerSource + "\n" + clientSource;
 
   assert.match(source, /Local Documentation — No AI/);
   assert.match(source, /id="authSection"/);
