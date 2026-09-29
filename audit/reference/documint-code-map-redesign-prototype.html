@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>documint: code map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F6F8F7; --grid:#E2EAE6; --ink:#24303A; --muted:#5E6B74; --line:#C9D4CF;
+  --mint:#1E8C6E; --note:#3F6394; --hl:#FFE66D; --card:#FFFFFF;
+  --s0:#5B6770; --t0:#E3E8EB;
+  --s1:#3F6394; --t1:#DAE4F2;
+  --s2:#B7791F; --t2:#F5E6C6;
+  --s3:#1E8C6E; --t3:#D3EEE4;
+  --s4:#B8475A; --t4:#F4DCE0;
+  --s5:#7A5BA6; --t5:#E7DFF3;
+  --s6:#6B7F2A; --t6:#E5EBCE;
+  --hand:"Kalam","Comic Neue","Segoe Print","Bradley Hand",cursive;
+  --sans:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#131B20; --grid:#1C282E; --ink:#DCE5E2; --muted:#93A2A9; --line:#34454C;
+    --mint:#4CC9A0; --note:#8DB0E6; --hl:#C9B43E; --card:#18232A;
+    --s0:#9AA7B0; --t0:#29333A; --s1:#86A6D6; --t1:#21304A; --s2:#E0A95A; --t2:#3B3020;
+    --s3:#4CC9A0; --t3:#163A30; --s4:#E48597; --t4:#44252C; --s5:#B39AD8; --t5:#32294A;
+    --s6:#A9BF62; --t6:#2E3619;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#131B20; --grid:#1C282E; --ink:#DCE5E2; --muted:#93A2A9; --line:#34454C;
+  --mint:#4CC9A0; --note:#8DB0E6; --hl:#C9B43E; --card:#18232A;
+  --s0:#9AA7B0; --t0:#29333A; --s1:#86A6D6; --t1:#21304A; --s2:#E0A95A; --t2:#3B3020;
+  --s3:#4CC9A0; --t3:#163A30; --s4:#E48597; --t4:#44252C; --s5:#B39AD8; --t5:#32294A;
+  --s6:#A9BF62; --t6:#2E3619;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 64px);scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{
+  margin:0; color:var(--ink); font:17px/1.55 var(--sans);
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;
+}
+a{color:var(--note)}
+code,.mono{font-family:var(--mono);font-size:.86em}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2.5px solid var(--mint);outline-offset:2px;border-radius:3px}
+
+.bar{position:sticky;top:0;z-index:20;padding-top:env(safe-area-inset-top,0px);
+  background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line)}
+.bar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:22px;padding:10px 24px}
+.brand{font-weight:700;font-size:18px;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:8px}
+.brand svg{width:20px;height:20px}
+.bar nav{display:flex;gap:18px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none}
+.bar nav a{color:var(--muted);text-decoration:none;font-size:15px;white-space:nowrap;padding:4px 0}
+.bar nav a:hover{color:var(--ink)}
+.theme{border:1px solid var(--line);background:var(--card);border-radius:20px;padding:4px 12px;font-size:14px;cursor:pointer;white-space:nowrap}
+
+main{max-width:1120px;margin:0 auto;padding:0 24px 80px}
+header.intro{padding:44px 0 8px;max-width:760px}
+h1{font-size:46px;line-height:1.05;margin:0 0 14px;letter-spacing:-.01em}
+.lead{font-size:19px;margin:0 0 12px;max-width:68ch}
+.facts{color:var(--muted);margin:0}
+.facts code{color:var(--ink)}
+.run{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center}
+.run span{color:var(--muted);font-size:15px;margin-right:4px}
+.run code{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:3px 9px;font-size:14px}
+
+section{padding-top:46px}
+h2{font-size:28px;margin:0;line-height:1.2}
+.q{font-family:var(--hand);color:var(--note);font-size:21px;margin:2px 0 16px;line-height:1.3}
+.hint{color:var(--muted);font-size:15px;margin:10px 0 0;max-width:72ch}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* big picture */
+.sketch{display:block;width:100%;min-width:760px;height:auto}
+.sketch .box{cursor:pointer}
+.sketch.focus .edge:not(.on),.sketch.focus .enum:not(.on){opacity:.12}
+.sketch.focus .box:not(.on){opacity:.35}
+.sketch .edge,.sketch .box,.sketch .enum{transition:opacity .15s}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px 22px;margin:14px 2px 0;padding:0;list-style:none}
+.legend li{display:flex;gap:10px;align-items:baseline;font-size:15px}
+.legend i{flex:none;width:11px;height:11px;border-radius:3px;transform:translateY(1px)}
+.legend b{font-weight:700}
+.legend small{color:var(--muted);font-family:var(--mono);font-size:12px}
+
+/* treemap */
+.tm-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;min-height:30px}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--paper);border-radius:20px;padding:3px 6px 3px 12px;font-size:14px}
+.chip button{border:0;background:var(--line);border-radius:12px;padding:0 8px;cursor:pointer}
+.tm{position:relative;width:100%}
+.tm-mod{position:absolute;border-radius:8px;border:1.5px solid;transition:opacity .15s}
+.tm.filtered .tm-mod:not(.on){opacity:.22}
+.tm-head{position:absolute;left:8px;top:3px;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tm-file{position:absolute;border:0;border-radius:4px;padding:3px 5px;text-align:left;cursor:pointer;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:flex-start;line-height:1.2;box-shadow:inset 0 0 0 1px var(--card)}
+.tm-file:hover{filter:brightness(.94)}
+.tm-file span{font-family:var(--mono);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tm-file small{font-size:11px;color:var(--muted)}
+.tip{position:fixed;z-index:50;pointer-events:none;max-width:320px;background:var(--ink);color:var(--paper);border-radius:8px;padding:8px 11px;font-size:13.5px;line-height:1.4;opacity:0;transition:opacity .1s}
+.tip.show{opacity:1}
+.tip code{font-size:12px}
+
+/* start here */
+.path{position:relative;list-style:none;margin:0;padding:0 0 0 70px;max-width:760px}
+.path-line{position:absolute;left:0;top:0;width:60px;pointer-events:none}
+.path li{padding:9px 0 13px;min-height:58px}
+.path button{border:0;background:none;padding:0;cursor:pointer;text-align:left;overflow-wrap:anywhere;font-family:var(--mono);font-size:15px;color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px}
+.path button:hover{text-decoration-color:var(--mint)}
+.path p{margin:3px 0 0;color:var(--muted);font-size:15.5px}
+
+/* scatter */
+.scatter{display:block;width:100%;min-width:640px;height:auto}
+.scatter .pt{cursor:pointer}
+.scatter .pt:hover circle{stroke-width:3}
+
+/* file card */
+.lookup{position:relative;max-width:560px}
+.lookup input{width:100%;font:inherit;font-size:16px;padding:11px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink)}
+.lookup input:focus{outline:none;border-color:var(--mint)}
+.results{position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:10;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px;list-style:none;display:none;max-height:320px;overflow:auto;box-shadow:0 8px 24px color-mix(in srgb,var(--ink) 14%,transparent)}
+.results.show{display:block}
+.results button{display:block;width:100%;text-align:left;border:0;background:none;padding:7px 10px;border-radius:6px;cursor:pointer}
+.results button:hover,.results button[aria-selected="true"]{background:var(--paper)}
+.results code{font-size:13.5px}
+.results small{display:block;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card{margin-top:16px;padding:22px 24px}
+.card-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.card-head h3{margin:0;font-family:var(--mono);font-weight:500;font-size:21px;word-break:break-all}
+.tag{font-size:13px;border-radius:12px;padding:2px 10px;font-weight:700}
+.meta{color:var(--muted);font-size:15px;margin:6px 0 0}
+.desc{font-size:18px;margin:14px 0 4px;max-width:70ch}
+.desc.none{font-size:16px;color:var(--muted)}
+.from{font-family:var(--hand);color:var(--note);font-size:16px}
+.ego{display:block;width:100%;min-width:600px;height:auto;margin-top:8px}
+.ego .n{cursor:pointer}
+.ego .n:hover text{text-decoration:underline}
+table{border-collapse:collapse;width:100%;font-size:15px;margin-top:6px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{font-weight:700;color:var(--muted);font-size:13.5px}
+td.num,th.num{text-align:right}
+.card h4{margin:22px 0 4px;font-size:16px}
+
+.only-narrow{display:none}
+footer{max-width:1120px;margin:0 auto;padding:30px 24px 60px;color:var(--muted);font-size:14.5px}
+footer p{max-width:78ch;margin:0 0 8px}
+
+@media (max-width:700px){
+  body{font-size:16px}
+  h1{font-size:34px}
+  .bar-in{padding:8px 16px;gap:14px}
+  main,footer{padding-left:16px;padding-right:16px}
+  .card{padding:16px}
+  .only-narrow{display:block}
+}
+</style>
+</head>
+<body>
+<div class="bar"><div class="bar-in">
+  <a class="brand" href="#top"><svg viewBox="0 0 24 24" fill="none" stroke="var(--mint)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-3-7-7-7-11a7 7 0 0 1 14 0c0 4-3 8-7 11z"/><path d="M12 21V9"/><path d="M12 13l3-3"/></svg>documint</a>
+  <nav aria-label="Sections">
+    <a href="#big-picture">Big picture</a><a href="#inside">What's inside</a><a href="#start">Start here</a><a href="#care">Handle with care</a><a href="#lookup">Look up a file</a>
+  </nav>
+  <button class="theme" id="theme" type="button">Dark mode</button>
+</div></div>
+
+<main id="top">
+  <header class="intro">
+    <h1>documint</h1>
+    <p class="lead" id="lead"></p>
+    <p class="facts" id="facts"></p>
+    <div class="run"><span>Run it:</span><code>npm install</code><code>npm run compile</code><code>npm test</code></div>
+  </header>
+
+  <section id="big-picture">
+    <h2>Big picture</h2>
+    <p class="q">How do the parts fit together?</p>
+    <div class="sheet scroll"><svg class="sketch" id="sketch" viewBox="0 0 1000 505" role="img" aria-label="Sketch of the seven folders and the imports between them"></svg></div>
+    <p class="hint only-narrow">Swipe sideways to see the whole sketch.</p>
+    <ul class="legend" id="legend"></ul>
+    <p class="hint">Each box is a folder. An arrow means “imports from”, and the number is how many imports cross that line. Hover a box to see only its connections, click it to see its files below.</p>
+  </section>
+
+  <section id="inside">
+    <h2>What's inside</h2>
+    <p class="q">Where does the code live, and which files are big?</p>
+    <div class="sheet">
+      <div class="tm-top"><span class="hint" style="margin:0">Area is file size in lines. Click a file to open its card.</span><span id="tmchip"></span></div>
+      <div class="tm" id="tm"></div>
+    </div>
+  </section>
+
+  <section id="start">
+    <h2>Start here</h2>
+    <p class="q">I'm new. What do I read first?</p>
+    <ol class="path" id="path"><svg class="path-line" id="pathline" aria-hidden="true"></svg></ol>
+  </section>
+
+  <section id="care">
+    <h2>Handle with care</h2>
+    <p class="q">Which files break the most things if I change them?</p>
+    <div class="sheet scroll"><svg class="scatter" id="scatter" viewBox="0 0 1000 450" role="img" aria-label="Chart of file size against number of files that use each file"></svg></div>
+    <p class="hint">Higher up means more files import it, so a change here ripples further. Far right means a long file. Click any dot to open that file.</p>
+  </section>
+
+  <section id="lookup">
+    <h2>Look up a file</h2>
+    <p class="q">What does this file do, and who uses it?</p>
+    <div class="lookup">
+      <label for="find" class="hint" style="display:block;margin:0 0 6px">Search by file name or by what it does</label>
+      <input id="find" type="search" autocomplete="off" placeholder="Try “retry”, “cache” or “secret”" role="combobox" aria-expanded="false" aria-controls="results">
+      <ul class="results" id="results" role="listbox"></ul>
+    </div>
+    <article class="sheet card" id="card" aria-live="polite"></article>
+  </section>
+</main>
+
+<footer>
+  <p><b>About this page.</b> A redesign prototype built from documint's own source. File sizes, links, exports and descriptions are real: descriptions come from the README's project-structure notes or from the code comment above the first export. Folder nicknames and the reading-path notes were written by hand for this prototype; in the extension they would come from the README or, in AI mode, from the model.</p>
+  <p>Everything is drawn in the browser with rough.js, which is inlined, so the page works offline apart from the web fonts.</p>
+</footer>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>var rough=function(){"use strict";function t(t,e,s){if(t&&t.length){const[n,o]=e,a=Math.PI/180*s,h=Math.cos(a),r=Math.sin(a);for(const e of t){const[t,s]=e;e[0]=(t-n)*h-(s-o)*r+n,e[1]=(t-n)*r+(s-o)*h+o}}}function e(t,e){return t[0]===e[0]&&t[1]===e[1]}function s(s,n,o,a=1){const h=o,r=Math.max(n,.1),i=s[0]&&s[0][0]&&"number"==typeof s[0][0]?[s]:s,c=[0,0];if(h)for(const e of i)t(e,c,h);const l=function(t,s,n){const o=[];for(const s of t){const t=[...s];e(t[0],t[t.length-1])||t.push([t[0][0],t[0][1]]),t.length>2&&o.push(t)}const a=[];s=Math.max(s,.1);const h=[];for(const t of o)for(let e=0;e<t.length-1;e++){const s=t[e],n=t[e+1];if(s[1]!==n[1]){const t=Math.min(s[1],n[1]);h.push({ymin:t,ymax:Math.max(s[1],n[1]),x:t===s[1]?s[0]:n[0],islope:(n[0]-s[0])/(n[1]-s[1])})}}if(h.sort(((t,e)=>t.ymin<e.ymin?-1:t.ymin>e.ymin?1:t.x<e.x?-1:t.x>e.x?1:t.ymax===e.ymax?0:(t.ymax-e.ymax)/Math.abs(t.ymax-e.ymax))),!h.length)return a;let r=[],i=h[0].ymin,c=0;for(;r.length||h.length;){if(h.length){let t=-1;for(let e=0;e<h.length&&!(h[e].ymin>i);e++)t=e;h.splice(0,t+1).forEach((t=>{r.push({s:i,edge:t})}))}if(r=r.filter((t=>!(t.edge.ymax<=i))),r.sort(((t,e)=>t.edge.x===e.edge.x?0:(t.edge.x-e.edge.x)/Math.abs(t.edge.x-e.edge.x))),(1!==n||c%s==0)&&r.length>1)for(let t=0;t<r.length;t+=2){const e=t+1;if(e>=r.length)break;const s=r[t].edge,n=r[e].edge;a.push([[Math.round(s.x),i],[Math.round(n.x),i]])}i+=n,r.forEach((t=>{t.edge.x=t.edge.x+n*t.edge.islope})),c++}return a}(i,r,a);if(h){for(const e of i)t(e,c,-h);!function(e,s,n){const o=[];e.forEach((t=>o.push(...t))),t(o,s,n)}(l,c,-h)}return l}function n(t,e){var n;const o=e.hachureAngle+90;let a=e.hachureGap;a<0&&(a=4*e.strokeWidth),a=Math.round(Math.max(a,.1));let h=1;return e.roughness>=1&&((null===(n=e.randomizer)||void 0===n?void 0:n.next())||Math.random())>.7&&(h=a),s(t,a,o,h||1)}class o{constructor(t){this.helper=t}fillPolygons(t,e){return this._fillPolygons(t,e)}_fillPolygons(t,e){const s=n(t,e);return{type:"fillSketch",ops:this.renderLines(s,e)}}renderLines(t,e){const s=[];for(const n of t)s.push(...this.helper.doubleLineOps(n[0][0],n[0][1],n[1][0],n[1][1],e));return s}}function a(t){const e=t[0],s=t[1];return Math.sqrt(Math.pow(e[0]-s[0],2)+Math.pow(e[1]-s[1],2))}class h extends o{fillPolygons(t,e){let s=e.hachureGap;s<0&&(s=4*e.strokeWidth),s=Math.max(s,.1);const o=n(t,Object.assign({},e,{hachureGap:s})),h=Math.PI/180*e.hachureAngle,r=[],i=.5*s*Math.cos(h),c=.5*s*Math.sin(h);for(const[t,e]of o)a([t,e])&&r.push([[t[0]-i,t[1]+c],[...e]],[[t[0]+i,t[1]-c],[...e]]);return{type:"fillSketch",ops:this.renderLines(r,e)}}}class r extends o{fillPolygons(t,e){const s=this._fillPolygons(t,e),n=Object.assign({},e,{hachureAngle:e.hachureAngle+90}),o=this._fillPolygons(t,n);return s.ops=s.ops.concat(o.ops),s}}class i{constructor(t){this.helper=t}fillPolygons(t,e){const s=n(t,e=Object.assign({},e,{hachureAngle:0}));return this.dotsOnLines(s,e)}dotsOnLines(t,e){const s=[];let n=e.hachureGap;n<0&&(n=4*e.strokeWidth),n=Math.max(n,.1);let o=e.fillWeight;o<0&&(o=e.strokeWidth/2);const h=n/4;for(const r of t){const t=a(r),i=t/n,c=Math.ceil(i)-1,l=t-c*n,u=(r[0][0]+r[1][0])/2-n/4,p=Math.min(r[0][1],r[1][1]);for(let t=0;t<c;t++){const a=p+l+t*n,r=u-h+2*Math.random()*h,i=a-h+2*Math.random()*h,c=this.helper.ellipse(r,i,o,o,e);s.push(...c.ops)}}return{type:"fillSketch",ops:s}}}class c{constructor(t){this.helper=t}fillPolygons(t,e){const s=n(t,e);return{type:"fillSketch",ops:this.dashedLine(s,e)}}dashedLine(t,e){const s=e.dashOffset<0?e.hachureGap<0?4*e.strokeWidth:e.hachureGap:e.dashOffset,n=e.dashGap<0?e.hachureGap<0?4*e.strokeWidth:e.hachureGap:e.dashGap,o=[];return t.forEach((t=>{const h=a(t),r=Math.floor(h/(s+n)),i=(h+n-r*(s+n))/2;let c=t[0],l=t[1];c[0]>l[0]&&(c=t[1],l=t[0]);const u=Math.atan((l[1]-c[1])/(l[0]-c[0]));for(let t=0;t<r;t++){const a=t*(s+n),h=a+s,r=[c[0]+a*Math.cos(u)+i*Math.cos(u),c[1]+a*Math.sin(u)+i*Math.sin(u)],l=[c[0]+h*Math.cos(u)+i*Math.cos(u),c[1]+h*Math.sin(u)+i*Math.sin(u)];o.push(...this.helper.doubleLineOps(r[0],r[1],l[0],l[1],e))}})),o}}class l{constructor(t){this.helper=t}fillPolygons(t,e){const s=e.hachureGap<0?4*e.strokeWidth:e.hachureGap,o=e.zigzagOffset<0?s:e.zigzagOffset,a=n(t,e=Object.assign({},e,{hachureGap:s+o}));return{type:"fillSketch",ops:this.zigzagLines(a,o,e)}}zigzagLines(t,e,s){const n=[];return t.forEach((t=>{const o=a(t),h=Math.round(o/(2*e));let r=t[0],i=t[1];r[0]>i[0]&&(r=t[1],i=t[0]);const c=Math.atan((i[1]-r[1])/(i[0]-r[0]));for(let t=0;t<h;t++){const o=2*t*e,a=2*(t+1)*e,h=Math.sqrt(2*Math.pow(e,2)),i=[r[0]+o*Math.cos(c),r[1]+o*Math.sin(c)],l=[r[0]+a*Math.cos(c),r[1]+a*Math.sin(c)],u=[i[0]+h*Math.cos(c+Math.PI/4),i[1]+h*Math.sin(c+Math.PI/4)];n.push(...this.helper.doubleLineOps(i[0],i[1],u[0],u[1],s),...this.helper.doubleLineOps(u[0],u[1],l[0],l[1],s))}})),n}}const u={};class p{constructor(t){this.seed=t}next(){return this.seed?(2**31-1&(this.seed=Math.imul(48271,this.seed)))/2**31:Math.random()}}const f=0,d=1,g=2,M={A:7,a:7,C:6,c:6,H:1,h:1,L:2,l:2,M:2,m:2,Q:4,q:4,S:4,s:4,T:2,t:2,V:1,v:1,Z:0,z:0};function k(t,e){return t.type===e}function b(t){const e=[],s=function(t){const e=new Array;for(;""!==t;)if(t.match(/^([ \t\r\n,]+)/))t=t.substr(RegExp.$1.length);else if(t.match(/^([aAcChHlLmMqQsStTvVzZ])/))e[e.length]={type:f,text:RegExp.$1},t=t.substr(RegExp.$1.length);else{if(!t.match(/^(([-+]?[0-9]+(\.[0-9]*)?|[-+]?\.[0-9]+)([eE][-+]?[0-9]+)?)/))return[];e[e.length]={type:d,text:`${parseFloat(RegExp.$1)}`},t=t.substr(RegExp.$1.length)}return e[e.length]={type:g,text:""},e}(t);let n="BOD",o=0,a=s[o];for(;!k(a,g);){let h=0;const r=[];if("BOD"===n){if("M"!==a.text&&"m"!==a.text)return b("M0,0"+t);o++,h=M[a.text],n=a.text}else k(a,d)?h=M[n]:(o++,h=M[a.text],n=a.text);if(!(o+h<s.length))throw new Error("Path data ended short");for(let t=o;t<o+h;t++){const e=s[t];if(!k(e,d))throw new Error("Param not a number: "+n+","+e.text);r[r.length]=+e.text}if("number"!=typeof M[n])throw new Error("Bad segment: "+n);{const t={key:n,data:r};e.push(t),o+=h,a=s[o],"M"===n&&(n="L"),"m"===n&&(n="l")}}return e}function y(t){let e=0,s=0,n=0,o=0;const a=[];for(const{key:h,data:r}of t)switch(h){case"M":a.push({key:"M",data:[...r]}),[e,s]=r,[n,o]=r;break;case"m":e+=r[0],s+=r[1],a.push({key:"M",data:[e,s]}),n=e,o=s;break;case"L":a.push({key:"L",data:[...r]}),[e,s]=r;break;case"l":e+=r[0],s+=r[1],a.push({key:"L",data:[e,s]});break;case"C":a.push({key:"C",data:[...r]}),e=r[4],s=r[5];break;case"c":{const t=r.map(((t,n)=>n%2?t+s:t+e));a.push({key:"C",data:t}),e=t[4],s=t[5];break}case"Q":a.push({key:"Q",data:[...r]}),e=r[2],s=r[3];break;case"q":{const t=r.map(((t,n)=>n%2?t+s:t+e));a.push({key:"Q",data:t}),e=t[2],s=t[3];break}case"A":a.push({key:"A",data:[...r]}),e=r[5],s=r[6];break;case"a":e+=r[5],s+=r[6],a.push({key:"A",data:[r[0],r[1],r[2],r[3],r[4],e,s]});break;case"H":a.push({key:"H",data:[...r]}),e=r[0];break;case"h":e+=r[0],a.push({key:"H",data:[e]});break;case"V":a.push({key:"V",data:[...r]}),s=r[0];break;case"v":s+=r[0],a.push({key:"V",data:[s]});break;case"S":a.push({key:"S",data:[...r]}),e=r[2],s=r[3];break;case"s":{const t=r.map(((t,n)=>n%2?t+s:t+e));a.push({key:"S",data:t}),e=t[2],s=t[3];break}case"T":a.push({key:"T",data:[...r]}),e=r[0],s=r[1];break;case"t":e+=r[0],s+=r[1],a.push({key:"T",data:[e,s]});break;case"Z":case"z":a.push({key:"Z",data:[]}),e=n,s=o}return a}function m(t){const e=[];let s="",n=0,o=0,a=0,h=0,r=0,i=0;for(const{key:c,data:l}of t){switch(c){case"M":e.push({key:"M",data:[...l]}),[n,o]=l,[a,h]=l;break;case"C":e.push({key:"C",data:[...l]}),n=l[4],o=l[5],r=l[2],i=l[3];break;case"L":e.push({key:"L",data:[...l]}),[n,o]=l;break;case"H":n=l[0],e.push({key:"L",data:[n,o]});break;case"V":o=l[0],e.push({key:"L",data:[n,o]});break;case"S":{let t=0,a=0;"C"===s||"S"===s?(t=n+(n-r),a=o+(o-i)):(t=n,a=o),e.push({key:"C",data:[t,a,...l]}),r=l[0],i=l[1],n=l[2],o=l[3];break}case"T":{const[t,a]=l;let h=0,c=0;"Q"===s||"T"===s?(h=n+(n-r),c=o+(o-i)):(h=n,c=o);const u=n+2*(h-n)/3,p=o+2*(c-o)/3,f=t+2*(h-t)/3,d=a+2*(c-a)/3;e.push({key:"C",data:[u,p,f,d,t,a]}),r=h,i=c,n=t,o=a;break}case"Q":{const[t,s,a,h]=l,c=n+2*(t-n)/3,u=o+2*(s-o)/3,p=a+2*(t-a)/3,f=h+2*(s-h)/3;e.push({key:"C",data:[c,u,p,f,a,h]}),r=t,i=s,n=a,o=h;break}case"A":{const t=Math.abs(l[0]),s=Math.abs(l[1]),a=l[2],h=l[3],r=l[4],i=l[5],c=l[6];if(0===t||0===s)e.push({key:"C",data:[n,o,i,c,i,c]}),n=i,o=c;else if(n!==i||o!==c){x(n,o,i,c,t,s,a,h,r).forEach((function(t){e.push({key:"C",data:t})})),n=i,o=c}break}case"Z":e.push({key:"Z",data:[]}),n=a,o=h}s=c}return e}function w(t,e,s){return[t*Math.cos(s)-e*Math.sin(s),t*Math.sin(s)+e*Math.cos(s)]}function x(t,e,s,n,o,a,h,r,i,c){const l=(u=h,Math.PI*u/180);var u;let p=[],f=0,d=0,g=0,M=0;if(c)[f,d,g,M]=c;else{[t,e]=w(t,e,-l),[s,n]=w(s,n,-l);const h=(t-s)/2,c=(e-n)/2;let u=h*h/(o*o)+c*c/(a*a);u>1&&(u=Math.sqrt(u),o*=u,a*=u);const p=o*o,k=a*a,b=p*k-p*c*c-k*h*h,y=p*c*c+k*h*h,m=(r===i?-1:1)*Math.sqrt(Math.abs(b/y));g=m*o*c/a+(t+s)/2,M=m*-a*h/o+(e+n)/2,f=Math.asin(parseFloat(((e-M)/a).toFixed(9))),d=Math.asin(parseFloat(((n-M)/a).toFixed(9))),t<g&&(f=Math.PI-f),s<g&&(d=Math.PI-d),f<0&&(f=2*Math.PI+f),d<0&&(d=2*Math.PI+d),i&&f>d&&(f-=2*Math.PI),!i&&d>f&&(d-=2*Math.PI)}let k=d-f;if(Math.abs(k)>120*Math.PI/180){const t=d,e=s,r=n;d=i&&d>f?f+120*Math.PI/180*1:f+120*Math.PI/180*-1,p=x(s=g+o*Math.cos(d),n=M+a*Math.sin(d),e,r,o,a,h,0,i,[d,t,g,M])}k=d-f;const b=Math.cos(f),y=Math.sin(f),m=Math.cos(d),P=Math.sin(d),v=Math.tan(k/4),S=4/3*o*v,O=4/3*a*v,L=[t,e],T=[t+S*y,e-O*b],D=[s+S*P,n-O*m],A=[s,n];if(T[0]=2*L[0]-T[0],T[1]=2*L[1]-T[1],c)return[T,D,A].concat(p);{p=[T,D,A].concat(p);const t=[];for(let e=0;e<p.length;e+=3){const s=w(p[e][0],p[e][1],l),n=w(p[e+1][0],p[e+1][1],l),o=w(p[e+2][0],p[e+2][1],l);t.push([s[0],s[1],n[0],n[1],o[0],o[1]])}return t}}const P={randOffset:function(t,e){return G(t,e)},randOffsetWithRange:function(t,e,s){return E(t,e,s)},ellipse:function(t,e,s,n,o){const a=T(s,n,o);return D(t,e,o,a).opset},doubleLineOps:function(t,e,s,n,o){return $(t,e,s,n,o,!0)}};function v(t,e,s,n,o){return{type:"path",ops:$(t,e,s,n,o)}}function S(t,e,s){const n=(t||[]).length;if(n>2){const o=[];for(let e=0;e<n-1;e++)o.push(...$(t[e][0],t[e][1],t[e+1][0],t[e+1][1],s));return e&&o.push(...$(t[n-1][0],t[n-1][1],t[0][0],t[0][1],s)),{type:"path",ops:o}}return 2===n?v(t[0][0],t[0][1],t[1][0],t[1][1],s):{type:"path",ops:[]}}function O(t,e,s,n,o){return function(t,e){return S(t,!0,e)}([[t,e],[t+s,e],[t+s,e+n],[t,e+n]],o)}function L(t,e){if(t.length){const s="number"==typeof t[0][0]?[t]:t,n=j(s[0],1*(1+.2*e.roughness),e),o=e.disableMultiStroke?[]:j(s[0],1.5*(1+.22*e.roughness),z(e));for(let t=1;t<s.length;t++){const a=s[t];if(a.length){const t=j(a,1*(1+.2*e.roughness),e),s=e.disableMultiStroke?[]:j(a,1.5*(1+.22*e.roughness),z(e));for(const e of t)"move"!==e.op&&n.push(e);for(const t of s)"move"!==t.op&&o.push(t)}}return{type:"path",ops:n.concat(o)}}return{type:"path",ops:[]}}function T(t,e,s){const n=Math.sqrt(2*Math.PI*Math.sqrt((Math.pow(t/2,2)+Math.pow(e/2,2))/2)),o=Math.ceil(Math.max(s.curveStepCount,s.curveStepCount/Math.sqrt(200)*n)),a=2*Math.PI/o;let h=Math.abs(t/2),r=Math.abs(e/2);const i=1-s.curveFitting;return h+=G(h*i,s),r+=G(r*i,s),{increment:a,rx:h,ry:r}}function D(t,e,s,n){const[o,a]=F(n.increment,t,e,n.rx,n.ry,1,n.increment*E(.1,E(.4,1,s),s),s);let h=q(o,null,s);if(!s.disableMultiStroke&&0!==s.roughness){const[o]=F(n.increment,t,e,n.rx,n.ry,1.5,0,s),a=q(o,null,s);h=h.concat(a)}return{estimatedPoints:a,opset:{type:"path",ops:h}}}function A(t,e,s,n,o,a,h,r,i){const c=t,l=e;let u=Math.abs(s/2),p=Math.abs(n/2);u+=G(.01*u,i),p+=G(.01*p,i);let f=o,d=a;for(;f<0;)f+=2*Math.PI,d+=2*Math.PI;d-f>2*Math.PI&&(f=0,d=2*Math.PI);const g=2*Math.PI/i.curveStepCount,M=Math.min(g/2,(d-f)/2),k=V(M,c,l,u,p,f,d,1,i);if(!i.disableMultiStroke){const t=V(M,c,l,u,p,f,d,1.5,i);k.push(...t)}return h&&(r?k.push(...$(c,l,c+u*Math.cos(f),l+p*Math.sin(f),i),...$(c,l,c+u*Math.cos(d),l+p*Math.sin(d),i)):k.push({op:"lineTo",data:[c,l]},{op:"lineTo",data:[c+u*Math.cos(f),l+p*Math.sin(f)]})),{type:"path",ops:k}}function _(t,e){const s=m(y(b(t))),n=[];let o=[0,0],a=[0,0];for(const{key:t,data:h}of s)switch(t){case"M":a=[h[0],h[1]],o=[h[0],h[1]];break;case"L":n.push(...$(a[0],a[1],h[0],h[1],e)),a=[h[0],h[1]];break;case"C":{const[t,s,o,r,i,c]=h;n.push(...Z(t,s,o,r,i,c,a,e)),a=[i,c];break}case"Z":n.push(...$(a[0],a[1],o[0],o[1],e)),a=[o[0],o[1]]}return{type:"path",ops:n}}function I(t,e){const s=[];for(const n of t)if(n.length){const t=e.maxRandomnessOffset||0,o=n.length;if(o>2){s.push({op:"move",data:[n[0][0]+G(t,e),n[0][1]+G(t,e)]});for(let a=1;a<o;a++)s.push({op:"lineTo",data:[n[a][0]+G(t,e),n[a][1]+G(t,e)]})}}return{type:"fillPath",ops:s}}function C(t,e){return function(t,e){let s=t.fillStyle||"hachure";if(!u[s])switch(s){case"zigzag":u[s]||(u[s]=new h(e));break;case"cross-hatch":u[s]||(u[s]=new r(e));break;case"dots":u[s]||(u[s]=new i(e));break;case"dashed":u[s]||(u[s]=new c(e));break;case"zigzag-line":u[s]||(u[s]=new l(e));break;default:s="hachure",u[s]||(u[s]=new o(e))}return u[s]}(e,P).fillPolygons(t,e)}function z(t){const e=Object.assign({},t);return e.randomizer=void 0,t.seed&&(e.seed=t.seed+1),e}function W(t){return t.randomizer||(t.randomizer=new p(t.seed||0)),t.randomizer.next()}function E(t,e,s,n=1){return s.roughness*n*(W(s)*(e-t)+t)}function G(t,e,s=1){return E(-t,t,e,s)}function $(t,e,s,n,o,a=!1){const h=a?o.disableMultiStrokeFill:o.disableMultiStroke,r=R(t,e,s,n,o,!0,!1);if(h)return r;const i=R(t,e,s,n,o,!0,!0);return r.concat(i)}function R(t,e,s,n,o,a,h){const r=Math.pow(t-s,2)+Math.pow(e-n,2),i=Math.sqrt(r);let c=1;c=i<200?1:i>500?.4:-.0016668*i+1.233334;let l=o.maxRandomnessOffset||0;l*l*100>r&&(l=i/10);const u=l/2,p=.2+.2*W(o);let f=o.bowing*o.maxRandomnessOffset*(n-e)/200,d=o.bowing*o.maxRandomnessOffset*(t-s)/200;f=G(f,o,c),d=G(d,o,c);const g=[],M=()=>G(u,o,c),k=()=>G(l,o,c),b=o.preserveVertices;return a&&(h?g.push({op:"move",data:[t+(b?0:M()),e+(b?0:M())]}):g.push({op:"move",data:[t+(b?0:G(l,o,c)),e+(b?0:G(l,o,c))]})),h?g.push({op:"bcurveTo",data:[f+t+(s-t)*p+M(),d+e+(n-e)*p+M(),f+t+2*(s-t)*p+M(),d+e+2*(n-e)*p+M(),s+(b?0:M()),n+(b?0:M())]}):g.push({op:"bcurveTo",data:[f+t+(s-t)*p+k(),d+e+(n-e)*p+k(),f+t+2*(s-t)*p+k(),d+e+2*(n-e)*p+k(),s+(b?0:k()),n+(b?0:k())]}),g}function j(t,e,s){if(!t.length)return[];const n=[];n.push([t[0][0]+G(e,s),t[0][1]+G(e,s)]),n.push([t[0][0]+G(e,s),t[0][1]+G(e,s)]);for(let o=1;o<t.length;o++)n.push([t[o][0]+G(e,s),t[o][1]+G(e,s)]),o===t.length-1&&n.push([t[o][0]+G(e,s),t[o][1]+G(e,s)]);return q(n,null,s)}function q(t,e,s){const n=t.length,o=[];if(n>3){const a=[],h=1-s.curveTightness;o.push({op:"move",data:[t[1][0],t[1][1]]});for(let e=1;e+2<n;e++){const s=t[e];a[0]=[s[0],s[1]],a[1]=[s[0]+(h*t[e+1][0]-h*t[e-1][0])/6,s[1]+(h*t[e+1][1]-h*t[e-1][1])/6],a[2]=[t[e+1][0]+(h*t[e][0]-h*t[e+2][0])/6,t[e+1][1]+(h*t[e][1]-h*t[e+2][1])/6],a[3]=[t[e+1][0],t[e+1][1]],o.push({op:"bcurveTo",data:[a[1][0],a[1][1],a[2][0],a[2][1],a[3][0],a[3][1]]})}if(e&&2===e.length){const t=s.maxRandomnessOffset;o.push({op:"lineTo",data:[e[0]+G(t,s),e[1]+G(t,s)]})}}else 3===n?(o.push({op:"move",data:[t[1][0],t[1][1]]}),o.push({op:"bcurveTo",data:[t[1][0],t[1][1],t[2][0],t[2][1],t[2][0],t[2][1]]})):2===n&&o.push(...R(t[0][0],t[0][1],t[1][0],t[1][1],s,!0,!0));return o}function F(t,e,s,n,o,a,h,r){const i=[],c=[];if(0===r.roughness){t/=4,c.push([e+n*Math.cos(-t),s+o*Math.sin(-t)]);for(let a=0;a<=2*Math.PI;a+=t){const t=[e+n*Math.cos(a),s+o*Math.sin(a)];i.push(t),c.push(t)}c.push([e+n*Math.cos(0),s+o*Math.sin(0)]),c.push([e+n*Math.cos(t),s+o*Math.sin(t)])}else{const l=G(.5,r)-Math.PI/2;c.push([G(a,r)+e+.9*n*Math.cos(l-t),G(a,r)+s+.9*o*Math.sin(l-t)]);const u=2*Math.PI+l-.01;for(let h=l;h<u;h+=t){const t=[G(a,r)+e+n*Math.cos(h),G(a,r)+s+o*Math.sin(h)];i.push(t),c.push(t)}c.push([G(a,r)+e+n*Math.cos(l+2*Math.PI+.5*h),G(a,r)+s+o*Math.sin(l+2*Math.PI+.5*h)]),c.push([G(a,r)+e+.98*n*Math.cos(l+h),G(a,r)+s+.98*o*Math.sin(l+h)]),c.push([G(a,r)+e+.9*n*Math.cos(l+.5*h),G(a,r)+s+.9*o*Math.sin(l+.5*h)])}return[c,i]}function V(t,e,s,n,o,a,h,r,i){const c=a+G(.1,i),l=[];l.push([G(r,i)+e+.9*n*Math.cos(c-t),G(r,i)+s+.9*o*Math.sin(c-t)]);for(let a=c;a<=h;a+=t)l.push([G(r,i)+e+n*Math.cos(a),G(r,i)+s+o*Math.sin(a)]);return l.push([e+n*Math.cos(h),s+o*Math.sin(h)]),l.push([e+n*Math.cos(h),s+o*Math.sin(h)]),q(l,null,i)}function Z(t,e,s,n,o,a,h,r){const i=[],c=[r.maxRandomnessOffset||1,(r.maxRandomnessOffset||1)+.3];let l=[0,0];const u=r.disableMultiStroke?1:2,p=r.preserveVertices;for(let f=0;f<u;f++)0===f?i.push({op:"move",data:[h[0],h[1]]}):i.push({op:"move",data:[h[0]+(p?0:G(c[0],r)),h[1]+(p?0:G(c[0],r))]}),l=p?[o,a]:[o+G(c[f],r),a+G(c[f],r)],i.push({op:"bcurveTo",data:[t+G(c[f],r),e+G(c[f],r),s+G(c[f],r),n+G(c[f],r),l[0],l[1]]});return i}function Q(t){return[...t]}function H(t,e=0){const s=t.length;if(s<3)throw new Error("A curve must have at least three points.");const n=[];if(3===s)n.push(Q(t[0]),Q(t[1]),Q(t[2]),Q(t[2]));else{const s=[];s.push(t[0],t[0]);for(let e=1;e<t.length;e++)s.push(t[e]),e===t.length-1&&s.push(t[e]);const o=[],a=1-e;n.push(Q(s[0]));for(let t=1;t+2<s.length;t++){const e=s[t];o[0]=[e[0],e[1]],o[1]=[e[0]+(a*s[t+1][0]-a*s[t-1][0])/6,e[1]+(a*s[t+1][1]-a*s[t-1][1])/6],o[2]=[s[t+1][0]+(a*s[t][0]-a*s[t+2][0])/6,s[t+1][1]+(a*s[t][1]-a*s[t+2][1])/6],o[3]=[s[t+1][0],s[t+1][1]],n.push(o[1],o[2],o[3])}}return n}function N(t,e){return Math.pow(t[0]-e[0],2)+Math.pow(t[1]-e[1],2)}function B(t,e,s){const n=N(e,s);if(0===n)return N(t,e);let o=((t[0]-e[0])*(s[0]-e[0])+(t[1]-e[1])*(s[1]-e[1]))/n;return o=Math.max(0,Math.min(1,o)),N(t,J(e,s,o))}function J(t,e,s){return[t[0]+(e[0]-t[0])*s,t[1]+(e[1]-t[1])*s]}function K(t,e,s,n){const o=n||[];if(function(t,e){const s=t[e+0],n=t[e+1],o=t[e+2],a=t[e+3];let h=3*n[0]-2*s[0]-a[0];h*=h;let r=3*n[1]-2*s[1]-a[1];r*=r;let i=3*o[0]-2*a[0]-s[0];i*=i;let c=3*o[1]-2*a[1]-s[1];return c*=c,h<i&&(h=i),r<c&&(r=c),h+r}(t,e)<s){const s=t[e+0];if(o.length){(a=o[o.length-1],h=s,Math.sqrt(N(a,h)))>1&&o.push(s)}else o.push(s);o.push(t[e+3])}else{const n=.5,a=t[e+0],h=t[e+1],r=t[e+2],i=t[e+3],c=J(a,h,n),l=J(h,r,n),u=J(r,i,n),p=J(c,l,n),f=J(l,u,n),d=J(p,f,n);K([a,c,p,d],0,s,o),K([d,f,u,i],0,s,o)}var a,h;return o}function U(t,e){return X(t,0,t.length,e)}function X(t,e,s,n,o){const a=o||[],h=t[e],r=t[s-1];let i=0,c=1;for(let n=e+1;n<s-1;++n){const e=B(t[n],h,r);e>i&&(i=e,c=n)}return Math.sqrt(i)>n?(X(t,e,c+1,n,a),X(t,c,s,n,a)):(a.length||a.push(h),a.push(r)),a}function Y(t,e=.15,s){const n=[],o=(t.length-1)/3;for(let s=0;s<o;s++){K(t,3*s,e,n)}return s&&s>0?X(n,0,n.length,s):n}const tt="none";class et{constructor(t){this.defaultOptions={maxRandomnessOffset:2,roughness:1,bowing:1,stroke:"#000",strokeWidth:1,curveTightness:0,curveFitting:.95,curveStepCount:9,fillStyle:"hachure",fillWeight:-1,hachureAngle:-41,hachureGap:-1,dashOffset:-1,dashGap:-1,zigzagOffset:-1,seed:0,disableMultiStroke:!1,disableMultiStrokeFill:!1,preserveVertices:!1,fillShapeRoughnessGain:.8},this.config=t||{},this.config.options&&(this.defaultOptions=this._o(this.config.options))}static newSeed(){return Math.floor(Math.random()*2**31)}_o(t){return t?Object.assign({},this.defaultOptions,t):this.defaultOptions}_d(t,e,s){return{shape:t,sets:e||[],options:s||this.defaultOptions}}line(t,e,s,n,o){const a=this._o(o);return this._d("line",[v(t,e,s,n,a)],a)}rectangle(t,e,s,n,o){const a=this._o(o),h=[],r=O(t,e,s,n,a);if(a.fill){const o=[[t,e],[t+s,e],[t+s,e+n],[t,e+n]];"solid"===a.fillStyle?h.push(I([o],a)):h.push(C([o],a))}return a.stroke!==tt&&h.push(r),this._d("rectangle",h,a)}ellipse(t,e,s,n,o){const a=this._o(o),h=[],r=T(s,n,a),i=D(t,e,a,r);if(a.fill)if("solid"===a.fillStyle){const s=D(t,e,a,r).opset;s.type="fillPath",h.push(s)}else h.push(C([i.estimatedPoints],a));return a.stroke!==tt&&h.push(i.opset),this._d("ellipse",h,a)}circle(t,e,s,n){const o=this.ellipse(t,e,s,s,n);return o.shape="circle",o}linearPath(t,e){const s=this._o(e);return this._d("linearPath",[S(t,!1,s)],s)}arc(t,e,s,n,o,a,h=!1,r){const i=this._o(r),c=[],l=A(t,e,s,n,o,a,h,!0,i);if(h&&i.fill)if("solid"===i.fillStyle){const h=Object.assign({},i);h.disableMultiStroke=!0;const r=A(t,e,s,n,o,a,!0,!1,h);r.type="fillPath",c.push(r)}else c.push(function(t,e,s,n,o,a,h){const r=t,i=e;let c=Math.abs(s/2),l=Math.abs(n/2);c+=G(.01*c,h),l+=G(.01*l,h);let u=o,p=a;for(;u<0;)u+=2*Math.PI,p+=2*Math.PI;p-u>2*Math.PI&&(u=0,p=2*Math.PI);const f=(p-u)/h.curveStepCount,d=[];for(let t=u;t<=p;t+=f)d.push([r+c*Math.cos(t),i+l*Math.sin(t)]);return d.push([r+c*Math.cos(p),i+l*Math.sin(p)]),d.push([r,i]),C([d],h)}(t,e,s,n,o,a,i));return i.stroke!==tt&&c.push(l),this._d("arc",c,i)}curve(t,e){const s=this._o(e),n=[],o=L(t,s);if(s.fill&&s.fill!==tt)if("solid"===s.fillStyle){const e=L(t,Object.assign(Object.assign({},s),{disableMultiStroke:!0,roughness:s.roughness?s.roughness+s.fillShapeRoughnessGain:0}));n.push({type:"fillPath",ops:this._mergedShape(e.ops)})}else{const e=[],o=t;if(o.length){const t="number"==typeof o[0][0]?[o]:o;for(const n of t)n.length<3?e.push(...n):3===n.length?e.push(...Y(H([n[0],n[0],n[1],n[2]]),10,(1+s.roughness)/2)):e.push(...Y(H(n),10,(1+s.roughness)/2))}e.length&&n.push(C([e],s))}return s.stroke!==tt&&n.push(o),this._d("curve",n,s)}polygon(t,e){const s=this._o(e),n=[],o=S(t,!0,s);return s.fill&&("solid"===s.fillStyle?n.push(I([t],s)):n.push(C([t],s))),s.stroke!==tt&&n.push(o),this._d("polygon",n,s)}path(t,e){const s=this._o(e),n=[];if(!t)return this._d("path",n,s);t=(t||"").replace(/\n/g," ").replace(/(-\s)/g,"-").replace("/(ss)/g"," ");const o=s.fill&&"transparent"!==s.fill&&s.fill!==tt,a=s.stroke!==tt,h=!!(s.simplification&&s.simplification<1),r=function(t,e,s){const n=m(y(b(t))),o=[];let a=[],h=[0,0],r=[];const i=()=>{r.length>=4&&a.push(...Y(r,e)),r=[]},c=()=>{i(),a.length&&(o.push(a),a=[])};for(const{key:t,data:e}of n)switch(t){case"M":c(),h=[e[0],e[1]],a.push(h);break;case"L":i(),a.push([e[0],e[1]]);break;case"C":if(!r.length){const t=a.length?a[a.length-1]:h;r.push([t[0],t[1]])}r.push([e[0],e[1]]),r.push([e[2],e[3]]),r.push([e[4],e[5]]);break;case"Z":i(),a.push([h[0],h[1]])}if(c(),!s)return o;const l=[];for(const t of o){const e=U(t,s);e.length&&l.push(e)}return l}(t,1,h?4-4*(s.simplification||1):(1+s.roughness)/2),i=_(t,s);if(o)if("solid"===s.fillStyle)if(1===r.length){const e=_(t,Object.assign(Object.assign({},s),{disableMultiStroke:!0,roughness:s.roughness?s.roughness+s.fillShapeRoughnessGain:0}));n.push({type:"fillPath",ops:this._mergedShape(e.ops)})}else n.push(I(r,s));else n.push(C(r,s));return a&&(h?r.forEach((t=>{n.push(S(t,!1,s))})):n.push(i)),this._d("path",n,s)}opsToPath(t,e){let s="";for(const n of t.ops){const t="number"==typeof e&&e>=0?n.data.map((t=>+t.toFixed(e))):n.data;switch(n.op){case"move":s+=`M${t[0]} ${t[1]} `;break;case"bcurveTo":s+=`C${t[0]} ${t[1]}, ${t[2]} ${t[3]}, ${t[4]} ${t[5]} `;break;case"lineTo":s+=`L${t[0]} ${t[1]} `}}return s.trim()}toPaths(t){const e=t.sets||[],s=t.options||this.defaultOptions,n=[];for(const t of e){let e=null;switch(t.type){case"path":e={d:this.opsToPath(t),stroke:s.stroke,strokeWidth:s.strokeWidth,fill:tt};break;case"fillPath":e={d:this.opsToPath(t),stroke:tt,strokeWidth:0,fill:s.fill||tt};break;case"fillSketch":e=this.fillSketch(t,s)}e&&n.push(e)}return n}fillSketch(t,e){let s=e.fillWeight;return s<0&&(s=e.strokeWidth/2),{d:this.opsToPath(t),stroke:e.fill||tt,strokeWidth:s,fill:tt}}_mergedShape(t){return t.filter(((t,e)=>0===e||"move"!==t.op))}}class st{constructor(t,e){this.canvas=t,this.ctx=this.canvas.getContext("2d"),this.gen=new et(e)}draw(t){const e=t.sets||[],s=t.options||this.getDefaultOptions(),n=this.ctx,o=t.options.fixedDecimalPlaceDigits;for(const a of e)switch(a.type){case"path":n.save(),n.strokeStyle="none"===s.stroke?"transparent":s.stroke,n.lineWidth=s.strokeWidth,s.strokeLineDash&&n.setLineDash(s.strokeLineDash),s.strokeLineDashOffset&&(n.lineDashOffset=s.strokeLineDashOffset),this._drawToContext(n,a,o),n.restore();break;case"fillPath":{n.save(),n.fillStyle=s.fill||"";const e="curve"===t.shape||"polygon"===t.shape||"path"===t.shape?"evenodd":"nonzero";this._drawToContext(n,a,o,e),n.restore();break}case"fillSketch":this.fillSketch(n,a,s)}}fillSketch(t,e,s){let n=s.fillWeight;n<0&&(n=s.strokeWidth/2),t.save(),s.fillLineDash&&t.setLineDash(s.fillLineDash),s.fillLineDashOffset&&(t.lineDashOffset=s.fillLineDashOffset),t.strokeStyle=s.fill||"",t.lineWidth=n,this._drawToContext(t,e,s.fixedDecimalPlaceDigits),t.restore()}_drawToContext(t,e,s,n="nonzero"){t.beginPath();for(const n of e.ops){const e="number"==typeof s&&s>=0?n.data.map((t=>+t.toFixed(s))):n.data;switch(n.op){case"move":t.moveTo(e[0],e[1]);break;case"bcurveTo":t.bezierCurveTo(e[0],e[1],e[2],e[3],e[4],e[5]);break;case"lineTo":t.lineTo(e[0],e[1])}}"fillPath"===e.type?t.fill(n):t.stroke()}get generator(){return this.gen}getDefaultOptions(){return this.gen.defaultOptions}line(t,e,s,n,o){const a=this.gen.line(t,e,s,n,o);return this.draw(a),a}rectangle(t,e,s,n,o){const a=this.gen.rectangle(t,e,s,n,o);return this.draw(a),a}ellipse(t,e,s,n,o){const a=this.gen.ellipse(t,e,s,n,o);return this.draw(a),a}circle(t,e,s,n){const o=this.gen.circle(t,e,s,n);return this.draw(o),o}linearPath(t,e){const s=this.gen.linearPath(t,e);return this.draw(s),s}polygon(t,e){const s=this.gen.polygon(t,e);return this.draw(s),s}arc(t,e,s,n,o,a,h=!1,r){const i=this.gen.arc(t,e,s,n,o,a,h,r);return this.draw(i),i}curve(t,e){const s=this.gen.curve(t,e);return this.draw(s),s}path(t,e){const s=this.gen.path(t,e);return this.draw(s),s}}const nt="http://www.w3.org/2000/svg";class ot{constructor(t,e){this.svg=t,this.gen=new et(e)}draw(t){const e=t.sets||[],s=t.options||this.getDefaultOptions(),n=this.svg.ownerDocument||window.document,o=n.createElementNS(nt,"g"),a=t.options.fixedDecimalPlaceDigits;for(const h of e){let e=null;switch(h.type){case"path":e=n.createElementNS(nt,"path"),e.setAttribute("d",this.opsToPath(h,a)),e.setAttribute("stroke",s.stroke),e.setAttribute("stroke-width",s.strokeWidth+""),e.setAttribute("fill","none"),s.strokeLineDash&&e.setAttribute("stroke-dasharray",s.strokeLineDash.join(" ").trim()),s.strokeLineDashOffset&&e.setAttribute("stroke-dashoffset",`${s.strokeLineDashOffset}`);break;case"fillPath":e=n.createElementNS(nt,"path"),e.setAttribute("d",this.opsToPath(h,a)),e.setAttribute("stroke","none"),e.setAttribute("stroke-width","0"),e.setAttribute("fill",s.fill||""),"curve"!==t.shape&&"polygon"!==t.shape||e.setAttribute("fill-rule","evenodd");break;case"fillSketch":e=this.fillSketch(n,h,s)}e&&o.appendChild(e)}return o}fillSketch(t,e,s){let n=s.fillWeight;n<0&&(n=s.strokeWidth/2);const o=t.createElementNS(nt,"path");return o.setAttribute("d",this.opsToPath(e,s.fixedDecimalPlaceDigits)),o.setAttribute("stroke",s.fill||""),o.setAttribute("stroke-width",n+""),o.setAttribute("fill","none"),s.fillLineDash&&o.setAttribute("stroke-dasharray",s.fillLineDash.join(" ").trim()),s.fillLineDashOffset&&o.setAttribute("stroke-dashoffset",`${s.fillLineDashOffset}`),o}get generator(){return this.gen}getDefaultOptions(){return this.gen.defaultOptions}opsToPath(t,e){return this.gen.opsToPath(t,e)}line(t,e,s,n,o){const a=this.gen.line(t,e,s,n,o);return this.draw(a)}rectangle(t,e,s,n,o){const a=this.gen.rectangle(t,e,s,n,o);return this.draw(a)}ellipse(t,e,s,n,o){const a=this.gen.ellipse(t,e,s,n,o);return this.draw(a)}circle(t,e,s,n){const o=this.gen.circle(t,e,s,n);return this.draw(o)}linearPath(t,e){const s=this.gen.linearPath(t,e);return this.draw(s)}polygon(t,e){const s=this.gen.polygon(t,e);return this.draw(s)}arc(t,e,s,n,o,a,h=!1,r){const i=this.gen.arc(t,e,s,n,o,a,h,r);return this.draw(i)}curve(t,e){const s=this.gen.curve(t,e);return this.draw(s)}path(t,e){const s=this.gen.path(t,e);return this.draw(s)}}return{canvas:(t,e)=>new st(t,e),svg:(t,e)=>new ot(t,e),generator:t=>new et(t),newSeed:()=>et.newSeed()}}();
+</script>
+<script>
+(function(){
+'use strict';
+const D = {"entry":["src/extension.ts"],"ext":["async_hooks","axios","crypto","marked","path","vscode"],"files":[{"p":"src/analyzer/sourceAnalyzer.ts","m":"src/analyzer","l":98,"ex":[["class","SourceAnalyzer",35]],"uses":["src/analyzer/sourceAnalyzerBase.ts","src/types.ts"],"by":["src/services/docGeneratorBase.ts","src/services/documentationValidator.ts","src/services/localArchitectureDocumentation.ts","src/services/localDocumentationDocument.ts","src/services/localDocumentationGenerator.ts","src/services/localFileDocumentation.ts","src/services/localProjectDocumentation.ts","src/services/localVisualBlueprint.ts"],"todo":0,"doc":"Public analyzer facade + modern module compatibility","src":"readme"},{"p":"src/analyzer/sourceAnalyzerBase.ts","m":"src/analyzer","l":1299,"ex":[["type","SourceSymbolKind",4],["interface","SourceSymbol",16],["interface","SourceImport",24],["interface","TodoComment",31],["interface","FileAnalysis",36],["interface","ProjectAnalysis",44],["interface","FileDependencyIndex",55],["class","SourceAnalyzer",123]],"uses":["src/types.ts"],"by":["src/analyzer/sourceAnalyzer.ts"],"todo":0,"doc":"Core cross-language import/export/symbol analysis","src":"readme"},{"p":"src/config/apiKeyValidation.ts","m":"src/config","l":65,"ex":[["interface","ApiKeyValidationResult",1],["interface","ApiKeyValidationOptions",6],["function","validateApiKeyValue",30]],"uses":[],"by":["src/config/secretStorage.ts"],"todo":0,"doc":"Performs only local sanity checks.","src":"comment"},{"p":"src/config/secretStorage.ts","m":"src/config","l":93,"ex":[["class","SecretStorageManager",4]],"uses":["src/config/apiKeyValidation.ts"],"by":["src/extensionBase.ts","src/providers/aiProvider.ts","src/services/docGeneratorBase.ts","src/services/modelMetadataService.ts","src/views/sidebarProvider.ts"],"todo":0,"doc":"VS Code secret storage wrapper","src":"readme"},{"p":"src/extension.ts","m":"src","l":2,"ex":[],"uses":["src/extensionBase.ts"],"by":[],"todo":0,"doc":"Public VS Code activation entry point","src":"readme"},{"p":"src/extensionBase.ts","m":"src","l":651,"ex":[["function","activate",47],["function","deactivate",650]],"uses":["src/config/secretStorage.ts","src/outputDirectory.ts","src/providers/customEndpointPolicy.ts","src/providers/providerFactory.ts","src/providers/providerSelection.ts","src/scanner/scannerPolicy.ts","src/scanner/workspaceScanner.ts","src/services/docGenerator.ts","src/services/generationCachePolicy.ts","src/services/generationDepth.ts","src/services/generationMode.ts","src/services/generationRunContext.ts","src/services/localDocumentationCache.ts","src/services/localDocumentationGenerator.ts","src/services/outputSanitizer.ts","src/types.ts","src/views/sidebarProvider.ts"],"by":["src/extension.ts"],"todo":0,"doc":"Activation, commands, AI/Local routing, consent, cache clearing","src":"readme"},{"p":"src/outputDirectory.ts","m":"src","l":3,"ex":[["constant","DOCUMINT_OUTPUT_DIRECTORY",1],["constant","LEGACY_DOCUMINT_OUTPUT_DIRECTORY",2]],"uses":[],"by":["src/extensionBase.ts","src/scanner/scannerPolicy.ts","src/services/docGeneratorBase.ts","src/services/generationCachePolicy.ts","src/services/localDocumentationGenerator.ts"],"todo":0,"doc":"","src":""},{"p":"src/providers/aiProvider.ts","m":"src/providers","l":672,"ex":[["interface","AIProvider",12],["interface","ApiCallParams",23],["interface","RawMarkdownPromptParams",31],["class","BaseAIProvider",44]],"uses":["src/config/secretStorage.ts","src/providers/chunkDocumentationMerge.ts","src/providers/chunkTokenBudget.ts","src/providers/contextOutputBudget.ts","src/providers/providerRequestStartScheduler.ts","src/types.ts"],"by":["src/providers/anthropicProvider.ts","src/providers/customProvider.ts","src/providers/deepseekProvider.ts","src/providers/openaiProvider.ts","src/providers/openrouterProvider.ts","src/providers/providerFactory.ts","src/providers/providerMetadataDecorator.ts","src/services/docGeneratorBase.ts"],"todo":0,"doc":"Base provider and prompt/chunking pipeline","src":"readme"},{"p":"src/providers/anthropicCapabilities.ts","m":"src/providers","l":98,"ex":[["interface","AnthropicModelCapabilities",1],["function","getAnthropicModelCapabilities",75]],"uses":[],"by":["src/providers/anthropicProvider.ts","src/providers/openRouterCapabilities.ts","src/services/modelContextCatalog.ts"],"todo":0,"doc":"Canonical Anthropic context/output capability table","src":"readme"},{"p":"src/providers/anthropicProvider.ts","m":"src/providers","l":133,"ex":[["class","AnthropicProvider",22]],"uses":["src/providers/aiProvider.ts","src/providers/anthropicCapabilities.ts","src/providers/anthropicResponse.ts","src/providers/outputTokenLimit.ts","src/providers/providerDefaults.ts","src/providers/providerHttpError.ts","src/providers/providerModelGuard.ts","src/providers/providerRequestPolicy.ts","src/providers/providerRetry.ts","src/types.ts"],"by":["src/providers/providerFactory.ts"],"todo":0,"doc":"Anthropic Claude provider.","src":"comment"},{"p":"src/providers/anthropicResponse.ts","m":"src/providers","l":54,"ex":[["interface","ParsedAnthropicResponse",1],["function","parseAnthropicResponse",11]],"uses":[],"by":["src/providers/anthropicProvider.ts"],"todo":0,"doc":"Extracts documentation text and token usage from an Anthropic Messages API response without depending on Axios.","src":"comment"},{"p":"src/providers/chunkDocumentationMerge.ts","m":"src/providers","l":199,"ex":[["function","mergeChunkDocumentation",12]],"uses":[],"by":["src/providers/aiProvider.ts"],"todo":0,"doc":"Merges documentation generated for large-file chunks without naively concatenating repeated Markdown sections.","src":"comment"},{"p":"src/providers/chunkTokenBudget.ts","m":"src/providers","l":14,"ex":[["constant","CONTEXT_WINDOW_TOO_SMALL_FOR_PROMPT_ERROR",1],["constant","INVALID_CHUNK_TOKEN_BUDGET_ERROR",4],["function","requirePositiveChunkTokenBudget",7]],"uses":[],"by":["src/providers/aiProvider.ts"],"todo":0,"doc":"","src":""},{"p":"src/providers/contextOutputBudget.ts","m":"src/providers","l":44,"ex":[["constant","CONTEXT_WINDOW_TOO_SMALL_FOR_OUTPUT_ERROR",1],["interface","ContextOutputBudgetInput",4],["function","resolveContextOutputTokenBudget",15]],"uses":[],"by":["src/providers/aiProvider.ts"],"todo":0,"doc":"Resolves the maximum response size that can fit inside the model context after the complete prompt and a safety reserve are accounted for.","src":"comment"},{"p":"src/providers/contextWindowPolicy.ts","m":"src/providers","l":64,"ex":[["type","ContextWindowMetadataSource",3],["function","resolveRequestContextWindow",5],["function","resolveMetadataContextWindow",23],["function","hasExplicitContextWindow",46],["class","RequestContextWindowScope",52]],"uses":[],"by":["src/providers/providerMetadataDecorator.ts","src/services/generationRunContext.ts"],"todo":0,"doc":"","src":""},{"p":"src/providers/customEndpointPolicy.ts","m":"src/providers","l":86,"ex":[["interface","CustomEndpointPolicyResult",1],["function","evaluateCustomEndpoint",8]],"uses":[],"by":["src/extensionBase.ts","src/providers/customProvider.ts"],"todo":0,"doc":"","src":""},{"p":"src/providers/customProvider.ts","m":"src/providers","l":126,"ex":[["class","CustomProvider",21]],"uses":["src/providers/aiProvider.ts","src/providers/customEndpointPolicy.ts","src/providers/openAICompatibleResponse.ts","src/providers/outputTokenLimit.ts","src/providers/providerHttpError.ts","src/providers/providerRequestPolicy.ts","src/providers/providerRetry.ts","src/types.ts"],"by":["src/providers/providerFactory.ts"],"todo":0,"doc":"Custom provider \u2014 calls a user-specified endpoint using the OpenAI chat/completions wire format.","src":"comment"},{"p":"src/providers/deepSeekCapabilities.ts","m":"src/providers","l":54,"ex":[["interface","DeepSeekModelCapabilities",1],["function","getDeepSeekModelCapabilities",16]],"uses":[],"by":["src/providers/deepseekProvider.ts","src/providers/openRouterCapabilities.ts","src/services/modelContextCatalog.ts"],"todo":0,"doc":"Canonical DeepSeek context/output capability table","src":"readme"},{"p":"src/providers/deepseekProvider.ts","m":"src/providers","l":111,"ex":[["class","DeepSeekProvider",22]],"uses":["src/providers/aiProvider.ts","src/providers/deepSeekCapabilities.ts","src/providers/openAICompatibleResponse.ts","src/providers/outputTokenLimit.ts","src/providers/providerDefaults.ts","src/providers/providerHttpError.ts","src/providers/providerModelGuard.ts","src/providers/providerRequestPolicy.ts","src/providers/providerRetry.ts","src/types.ts"],"by":["src/providers/providerFactory.ts"],"todo":0,"doc":"DeepSeek provider using the official OpenAI-compatible Chat Completions API.","src":"comment"},{"p":"src/providers/openAICapabilities.ts","m":"src/providers","l":195,"ex":[["interface","OpenAIModelCapabilities",1],["function","getOpenAIModelCapabilities",172]],"uses":[],"by":["src/providers/openRouterCapabilities.ts","src/providers/openaiProvider.ts","src/services/modelContextCatalog.ts"],"todo":0,"doc":"Canonical OpenAI context/output capability table","src":"readme"},{"p":"src/providers/openAICompatibleResponse.ts","m":"src/providers","l":93,"ex":[["interface","ParsedOpenAICompatibleResponse",1],["function","parseOpenAICompatibleResponse",6]],"uses":[],"by":["src/providers/customProvider.ts","src/providers/deepseekProvider.ts","src/providers/openaiProvider.ts","src/providers/openrouterProvider.ts"],"todo":0,"doc":"","src":""},{"p":"src/providers/openRouterCapabilities.ts","m":"src/providers","l":75,"ex":[["function","getOpenRouterMaxOutputTokens",9],["function","getOpenRouterContextWindow",39]],"uses":["src/providers/anthropicCapabilities.ts","src/providers/deepSeekCapabilities.ts","src/providers/openAICapabilities.ts","src/services/modelContextCatalog.ts"],"by":["src/providers/openrouterProvider.ts"],"todo":0,"doc":"","src":""},{"p":"src/providers/openaiProvider.ts","m":"src/providers","l":162,"ex":[["class","OpenAIProvider",73]],"uses":["src/providers/aiProvider.ts","src/providers/openAICapabilities.ts","src/providers/openAICompatibleResponse.ts","src/providers/outputTokenLimit.ts","src/providers/providerDefaults.ts","src/providers/providerHttpError.ts","src/providers/providerModelGuard.ts","src/providers/providerRequestPolicy.ts","src/providers/providerRetry.ts","src/types.ts"],"by":["src/providers/providerFactory.ts"],"todo":0,"doc":"","src":""},{"p":"src/providers/openrouterProvider.ts","m":"src/providers","l":110,"ex":[["class","OpenRouterProvider",26]],"uses":["src/providers/aiProvider.ts","src/providers/openAICompatibleResponse.ts","src/providers/openRouterCapabilities.ts","src/providers/outputTokenLimit.ts","src/providers/providerDefaults.ts","src/providers/providerHttpError.ts","src/providers/providerModelGuard.ts","src/providers/providerRequestPolicy.ts","src/providers/providerRetry.ts","src/types.ts"],"by":["src/providers/providerFactory.ts"],"todo":0,"doc":"OpenRouter provider \u2014 routes requests to 100+ models via a single API key.","src":"comment"},{"p":"src/providers/outputTokenLimit.ts","m":"src/providers","l":18,"ex":[["function","capRequestedOutputTokens",11]],"uses":["src/providers/outputTokenLimitCore.ts"],"by":["src/providers/anthropicProvider.ts","src/providers/customProvider.ts","src/providers/deepseekProvider.ts","src/providers/openaiProvider.ts","src/providers/openrouterProvider.ts"],"todo":0,"doc":"Applies the user-facing aiDocGenerator.maxTokens setting as an upper bound on provider output while preserving any stricter provider/context limit that was alre","src":"comment"},{"p":"src/providers/outputTokenLimitCore.ts","m":"src/providers","l":18,"ex":[["function","resolveOutputTokenLimit",1]],"uses":[],"by":["src/providers/outputTokenLimit.ts"],"todo":0,"doc":"","src":""},{"p":"src/providers/providerDefaults.ts","m":"src/providers","l":27,"ex":[["constant","PROVIDER_DEFAULT_MODELS",6],["function","resolveProviderSelectionModel",17]],"uses":["src/providers/providerModelGuard.ts"],"by":["src/providers/anthropicProvider.ts","src/providers/deepseekProvider.ts","src/providers/openaiProvider.ts","src/providers/openrouterProvider.ts","src/providers/providerMetadataDecorator.ts","src/providers/providerSelection.ts"],"todo":0,"doc":"Resolves the model shown after a provider switch using the exact same compatibility policy enforced again at runtime by concrete providers.","src":"comment"},{"p":"src/providers/providerErrorPolicy.ts","m":"src/providers","l":110,"ex":[["type","ProviderFailureKind",1],["interface","ProviderFailureInput",9],["interface","ProviderFailureClassification",16],["function","classifyProviderFailure",43],["function","getProviderRetryDelayMs",80]],"uses":[],"by":["src/providers/providerHttpError.ts","src/providers/providerRetry.ts"],"todo":0,"doc":"Classifies provider failures without depending on Axios or a specific SDK.","src":"comment"},{"p":"src/providers/providerFactory.ts","m":"src/providers","l":60,"ex":[["class","ProviderFactory",19]],"uses":["src/providers/aiProvider.ts","src/providers/anthropicProvider.ts","src/providers/customProvider.ts","src/providers/deepseekProvider.ts","src/providers/openaiProvider.ts","src/providers/openrouterProvider.ts","src/providers/providerMetadataDecorator.ts","src/providers/providerNamePolicy.ts"],"by":["src/extensionBase.ts","src/services/docGeneratorBase.ts"],"todo":0,"doc":"Provider resolution and creation","src":"readme"},{"p":"src/providers/providerHttpError.ts","m":"src/providers","l":127,"ex":[["function","normalizeProviderRequestError",13]],"uses":["src/providers/providerErrorPolicy.ts","src/providers/providerHttpStatus.ts"],"by":["src/providers/anthropicProvider.ts","src/providers/customProvider.ts","src/providers/deepseekProvider.ts","src/providers/openaiProvider.ts","src/providers/openrouterProvider.ts"],"todo":0,"doc":"","src":""},{"p":"src/providers/providerHttpStatus.ts","m":"src/providers","l":45,"ex":[["function","extractProviderHttpStatus",1]],"uses":[],"by":["src/providers/providerHttpError.ts","src/providers/providerRetry.ts"],"todo":0,"doc":"","src":""},{"p":"src/providers/providerMetadataDecorator.ts","m":"src/providers","l":132,"ex":[["function","withModelMetadata",36]],"uses":["src/providers/aiProvider.ts","src/providers/contextWindowPolicy.ts","src/providers/providerDefaults.ts","src/providers/providerModelGuard.ts","src/services/generationRunContext.ts","src/services/modelMetadataService.ts"],"by":["src/providers/providerFactory.ts"],"todo":0,"doc":"Context-window metadata/override layer","src":"readme"},{"p":"src/providers/providerModelGuard.ts","m":"src/providers","l":120,"ex":[["type","GuardedProviderName",1],["function","normalizeProviderModel",51]],"uses":[],"by":["src/providers/anthropicProvider.ts","src/providers/deepseekProvider.ts","src/providers/openaiProvider.ts","src/providers/openrouterProvider.ts","src/providers/providerDefaults.ts","src/providers/providerMetadataDecorator.ts"],"todo":0,"doc":"Prevents stale cross-provider model IDs","src":"readme"},{"p":"src/providers/providerNamePolicy.ts","m":"src/providers","l":38,"ex":[["type","ProviderName",1],["function","normalizeProviderName",21],["function","resolveProviderNameWithFallback",31]],"uses":[],"by":["src/providers/providerFactory.ts","src/providers/providerSelection.ts"],"todo":0,"doc":"Normalizes persisted/sidebar provider values before consent and factory use.","src":"comment"},{"p":"src/providers/providerRequestPolicy.ts","m":"src/providers","l":12,"ex":[["constant","CLOUD_PROVIDER_REQUEST_TIMEOUT_MS",1],["constant","CUSTOM_PROVIDER_REQUEST_TIMEOUT_MS",2],["function","normalizeProviderTimeoutMs",4]],"uses":[],"by":["src/providers/anthropicProvider.ts","src/providers/customProvider.ts","src/providers/deepseekProvider.ts","src/providers/openaiProvider.ts","src/providers/openrouterProvider.ts"],"todo":0,"doc":"","src":""},{"p":"src/providers/providerRequestStartScheduler.ts","m":"src/providers","l":49,"ex":[["type","RequestStartDelay",1],["class","ProviderRequestStartScheduler",7]],"uses":[],"by":["src/providers/aiProvider.ts"],"todo":0,"doc":"Serializes provider request-start reservations without reserving time for a request that is cancelled before it actually starts.","src":"comment"},{"p":"src/providers/providerRetry.ts","m":"src/providers","l":206,"ex":[["interface","ProviderRetryOptions",7],["function","runProviderRequestWithRetry",24],["function","getRetryAfterMs",54]],"uses":["src/providers/providerErrorPolicy.ts","src/providers/providerHttpStatus.ts"],"by":["src/providers/anthropicProvider.ts","src/providers/customProvider.ts","src/providers/deepseekProvider.ts","src/providers/openaiProvider.ts","src/providers/openrouterProvider.ts"],"todo":0,"doc":"","src":""},{"p":"src/providers/providerSelection.ts","m":"src/providers","l":36,"ex":[["interface","ProviderSelection",7],["function","resolveProviderSelection",17]],"uses":["src/providers/providerDefaults.ts","src/providers/providerNamePolicy.ts"],"by":["src/extensionBase.ts","src/views/sidebarProvider.ts"],"todo":0,"doc":"Canonicalizes provider/model pairs before cache identity, generation, and UI persistence.","src":"comment"},{"p":"src/scanner/scannerPolicy.ts","m":"src/scanner","l":212,"ex":[["constant","EXTENSION_TO_LANGUAGE",4],["constant","LANGUAGE_TO_EXTENSIONS",42],["constant","DEFAULT_EXCLUDE_PATTERNS",69],["function","buildWorkspaceExcludePatterns",100],["function","buildExplicitFolderExcludePatterns",111],["function","getDefaultTargetLanguages",124],["function","getTargetExtensions",128],["function","getLanguageFromPath",150],["function","normalizeFsPath",155],["function","isInsideWorkspace",159],["function","isRelativePathInsideExcludedDirectory",181]],"uses":["src/outputDirectory.ts"],"by":["src/extensionBase.ts","src/scanner/workspaceScanner.ts"],"todo":0,"doc":"","src":""},{"p":"src/scanner/scannerRunTargetScope.ts","m":"src/scanner","l":33,"ex":[["class","ScannerRunTargetScope",15],["constant","scannerRunTargetScope",32]],"uses":[],"by":["src/scanner/workspaceScanner.ts"],"todo":0,"doc":"Keeps picker-selected scan targets scoped to the current async command run.","src":"comment"},{"p":"src/scanner/workspaceScanner.ts","m":"src/scanner","l":226,"ex":[["function","setWorkspaceScannerRunTargets",21],["interface","ScannerConfig",25],["class","WorkspaceScanner",33]],"uses":["src/scanner/scannerPolicy.ts","src/scanner/scannerRunTargetScope.ts","src/types.ts"],"by":["src/extensionBase.ts","src/services/docGeneratorBase.ts","src/services/localDocumentationGenerator.ts"],"todo":0,"doc":"Workspace/selected-path discovery and filtering","src":"readme"},{"p":"src/services/docGenerator.ts","m":"src/services","l":9,"ex":[],"uses":["src/services/docGeneratorBase.ts"],"by":["src/extensionBase.ts","src/services/localDocumentationGenerator.ts"],"todo":0,"doc":"Public AI generator facade","src":"readme"},{"p":"src/services/docGeneratorBase.ts","m":"src/services","l":2370,"ex":[["interface","DocGeneratorOptions",25],["interface","GeneratedOutputPaths",42],["class","DocGeneratorService",150]],"uses":["src/analyzer/sourceAnalyzer.ts","src/config/secretStorage.ts","src/outputDirectory.ts","src/providers/aiProvider.ts","src/providers/providerFactory.ts","src/scanner/workspaceScanner.ts","src/services/documentationValidator.ts","src/services/generationCacheIdentity.ts","src/services/htmlTemplate.ts","src/types.ts"],"by":["src/services/docGenerator.ts"],"todo":0,"doc":"AI orchestration + canonical prompt/cache binding","src":"readme"},{"p":"src/services/documentationValidator.ts","m":"src/services","l":290,"ex":[["interface","DocumentationValidationResult",3],["class","DocumentationValidator",24]],"uses":["src/analyzer/sourceAnalyzer.ts"],"by":["src/services/docGeneratorBase.ts"],"todo":0,"doc":"Checks AI docs against source facts","src":"readme"},{"p":"src/services/generationCacheIdentity.ts","m":"src/services","l":91,"ex":[["constant","GENERATION_CACHE_POLICY_VERSION",3],["constant","GENERATION_PROMPT_SCHEMA_VERSION",10],["interface","GenerationCacheIdentityInput",12],["interface","GenerationCacheSettings",20],["interface","GenerationCacheIdentity",28],["function","buildGenerationCacheIdentity",40]],"uses":["src/services/generationDepth.ts"],"by":["src/services/docGeneratorBase.ts","src/services/generationCachePolicy.ts"],"todo":0,"doc":"Canonical AI generation/cache identity versions","src":"readme"},{"p":"src/services/generationCachePolicy.ts","m":"src/services","l":109,"ex":[["interface","GenerationCachePreparation",12],["function","prepareGenerationCacheCompatibility",23],["function","commitGenerationCacheCompatibility",61],["function","ensureGenerationCacheCompatibility",79]],"uses":["src/outputDirectory.ts","src/services/generationCacheIdentity.ts"],"by":["src/extensionBase.ts"],"todo":0,"doc":"Invalidates AI-doc cache on material generation changes","src":"readme"},{"p":"src/services/generationDepth.ts","m":"src/services","l":37,"ex":[["type","DocumentationDepth",1],["function","normalizeDocumentationDepth",18]],"uses":[],"by":["src/extensionBase.ts","src/services/generationCacheIdentity.ts"],"todo":0,"doc":"Normalizes run/config depth so cache identity and runtime generation cannot disagree on blank or unsupported values.","src":"comment"},{"p":"src/services/generationMode.ts","m":"src/services","l":13,"ex":[["type","GenerationMode",1],["function","normalizeGenerationMode",8]],"uses":[],"by":["src/extensionBase.ts","src/views/sidebarProvider.ts"],"todo":0,"doc":"Canonical AI/Local mode normalization","src":"readme"},{"p":"src/services/generationRunContext.ts","m":"src/services","l":36,"ex":[["interface","GenerationRunContextValue",4],["class","GenerationRunContextScope",14],["constant","generationRunContext",35]],"uses":["src/providers/contextWindowPolicy.ts"],"by":["src/extensionBase.ts","src/providers/providerMetadataDecorator.ts"],"todo":0,"doc":"Carries run-scoped generation settings across async layers without mutating provider instances.","src":"comment"},{"p":"src/services/htmlOfflineHardening.ts","m":"src/services","l":47,"ex":[["function","hardenGeneratedHtmlForOffline",31]],"uses":[],"by":["src/services/outputSanitizer.ts"],"todo":0,"doc":"Keeps generated documentation usable when optional CDN assets cannot load.","src":"comment"},{"p":"src/services/htmlReaderNavigation.ts","m":"src/services","l":325,"ex":[["constant","READER_NAVIGATION_SCRIPT",2]],"uses":[],"by":["src/services/htmlTemplate.ts"],"todo":0,"doc":"Browser-only controls operate on existing report identities, never inferred source facts.","src":"comment"},{"p":"src/services/htmlReaderSearch.ts","m":"src/services","l":119,"ex":[["constant","READER_SEARCH_SCRIPT",2]],"uses":[],"by":["src/services/htmlTemplate.ts"],"todo":0,"doc":"Ranked, escaped browser search shared by Local and AI-format documents.","src":"comment"},{"p":"src/services/htmlReaderStyles.ts","m":"src/services","l":81,"ex":[["constant","READER_STYLES",2]],"uses":[],"by":["src/services/htmlTemplate.ts"],"todo":0,"doc":"Reader layout extends the existing soft palette without changing report content.","src":"comment"},{"p":"src/services/htmlTemplate.ts","m":"src/services","l":4920,"ex":[["interface","HtmlTemplateOptions",5],["function","generateHtmlTemplate",57]],"uses":["src/services/htmlReaderNavigation.ts","src/services/htmlReaderSearch.ts","src/services/htmlReaderStyles.ts"],"by":["src/services/docGeneratorBase.ts","src/services/localDocumentationDocument.ts"],"todo":0,"doc":"Full HTML document template","src":"readme"},{"p":"src/services/localArchitectureDocumentation.ts","m":"src/services","l":229,"ex":[["interface","LocalArchitectureDocumentationInput",5],["function","renderLocalArchitectureDocumentation",26]],"uses":["src/analyzer/sourceAnalyzer.ts","src/services/localVisualBlueprint.ts","src/types.ts"],"by":["src/services/localDocumentationDocument.ts"],"todo":0,"doc":"Deterministic dependency diagrams/edges","src":"readme"},{"p":"src/services/localDocumentationCache.ts","m":"src/services","l":97,"ex":[["constant","LOCAL_DOCUMENTATION_CACHE_FILE",4],["constant","LOCAL_DOCUMENTATION_CACHE_VERSION",5],["interface","LocalDocumentationOutputHashes",7],["interface","LocalDocumentationCacheManifest",12],["function","buildLocalDocumentationCacheKey",25],["function","hashLocalDocumentationOutput",46],["function","createLocalDocumentationCacheManifest",52],["function","parseLocalDocumentationCacheManifest",65]],"uses":["src/types.ts"],"by":["src/extensionBase.ts","src/services/localDocumentationGenerator.ts"],"todo":0,"doc":"Separate Local source/output fingerprint cache","src":"readme"},{"p":"src/services/localDocumentationDocument.ts","m":"src/services","l":165,"ex":[["interface","LocalDocumentationDocument",9],["function","buildLocalDocumentationDocument",22]],"uses":["src/analyzer/sourceAnalyzer.ts","src/services/htmlTemplate.ts","src/services/localArchitectureDocumentation.ts","src/services/localFileDocumentation.ts","src/services/localProjectDocumentation.ts","src/types.ts"],"by":["src/services/localDocumentationGenerator.ts"],"todo":0,"doc":"Complete deterministic Local document assembly","src":"readme"},{"p":"src/services/localDocumentationGenerator.ts","m":"src/services","l":319,"ex":[["interface","LocalDocumentationGeneratorOptions",22],["class","LocalDocumentationGenerator",32]],"uses":["src/analyzer/sourceAnalyzer.ts","src/outputDirectory.ts","src/scanner/workspaceScanner.ts","src/services/docGenerator.ts","src/services/localDocumentationCache.ts","src/services/localDocumentationDocument.ts","src/services/outputSanitizer.ts","src/types.ts"],"by":["src/extensionBase.ts"],"todo":0,"doc":"Local scan/analyze/write/cache runtime","src":"readme"},{"p":"src/services/localFileDocumentation.ts","m":"src/services","l":174,"ex":[["interface","LocalFileDocumentationInput",9],["function","renderLocalFileDocumentation",23]],"uses":["src/analyzer/sourceAnalyzer.ts","src/types.ts"],"by":["src/services/localDocumentationDocument.ts"],"todo":0,"doc":"Deterministic per-file facts/API sections","src":"readme"},{"p":"src/services/localProjectDocumentation.ts","m":"src/services","l":300,"ex":[["interface","LocalProjectDocumentationInput",4],["function","renderLocalProjectDocumentation",27]],"uses":["src/analyzer/sourceAnalyzer.ts","src/types.ts"],"by":["src/services/localDocumentationDocument.ts"],"todo":0,"doc":"Deterministic Local project overview","src":"readme"},{"p":"src/services/localVisualBlueprint.ts","m":"src/services","l":308,"ex":[["interface","LocalArchitectureFileNode",4],["interface","LocalArchitectureModuleNode",14],["interface","LocalArchitectureModuleEdge",24],["interface","LocalArchitectureGraphNode",30],["interface","LocalArchitectureGraphEdge",41],["interface","LocalArchitectureVisualBlueprint",47],["interface","LocalArchitectureVisualInput",61],["function","buildLocalArchitectureVisualBlueprint",72],["function","renderLocalArchitectureVisualSections",218]],"uses":["src/analyzer/sourceAnalyzer.ts","src/types.ts"],"by":["src/services/localArchitectureDocumentation.ts"],"todo":0,"doc":"Builds the JSON contract consumed by the generated HTML visual enhancers.","src":"comment"},{"p":"src/services/modelContextCatalog.ts","m":"src/services","l":121,"ex":[["interface","KnownModelContext",5],["function","getKnownModelContext",28],["function","estimateModelContextWindow",73]],"uses":["src/providers/anthropicCapabilities.ts","src/providers/deepSeekCapabilities.ts","src/providers/openAICapabilities.ts"],"by":["src/providers/openRouterCapabilities.ts","src/services/modelMetadataService.ts"],"todo":0,"doc":"","src":""},{"p":"src/services/modelMetadataCacheEpoch.ts","m":"src/services","l":17,"ex":[["class","ModelMetadataCacheEpoch",1]],"uses":[],"by":["src/services/modelMetadataService.ts"],"todo":0,"doc":"","src":""},{"p":"src/services/modelMetadataCacheKey.ts","m":"src/services","l":27,"ex":[["interface","ModelMetadataLookupIdentity",1],["function","buildModelMetadataLookupIdentity",8]],"uses":[],"by":["src/services/modelMetadataService.ts"],"todo":0,"doc":"","src":""},{"p":"src/services/modelMetadataService.ts","m":"src/services","l":214,"ex":[["interface","ModelMetadata",11],["class","ModelMetadataService",16]],"uses":["src/config/secretStorage.ts","src/services/modelContextCatalog.ts","src/services/modelMetadataCacheEpoch.ts","src/services/modelMetadataCacheKey.ts"],"by":["src/providers/providerMetadataDecorator.ts"],"todo":0,"doc":"Context window metadata fetch/cache","src":"readme"},{"p":"src/services/outputSanitizer.ts","m":"src/services","l":103,"ex":[["function","sanitizeGeneratedOutputs",29]],"uses":["src/services/htmlOfflineHardening.ts","src/services/outputSanitizerCore.ts"],"by":["src/extensionBase.ts","src/services/localDocumentationGenerator.ts"],"todo":0,"doc":"Removes unsafe/non-source-grounded output sections","src":"readme"},{"p":"src/services/outputSanitizerCore.ts","m":"src/services","l":44,"ex":[["function","sanitizeMarkdown",7],["function","sanitizeHtml",26]],"uses":[],"by":["src/services/outputSanitizer.ts"],"todo":0,"doc":"","src":""},{"p":"src/types.ts","m":"src","l":126,"ex":[["interface","DocGeneratorConfig",6],["interface","DocumentationContext",28],["interface","DocumentationResult",45],["interface","GenerationProgress",54],["interface","WorkspaceFile",74],["interface","CodeChunk",83],["class","DocumentationError",94],["class","CancellationToken",109]],"uses":[],"by":["src/analyzer/sourceAnalyzer.ts","src/analyzer/sourceAnalyzerBase.ts","src/extensionBase.ts","src/providers/aiProvider.ts","src/providers/anthropicProvider.ts","src/providers/customProvider.ts","src/providers/deepseekProvider.ts","src/providers/openaiProvider.ts","src/providers/openrouterProvider.ts","src/scanner/workspaceScanner.ts","src/services/docGeneratorBase.ts","src/services/localArchitectureDocumentation.ts","src/services/localDocumentationCache.ts","src/services/localDocumentationDocument.ts","src/services/localDocumentationGenerator.ts","src/services/localFileDocumentation.ts","src/services/localProjectDocumentation.ts","src/services/localVisualBlueprint.ts"],"todo":0,"doc":"Shared types and error models","src":"readme"},{"p":"src/views/sidebarProvider.ts","m":"src/views","l":1129,"ex":[["class","SidebarProvider",6]],"uses":["src/config/secretStorage.ts","src/providers/providerSelection.ts","src/services/generationMode.ts"],"by":["src/extensionBase.ts"],"todo":0,"doc":"Sidebar UI webview and state sync","src":"readme"}]};
+const REPO = 'https://github.com/Wonderer-Tech/documint/blob/main/';
+const MODS = [
+  {id:'src',          label:'Core',          desc:'Start-up, commands and shared types',             x:130, y:250},
+  {id:'src/views',    label:'Sidebar UI',    desc:'The panel you click in VS Code',                    x:300, y:70},
+  {id:'src/scanner',  label:'Scanner',       desc:'Decides which workspace files get read',            x:640, y:70},
+  {id:'src/services', label:'Doc builder',   desc:'Builds the docs: Local and AI paths, cache, HTML',  x:470, y:250},
+  {id:'src/providers',label:'AI providers',  desc:'Talks to OpenAI, Anthropic, DeepSeek and others',   x:820, y:250},
+  {id:'src/analyzer', label:'Analyzer',      desc:'Finds imports, exports and symbols',                x:470, y:430},
+  {id:'src/config',   label:'Keys & config', desc:'API key storage and validation',                    x:150, y:430}
+];
+const HUBS = new Set(['src/types.ts','src/outputDirectory.ts']);
+const PATH = [
+  ['src/extension.ts','Where VS Code starts the extension. Two lines that hand off to the next file.'],
+  ['src/extensionBase.ts','Registers the commands and decides between Local and AI mode.'],
+  ['src/scanner/workspaceScanner.ts','Collects the files to document and skips the excluded ones.'],
+  ['src/analyzer/sourceAnalyzer.ts','Reads each file for imports, exports and symbols. Every page of the docs is built on this.'],
+  ['src/services/localDocumentationGenerator.ts','The Local path end to end: scan, analyze, render, write, cache.'],
+  ['src/services/docGeneratorBase.ts','The AI path: builds prompts, batches files and merges the results.'],
+  ['src/providers/providerFactory.ts','Picks the provider class for the AI the user selected.'],
+  ['src/providers/aiProvider.ts','The shared base every provider extends: prompts, chunking, budgets.']
+];
+
+const byPath = new Map(D.files.map(f => [f.p, f]));
+const modIdx = new Map(MODS.map((m,i) => [m.id, i]));
+const modOf = p => MODS[modIdx.get(byPath.get(p).m)];
+const name = p => p.split('/').pop();
+const fmt = n => n.toLocaleString('en-US');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const txt = (parent, x, y, s, attrs) => { const t = el('text', Object.assign({x, y}, attrs || {}), parent); t.textContent = s; return t; };
+let C = {};
+function readVars(){ const cs = getComputedStyle(document.documentElement); ['paper','ink','muted','line','mint','note','hl','card'].forEach(k => C[k] = cs.getPropertyValue('--'+k).trim()); for (let i=0;i<7;i++){ C['s'+i]=cs.getPropertyValue('--s'+i).trim(); C['t'+i]=cs.getPropertyValue('--t'+i).trim(); } }
+const HAND = '"Kalam","Comic Neue","Segoe Print",cursive';
+
+/* ---------- intro ---------- */
+const totalLines = D.files.reduce((a,f)=>a+f.l,0);
+document.getElementById('lead').textContent = 'A VS Code extension that writes documentation for your code, either entirely on your machine or with help from an AI provider.';
+document.getElementById('facts').innerHTML = D.files.length + ' TypeScript files, ' + fmt(totalLines) + ' lines. It starts at <code>' + esc(D.entry[0]) + '</code> and depends on ' + D.ext.filter(e=>!['path','crypto','async_hooks'].includes(e)).map(e=>'<code>'+esc(e)+'</code>').join(', ') + '.';
+
+/* ---------- module edges ---------- */
+const modCount = {}; MODS.forEach(m => modCount[m.id] = 0);
+D.files.forEach(f => modCount[f.m]++);
+const edgeMap = new Map();
+D.files.forEach(f => f.uses.forEach(u => { if (HUBS.has(u)) return; const a=f.m, b=byPath.get(u).m; if (a===b) return; const k=a+'>'+b; edgeMap.set(k,(edgeMap.get(k)||0)+1); }));
+const hubUsers = new Set(); D.files.forEach(f => { if (f.uses.includes('src/types.ts')) hubUsers.add(f.p); });
+
+/* ---------- sketch ---------- */
+const BW=170, BH=78;
+function clip(m, tx, ty){ const dx=tx-m.x, dy=ty-m.y; const s=Math.min((BW/2+6)/Math.abs(dx||1e-6),(BH/2+6)/Math.abs(dy||1e-6)); return [m.x+dx*s, m.y+dy*s]; }
+function arrowHead(rc, g, x, y, ang, opt){ const L=12; [ang+0.42, ang-0.42].forEach(a => g.appendChild(rc.line(x, y, x+Math.cos(a)*L, y+Math.sin(a)*L, opt))); }
+const BENDS = {'src>src/providers':[475,140]};
+function drawSketch(){
+  const svg = document.getElementById('sketch'); svg.innerHTML=''; const rc = rough.svg(svg);
+  let seed = 11;
+  // edges
+  edgeMap.forEach((n, k) => {
+    const [a,b] = k.split('>'); const A=MODS[modIdx.get(a)], B=MODS[modIdx.get(b)];
+    const g = el('g',{class:'edge','data-a':a,'data-b':b},svg);
+    const strong = n>=5, mid = n>=2;
+    const opt = {stroke: mid ? C.ink : C.muted, strokeWidth: strong?2.4:(mid?1.5:1), roughness:1.1, seed:seed++, strokeLineDash: mid?undefined:[5,6]};
+    const optHead = Object.assign({}, opt, {strokeLineDash: undefined});
+    const bend = BENDS[k];
+    let lx, ly;
+    if (bend){
+      const p1=clip(A,bend[0],bend[1]), p2=clip(B,bend[0],bend[1]);
+      const qp=(t)=>{const u=1-t;return [u*u*p1[0]+2*u*t*bend[0]+t*t*p2[0], u*u*p1[1]+2*u*t*bend[1]+t*t*p2[1]];}; g.appendChild(rc.curve([0,.2,.4,.5,.6,.8,1].map(qp), opt));
+      arrowHead(rc,g,p2[0],p2[1],Math.atan2(p2[1]-bend[1],p2[0]-bend[0])+Math.PI,optHead);
+      const mp=qp(.5); lx=mp[0]; ly=mp[1];
+    } else {
+      let off=0; if (edgeMap.has(b+'>'+a)) off = a<b ? 8 : -8;
+      const dx=B.x-A.x, dy=B.y-A.y, len=Math.hypot(dx,dy), nx=-dy/len*off, ny=dx/len*off;
+      const p1=clip(A,B.x,B.y), p2=clip(B,A.x,A.y);
+      p1[0]+=nx;p1[1]+=ny;p2[0]+=nx;p2[1]+=ny;
+      g.appendChild(rc.line(p1[0],p1[1],p2[0],p2[1],opt));
+      arrowHead(rc,g,p2[0],p2[1],Math.atan2(dy,dx)+Math.PI,optHead);
+      const cdx=a<b?dx:-dx, cdy=a<b?dy:-dy, sh=off?(off>0?-.16:.16):0; lx=(p1[0]+p2[0])/2+nx*2.4+cdx*sh; ly=(p1[1]+p2[1])/2+ny*2.4+cdy*sh;
+    }
+    if (mid){
+      const t = el('g',{class:'enum','data-a':a,'data-b':b},svg);
+      el('circle',{cx:lx,cy:ly,r:11,fill:C.card,stroke:C.line},t);
+      txt(t,lx,ly+5,String(n),{'text-anchor':'middle','font-family':HAND,'font-size':16,'font-weight':700,fill:C.ink});
+    }
+  });
+  // boxes
+  MODS.forEach((m,i) => {
+    const g = el('g',{class:'box','data-mod':m.id,tabindex:0,role:'button','aria-label':m.label+', '+modCount[m.id]+' files. Show its files.'},svg);
+    g.appendChild(rc.rectangle(m.x-BW/2, m.y-BH/2, BW, BH, {fill:C['t'+i], fillStyle:'hachure', hachureAngle:-41, hachureGap:5.5, fillWeight:1.6, stroke:C['s'+i], strokeWidth:1.8, roughness:1.25, seed:100+i}));
+    el('rect',{x:m.x-BW/2+10,y:m.y-24,width:BW-20,height:48,fill:C.card,opacity:.82,rx:6},g);
+    txt(g,m.x,m.y-1,m.label,{'text-anchor':'middle','font-family':HAND,'font-size':22,'font-weight':700,fill:C.ink});
+    txt(g,m.x,m.y+18,(m.id==='src'?'src/':m.id+'/')+'  '+modCount[m.id]+(modCount[m.id]===1?' file':' files'),{'text-anchor':'middle','font-family':'var(--mono)','font-size':11.5,fill:C.muted});
+    const on = () => { svg.classList.add('focus'); g.classList.add('on'); svg.querySelectorAll('.edge,.enum').forEach(e => { if (e.dataset.a===m.id||e.dataset.b===m.id) e.classList.add('on'); }); svg.querySelectorAll('.box').forEach(b => { const id=b.dataset.mod; if (edgeMap.has(m.id+'>'+id)||edgeMap.has(id+'>'+m.id)) b.classList.add('on'); }); };
+    const off = () => { svg.classList.remove('focus'); svg.querySelectorAll('.on').forEach(e=>e.classList.remove('on')); };
+    g.addEventListener('mouseenter',on); g.addEventListener('mouseleave',off); g.addEventListener('focus',on); g.addEventListener('blur',off);
+    const go = () => { filterModule(m.id); document.getElementById('inside').scrollIntoView(); };
+    g.addEventListener('click',go); g.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();go();} });
+  });
+  // notes
+  const note = (x,y,s,anchor,size) => txt(svg,x,y,s,{'text-anchor':anchor||'start','font-family':HAND,'font-size':size||18,fill:C.note});
+  const noteArrow = (pts) => { svg.appendChild(rough.svg(svg).curve(pts,{stroke:C.note,strokeWidth:1.3,roughness:.9,seed:seed++})); const [a,b]=[pts[pts.length-2],pts[pts.length-1]]; arrowHead(rough.svg(svg),svg,b[0],b[1],Math.atan2(b[1]-a[1],b[0]-a[0])+Math.PI,{stroke:C.note,strokeWidth:1.3,roughness:.6}); };
+  note(28,166,'start: extension.ts');
+  noteArrow([[70,174],[82,190],[96,206]]);
+  note(890,168,'the only place that','middle'); note(890,188,'calls the internet','middle');
+  noteArrow([[880,196],[872,202],[862,208]]);
+  note(612,372,'every doc is built here');
+  noteArrow([[640,356],[600,330],[560,296]]);
+  note(985,497,'types.ts is used by '+hubUsers.size+' files, so it is left off to keep the arrows readable','end',15);
+}
+function renderLegend(){
+  document.getElementById('legend').innerHTML = MODS.map((m,i)=>'<li><i style="background:var(--s'+i+')"></i><span><b>'+esc(m.label)+'</b> '+esc(m.desc)+' <small>'+esc(m.id==='src'?'src/':m.id+'/')+'</small></span></li>').join('');
+}
+
+/* ---------- treemap ---------- */
+function squarify(data, x, y, w, h){
+  const total = data.reduce((a,d)=>a+d.v,0); if (!total || w<=0 || h<=0) return [];
+  const sc = w*h/total; const items = data.map(d=>({d, a:d.v*sc})).sort((p,q)=>q.a-p.a);
+  const out=[]; let row=[], i=0;
+  const worst=(r,side)=>{ let s=0,mx=0,mn=Infinity; r.forEach(t=>{s+=t.a;mx=Math.max(mx,t.a);mn=Math.min(mn,t.a);}); return Math.max(side*side*mx/(s*s),(s*s)/(side*side*mn)); };
+  const place=r=>{ const s=r.reduce((a,t)=>a+t.a,0);
+    if (w>=h){ const cw=s/h; let cy=y; r.forEach(t=>{const ch=t.a/cw; out.push({d:t.d,x,y:cy,w:cw,h:ch}); cy+=ch;}); x+=cw; w-=cw; }
+    else { const rh=s/w; let cx=x; r.forEach(t=>{const iw=t.a/rh; out.push({d:t.d,x:cx,y,w:iw,h:rh}); cx+=iw;}); y+=rh; h-=rh; } };
+  while (i<items.length){ const side=Math.min(w,h); if (!row.length || worst(row.concat(items[i]),side)<=worst(row,side)){ row.push(items[i]); i++; } else { place(row); row=[]; } }
+  if (row.length) place(row); return out;
+}
+let tmFilter = null;
+function renderTreemap(){
+  const box = document.getElementById('tm'); const W = box.clientWidth; if (!W) return;
+  const H = Math.round(W>760 ? W*0.5 : W*1.25); box.style.height=H+'px'; box.innerHTML='';
+  box.classList.toggle('filtered', !!tmFilter);
+  const mods = MODS.map((m,i)=>({v:D.files.filter(f=>f.m===m.id).reduce((a,f)=>a+f.l,0), m, i}));
+  squarify(mods,0,0,W,H).forEach(r=>{
+    const {m,i}=r.d; const pad=2.5;
+    const mdiv=document.createElement('div'); mdiv.className='tm-mod'+(tmFilter===m.id?' on':'');
+    Object.assign(mdiv.style,{left:(r.x+pad)+'px',top:(r.y+pad)+'px',width:(r.w-pad*2)+'px',height:(r.h-pad*2)+'px',borderColor:'var(--s'+i+')',background:'var(--t'+i+')'});
+    const head = r.w>80 && r.h>50; const top = head?24:3;
+    if (head){ const hd=document.createElement('div'); hd.className='tm-head'; hd.style.color='var(--s'+i+')'; hd.style.maxWidth=(r.w-20)+'px'; hd.textContent=m.label+'  '+(m.id==='src'?'src/':m.id+'/'); mdiv.appendChild(hd); }
+    const files = D.files.filter(f=>f.m===m.id).map(f=>({v:f.l,f}));
+    squarify(files,3,top,r.w-pad*2-6,r.h-pad*2-top-3).forEach(t=>{
+      const f=t.d.f; const b=document.createElement('button'); b.className='tm-file'; b.type='button';
+      Object.assign(b.style,{left:t.x+'px',top:t.y+'px',width:Math.max(t.w-2,1)+'px',height:Math.max(t.h-2,1)+'px',background:'color-mix(in srgb,var(--s'+i+') '+(18+Math.min(30,Math.round(f.by.length*2.2)))+'%,var(--card))'});
+      b.setAttribute('aria-label',f.p+', '+f.l+' lines');
+      if (t.w>52 && t.h>22){ b.innerHTML='<span>'+esc(name(f.p).replace(/\.ts$/,''))+'</span>'+(t.h>40?'<small>'+fmt(f.l)+' lines</small>':''); }
+      b.addEventListener('click',()=>{ openFile(f.p); document.getElementById('lookup').scrollIntoView(); });
+      b.addEventListener('mousemove',e=>showTip(e,f)); b.addEventListener('mouseleave',hideTip);
+      mdiv.appendChild(b);
+    });
+    box.appendChild(mdiv);
+  });
+  document.getElementById('tmchip').innerHTML = tmFilter ? '<span class="chip">Showing '+esc(MODS[modIdx.get(tmFilter)].label)+' <button type="button" id="clearf" aria-label="Show all folders">show all</button></span>' : '';
+  const cf=document.getElementById('clearf'); if (cf) cf.onclick=()=>filterModule(null);
+}
+function filterModule(id){ tmFilter=id; renderTreemap(); }
+const tip=document.getElementById('tip');
+function showTip(e,f){ tip.innerHTML='<code>'+esc(f.p)+'</code><br>'+fmt(f.l)+' lines, used by '+f.by.length+(f.doc?'<br>'+esc(f.doc):''); tip.classList.add('show'); const x=Math.min(e.clientX+14, innerWidth-340), y=e.clientY+16+tip.offsetHeight>innerHeight? e.clientY-tip.offsetHeight-10 : e.clientY+16; tip.style.left=x+'px'; tip.style.top=y+'px'; }
+function hideTip(){ tip.classList.remove('show'); }
+
+/* ---------- start here ---------- */
+function renderPath(){
+  const ol=document.getElementById('path'); const svg=document.getElementById('pathline');
+  ol.querySelectorAll('li').forEach(li=>li.remove());
+  PATH.forEach(([p,why])=>{ const li=document.createElement('li'); li.innerHTML='<button type="button">'+esc(p)+'</button><p>'+esc(why)+'</p>'; li.querySelector('button').onclick=()=>{openFile(p);document.getElementById('lookup').scrollIntoView();}; ol.appendChild(li); });
+}
+function drawPath(){
+  const ol=document.getElementById('path'); const svg=document.getElementById('pathline'); svg.innerHTML='';
+  const lis=[...ol.querySelectorAll('li')]; if(!lis.length) return;
+  const H=ol.offsetHeight; svg.setAttribute('height',H); svg.setAttribute('viewBox','0 0 60 '+H);
+  const rc=rough.svg(svg); const ys=lis.map(li=>li.offsetTop+24);
+  for(let i=0;i<ys.length-1;i++) svg.appendChild(rc.line(28,ys[i]+18,28+(i%2?2:-2),ys[i+1]-18,{stroke:C.mint,strokeWidth:1.6,roughness:1.4,seed:40+i}));
+  ys.forEach((y,i)=>{ svg.appendChild(rc.circle(28,y,34,{fill:C.card,fillStyle:'solid',stroke:C.mint,strokeWidth:1.8,roughness:1.1,seed:60+i})); txt(svg,28,y+7,String(i+1),{'text-anchor':'middle','font-family':HAND,'font-size':20,'font-weight':700,fill:C.ink}); });
+}
+
+/* ---------- scatter ---------- */
+function drawScatter(){
+  const svg=document.getElementById('scatter'); svg.innerHTML=''; const rc=rough.svg(svg);
+  const L=70,R=970,T=24,B=390; const maxBy=Math.max(...D.files.map(f=>f.by.length));
+  const yMax=Math.ceil((maxBy+1)/5)*5;
+  const X=l=>L+(Math.log10(Math.max(l,2))-Math.log10(2))/(Math.log10(8000)-Math.log10(2))*(R-L);
+  const Y=v=>B-Math.sqrt(v/yMax)*(B-T);
+  // care zone
+  const zx=X(80), zy=Y(4.5);
+  const z=el('g',{opacity:.55},svg); z.appendChild(rc.rectangle(zx,T,R-zx,zy-T,{fill:C.hl,fillStyle:'zigzag',hachureGap:7,fillWeight:2.2,stroke:'none',roughness:1.6,seed:5}));
+  // grid & axes
+  [10,100,1000].forEach(v=>{ el('line',{x1:X(v),x2:X(v),y1:T,y2:B,stroke:C.line,'stroke-dasharray':'3 5'},svg); txt(svg,X(v),B+22,fmt(v),{'text-anchor':'middle','font-size':13,fill:C.muted,'font-family':'var(--sans)'}); });
+  for(const v of [0,1,2,5,10,15,20].filter(v=>v<=yMax)){ el('line',{x1:L,x2:R,y1:Y(v),y2:Y(v),stroke:C.line,'stroke-dasharray':v?'3 5':'0'},svg); txt(svg,L-12,Y(v)+4,String(v),{'text-anchor':'end','font-size':13,fill:C.muted,'font-family':'var(--sans)'}); }
+  txt(svg,(L+R)/2,B+46,'file length in lines (each step is 10× longer)',{'text-anchor':'middle','font-size':14,fill:C.muted,'font-family':'var(--sans)'});
+  txt(svg,18,(T+B)/2,'used by this many files',{'text-anchor':'middle','font-size':14,fill:C.muted,'font-family':'var(--sans)',transform:'rotate(-90 18 '+((T+B)/2)+')'});
+  // notes
+  txt(svg,R-10,T+26,'change these carefully:',{'text-anchor':'end','font-family':HAND,'font-size':19,fill:C.note});
+  txt(svg,R-10,T+48,'many files depend on them',{'text-anchor':'end','font-family':HAND,'font-size':19,fill:C.note});
+  txt(svg,R-10,Y(2)-40,'long but used by few:',{'text-anchor':'end','font-family':HAND,'font-size':18,fill:C.note});
+  txt(svg,R-10,Y(2)-19,'good to split up',{'text-anchor':'end','font-family':HAND,'font-size':18,fill:C.note});
+  // points
+  const LABEL={'src/types.ts':[10,-8],'src/analyzer/sourceAnalyzer.ts':[10,-8],'src/providers/aiProvider.ts':[10,4],'src/providers/providerModelGuard.ts':[-10,-10,'end'],'src/config/secretStorage.ts':[-10,16,'end'],'src/services/htmlTemplate.ts':[-4,24,'end'],'src/services/docGeneratorBase.ts':[0,-14,'middle']};
+  const jit=p=>{let h=0;for(const c of p)h=(h*31+c.charCodeAt(0))|0;return ((h%100)/100)*6-3;};
+  [...D.files].sort((a,b)=>a.by.length-b.by.length).forEach(f=>{
+    const i=modIdx.get(f.m); const cx=X(f.l), cy=Y(f.by.length)+(f.by.length?jit(f.p):-2);
+    const g=el('g',{class:'pt',tabindex:0,role:'button','aria-label':f.p+', '+f.l+' lines, used by '+f.by.length},svg);
+    el('title',{},g).textContent=f.p+'\n'+fmt(f.l)+' lines, used by '+f.by.length;
+    el('circle',{cx,cy,r:6.5,fill:C['t'+i],stroke:C['s'+i],'stroke-width':2},g);
+    const lb=LABEL[f.p]; if(lb) txt(g,cx+lb[0],cy+lb[1],name(f.p),{'text-anchor':lb[2]||'start','font-family':'var(--mono)','font-size':12.5,fill:C.ink});
+    const go=()=>{openFile(f.p);document.getElementById('lookup').scrollIntoView();};
+    g.addEventListener('click',go); g.addEventListener('keydown',e=>{if(e.key==='Enter'){go();}});
+  });
+}
+
+/* ---------- lookup & card ---------- */
+let current='src/providers/aiProvider.ts';
+const find=document.getElementById('find'), results=document.getElementById('results');
+let hits=[], sel=-1;
+function search(q){
+  q=q.trim().toLowerCase(); if(!q){ results.classList.remove('show'); find.setAttribute('aria-expanded','false'); return; }
+  hits=D.files.map(f=>{ const n=name(f.p).toLowerCase(); let s=0; if(n.startsWith(q))s=3; else if(n.includes(q))s=2; else if(f.p.toLowerCase().includes(q))s=1.5; else if((f.doc||'').toLowerCase().includes(q))s=1; return {f,s}; }).filter(h=>h.s).sort((a,b)=>b.s-a.s||b.f.by.length-a.f.by.length).slice(0,8);
+  sel=hits.length?0:-1;
+  results.innerHTML = hits.length ? hits.map((h,i)=>'<li><button type="button" role="option" aria-selected="'+(i===sel)+'" data-p="'+esc(h.f.p)+'"><code>'+esc(h.f.p)+'</code>'+(h.f.doc?'<small>'+esc(h.f.doc)+'</small>':'')+'</button></li>').join('') : '<li style="padding:8px 10px;color:var(--muted)">No file matches “'+esc(q)+'”. Try part of a file name.</li>';
+  results.querySelectorAll('button').forEach(b=>b.onclick=()=>pick(b.dataset.p));
+  results.classList.add('show'); find.setAttribute('aria-expanded','true');
+}
+function pick(p){ openFile(p); results.classList.remove('show'); find.setAttribute('aria-expanded','false'); find.value=''; }
+find.addEventListener('input',()=>search(find.value));
+find.addEventListener('keydown',e=>{
+  if(!results.classList.contains('show')) return;
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){ e.preventDefault(); sel=(sel+(e.key==='ArrowDown'?1:-1)+hits.length)%hits.length; results.querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-selected',i===sel)); }
+  else if(e.key==='Enter'&&sel>=0){ e.preventDefault(); pick(hits[sel].f.p); }
+  else if(e.key==='Escape'){ results.classList.remove('show'); }
+});
+document.addEventListener('click',e=>{ if(!e.target.closest('.lookup')) results.classList.remove('show'); });
+document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); document.getElementById('lookup').scrollIntoView(); find.focus(); } });
+
+function openFile(p){ current=p; renderCard(); }
+function renderCard(){
+  const f=byPath.get(current); const m=modOf(current); const i=modIdx.get(m.id); const card=document.getElementById('card');
+  const src = f.src==='readme'?'from the README':'from a code comment';
+  card.innerHTML =
+    '<div class="card-head"><h3>'+esc(f.p)+'</h3><span class="tag" style="background:var(--t'+i+');color:var(--s'+i+')">'+esc(m.label)+'</span></div>'+
+    '<p class="meta">'+fmt(f.l)+' lines, '+f.ex.length+' export'+(f.ex.length===1?'':'s')+', used by '+f.by.length+' file'+(f.by.length===1?'':'s')+'. <a href="'+REPO+esc(f.p)+'" target="_blank" rel="noopener">Open on GitHub</a></p>'+
+    (f.doc ? '<p class="desc">'+esc(f.doc)+' <span class="from">'+src+'</span></p>' : '<p class="desc none">No description yet. Add a <code>/** … */</code> comment above the first export and it will appear here.</p>')+
+    '<div class="scroll"><svg class="ego" id="ego" role="img" aria-label="Files this file uses and files that use it"></svg></div>'+
+    (f.ex.length ? '<h4>What it exports</h4><div class="scroll"><table><thead><tr><th>Name</th><th>Kind</th><th class="num">Line</th></tr></thead><tbody>'+
+      f.ex.map(x=>'<tr><td><a href="'+REPO+esc(f.p)+'#L'+x[2]+'" target="_blank" rel="noopener"><code>'+esc(x[1])+'</code></a></td><td>'+esc(x[0])+'</td><td class="num">'+x[2]+'</td></tr>').join('')+'</tbody></table></div>'
+      : '<h4>What it exports</h4><p class="hint" style="margin-top:0">Nothing. This file only runs code or re-exports from elsewhere.</p>');
+  drawEgo(f);
+}
+function drawEgo(f){
+  const svg=document.getElementById('ego'); const rc=rough.svg(svg);
+  const CAP=10; const L=f.uses.slice(0,CAP), Rr=f.by.slice(0,CAP);
+  const rows=Math.max(L.length+(f.uses.length>CAP),Rr.length+(f.by.length>CAP),1);
+  const H=Math.max(150,rows*30+60); svg.setAttribute('viewBox','0 0 900 '+H);
+  const cx=450, cy=H/2+8; const i=modIdx.get(f.m);
+  txt(svg,150,24,'uses',{'text-anchor':'middle','font-family':HAND,'font-size':20,fill:C.note});
+  txt(svg,750,24,'used by',{'text-anchor':'middle','font-family':HAND,'font-size':20,fill:C.note});
+  const col=(list,x,more,side)=>{
+    const n=list.length+(more?1:0); const top=cy-(n-1)*15;
+    if(!list.length) txt(svg,x,cy+5,side==='l'?'nothing inside the project':'no other file',{'text-anchor':'middle','font-family':HAND,'font-size':17,fill:C.muted});
+    list.forEach((p,k)=>{
+      const y=top+k*30; const mi=modIdx.get(byPath.get(p).m);
+      const ex = side==='l' ? x+118 : x-118; const cxEdge = side==='l' ? cx-110 : cx+110;
+      svg.appendChild(rc.line(ex,y,cxEdge,cy+(y-cy)*0.12,{stroke:C['s'+mi],strokeWidth:1.3,roughness:1,seed:200+k+(side==='l'?0:50)}));
+      const g=el('g',{class:'n',tabindex:0,role:'button'},svg);
+      el('circle',{cx:side==='l'?x+118:x-118,cy:y,r:4,fill:C['s'+mi]},g);
+      txt(g,side==='l'?x+108:x-108,y+4,name(p),{'text-anchor':side==='l'?'end':'start','font-family':'var(--mono)','font-size':13,fill:C.ink});
+      el('title',{},g).textContent=p;
+      const go=()=>openFile(p); g.addEventListener('click',go); g.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+    });
+    if(more) txt(svg,side==='l'?x+108:x-108,top+list.length*30+4,'+ '+more+' more',{'text-anchor':side==='l'?'end':'start','font-size':13,fill:C.muted,'font-family':'var(--sans)'});
+  };
+  col(L,150,f.uses.length-L.length,'l'); col(Rr,750,f.by.length-Rr.length,'r');
+  svg.appendChild(rc.rectangle(cx-110,cy-26,220,52,{fill:C['t'+i],fillStyle:'solid',stroke:C['s'+i],strokeWidth:2,roughness:1.2,seed:9}));
+  txt(svg,cx,cy+6,name(f.p),{'text-anchor':'middle','font-family':'var(--mono)','font-size':15,'font-weight':500,fill:C.ink});
+}
+
+/* ---------- theme & boot ---------- */
+const themeBtn=document.getElementById('theme');
+const isDark=()=>{ const t=document.documentElement.dataset.theme; return t? t==='dark' : matchMedia('(prefers-color-scheme: dark)').matches; };
+function syncThemeLabel(){ themeBtn.textContent = isDark()?'Light mode':'Dark mode'; }
+function redraw(){ readVars(); drawSketch(); drawScatter(); drawPath(); renderCard(); syncThemeLabel(); }
+themeBtn.onclick=()=>{ const next=isDark()?'light':'dark'; document.documentElement.dataset.theme=next; try{localStorage.setItem('documint-theme',next);}catch(e){} redraw(); };
+try{ const s=localStorage.getItem('documint-theme'); if(s) document.documentElement.dataset.theme=s; }catch(e){}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{ if(!document.documentElement.dataset.theme) redraw(); });
+
+readVars(); renderLegend(); drawSketch(); renderTreemap(); renderPath(); drawPath(); drawScatter(); renderCard(); syncThemeLabel();
+let rt; addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{ renderTreemap(); drawPath(); },120); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ drawPath(); });
+})();
+</script>
+</body>
+</html>
