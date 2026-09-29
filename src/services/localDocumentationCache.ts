@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import type { WorkspaceFile } from "../types";
 
 export const LOCAL_DOCUMENTATION_CACHE_FILE = ".documint-local-cache.json";
-export const LOCAL_DOCUMENTATION_CACHE_VERSION = "local-documentation-cache-v5";
+export const LOCAL_DOCUMENTATION_CACHE_VERSION = "local-documentation-cache-v6";
 
 export interface LocalDocumentationOutputHashes {
   markdown?: string;
@@ -25,11 +25,17 @@ export interface LocalDocumentationCacheManifest {
 export function buildLocalDocumentationCacheKey(
   projectName: string,
   files: WorkspaceFile[],
+  supplemental: { readme?: string } = {},
 ): string {
   const hash = createHash("sha256");
   hash.update(LOCAL_DOCUMENTATION_CACHE_VERSION);
   hash.update("\0project\0");
   hash.update(projectName);
+
+  if (supplemental.readme !== undefined) {
+    hash.update("\0readme\0");
+    hash.update(supplemental.readme);
+  }
 
   for (const file of [...files].sort((a, b) => a.path.localeCompare(b.path))) {
     hash.update("\0file\0");
