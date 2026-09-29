@@ -29,11 +29,16 @@ test("sidebar keeps Local mode focused on controls that affect Local output", ()
     join(process.cwd(), "src/views/sidebarProvider.ts"),
     "utf8",
   );
+  const templateSource = readFileSync(
+    join(process.cwd(), "src/views/sidebarTemplate.ts"),
+    "utf8",
+  );
   const clientSource = readFileSync(
     join(process.cwd(), "src/views/sidebarClientScript.ts"),
     "utf8",
   );
-  const source = providerSource + "\n" + clientSource;
+  const source =
+    providerSource + "\n" + templateSource + "\n" + clientSource;
 
   assert.match(source, /Local Documentation — No AI/);
   assert.match(source, /id="authSection"/);
@@ -117,7 +122,7 @@ test("sidebar initial state matches the Local-first manifest default", () => {
 
 test("sidebar first paint matches the Local-first default", () => {
   const source = readFileSync(
-    join(process.cwd(), "src/views/sidebarProvider.ts"),
+    join(process.cwd(), "src/views/sidebarTemplate.ts"),
     "utf8",
   );
 
