@@ -71,7 +71,52 @@ export function analyzeJavaScriptLikeFile(
     symbols: uniqueFileSymbols,
     todos: collectTodoComments(file, sourceFile),
     description,
+    referencedEnvironmentVariables:
+      collectReferencedEnvironmentVariables(sourceFile),
   };
+}
+
+function collectReferencedEnvironmentVariables(
+  sourceFile: ts.SourceFile,
+): string[] {
+  const names = new Set<string>();
+
+  const isProcessEnv = (node: ts.Expression): boolean =>
+    ts.isPropertyAccessExpression(node) &&
+    ts.isIdentifier(node.expression) &&
+    node.expression.text === "process" &&
+    node.name.text === "env";
+
+  const isImportMetaEnv = (node: ts.Expression): boolean =>
+    ts.isPropertyAccessExpression(node) &&
+    ts.isMetaProperty(node.expression) &&
+    node.expression.keywordToken === ts.SyntaxKind.ImportKeyword &&
+    node.expression.name.text === "meta" &&
+    node.name.text === "env";
+
+  const visit = (node: ts.Node): void => {
+    if (
+      ts.isPropertyAccessExpression(node) &&
+      (isProcessEnv(node.expression) || isImportMetaEnv(node.expression))
+    ) {
+      names.add(node.name.text);
+    } else if (
+      ts.isElementAccessExpression(node) &&
+      isProcessEnv(node.expression) &&
+      node.argumentExpression &&
+      (ts.isStringLiteral(node.argumentExpression) ||
+        ts.isNoSubstitutionTemplateLiteral(node.argumentExpression))
+    ) {
+      const value = node.argumentExpression.text;
+      if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(value)) {
+        names.add(value);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+
+  ts.forEachChild(sourceFile, visit);
+  return Array.from(names).sort((a, b) => a.localeCompare(b));
 }
 
 function collectTodoComments(
