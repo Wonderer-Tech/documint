@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { getDocuMintConfiguration, affectsDocuMintConfiguration } from "./config/configuration";
 import { SidebarProvider } from "./views/sidebarProvider";
 import { SecretStorageManager } from "./config/secretStorage";
 import {
@@ -68,8 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function sendsCodeToExternalProvider(provider: string): boolean {
     if (provider === "custom") {
-      const endpoint = vscode.workspace
-        .getConfiguration("aiDocGenerator")
+      const endpoint = getDocuMintConfiguration()
         .get<string>("customApiEndpoint");
       return !evaluateCustomEndpoint(endpoint).isLocal;
     }
@@ -142,8 +142,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   async function refreshConfiguredApiKeyStatus(): Promise<void> {
     const provider = resolveRunProvider(
-      vscode.workspace
-        .getConfiguration("aiDocGenerator")
+      getDocuMintConfiguration()
         .get<string>("aiProvider"),
     );
     const apiKey = await secretManager.getApiKey(provider);
@@ -153,7 +152,7 @@ export function activate(context: vscode.ExtensionContext) {
   void refreshConfiguredApiKeyStatus();
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration("aiDocGenerator.aiProvider")) {
+      if (affectsDocuMintConfiguration(event, "aiProvider")) {
         void refreshConfiguredApiKeyStatus();
       }
     }),
@@ -191,8 +190,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     const generationMode = normalizeGenerationMode(
       payload.generationMode ??
-        vscode.workspace
-          .getConfiguration("aiDocGenerator")
+        getDocuMintConfiguration()
           .get<string>("generationMode"),
     );
     if (generationMode === "local") {
@@ -286,7 +284,7 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    const configuration = vscode.workspace.getConfiguration("aiDocGenerator");
+    const configuration = getDocuMintConfiguration();
     const configuredModel = configuration.get<string>("model");
     const normalizedDepth = normalizeDocumentationDepth(
       payload.depth,
@@ -307,7 +305,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     if (providerName === "custom") {
-      const configuration = vscode.workspace.getConfiguration("aiDocGenerator");
+      const configuration = getDocuMintConfiguration();
       const endpointInput =
         payload.customApiEndpoint?.trim() ||
         configuration.get<string>("customApiEndpoint")?.trim() ||
