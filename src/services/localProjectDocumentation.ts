@@ -28,10 +28,26 @@ export function renderLocalProjectDocumentation(
 export function renderLocalProjectDocumentationFromModel(
   model: LocalDocumentationModel,
 ): string {
-  return [
+  const sections = [
     `# ${escapeHeading(model.projectName)} — Local Documentation`,
     "",
     "> Generated entirely from static source analysis. No AI inference, model, API key, or external provider is used.",
+    "",
+    "## Where is what",
+    "",
+    renderWhereIsWhat(model),
+  ];
+
+  if (model.gettingStarted) {
+    sections.push(
+      "",
+      "## How to run",
+      "",
+      renderGettingStarted(model),
+    );
+  }
+
+  sections.push(
     "",
     "## Project Facts",
     "",
@@ -81,7 +97,9 @@ export function renderLocalProjectDocumentationFromModel(
     "```text",
     renderSourceTree(model.projectName, model.files.map((file) => file.path)),
     "```",
-  ].join("\n");
+  );
+
+  return sections.join("\n");
 }
 
 function renderGettingStartedSections(
@@ -388,4 +406,11 @@ function escapeHeading(value: string): string {
 
 function inlineCode(value: string): string {
   return `\`${cleanText(value).replace(/`/g, "'")}\``;
+}
+
+function escapeTableCell(value: string): string {
+  return String(value)
+    .replace(/\|/g, "\\|")
+    .replace(/[\r\n]+/g, " ")
+    .trim();
 }
