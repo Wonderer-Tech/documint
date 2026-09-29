@@ -64,3 +64,21 @@ test("README parser accepts explicit path-linked descriptions outside tree block
     "VS Code secret storage wrapper",
   );
 });
+
+
+test("README tree root comments become trusted structural-module descriptions", () => {
+  const facts = extractLocalReadmeFacts(
+    [
+      "```text",
+      "src/ # Application source",
+      "`-- index.ts # Entry file",
+      "```",
+    ].join("\n"),
+    ["src/index.ts"],
+  );
+
+  assert.deepEqual(facts.descriptionsByModule.get("src"), {
+    text: "Application source",
+    source: "readme",
+  });
+});
