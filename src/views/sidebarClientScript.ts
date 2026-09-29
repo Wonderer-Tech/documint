@@ -21,6 +21,9 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
   var depthField = $('depthField');
   var providerSel  = $('provider');
   var modelInput   = $('model');
+  var localModelSuggestions = $('localModelSuggestions');
+  var localModelStatus = $('localModelStatus');
+  var lastLocalModelDiscoveryProvider = '';
   var customEndpointField = $('customEndpointField');
   var customEndpointInput = $('customApiEndpoint');
   var generateBtn  = $('generateBtn');
@@ -64,6 +67,99 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
     }
     modelInput.placeholder =
       'e.g. gpt-5.4-nano, claude-sonnet-5, anthropic/claude-sonnet-5';
+  }
+
+  function clearLocalModelDiscovery() {
+    lastLocalModelDiscoveryProvider = '';
+    if (localModelSuggestions) localModelSuggestions.innerHTML = '';
+    if (localModelStatus) {
+      localModelStatus.textContent = '';
+      localModelStatus.classList.add('hidden');
+    }
+  }
+
+  function requestLocalProviderModels() {
+    if (
+      isLocalMode() ||
+      !isLocalProvider() ||
+      !providerSel ||
+      !localModelStatus
+    ) {
+      if (!isLocalProvider()) clearLocalModelDiscovery();
+      return;
+    }
+
+    var provider = providerSel.value;
+    if (lastLocalModelDiscoveryProvider === provider) return;
+    lastLocalModelDiscoveryProvider = provider;
+
+    if (localModelSuggestions) localModelSuggestions.innerHTML = '';
+    localModelStatus.textContent =
+      'Looking for models served by ' +
+      (provider === 'ollama' ? 'Ollama' : 'LM Studio') +
+      '…';
+    localModelStatus.classList.remove('hidden');
+
+    vscode.postMessage({
+      type: 'discover-local-models',
+      provider: provider
+    });
+  }
+
+  function applyLocalProviderModels(msg) {
+    if (
+      !msg ||
+      !isLocalProvider() ||
+      msg.provider !== providerSel.value
+    ) {
+      return;
+    }
+
+    var models = Array.isArray(msg.models)
+      ? msg.models.filter(function(model) {
+          return typeof model === 'string' && model.trim();
+        })
+      : [];
+
+    if (localModelSuggestions) {
+      localModelSuggestions.innerHTML = '';
+      models.forEach(function(model) {
+        var option = document.createElement('option');
+        option.value = model;
+        localModelSuggestions.appendChild(option);
+      });
+    }
+
+    if (!localModelStatus) return;
+
+    if (msg.error) {
+      localModelStatus.textContent =
+        'Could not reach the local model server. You can still enter a model ID manually.';
+      localModelStatus.classList.remove('hidden');
+      return;
+    }
+
+    if (!models.length) {
+      localModelStatus.textContent =
+        'No models reported by the local server. Enter a model ID manually or load/pull a model first.';
+      localModelStatus.classList.remove('hidden');
+      return;
+    }
+
+    localModelStatus.textContent =
+      models.length +
+      ' local model' +
+      (models.length === 1 ? '' : 's') +
+      ' detected.';
+    localModelStatus.classList.remove('hidden');
+
+    if (models.length === 1 && !modelInput.value.trim()) {
+      modelInput.value = models[0];
+      vscode.postMessage({
+        type: 'update-settings',
+        payload: { model: models[0] }
+      });
+    }
   }
 
   function updateActionAvailability() {
@@ -179,13 +275,18 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
 
   function applyNormalizedSettings(settings) {
     if (!settings) return;
+    var previousProvider = providerSel.value;
     if (settings.generationMode) generationModeSel.value = settings.generationMode;
     if (settings.provider) providerSel.value = settings.provider;
     if (typeof settings.model === 'string') modelInput.value = settings.model;
     if (typeof settings.customApiEndpoint === 'string') customEndpointInput.value = settings.customApiEndpoint;
     if (settings.depth) $('depth').value = settings.depth;
     if (settings.outputFormat) $('outputFormat').value = settings.outputFormat;
+    if (previousProvider !== providerSel.value) {
+      lastLocalModelDiscoveryProvider = '';
+    }
     updateGenerationModeVisibility();
+    requestLocalProviderModels();
   }
 
   function validateLocalProviderModelForRun() {
@@ -237,7 +338,9 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
   });
 
   providerSel.addEventListener('change', function() {
+    lastLocalModelDiscoveryProvider = '';
     updateGenerationModeVisibility();
+    if (!isLocalProvider()) clearLocalModelDiscovery();
     vscode.postMessage({
       type: 'update-settings',
       payload: {
@@ -366,6 +469,10 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
 
       case 'settings-normalized':
         applyNormalizedSettings(msg.settings);
+        break;
+
+      case 'local-models':
+        applyLocalProviderModels(msg);
         break;
 
       case 'api-key-status':
