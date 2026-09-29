@@ -255,6 +255,10 @@ export class SourceAnalyzer {
       symbols: this.uniqueSymbols(symbols),
       todos,
       description: this.extractStructuredFileDescription(file),
+      referencedEnvironmentVariables:
+        file.language === "python"
+          ? this.extractPythonEnvironmentVariables(file.content)
+          : undefined,
     };
   }
 
@@ -374,6 +378,157 @@ export class SourceAnalyzer {
       "TODO/FIXME/HACK comments:",
       todos.join("\n") || "none detected",
     ].join("\n");
+  }
+
+  private extractPythonEnvironmentVariables(
+    content: string,
+  ): string[] {
+    const names = new Set<string>();
+    const tokens = this.tokenizePythonEnvironmentSource(content);
+
+    for (let index = 0; index < tokens.length; index++) {
+      const token = tokens[index];
+
+      if (
+        token.value === "os" &&
+        tokens[index + 1]?.value === "." &&
+        tokens[index + 2]?.value === "environ"
+      ) {
+        const afterEnviron = index + 3;
+
+        if (
+          tokens[afterEnviron]?.value === "[" &&
+          tokens[afterEnviron + 1]?.type === "string" &&
+          tokens[afterEnviron + 2]?.value === "]"
+        ) {
+          const name = tokens[afterEnviron + 1].value;
+          if (this.isEnvironmentVariableName(name)) {
+            names.add(name);
+          }
+          continue;
+        }
+
+        if (
+          tokens[afterEnviron]?.value === "." &&
+          tokens[afterEnviron + 1]?.value === "get" &&
+          tokens[afterEnviron + 2]?.value === "(" &&
+          tokens[afterEnviron + 3]?.type === "string"
+        ) {
+          const name = tokens[afterEnviron + 3].value;
+          if (this.isEnvironmentVariableName(name)) {
+            names.add(name);
+          }
+          continue;
+        }
+      }
+
+      if (
+        token.value === "os" &&
+        tokens[index + 1]?.value === "." &&
+        tokens[index + 2]?.value === "getenv" &&
+        tokens[index + 3]?.value === "(" &&
+        tokens[index + 4]?.type === "string"
+      ) {
+        const name = tokens[index + 4].value;
+        if (this.isEnvironmentVariableName(name)) {
+          names.add(name);
+        }
+      }
+    }
+
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  }
+
+  private tokenizePythonEnvironmentSource(
+    content: string,
+  ): Array<{ type: "word" | "string" | "punct"; value: string }> {
+    const tokens: Array<{
+      type: "word" | "string" | "punct";
+      value: string;
+    }> = [];
+    let index = 0;
+
+    while (index < content.length) {
+      const char = content[index];
+
+      if (/\s/.test(char)) {
+        index++;
+        continue;
+      }
+
+      if (char === "#") {
+        while (index < content.length && content[index] !== "\n") {
+          index++;
+        }
+        continue;
+      }
+
+      const stringPrefix = content
+        .slice(index)
+        .match(/^(?:[rRuUbBfF]{0,2})(?:"""|'''|"|')/);
+      if (stringPrefix) {
+        const tokenText = stringPrefix[0];
+        const delimiter = tokenText.endsWith('"""')
+          ? '"""'
+          : tokenText.endsWith("'''")
+            ? "'''"
+            : tokenText.endsWith('"')
+              ? '"'
+              : "'";
+        index += tokenText.length;
+        const valueStart = index;
+        let value = "";
+
+        while (index < content.length) {
+          if (content.startsWith(delimiter, index)) {
+            value = content.slice(valueStart, index);
+            index += delimiter.length;
+            break;
+          }
+          if (
+            delimiter.length === 1 &&
+            content[index] === "\\" &&
+            index + 1 < content.length
+          ) {
+            index += 2;
+            continue;
+          }
+          index++;
+        }
+
+        tokens.push({
+          type: "string",
+          value: this.decodeSimplePythonString(value),
+        });
+        continue;
+      }
+
+      const word = content.slice(index).match(/^[A-Za-z_]\w*/);
+      if (word) {
+        tokens.push({ type: "word", value: word[0] });
+        index += word[0].length;
+        continue;
+      }
+
+      if (".[](),".includes(char)) {
+        tokens.push({ type: "punct", value: char });
+      }
+      index++;
+    }
+
+    return tokens;
+  }
+
+  private decodeSimplePythonString(value: string): string {
+    return value
+      .replace(/\\(["'\\])/g, "$1")
+      .replace(/\\n/g, "\n")
+      .replace(/\\r/g, "\r")
+      .replace(/\\t/g, "\t");
+  }
+
+  private isEnvironmentVariableName(value: string): boolean {
+    return /^[A-Za-z_][A-Za-z0-9_]*$/.test(value);
   }
 
   private extractStructuredFileDescription(
