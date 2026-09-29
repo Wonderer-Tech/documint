@@ -2,8 +2,9 @@ export type GenerationMode = "ai" | "local";
 
 /**
  * Keeps the generation-mode boundary deliberately small and deterministic.
- * Unknown, blank, or legacy values fall back to the existing AI behavior so
- * older workspaces continue to behave exactly as before.
+ * The manifest defaults new/unconfigured installs to Local mode. Explicit
+ * Local values normalize to Local; blank, unknown, or legacy programmatic
+ * values still fall back to AI so malformed inputs never silently become Local.
  */
 export function normalizeGenerationMode(value: unknown): GenerationMode {
   return typeof value === "string" && value.trim().toLowerCase() === "local"
