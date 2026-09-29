@@ -52,51 +52,50 @@ export function renderLocalFileDocumentation(
 export function renderLocalFileDocumentationFromModel(
   file: LocalDocumentationFile,
 ): string {
-  const descriptionLines = file.description
-    ? [
-        `> ${escapeMarkdownText(file.description.text)}`,
-        `> _Description source: ${descriptionSourceLabel(file.description.source)}${file.description.line ? `, line ${file.description.line}` : ""}._`,
-        "",
-      ]
-    : [];
-
-  return [
+  const sections: string[] = [
     `## ${inlineCode(file.path)}`,
     "",
-    "> Local documentation generated from static source analysis only. No AI inference is used.",
+    file.description
+      ? `> ${escapeMarkdownText(file.description.text)}  \n> _Source: ${descriptionSourceLabel(file.description.source)}${file.description.line ? `, line ${file.description.line}` : ""}._`
+      : "> _No module-level description found._",
     "",
-    ...descriptionLines,
-    `- **Module:** ${inlineCode(file.module)}`,
-    `- **Language:** ${inlineCode(file.language)}`,
-    `- **Lines:** ${file.lineCount}`,
-    `- **Detected symbols:** ${file.symbols.length}`,
-    `- **Imports:** ${file.imports.length}`,
-    `- **TODO/FIXME/HACK comments:** ${file.todos.length}`,
-    "",
-    "### Exported API",
-    "",
-    renderSymbolTable(file.exportedSymbols, "No exported symbols detected."),
-    "",
-    "### Other Detected Symbols",
-    "",
-    renderSymbolTable(file.internalSymbols, "No additional symbols detected."),
-    "",
-    "### Imports",
-    "",
-    renderImports(file),
-    "",
-    "### Internal Dependencies",
-    "",
-    renderPathList(file.uses, "No internal dependencies detected."),
-    "",
-    "### Known Dependents",
-    "",
-    renderPathList(file.usedBy, "No known project dependents detected."),
-    "",
-    "### TODO / FIXME / HACK",
-    "",
-    renderTodos(file),
-  ].join("\n");
+    `**Module:** ${inlineCode(file.module)} · **Language:** ${inlineCode(file.language)} · **Lines:** ${file.lineCount}`,
+  ];
+
+  if (file.uses.length > 0) {
+    sections.push("", `**Uses:** ${file.uses.map(inlineCode).join(", ")}`);
+  }
+  if (file.usedBy.length > 0) {
+    sections.push("", `**Used by:** ${file.usedBy.map(inlineCode).join(", ")}`);
+  }
+
+  if (file.exportedSymbols.length > 0) {
+    sections.push(
+      "",
+      "### Exported API",
+      "",
+      renderSymbolTable(file.exportedSymbols, ""),
+    );
+  }
+
+  if (file.internalSymbols.length > 0) {
+    sections.push(
+      "",
+      "### Internal API",
+      "",
+      renderSymbolTable(file.internalSymbols, ""),
+    );
+  }
+
+  if (file.imports.length > 0) {
+    sections.push("", "### Imports", "", renderImports(file));
+  }
+
+  if (file.todos.length > 0) {
+    sections.push("", "### TODO / FIXME / HACK", "", renderTodos(file));
+  }
+
+  return sections.join("\n");
 }
 
 function renderSymbolTable(symbols: SourceSymbol[], emptyMessage: string): string {
