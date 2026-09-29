@@ -6,30 +6,34 @@ import { SourceAnalyzer } from "../src/analyzer/sourceAnalyzer";
 import { buildLocalDocumentationDocument } from "../src/services/localDocumentationDocument";
 
 test("HTML template carries the soft Jelly UI shell and accessibility states", () => {
-  const source = readFileSync(
+  const templateSource = readFileSync(
     join(process.cwd(), "src/services/htmlTemplate.ts"),
     "utf8",
   );
+  const styleSource = readFileSync(
+    join(process.cwd(), "src/services/htmlBaseStyles.ts"),
+    "utf8",
+  );
 
-  assert.match(source, /DOCUMINT JELLY UI/);
-  assert.match(source, /<body class="documint-jelly-ui">/);
-  assert.match(source, /--jelly-surface:/);
-  assert.match(source, /backdrop-filter: blur\(18px\)/);
-  assert.match(source, /\.documint-jelly-ui \.topbar/);
-  assert.match(source, /Professional soft sidebar/);
+  assert.match(styleSource, /DOCUMINT JELLY UI/);
+  assert.match(templateSource, /<body class="documint-jelly-ui">/);
+  assert.match(styleSource, /--jelly-surface:/);
+  assert.match(styleSource, /backdrop-filter: blur\(18px\)/);
+  assert.match(styleSource, /\.documint-jelly-ui \.topbar/);
+  assert.match(styleSource, /Professional soft sidebar/);
   assert.match(
-    source,
+    styleSource,
     /\.documint-jelly-ui \.sidebar \{[^}]*left: 0;[^}]*border-right: 1px solid var\(--jelly-border\);[^}]*border-radius: 0;/,
   );
   assert.doesNotMatch(
-    source,
+    styleSource,
     /\.documint-jelly-ui \.sidebar \{[^}]*border-radius: 20px;/,
   );
-  assert.match(source, /\.documint-jelly-ui \.smart-toc-group\[open\]/);
-  assert.match(source, /inset 3px 0 0 var\(--accent\)/);
-  assert.match(source, /\.documint-jelly-ui \.main table/);
-  assert.match(source, /:focus-visible/);
-  assert.match(source, /prefers-reduced-motion: reduce/);
+  assert.match(styleSource, /\.documint-jelly-ui \.smart-toc-group\[open\]/);
+  assert.match(styleSource, /inset 3px 0 0 var\(--accent\)/);
+  assert.match(styleSource, /\.documint-jelly-ui \.main table/);
+  assert.match(styleSource, /:focus-visible/);
+  assert.match(styleSource, /prefers-reduced-motion: reduce/);
 });
 
 test("Local generated HTML receives the Jelly UI and question-first code map", () => {
@@ -64,7 +68,7 @@ test("Local generated HTML receives the Jelly UI and question-first code map", (
 
 test("soft HTML keeps the module scale pie chart visually prominent", () => {
   const source = readFileSync(
-    join(process.cwd(), "src/services/htmlTemplate.ts"),
+    join(process.cwd(), "src/services/htmlBaseStyles.ts"),
     "utf8",
   );
 
