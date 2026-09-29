@@ -76,3 +76,22 @@ test("local architecture renderer emits HTML visual-enhancer payloads without se
   assert.match(output, /### Interactive Dependency Graph/);
   assert.match(output, /```dependency-graph/);
 });
+
+
+test("Markdown architecture surface excludes HTML-only visual payloads", () => {
+  const output = renderLocalArchitectureDocumentation(
+    {
+      projectName: "Example Project",
+      files,
+      project,
+    },
+    { surface: "markdown" },
+  );
+
+  assert.match(output, /### Module Architecture/);
+  assert.doesNotMatch(output, /```architecture-blueprint/);
+  assert.doesNotMatch(output, /```excalidraw-blueprint/);
+  assert.doesNotMatch(output, /```dependency-graph/);
+  assert.doesNotMatch(output, /### File Dependency Graph/);
+  assert.doesNotMatch(output, /### Module Architecture — D2/);
+});
