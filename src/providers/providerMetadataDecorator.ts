@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { getDocuMintConfiguration } from "../config/configuration";
 import { BaseAIProvider } from "./aiProvider";
 import {
   GuardedProviderName,
@@ -56,8 +57,7 @@ export function withModelMetadata(
     provider.generateMarkdownFromPrompt.bind(provider);
 
   const resolveModel = (requestedModel?: string): string => {
-    const configuredModel = vscode.workspace
-      .getConfiguration("aiDocGenerator")
+    const configuredModel = getDocuMintConfiguration()
       .get<string>("model")
       ?.trim();
 
