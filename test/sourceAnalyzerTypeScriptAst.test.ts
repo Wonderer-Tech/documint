@@ -313,3 +313,28 @@ test("TypeScript file tags can carry or precede the trusted file description", (
     line: 1,
   });
 });
+
+
+test("TypeScript AST extracts only real static environment references", () => {
+  const analysis = analyzer.analyzeFile(
+    file(
+      "src/env.ts",
+      "typescript",
+      [
+        'const fake = "process.env.NOT_REAL";',
+        "// process.env.COMMENT_ONLY",
+        "const api = process.env.API_URL;",
+        'const token = process.env["API_TOKEN"];',
+        "const vite = import.meta.env.VITE_PUBLIC_URL;",
+        "const key = \"DYNAMIC\";",
+        "const dynamic = process.env[key];",
+      ].join("\n"),
+    ),
+  );
+
+  assert.deepEqual(analysis.referencedEnvironmentVariables, [
+    "API_TOKEN",
+    "API_URL",
+    "VITE_PUBLIC_URL",
+  ]);
+});
