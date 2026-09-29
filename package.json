@@ -101,7 +101,7 @@
             "Generate enhanced documentation with the selected AI provider.",
             "Generate deterministic documentation locally without an AI provider or API key."
           ],
-          "default": "ai",
+          "default": "local",
           "description": "Documentation generation mode. AI preserves the provider-backed workflow; Local runs entirely on-device from source analysis."
         },
         "aiDocGenerator.aiProvider": {
@@ -196,8 +196,8 @@
           "type": "number",
           "minimum": 1,
           "maximum": 15,
-          "default": 15,
-          "description": "AI mode only: maximum number of detailed file documentation requests to run at the same time. Defaults to 15; lower it if requests are rate-limited."
+          "default": 5,
+          "description": "AI mode only: maximum number of detailed file documentation requests to run at the same time. Defaults to 5 for broader provider compatibility; increase it only when your provider rate limits allow."
         },
         "aiDocGenerator.excludePatterns": {
           "type": "array",
