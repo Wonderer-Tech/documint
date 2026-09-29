@@ -1,4 +1,3 @@
-import * as vscode from "vscode";
 import { getDocuMintConfiguration } from "../config/configuration";
 import { resolveOutputTokenLimit } from "./outputTokenLimitCore";
 
