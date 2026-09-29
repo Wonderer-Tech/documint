@@ -294,7 +294,7 @@ Custom endpoint example:
 
 | Mode | Network / API Key | What It Generates |
 |------|-------------------|-------------------|
-| `local` | None required | Deterministic project facts, source tree, detected APIs/symbols/imports/TODOs, resolved dependencies, module relationships, and source-derived Mermaid/D2 diagrams. No semantic AI inference is added. |
+| `local` | None required | Deterministic project facts, source tree, trusted descriptions, detected APIs/imports/TODOs/environment references, resolved dependencies, a compact module Mermaid view in Markdown, and the interactive Local project map in HTML. No semantic AI inference is added. |
 | `ai` | Depends on provider | Source-grounded documentation enhanced with provider-generated explanations, examples, architecture/design notes, and other semantic sections when supported by source evidence. |
 
 Local mode deliberately hides provider/model/authentication and Documentation Depth controls because they do not affect Local output.
