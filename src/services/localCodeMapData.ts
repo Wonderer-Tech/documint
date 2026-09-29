@@ -14,6 +14,7 @@ export interface LocalCodeMapFile {
   description?: string;
   descriptionSource?: string;
   exports: LocalCodeMapExport[];
+  environmentVariables: string[];
   uses: string[];
   usedBy: string[];
   entryPoint: boolean;
@@ -71,6 +72,7 @@ export function buildLocalCodeMapData(
         kind: symbol.kind,
         line: symbol.line,
       })),
+      environmentVariables: [...file.referencedEnvironmentVariables],
       uses: [...file.uses],
       usedBy: [...file.usedBy],
       entryPoint: file.entryPoint,
