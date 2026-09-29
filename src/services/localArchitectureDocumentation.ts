@@ -15,7 +15,7 @@ export interface LocalArchitectureDocumentationInput {
 }
 
 export interface LocalArchitectureRenderOptions {
-  surface?: "markdown" | "html";
+  surface?: "markdown" | "html" | "summary";
 }
 
 export function renderLocalArchitectureDocumentation(
@@ -42,6 +42,10 @@ export function renderLocalArchitectureDocumentationFromModel(
     "",
     renderModuleRelationshipTable(model),
   ];
+
+  if (surface === "summary") {
+    return sections.join("\n");
+  }
 
   if (surface === "markdown") {
     if (model.modules.length <= 15) {
