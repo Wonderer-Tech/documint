@@ -41,26 +41,31 @@ export function buildLocalDocumentationDocument(
     { readme: options.readme },
   );
   const overview = renderLocalProjectDocumentationFromModel(model);
-  const architecture = renderLocalArchitectureDocumentationFromModel(model);
+  const markdownArchitecture = renderLocalArchitectureDocumentationFromModel(
+    model,
+    { surface: "markdown" },
+  );
+  const htmlArchitecture = renderLocalArchitectureDocumentationFromModel(
+    model,
+    { surface: "html" },
+  );
   const fileSections = model.files.map((file) =>
     renderLocalFileDocumentationFromModel(file),
   );
-  const markdown = [
+  const markdown = assembleDocumentMarkdown(
     overview,
-    "",
-    "---",
-    "",
-    architecture,
-    ...fileSections.flatMap((section) => ["", "---", "", section]),
-    "",
-    "---",
-    "",
-    "*Generated locally by **DocuMint** from static source analysis. No AI provider was used.*",
-  ].join("\n");
+    markdownArchitecture,
+    fileSections,
+  );
+  const htmlSourceMarkdown = assembleDocumentMarkdown(
+    overview,
+    htmlArchitecture,
+    fileSections,
+  );
   const totalLines = model.totalLines;
   const languages = model.languages;
   const { contentHtml, tocHtml } = renderMarkdownForTemplate(
-    markdown,
+    htmlSourceMarkdown,
     model.files.map((file) => file.path),
   );
   const generationDate = new Date().toISOString();
@@ -83,6 +88,21 @@ export function buildLocalDocumentationDocument(
     languages,
     model,
   };
+}
+
+function assembleDocumentMarkdown(
+  overview: string,
+  architecture: string,
+  fileSections: string[],
+): string {
+  return [
+    overview,
+    "",
+    "---",
+    "",
+    architecture,
+    ...fileSections.flatMap((section) => ["", "---", "", section]),
+  ].join("\n");
 }
 
 function renderMarkdownForTemplate(markdown: string, filePaths: string[]): {
