@@ -5,6 +5,11 @@ import {
   renderLocalCodeMapFragments,
 } from "./htmlLocalCodeMap";
 import type { LocalCodeMapData } from "./localCodeMapData";
+import {
+  formatGeneratedTimestamp,
+  resolveHtmlExternalAssets,
+  resolveHtmlLocalSurfaceChrome,
+} from "./htmlTemplatePolicy";
 
 export interface HtmlTemplateOptions {
   title: string;
@@ -28,38 +33,6 @@ function escapeHtmlAttr(str: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function formatGeneratedTimestamp(value: string): {
-  month: string;
-  day: string;
-  year: string;
-  time: string;
-} {
-  const parsed = new Date(value);
-  if (!Number.isNaN(parsed.getTime())) {
-    return {
-      month: new Intl.DateTimeFormat("en-US", { month: "short" })
-        .format(parsed)
-        .toUpperCase(),
-      day: new Intl.DateTimeFormat("en-US", { day: "2-digit" }).format(parsed),
-      year: new Intl.DateTimeFormat("en-US", { year: "numeric" }).format(parsed),
-      time: new Intl.DateTimeFormat("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      }).format(parsed),
-    };
-  }
-
-  const [datePart, timePart] = value.split(",").map((part) => part.trim());
-  return {
-    month: "DATE",
-    day: datePart || value,
-    year: "",
-    time: timePart || value,
-  };
-}
-
 export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
   const safeTitle = escapeHtmlAttr(options.title);
   const safeDate = escapeHtmlAttr(options.generationDate);
@@ -74,25 +47,16 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     ? `<img class="footer-logo-img" src="${safeLogoSrc}" alt="DocuMint logo">`
     : "";
   const localCodeMap = renderLocalCodeMapFragments(options.localCodeMap);
-  const externalAssets = options.externalAssets !== false;
-  const highlightThemeLink = externalAssets
-    ? '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-theme">'
-    : "";
-  const externalScriptTags = externalAssets
-    ? '<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>\n  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>'
-    : "";
-  const highlightThemeDark = externalAssets
-    ? "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
-    : "";
-  const highlightThemeLight = externalAssets
-    ? "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
-    : "";
-  const localCodeMapToc = options.localCodeMap
-    ? '<ul><li><a class="toc-link level-1" href="#documint-local-code-map"><span class="toc-text">Project map</span></a></li></ul>'
-    : "";
-  const keyboardHints = options.localCodeMap
-    ? '<kbd>Ctrl/⌘ K</kbd> Files &nbsp; <kbd>/</kbd> Docs &nbsp; <kbd>T</kbd> Theme'
-    : '<kbd>/</kbd> Search &nbsp; <kbd>T</kbd> Theme';
+  const {
+    highlightThemeLink,
+    externalScriptTags,
+    highlightThemeDark,
+    highlightThemeLight,
+  } = resolveHtmlExternalAssets(options.externalAssets !== false);
+  const {
+    tocHtml: localCodeMapToc,
+    keyboardHints,
+  } = resolveHtmlLocalSurfaceChrome(Boolean(options.localCodeMap));
 
   const languagesStr = options.languages?.length
     ? options.languages.map(escapeHtmlAttr).join(", ")
