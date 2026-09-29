@@ -81,6 +81,12 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
   const externalScriptTags = externalAssets
     ? '<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>\n  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>'
     : "";
+  const highlightThemeDark = externalAssets
+    ? "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"
+    : "";
+  const highlightThemeLight = externalAssets
+    ? "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+    : "";
   const localCodeMapToc = options.localCodeMap
     ? '<ul><li><a class="toc-link level-1" href="#documint-local-code-map"><span class="toc-text">Project map</span></a></li></ul>'
     : "";
@@ -4867,8 +4873,8 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       if (label) label.textContent = t === 'dark' ? 'Light' : 'Dark';
       if (hljsLink) {
         hljsLink.href = t === 'dark'
-          ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css'
-          : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
+          ? '${highlightThemeDark}'
+          : '${highlightThemeLight}';
       }
     }
 
