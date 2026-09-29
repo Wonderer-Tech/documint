@@ -249,3 +249,31 @@ test("non-module strings and unrelated Go comments are not treated as file descr
   );
   assert.equal(go.description, undefined);
 });
+
+
+test("Python environment references are detected without comment or string false positives", () => {
+  const analysis = analyzer.analyzeFile(
+    file(
+      "app.py",
+      "python",
+      [
+        "import os",
+        'API_KEY = os.environ["API_KEY"]',
+        "region = os.environ.get('REGION', 'us-east-1')",
+        'timeout = os.getenv("TIMEOUT")',
+        '# fake = os.getenv("COMMENT_ONLY")',
+        'example = "os.environ[\\\"STRING_ONLY\\\"]"',
+        "",
+        "def run():",
+        '    """Mentions os.getenv("DOCSTRING_ONLY") for docs."""',
+        "    return API_KEY",
+      ].join("\n"),
+    ),
+  );
+
+  assert.deepEqual(analysis.referencedEnvironmentVariables, [
+    "API_KEY",
+    "REGION",
+    "TIMEOUT",
+  ]);
+});
