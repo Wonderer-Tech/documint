@@ -19,7 +19,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       processedFiles: 0,
     },
     settings: {
-      generationMode: "ai",
+      generationMode: "local",
       provider: "openai",
       model: "gpt-5.4-nano",
       customApiEndpoint: "",
