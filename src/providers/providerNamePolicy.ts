@@ -3,6 +3,8 @@ export type ProviderName =
   | "anthropic"
   | "openrouter"
   | "deepseek"
+  | "ollama"
+  | "lmstudio"
   | "custom";
 
 const PROVIDER_NAMES = new Set<ProviderName>([
@@ -10,6 +12,8 @@ const PROVIDER_NAMES = new Set<ProviderName>([
   "anthropic",
   "openrouter",
   "deepseek",
+  "ollama",
+  "lmstudio",
   "custom",
 ]);
 
