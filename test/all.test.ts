@@ -78,3 +78,5 @@ import "./localDocumentationModel.test";
 import "./htmlLocalCodeMap.test";
 
 import "./sidebarCsp.test";
+
+import "./configurationPreference.test";
