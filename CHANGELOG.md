@@ -30,6 +30,9 @@ All notable changes to DocuMint are documented here.
 - Bumped Local cache compatibility to v7 so README-backed descriptions and the redesigned Local output regenerate once.
 - Retired the old source-repair and VSIX self-commit workflows; CI/release automation no longer rewrites application source or force-adds a VSIX through those workflows.
 - Removed obsolete VS Code activation-event declarations and the deprecated `@types/marked` stub dependency.
+- Split the generated HTML shell into dedicated base-style, runtime-script, and policy modules; `htmlTemplate.ts` is now a small composition shell.
+- Split the sidebar webview into host/state, HTML template, styles, and client-runtime modules while preserving the nonce CSP boundary.
+- Added weekly Dependabot updates for npm and GitHub Actions.
 - Made Local Documentation the default generation mode for new/unconfigured installs while retaining AI fallback for malformed/legacy programmatic mode values.
 - Lowered the default AI file-generation concurrency from 15 to 5 while preserving the configurable maximum of 15.
 - Published the canonical `documint.*` settings namespace. Existing explicit `aiDocGenerator.*` values remain supported as deprecated aliases, with explicit new-namespace values taking precedence.
