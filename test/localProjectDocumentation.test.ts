@@ -86,6 +86,10 @@ test("local project overview renders package scripts and VS Code manifest facts 
           configuration: {
             properties: {
               "documint.mode": { default: "local" },
+              "aiDocGenerator.mode": {
+                default: "ai",
+                deprecationMessage: "Use documint.mode instead.",
+              },
             },
           },
         },
@@ -113,6 +117,7 @@ test("local project overview renders package scripts and VS Code manifest facts 
   assert.match(output, /`\.\/dist\/extension\.js`/);
   assert.match(output, /`documint\.generate`/);
   assert.match(output, /`documint\.mode`/);
+  assert.doesNotMatch(output, /`aiDocGenerator\.mode`/);
 });
 
 
