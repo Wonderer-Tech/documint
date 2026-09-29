@@ -85,6 +85,8 @@ export function renderLocalProjectDocumentationFromModel(
     "",
     `- **Files:** ${model.files.length}`,
     `- **Lines:** ${model.totalLines}`,
+    `- **Files with trusted descriptions:** ${model.files.filter((file) => Boolean(file.description)).length}`,
+    `- **Undocumented files:** ${model.files.filter((file) => !file.description).length}`,
     `- **Detected symbols:** ${model.totalSymbols}`,
     `- **Exported symbols:** ${model.totalExports}`,
     `- **Internal dependency links:** ${model.internalDependencies.length}`,
