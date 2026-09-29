@@ -76,3 +76,5 @@ import "./localReadmeFacts.test";
 import "./localDocumentationModel.test";
 
 import "./htmlLocalCodeMap.test";
+
+import "./sidebarCsp.test";
