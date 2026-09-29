@@ -32,11 +32,11 @@ const JAVASCRIPT_LIKE_LANGUAGES = new Set([
 /**
  * Public analyzer facade.
  *
- * The base analyzer keeps the existing cross-language behavior intact. This
- * facade only fills the modern Node/TypeScript module-resolution gap introduced
- * when the scanner added .mts/.cts/.mjs/.cjs support: extensionless relative
- * imports and directory index imports now resolve to those files as internal
- * project dependencies too.
+ * JS/TS-family files are analyzed with the TypeScript compiler AST so
+ * multiline imports/declarations, modifiers, declaration scope, and class
+ * methods are represented structurally. Other languages keep the existing
+ * cross-language analyzer. The facade also resolves modern Node/TypeScript
+ * module extensions such as .mts/.cts/.mjs/.cjs.
  */
 export class SourceAnalyzer extends BaseSourceAnalyzer {
   analyzeFile(file: WorkspaceFile): FileAnalysis {
