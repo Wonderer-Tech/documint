@@ -22,7 +22,14 @@ with sync_playwright() as playwright:
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
         page.route("https://**/*", lambda route: route.abort())
         errors = []
+        external_requests = []
         page.on("pageerror", lambda error: errors.append(str(error)))
+        page.on(
+            "request",
+            lambda request: external_requests.append(request.url)
+            if request.url.startswith(("http://", "https://"))
+            else None,
+        )
         try:
             page.set_content((root / f"{name}.html").read_text(), wait_until="load")
             page.wait_for_timeout(300)
@@ -43,6 +50,47 @@ with sync_playwright() as playwright:
             if name == "local":
                 for file_path in ["src/app/(internal)/[slug]/page.tsx", "src/components/hello world.ts", "src/lib/d2.ts"]:
                     assert page.locator(f'#tocNav .file-link[title="{file_path}"]').count() == 1, file_path
+
+            if fixture.get("codeMap"):
+                assert page.locator("[data-documint-local-code-map]").count() == 1, name
+                assert external_requests == [], (name, external_requests)
+                assert page.locator("#localMapModules .local-map-module-node").count() >= 3, name
+                page.locator("#localMapModules .local-map-module-node").first.click()
+                assert page.locator("#localMapFilterState").inner_text() != "Showing all modules"
+                assert page.locator("#localMapTreemap .local-map-file-tile").count() > 0
+                page.locator("#localMapClearFilter").click()
+                assert page.locator("#localMapFilterState").inner_text() == "Showing all modules"
+
+                reading = page.locator("#localMapReading button")
+                assert reading.count() >= 2
+                second_path = reading.nth(1).inner_text()
+                reading.nth(1).click()
+                assert page.locator("#localMapCard h4").inner_text() == second_path
+
+                assert page.locator("#localMapScatter .point").count() == fixture["files"]
+
+                local_search = page.locator("#localMapSearch")
+                local_search.fill("provider")
+                assert page.locator("#localMapResults button").count() > 0
+                page.locator("#localMapResults button").first.click()
+                assert "provider" in page.locator("#localMapCard h4").inner_text().lower()
+
+                local_search.fill("run.ts")
+                page.locator("#localMapResults button").first.click()
+                assert page.locator("#localMapCard h4").inner_text() == "src/services/run.ts"
+                relation = page.locator(".local-map-relation").first.locator(
+                    'button:has-text("src/providers/factory.ts")'
+                )
+                assert relation.count() == 1
+                relation.click()
+                assert page.locator("#localMapCard h4").inner_text() == "src/providers/factory.ts"
+
+                page.set_viewport_size({"width": 390, "height": 844})
+                page.wait_for_timeout(100)
+                assert page.evaluate(
+                    "document.documentElement.scrollWidth <= innerWidth + 1"
+                ), name
+                page.set_viewport_size({"width": 1440, "height": 1000})
             search = page.locator("#sidebarFilter")
             search.fill("__missing_file__")
             assert page.locator("#tocNav > .smart-toc-empty").is_visible()
