@@ -2,6 +2,7 @@ import * as ts from "typescript";
 import type { WorkspaceFile } from "../types";
 import type {
   FileAnalysis,
+  SourceDescription,
   SourceImport,
   SourceSymbol,
   SourceSymbolKind,
@@ -39,6 +40,10 @@ export function analyzeJavaScriptLikeFile(
   const imports: SourceImport[] = [];
   const symbols: SourceSymbol[] = [];
   const explicitExportNames = collectExplicitExportNames(sourceFile);
+  const explicitFileDescription = extractExplicitFileDescription(
+    sourceFile,
+    file.content,
+  );
 
   for (const statement of sourceFile.statements) {
     collectStaticImport(statement, sourceFile, imports);
@@ -52,14 +57,20 @@ export function analyzeJavaScriptLikeFile(
 
   collectDynamicImports(sourceFile, imports);
 
+  const uniqueFileSymbols = uniqueSymbols(symbols);
+  const description =
+    explicitFileDescription ??
+    inferSingleExportDescription(uniqueFileSymbols);
+
   return {
     path: file.path,
     language: file.language,
     imports: uniqueImports(
       imports.sort((a, b) => a.line - b.line),
     ),
-    symbols: uniqueSymbols(symbols),
+    symbols: uniqueFileSymbols,
     todos: collectTodoComments(file, sourceFile),
+    description,
   };
 }
 
@@ -115,6 +126,112 @@ function collectTodoComments(
   }
 
   return todos;
+}
+
+function extractExplicitFileDescription(
+  sourceFile: ts.SourceFile,
+  content: string,
+): SourceDescription | undefined {
+  const firstStatement = sourceFile.statements[0];
+  const boundary = firstStatement
+    ? firstStatement.getStart(sourceFile)
+    : content.length;
+  const prefix = content.slice(0, boundary);
+  const blocks = Array.from(prefix.matchAll(/\/\*\*([\s\S]*?)\*\//g));
+
+  for (const block of blocks) {
+    const raw = block[1] ?? "";
+    if (!/@(?:file|module)\b/.test(raw)) {
+      continue;
+    }
+
+    const text = cleanJSDocSummary(raw);
+    if (!text) {
+      continue;
+    }
+
+    const offset = block.index ?? 0;
+    return {
+      text,
+      source: "file-comment",
+      line:
+        sourceFile.getLineAndCharacterOfPosition(offset).line + 1,
+    };
+  }
+
+  return undefined;
+}
+
+function declarationDescription(
+  node: ts.Node,
+  sourceFile: ts.SourceFile,
+): SourceDescription | undefined {
+  const leading = sourceFile.text.slice(
+    node.getFullStart(),
+    node.getStart(sourceFile),
+  );
+  const blocks = Array.from(leading.matchAll(/\/\*\*([\s\S]*?)\*\//g));
+  const block = blocks[blocks.length - 1];
+  if (!block) {
+    return undefined;
+  }
+
+  const text = cleanJSDocSummary(block[1] ?? "");
+  if (!text) {
+    return undefined;
+  }
+
+  const absoluteOffset = node.getFullStart() + (block.index ?? 0);
+  return {
+    text,
+    source: "declaration-comment",
+    line:
+      sourceFile.getLineAndCharacterOfPosition(absoluteOffset).line + 1,
+  };
+}
+
+function cleanJSDocSummary(value: string): string {
+  const lines = value
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s*\*\s?/, "").trim());
+
+  const summary: string[] = [];
+  for (const line of lines) {
+    if (!line) {
+      if (summary.length > 0) {
+        summary.push("");
+      }
+      continue;
+    }
+    if (line.startsWith("@")) {
+      break;
+    }
+    summary.push(line);
+  }
+
+  return summary
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 500);
+}
+
+function inferSingleExportDescription(
+  symbols: SourceSymbol[],
+): SourceDescription | undefined {
+  const exported = symbols.filter(
+    (symbol) => symbol.exported && symbol.scope === "module",
+  );
+  if (exported.length !== 1) {
+    return undefined;
+  }
+
+  return exported[0].description
+    ? {
+        ...exported[0].description,
+        source: "declaration-comment",
+      }
+    : undefined;
 }
 
 function scriptKindForPath(filePath: string): ts.ScriptKind {
@@ -354,6 +471,10 @@ function collectTopLevelSymbols(
         exported: statementExported || explicitExportNames.has(name),
         signature: variableSignature(statement, declaration, sourceFile),
         scope: "module",
+        description:
+          statement.declarationList.declarations.length === 1
+            ? declarationDescription(statement, sourceFile)
+            : undefined,
       });
     }
   }
@@ -373,6 +494,7 @@ function collectClassMethods(
         exported: false,
         signature: declarationSignature(member, sourceFile),
         scope: "class",
+        description: declarationDescription(member, sourceFile),
       });
       continue;
     }
@@ -395,6 +517,7 @@ function collectClassMethods(
         exported: false,
         signature: declarationSignature(member, sourceFile),
         scope: "class",
+        description: declarationDescription(member, sourceFile),
       });
     }
   }
@@ -420,6 +543,7 @@ function symbolFromNamedDeclaration(
     exported: hasExportModifier(declaration) || explicitExportNames.has(name),
     signature: declarationSignature(declaration, sourceFile),
     scope,
+    description: declarationDescription(declaration, sourceFile),
   };
 }
 
