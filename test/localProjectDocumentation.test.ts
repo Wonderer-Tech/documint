@@ -183,3 +183,31 @@ test("local project overview lists referenced environment variables conservative
   assert.match(output, /`REGION`/);
   assert.match(output, /does not claim they are required/i);
 });
+
+
+test("local project facts report trusted-description coverage", () => {
+  const describedFiles: WorkspaceFile[] = [
+    {
+      path: "src/documented.ts",
+      language: "typescript",
+      content: [
+        "/** Documented module. */",
+        "export class Documented {}",
+      ].join("\n"),
+    },
+    {
+      path: "src/undocumented.ts",
+      language: "typescript",
+      content: "export const value = 1;",
+    },
+  ];
+  const describedProject = analyzer.analyzeProject(describedFiles);
+  const output = renderLocalProjectDocumentation({
+    projectName: "Coverage",
+    files: describedFiles,
+    project: describedProject,
+  });
+
+  assert.match(output, /\*\*Files with trusted descriptions:\*\* 1/);
+  assert.match(output, /\*\*Undocumented files:\*\* 1/);
+});
