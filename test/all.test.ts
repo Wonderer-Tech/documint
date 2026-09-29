@@ -83,3 +83,5 @@ import "./configurationPreference.test";
 import "./configurationNamespace.test";
 
 import "./htmlTemplatePolicy.test";
+
+import "./htmlBaseStyles.test";
