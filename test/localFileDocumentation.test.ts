@@ -80,9 +80,9 @@ test("local renderer omits empty fact sections instead of repeating placeholders
 });
 
 
-test("Local file documentation uses portable relative source links", () => {
+test("local file documentation uses portable relative source links", () => {
   const project = analyzer.analyzeProject(files);
-  const analysis = project.files.find((item) => item.path === "src/service.ts");
+  const analysis = project.files.find((item) => item.path === "src/main.ts");
   assert.ok(analysis);
 
   const markdown = renderLocalFileDocumentation({
@@ -91,8 +91,12 @@ test("Local file documentation uses portable relative source links", () => {
     project,
   });
 
-  assert.match(markdown, /\.\.\/src\/service\.ts#L\d+/);
-  assert.match(markdown, /\.\.\/src\/dependency\.ts/);
+  assert.match(
+    markdown,
+    /\*\*Source:\*\* \[Open file\]\(\.\.\/src\/main\.ts\)/,
+  );
+  assert.match(markdown, /\.\.\/src\/main\.ts#L3/);
+  assert.match(markdown, /\.\.\/src\/helper\.ts/);
   assert.doesNotMatch(markdown, /github\.com\/Wonderer-Tech/);
   assert.doesNotMatch(markdown, /vscode:\/\/file/);
 });
