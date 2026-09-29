@@ -226,3 +226,52 @@ test("canonical model derives npm-compatible script runners from packageManager"
     assert.equal(model.gettingStarted?.scripts[0]?.run, expected);
   }
 });
+
+
+test("canonical Local model supports Makefile and Dockerfile onboarding without package.json", () => {
+  const projectFiles: WorkspaceFile[] = [
+    {
+      path: "src/main.ts",
+      language: "typescript",
+      content: "export const value = 1;",
+    },
+  ];
+  const project = new SourceAnalyzer().analyzeProject(projectFiles);
+  const model = buildLocalDocumentationModel(
+    "Build Facts",
+    projectFiles,
+    project,
+    {
+      makefile: [
+        ".PHONY: build test",
+        "build:",
+        "\tnpm run build",
+        "test:",
+        "\tnpm test",
+      ].join("\n"),
+      dockerfile: [
+        "FROM node:22-alpine AS runtime",
+        "EXPOSE 3000",
+        'CMD ["node", "dist/server.js"]',
+      ].join("\n"),
+    },
+  );
+
+  assert.deepEqual(model.gettingStarted?.makefile, {
+    path: "Makefile",
+    targets: [
+      { name: "build" },
+      { name: "test" },
+    ],
+  });
+  assert.deepEqual(model.gettingStarted?.dockerfile, {
+    path: "Dockerfile",
+    baseImages: ["node:22-alpine"],
+    stages: ["runtime"],
+    exposedPorts: ["3000"],
+    command: '["node", "dist/server.js"]',
+    entrypoint: undefined,
+  });
+  assert.equal(model.gettingStarted?.packageJsonPath, undefined);
+  assert.equal(model.gettingStarted?.packageManager, undefined);
+});
