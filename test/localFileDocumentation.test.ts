@@ -45,19 +45,20 @@ test("local renderer emits source-analysis facts without AI inference", () => {
   });
 
   assert.match(markdown, /## `src\/main\.ts`/);
-  assert.match(markdown, /static source analysis only\. No AI inference is used/);
+  assert.doesNotMatch(markdown, /static source analysis only\. No AI inference is used/);
   assert.match(markdown, /### Exported API/);
   assert.match(markdown, /`User`/);
   assert.match(markdown, /`greet`/);
-  assert.match(markdown, /### Other Detected Symbols/);
+  assert.match(markdown, /### Internal API/);
   assert.match(markdown, /`internalOnly`/);
+  assert.match(markdown, /### Imports/);
   assert.match(markdown, /`\.\/helper`/);
-  assert.match(markdown, /`src\/helper\.ts`/);
-  assert.match(markdown, /### Known Dependents[\s\S]*`src\/consumer\.ts`/);
+  assert.match(markdown, /\*\*Uses:\*\*[\s\S]*`src\/helper\.ts`/);
+  assert.match(markdown, /\*\*Used by:\*\*[\s\S]*`src\/consumer\.ts`/);
   assert.match(markdown, /handle empty name/);
 });
 
-test("local renderer makes empty analyzer facts explicit instead of inventing prose", () => {
+test("local renderer omits empty fact sections instead of repeating placeholders", () => {
   const analyzer = new SourceAnalyzer();
   const file: WorkspaceFile = {
     path: "src/empty.ts",
@@ -68,10 +69,12 @@ test("local renderer makes empty analyzer facts explicit instead of inventing pr
   const analysis = project.files[0];
   const markdown = renderLocalFileDocumentation({ file, analysis, project });
 
-  assert.match(markdown, /No exported symbols detected\./);
-  assert.match(markdown, /No additional symbols detected\./);
-  assert.match(markdown, /No imports detected\./);
-  assert.match(markdown, /No internal dependencies detected\./);
-  assert.match(markdown, /No known project dependents detected\./);
-  assert.match(markdown, /No TODO, FIXME, or HACK comments detected\./);
+  assert.match(markdown, /No module-level description found/);
+  assert.doesNotMatch(markdown, /### Exported API/);
+  assert.doesNotMatch(markdown, /### Internal API/);
+  assert.doesNotMatch(markdown, /### Imports/);
+  assert.doesNotMatch(markdown, /\*\*Uses:\*\*/);
+  assert.doesNotMatch(markdown, /\*\*Used by:\*\*/);
+  assert.doesNotMatch(markdown, /### TODO \/ FIXME \/ HACK/);
+  assert.doesNotMatch(markdown, /No .* detected\./);
 });
