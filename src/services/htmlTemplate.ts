@@ -1,6 +1,10 @@
 import { READER_STYLES } from "./htmlReaderStyles";
 import { READER_NAVIGATION_SCRIPT } from "./htmlReaderNavigation";
 import { READER_SEARCH_SCRIPT } from "./htmlReaderSearch";
+import {
+  renderLocalCodeMapFragments,
+} from "./htmlLocalCodeMap";
+import type { LocalCodeMapData } from "./localCodeMapData";
 
 export interface HtmlTemplateOptions {
   title: string;
@@ -12,6 +16,7 @@ export interface HtmlTemplateOptions {
   languages?: string[];
   totalLines?: number;
   logoSrc?: string;
+  localCodeMap?: LocalCodeMapData;
 }
 
 function escapeHtmlAttr(str: string): string {
@@ -67,6 +72,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
   const footerLogoHtml = safeLogoSrc
     ? `<img class="footer-logo-img" src="${safeLogoSrc}" alt="DocuMint logo">`
     : "";
+  const localCodeMap = renderLocalCodeMapFragments(options.localCodeMap);
 
   const languagesStr = options.languages?.length
     ? options.languages.map(escapeHtmlAttr).join(", ")
@@ -2627,6 +2633,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       }
     }
     ${READER_STYLES}
+    ${localCodeMap.styles}
   </style>
 </head>
 <body class="documint-jelly-ui">
@@ -2678,6 +2685,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
       <div class="client-name-highlight">${safeProjectName}</div>
     </header>
     <div class="stats-banner">${statsHtml}</div>
+    ${localCodeMap.markup}
     ${options.contentHtml}
   </main>
 
@@ -4908,6 +4916,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     if (document.readyState !== 'loading') { runInit(); }
   })();
   </script>
+  ${localCodeMap.script}
   <footer class="doc-footer">
     <div class="doc-footer-inner">
       ${footerLogoHtml}
