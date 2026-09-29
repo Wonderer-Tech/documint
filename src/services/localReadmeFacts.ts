@@ -1,4 +1,4 @@
-import { normalizeProjectPath } from "./structuralModule";
+import { normalizeProjectPath, structuralModuleName } from "./structuralModule";
 
 export interface ReadmeFileDescription {
   text: string;
@@ -7,6 +7,7 @@ export interface ReadmeFileDescription {
 
 export interface LocalReadmeFacts {
   descriptionsByPath: Map<string, ReadmeFileDescription>;
+  descriptionsByModule: Map<string, ReadmeFileDescription>;
 }
 
 /**
@@ -18,19 +19,34 @@ export function extractLocalReadmeFacts(
   knownFilePaths: Iterable<string>,
 ): LocalReadmeFacts {
   const descriptionsByPath = new Map<string, ReadmeFileDescription>();
-  if (!readme) {
-    return { descriptionsByPath };
-  }
-
   const known = new Set(
     Array.from(knownFilePaths, (value) => normalizeProjectPath(value)),
   );
+  const knownModules = new Set(
+    Array.from(known, (value) => structuralModuleName(value)),
+  );
+  const descriptionsByModule = new Map<string, ReadmeFileDescription>();
+
+  if (!readme) {
+    return { descriptionsByPath, descriptionsByModule };
+  }
   const lines = readme.split(/\r?\n/);
 
   collectExplicitPathDescriptions(lines, known, descriptionsByPath);
-  collectTreeDescriptions(lines, known, descriptionsByPath);
+  collectExplicitModuleDescriptions(
+    lines,
+    knownModules,
+    descriptionsByModule,
+  );
+  collectTreeDescriptions(
+    lines,
+    known,
+    knownModules,
+    descriptionsByPath,
+    descriptionsByModule,
+  );
 
-  return { descriptionsByPath };
+  return { descriptionsByPath, descriptionsByModule };
 }
 
 function collectExplicitPathDescriptions(
@@ -52,10 +68,35 @@ function collectExplicitPathDescriptions(
   }
 }
 
+function collectExplicitModuleDescriptions(
+  lines: string[],
+  knownModules: Set<string>,
+  output: Map<string, ReadmeFileDescription>,
+): void {
+  for (const line of lines) {
+    for (const moduleName of knownModules) {
+      const candidates = [moduleName, `${moduleName}/`];
+      for (const candidate of candidates) {
+        if (!line.includes(candidate)) {
+          continue;
+        }
+
+        const description = descriptionAfterPath(line, candidate);
+        if (description) {
+          output.set(moduleName, { text: description, source: "readme" });
+          break;
+        }
+      }
+    }
+  }
+}
+
 function collectTreeDescriptions(
   lines: string[],
   known: Set<string>,
-  output: Map<string, ReadmeFileDescription>,
+  knownModules: Set<string>,
+  fileOutput: Map<string, ReadmeFileDescription>,
+  moduleOutput: Map<string, ReadmeFileDescription>,
 ): void {
   let inFence = false;
   let root: string | undefined;
@@ -105,11 +146,21 @@ function collectTreeDescriptions(
     if (name.endsWith("/")) {
       directories[level] = itemPath;
       directories.length = level + 1;
+      if (
+        description &&
+        knownModules.has(itemPath) &&
+        !moduleOutput.has(itemPath)
+      ) {
+        moduleOutput.set(itemPath, {
+          text: description,
+          source: "readme",
+        });
+      }
       continue;
     }
 
-    if (description && known.has(itemPath) && !output.has(itemPath)) {
-      output.set(itemPath, { text: description, source: "readme" });
+    if (description && known.has(itemPath) && !fileOutput.has(itemPath)) {
+      fileOutput.set(itemPath, { text: description, source: "readme" });
     }
   }
 }
