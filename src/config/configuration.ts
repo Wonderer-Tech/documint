@@ -31,7 +31,7 @@ export interface DocuMintConfigurationAccessor {
     key: string,
     value: unknown,
     target: vscode.ConfigurationTarget,
-  ): Thenable<void>;
+  ): PromiseLike<void>;
 }
 
 export function getDocuMintConfiguration(
@@ -45,7 +45,7 @@ export function getDocuMintConfiguration(
       key: string,
       value: unknown,
       target: vscode.ConfigurationTarget,
-    ): Thenable<void> {
+    ): PromiseLike<void> {
       return vscode.workspace
         .getConfiguration(DOCUMINT_CONFIGURATION_SECTION, resource)
         .update(key, value, target);
