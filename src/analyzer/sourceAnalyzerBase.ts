@@ -15,6 +15,12 @@ export type SourceSymbolKind =
 
 export type SourceSymbolScope = "module" | "class" | "function" | "unknown";
 
+export interface SourceDescription {
+  text: string;
+  source: "file-comment" | "declaration-comment";
+  line?: number;
+}
+
 export interface SourceSymbol {
   name: string;
   kind: SourceSymbolKind;
@@ -22,6 +28,7 @@ export interface SourceSymbol {
   exported: boolean;
   signature: string;
   scope?: SourceSymbolScope;
+  description?: SourceDescription;
 }
 
 export interface SourceImport {
@@ -42,6 +49,7 @@ export interface FileAnalysis {
   imports: SourceImport[];
   symbols: SourceSymbol[];
   todos: TodoComment[];
+  description?: SourceDescription;
 }
 
 export interface ProjectAnalysis {
