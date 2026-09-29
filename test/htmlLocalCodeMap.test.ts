@@ -162,7 +162,7 @@ test("Local code map source navigation stays relative and repository-agnostic", 
 
   assert.match(fragments.script, /relativeSourceHref/);
   assert.match(fragments.script, /Open source file/);
-  assert.match(fragments.script, /sourceAnchor\.href = relativeSourceHref\(file\.path, item\.line\)/);
+  assert.match(fragments.script, /exportLink\.href = relativeSourceHref\(file\.path, item\.line\)/);
   assert.doesNotMatch(fragments.script, /vscode:\/\/file/i);
   assert.doesNotMatch(fragments.script, /github\.com\/Wonderer-Tech\/documint/i);
 });
