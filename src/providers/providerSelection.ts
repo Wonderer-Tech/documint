@@ -1,4 +1,5 @@
 import { resolveProviderSelectionModel } from "./providerDefaults";
+import { resolveLocalPresetModel } from "./localProviderPolicy";
 import {
   normalizeProviderName,
   ProviderName,
@@ -25,6 +26,13 @@ export function resolveProviderSelection(
     return {
       provider,
       model: requestedModel || "default",
+    };
+  }
+
+  if (provider === "ollama" || provider === "lmstudio") {
+    return {
+      provider,
+      model: resolveLocalPresetModel(requestedModel),
     };
   }
 
