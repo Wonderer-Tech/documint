@@ -73,6 +73,9 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     ? `<img class="footer-logo-img" src="${safeLogoSrc}" alt="DocuMint logo">`
     : "";
   const localCodeMap = renderLocalCodeMapFragments(options.localCodeMap);
+  const localCodeMapToc = options.localCodeMap
+    ? '<ul><li><a class="toc-link level-1" href="#documint-local-code-map"><span class="toc-text">Project map</span></a></li></ul>'
+    : "";
 
   const languagesStr = options.languages?.length
     ? options.languages.map(escapeHtmlAttr).join(", ")
@@ -2676,7 +2679,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
         <input class="sidebar-filter" id="sidebarFilter" type="search" placeholder="Filter sections..." autocomplete="off" spellcheck="false">
       </div>
       <div class="sidebar-label legacy-hidden">Contents</div>
-      <nav class="toc-nav" id="tocNav">${options.tocHtml}</nav>
+      <nav class="toc-nav" id="tocNav">${localCodeMapToc}${options.tocHtml}</nav>
     </div>
   </aside>
 
