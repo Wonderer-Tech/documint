@@ -149,7 +149,10 @@ test("AI generator runtime fallback matches the manifest concurrency default", (
 
 
 test("legacy aiDocGenerator settings remain deprecated compatibility aliases", () => {
-  const properties = manifest.contributes.configuration.properties;
+  const properties = manifest.contributes.configuration.properties as Record<
+    string,
+    { deprecationMessage?: string }
+  >;
 
   for (const key of [
     "generationMode",
@@ -167,7 +170,7 @@ test("legacy aiDocGenerator settings remain deprecated compatibility aliases", (
   ]) {
     assert.ok(properties[`documint.${key}`], `missing documint.${key}`);
     assert.match(
-      properties[`aiDocGenerator.${key}`].deprecationMessage,
+      properties[`aiDocGenerator.${key}`].deprecationMessage ?? "",
       new RegExp(`Use documint\\.${key}`),
     );
   }
