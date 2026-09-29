@@ -100,3 +100,24 @@ test("local file documentation uses portable relative source links", () => {
   assert.doesNotMatch(markdown, /github\.com\/Wonderer-Tech/);
   assert.doesNotMatch(markdown, /vscode:\/\/file/);
 });
+
+
+test("local file documentation surfaces referenced environment variables without calling them required", () => {
+  const envFile: WorkspaceFile = {
+    path: "src/env.ts",
+    language: "typescript",
+    content: [
+      'export const key = process.env.API_KEY;',
+      'export const region = process.env["REGION"];',
+    ].join("\n"),
+  };
+  const project = analyzer.analyzeProject([envFile]);
+  const markdown = renderLocalFileDocumentation({
+    file: envFile,
+    analysis: project.files[0],
+    project,
+  });
+
+  assert.match(markdown, /\*\*Environment references:\*\* `API_KEY`, `REGION`/);
+  assert.doesNotMatch(markdown, /Required environment/i);
+});
