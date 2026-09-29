@@ -51,7 +51,7 @@ export interface LocalCodeMapData {
   edges: LocalCodeMapEdge[];
   readingPath: LocalCodeMapReadingItem[];
   gettingStarted?: {
-    packageManager: "npm" | "pnpm" | "yarn" | "bun";
+    packageManager?: "npm" | "pnpm" | "yarn" | "bun";
     extensionEntry?: string;
     scripts: LocalCodeMapRunScript[];
   };
