@@ -207,7 +207,7 @@ All settings are under `aiDocGenerator`.
 
 ### Key Settings
 
-- `aiDocGenerator.generationMode` (`ai | local`, `ai` by default)
+- `aiDocGenerator.generationMode` (`ai | local`, `local` by default)
 - `aiDocGenerator.aiProvider` (`openai` by default; AI mode only)
 - `aiDocGenerator.model` (`gpt-5.4-nano` by default; AI mode only)
 - `aiDocGenerator.documentationDepth` (`simple | basic | standard | comprehensive`; AI mode only)
@@ -240,7 +240,7 @@ All settings are under `aiDocGenerator`.
   "aiDocGenerator.outputFormat": "both",
   "aiDocGenerator.maxTokens": 4000,
   "aiDocGenerator.temperature": 0.3,
-  "aiDocGenerator.concurrentRequests": 15,
+  "aiDocGenerator.concurrentRequests": 5,
   "aiDocGenerator.rateLimitDelay": 1000,
   "aiDocGenerator.excludePatterns": [
     "**/node_modules/**",
@@ -424,7 +424,7 @@ npx @vscode/vsce package
 - Local mode does not invent business-logic explanations, intent, usage examples, or architectural rationale that cannot be established from static source evidence.
 - AI documentation quality depends on the selected model and the source code/context available in the workspace.
 - Cloud providers receive selected source code only after confirmation. Use Local Documentation when code must remain entirely on the machine.
-- `aiDocGenerator.concurrentRequests` defaults to `15` for faster AI generation. Lower it in settings if your cloud provider rate-limits requests.
+- `aiDocGenerator.concurrentRequests` defaults to `5` for broader provider compatibility. Increase it only when your provider rate limits allow.
 
 ## Contributing
 
