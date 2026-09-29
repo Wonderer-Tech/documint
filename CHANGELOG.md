@@ -36,6 +36,8 @@ All notable changes to DocuMint are documented here.
 - Made Local Documentation the default generation mode for new/unconfigured installs while retaining AI fallback for malformed/legacy programmatic mode values.
 - Lowered the default AI file-generation concurrency from 15 to 5 while preserving the configurable maximum of 15.
 - Published the canonical `documint.*` settings namespace. Existing explicit `aiDocGenerator.*` values remain supported as deprecated aliases, with explicit new-namespace values taking precedence.
+- Added explicit Ollama and LM Studio AI-provider presets using fixed loopback OpenAI-compatible endpoints, no API key, no cloud-source-transfer consent, and an explicit local-model requirement.
+- Local provider selection now clears inherited cloud-default model IDs so switching from OpenAI/Anthropic/OpenRouter/DeepSeek cannot silently send an invalid cloud model name to a local runtime.
 - Moved future VSIX packaging to a tag-based GitHub Release workflow and removed committed VSIX binaries from the current source tree. Historical blobs remain in existing Git history.
 
 ### Fixed
