@@ -783,6 +783,10 @@ Only after this slice is green do we build the new documentation model and UI.
 
 # 16. Reference prototype observations
 
+**Stored reference:** [`audit/reference/documint-code-map-redesign-prototype.html`](./reference/documint-code-map-redesign-prototype.html)
+
+This file is the preserved Claude redesign prototype used during the audit. Treat it as a UX/interaction reference, not as production-ready source. The constraints and corrections in this roadmap take precedence over prototype-specific hard-coding.
+
 The reviewed redesign prototype demonstrates these useful interaction patterns:
 
 - question-first sections;
