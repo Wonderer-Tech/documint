@@ -8,7 +8,7 @@ import type {
   SourceSymbolKind,
   SourceSymbolScope,
   TodoComment,
-} from "./sourceAnalyzerBase";
+} from "./sourceAnalyzer";
 
 const JAVASCRIPT_LIKE_EXTENSIONS = new Set([
   "ts",
