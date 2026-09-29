@@ -8,11 +8,11 @@ test("README tree descriptions map to exact project paths", () => {
     "",
     "```text",
     "src/",
-    "|-- analyzer/",
+    "|-- analyzer/                  # Source analysis and dependency facts",
     "|   |-- sourceAnalyzer.ts          # Public analyzer facade",
     "|   `-- sourceAnalyzerBase.ts      # Core cross-language analysis",
     "|-- extension.ts                   # VS Code activation entry point",
-    "`-- providers/",
+    "`-- providers/                 # AI provider integrations",
     "    `-- openaiProvider.ts",
     "```",
   ].join("\n");
@@ -32,6 +32,17 @@ test("README tree descriptions map to exact project paths", () => {
     text: "VS Code activation entry point",
     source: "readme",
   });
+
+
+  assert.deepEqual(facts.descriptionsByModule.get("src/analyzer"), {
+    text: "Source analysis and dependency facts",
+    source: "readme",
+  });
+  assert.deepEqual(facts.descriptionsByModule.get("src/providers"), {
+    text: "AI provider integrations",
+    source: "readme",
+  });
+
   assert.equal(
     facts.descriptionsByPath.has("src/providers/openaiProvider.ts"),
     false,
