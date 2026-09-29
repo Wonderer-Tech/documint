@@ -146,6 +146,10 @@ test("canonical model extracts deterministic package scripts and VS Code metadat
           properties: {
             "documint.mode": { default: "local" },
             "documint.limit": { default: 5 },
+            "aiDocGenerator.mode": {
+              default: "ai",
+              deprecationMessage: "Use documint.mode instead.",
+            },
           },
         },
       },
