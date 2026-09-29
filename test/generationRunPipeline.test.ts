@@ -82,3 +82,29 @@ test("AI and Local runtime use the dedicated DocuMint output directory", () => {
   assert.doesNotMatch(localSource, /workspaceFolder\.uri, "docs"/);
   assert.doesNotMatch(cacheSource, /workspaceFolder\.uri, "docs"/);
 });
+
+
+test("local provider presets skip metadata fetches but retain request-scoped context overrides", () => {
+  const source = readFileSync(
+    "src/providers/providerMetadataDecorator.ts",
+    "utf-8",
+  );
+
+  assert.match(
+    source,
+    /providerName === "ollama" \|\| providerName === "lmstudio"/,
+  );
+  assert.match(source, /localPreset/);
+  assert.match(
+    source,
+    /providerName === "custom" \|\|\s*localPreset[\s\S]*return;/,
+  );
+  assert.match(
+    source,
+    /provider\.generateDocumentation = async[\s\S]*hasExplicitContextWindow\(documentationContext\.contextWindow\)[\s\S]*requestContextWindow\.run/,
+  );
+  assert.match(
+    source,
+    /provider\.getMaxContextWindow = [\s\S]*requestContextWindow\.current\(\)/,
+  );
+});
