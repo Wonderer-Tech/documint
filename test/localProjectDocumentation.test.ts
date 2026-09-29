@@ -104,7 +104,8 @@ test("local project overview renders package scripts and VS Code manifest facts 
   });
 
   assert.match(output, /## How to run/);
-  assert.match(output, /`npm run compile`/);
+  assert.match(output, /\*\*Package manager:\*\* `pnpm`/);
+  assert.match(output, /`pnpm run compile`/);
   assert.match(output, /`tsc --noEmit`/);
   assert.match(output, /### VS Code commands/);
   assert.match(output, /### VS Code settings/);
