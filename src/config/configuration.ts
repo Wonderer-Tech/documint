@@ -24,6 +24,35 @@ export function getDocuMintConfigurationValue<T>(
   ).value;
 }
 
+
+export interface DocuMintConfigurationAccessor {
+  get<T>(key: string): T | undefined;
+  update(
+    key: string,
+    value: unknown,
+    target: vscode.ConfigurationTarget,
+  ): Thenable<void>;
+}
+
+export function getDocuMintConfiguration(
+  resource?: vscode.Uri,
+): DocuMintConfigurationAccessor {
+  return {
+    get<T>(key: string): T | undefined {
+      return getDocuMintConfigurationValue<T>(key, resource);
+    },
+    update(
+      key: string,
+      value: unknown,
+      target: vscode.ConfigurationTarget,
+    ): Thenable<void> {
+      return vscode.workspace
+        .getConfiguration(DOCUMINT_CONFIGURATION_SECTION, resource)
+        .update(key, value, target);
+    },
+  };
+}
+
 export async function updateDocuMintConfigurationValue(
   key: string,
   value: unknown,
