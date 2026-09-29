@@ -30,6 +30,8 @@ All notable changes to DocuMint are documented here.
 - Bumped Local cache compatibility to v6 so README-backed descriptions and the redesigned Local output regenerate once.
 - Retired the old source-repair and VSIX self-commit workflows; CI/release automation no longer rewrites application source or force-adds a VSIX through those workflows.
 - Removed obsolete VS Code activation-event declarations and the deprecated `@types/marked` stub dependency.
+- Made Local Documentation the default generation mode for new/unconfigured installs while retaining AI fallback for malformed/legacy programmatic mode values.
+- Lowered the default AI file-generation concurrency from 15 to 5 while preserving the configurable maximum of 15.
 
 ### Fixed
 
