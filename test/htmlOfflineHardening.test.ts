@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { hardenGeneratedHtmlForOffline } from "../src/services/htmlOfflineHardening";
+import { generateHtmlTemplate } from "../src/services/htmlTemplate";
 
 const htmlFixture = [
   "<!doctype html>",
@@ -60,4 +61,22 @@ test("output sanitizer hardens fresh HTML while legacy workflow cleanup stays ca
   );
   assert.match(source, /sanitizeMarkdown\(entry\.section\)/);
   assert.doesNotMatch(source, /sanitizeHtml\(content\)/);
+});
+
+
+test("shared HTML template keeps external assets by default but can disable them", () => {
+  const base = {
+    title: "Example",
+    tocHtml: "<ul></ul>",
+    contentHtml: "<h1>Example</h1>",
+    projectName: "Example",
+    fileCount: 1,
+    generationDate: "2026-09-30T00:00:00.000Z",
+  };
+
+  const shared = generateHtmlTemplate(base);
+  const local = generateHtmlTemplate({ ...base, externalAssets: false });
+
+  assert.match(shared, /cdnjs\.cloudflare\.com/);
+  assert.doesNotMatch(local, /cdnjs\.cloudflare\.com/);
 });
