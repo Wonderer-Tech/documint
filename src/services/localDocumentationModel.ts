@@ -41,6 +41,7 @@ export interface LocalDocumentationFile {
 export interface LocalDocumentationModule {
   name: string;
   filePaths: string[];
+  primaryFilePaths: string[];
   fileCount: number;
   lineCount: number;
   languages: string[];
@@ -82,6 +83,30 @@ export interface LocalReadingPathItem {
   path: string;
   reason: string;
   entryPoint: boolean;
+}
+
+export interface LocalPackageScript {
+  name: string;
+  command: string;
+  run: string;
+}
+
+export interface LocalVsCodeCommand {
+  id: string;
+  title: string;
+}
+
+export interface LocalVsCodeSetting {
+  key: string;
+  defaultValue?: unknown;
+}
+
+export interface LocalGettingStartedFacts {
+  packageJsonPath: string;
+  extensionEntry?: string;
+  scripts: LocalPackageScript[];
+  vscodeCommands: LocalVsCodeCommand[];
+  vscodeSettings: LocalVsCodeSetting[];
 }
 
 export interface LocalDocumentationModel {
@@ -413,6 +438,7 @@ function buildModules(
     const current = rows.get(file.module) ?? {
       name: file.module,
       filePaths: [],
+      primaryFilePaths: [],
       fileCount: 0,
       lineCount: 0,
       languages: [],
@@ -431,12 +457,32 @@ function buildModules(
     rows.set(file.module, current);
   }
 
+  const filesByPath = new Map(files.map((file) => [file.path, file]));
+
   return Array.from(rows.values())
-    .map((module) => ({
-      ...module,
-      filePaths: uniqueSorted(module.filePaths),
-      languages: uniqueSorted(module.languages),
-    }))
+    .map((module) => {
+      const filePaths = uniqueSorted(module.filePaths);
+      const primaryFilePaths = filePaths
+        .map((path) => filesByPath.get(path))
+        .filter((file): file is LocalDocumentationFile => Boolean(file))
+        .sort(
+          (a, b) =>
+            Number(b.entryPoint) - Number(a.entryPoint) ||
+            b.usedBy.length - a.usedBy.length ||
+            b.exportedSymbols.length - a.exportedSymbols.length ||
+            b.uses.length - a.uses.length ||
+            a.path.localeCompare(b.path),
+        )
+        .slice(0, 2)
+        .map((file) => file.path);
+
+      return {
+        ...module,
+        filePaths,
+        primaryFilePaths,
+        languages: uniqueSorted(module.languages),
+      };
+    })
     .sort(
       (a, b) =>
         b.fileCount - a.fileCount ||
