@@ -13,35 +13,42 @@
 
 _Last updated: 2026-09-30_
 
-- ✅ Retired the obsolete 1.0.6/1.0.7 navigation/reader source-repair workflows and Python repair scripts after verifying their intended markers already exist in current source.
-- ⏸ Normal CI trigger + lockfile migration is still pending. No workflow was manually triggered during this implementation pass.
-- ✅ Added an AST-backed JS/TS-family analyzer using the TypeScript compiler API behind the existing public `SourceAnalyzer` facade.
-- ✅ Multiline imports, multiline declarations, `export abstract class`, class methods, explicit export lists, and module-vs-function scope are structurally analyzed.
+- ✅ Retired obsolete source-repair workflows/scripts and the old VSIX self-commit workflow.
+- ✅ Added a tag-only GitHub Release workflow for future VSIX assets; current source tree no longer carries committed VSIX binaries.
+- ✅ Pull requests now run CI automatically. Main-branch push CI remains intentionally trigger-file gated so the current implementation work does not auto-run CI.
+- ⏳ `package-lock.json` is now allowed by `.gitignore`, but lockfile generation is still pending because this environment cannot reach the npm registry. CI/release workflows stay on `npm install` until the lockfile is committed.
+- ✅ Added AST-backed JS/TS-family analysis using the TypeScript compiler API.
+- ✅ Multiline imports/declarations, `export abstract class`, class methods, explicit exports, module scope, static environment references, and comment-safe TODO extraction are structurally analyzed.
 - ✅ Function-local temporary variables no longer pollute the JS/TS module symbol list.
-- ✅ JS/TS TODO/FIXME/HACK extraction uses compiler comment trivia rather than line regexes.
-- ✅ Trusted description metadata now supports explicit TS/JS file/module JSDoc, documented single exports, Python module docstrings, Rust module docs, Go package comments, and exact README path descriptions.
-- ✅ Added one canonical `LocalDocumentationModel` for file facts, modules, resolved relationships, descriptions/provenance, package scripts, VS Code commands/settings, and suggested reading order.
-- ✅ Structural module grouping is shared and produces useful groups such as `src/providers`, `src/services`, and `src/scanner` instead of collapsing everything into `src`.
-- ✅ Local Markdown and Local HTML now use separate architecture render surfaces: Markdown stays human-readable and omits raw architecture/excalidraw/dependency JSON, while HTML keeps rich visual payloads.
-- ✅ Per-file Local output is compact: repeated Local-mode banners and routine empty sections are gone; Uses/Used by are concise; description provenance is visible.
-- ✅ Project overview is question-first with **Where is what**, **How to run**, **Suggested reading path**, **Core files**, and **Undocumented files**.
-- ✅ Added a production Local code-map shell backed by the canonical model: Big Picture, file-size treemap, suggested reading path, dependency-reach scatter, description/export search, and connected file cards.
-- ✅ Cross-view interactions are connected: module focus isolates related edges, module click filters the treemap, file selections reveal the file card, and the card can jump to the full generated file documentation.
-- ✅ Local code-map hero surfaces detected run commands; Local `Ctrl/Cmd+K` focuses file/description/export search while the existing `/` documentation search remains available.
-- ✅ Big Picture uses a deterministic entry-point-driven layered module layout and clips arrows at module boundaries.
-- ✅ Local HTML passes `externalAssets: false`; CDN tags/theme URLs are conditionally omitted from Local output, while AI-format HTML keeps its existing external-asset behavior.
-- ✅ Sidebar webview now uses a per-render nonce CSP (`default-src 'none'`, nonce-locked script/style) and no longer relies on inline `style="..."` attributes.
-- ✅ Local Markdown and HTML file cards use portable workspace-relative source links with optional `#L<line>` fragments; no hard-coded GitHub URL or machine-specific `vscode://file` path is emitted.
-- ✅ Big Picture now has a dependency-free native SVG sketch treatment (turbulence/displacement) while treemap/scatter remain clean quantitative visuals.
-- ✅ Browser acceptance fixtures/assertions now cover Local code-map filtering, reading path, scatter/file-card navigation, search, relation navigation, responsive behavior, and zero external HTTP(S) requests. The browser suite has been authored but not executed in this environment.
-- ✅ Added/expanded targeted regression coverage for analyzer AST behavior, description provenance, README facts, canonical Local model, compact Markdown vs rich HTML, Local offline policy, and code-map interactions.
-- ⏳ Full repository regression execution and VSIX size/scan-latency measurement remain required before release verification. Direct sandbox clone currently fails because the environment cannot resolve `github.com`; this limitation does not affect GitHub connector writes.
+- ✅ Added Python environment-reference detection that ignores comments and strings.
+- ✅ Added trusted description provenance from TS/JS file/module docs, safe declaration docs, Python module docstrings, Rust module docs, Go package comments, exact README file descriptions, and exact README structural-module descriptions.
+- ✅ Added one canonical `LocalDocumentationModel` shared by Local Markdown and HTML.
+- ✅ Structural modules use shared second-level grouping such as `src/providers`, `src/services`, and `src/scanner`.
+- ✅ Local project docs are question-first: **Where is what**, **How to run**, **Referenced environment variables**, **Suggested reading path**, **Core files**, **Undocumented files**, and description-coverage facts.
+- ✅ Local per-file docs are compact, omit empty routine sections, show trusted description provenance, show Uses / Used by, environment references, and portable source/line links.
+- ✅ Local Markdown no longer carries raw architecture/whiteboard/dependency JSON, file-level graph payloads, or D2 duplication; it keeps one compact module Mermaid view.
+- ✅ Local HTML uses the question-first code map as its rich visual layer: module map, treemap, suggested reading path, dependency-reach scatter, file/description/export/environment search, connected file cards, source links, and factual handwritten notes.
+- ✅ Local code map supports cross-view navigation, module focus isolation, entry-point-driven layered layout, accessible search/listbox behavior, `Ctrl/Cmd+K` file search, and trusted module-description tooltips.
+- ✅ Local HTML disables required external CDN assets; the Local project-map experience is self-contained.
+- ✅ Local cache compatibility is now `local-documentation-cache-v7`.
+- ✅ Added nonce-based CSP to the sidebar webview.
+- ✅ New installs default to Local mode; malformed/legacy programmatic mode values still fall back to AI.
+- ✅ Default AI file-generation concurrency is 5, with a configurable maximum of 15.
+- ✅ Published canonical `documint.*` settings while preserving explicit `aiDocGenerator.*` values as deprecated compatibility aliases. Runtime reads/writes go through the shared namespace bridge; command IDs remain unchanged.
+- ✅ Removed obsolete activation events and deprecated `@types/marked`.
+- ✅ Added CONTRIBUTING, SECURITY, issue templates, PR checklist, and source-of-truth audit docs.
+- ✅ Retired the unused `localVisualBlueprint.ts` Local payload path and aligned Local browser/Jelly/architecture regressions with the code-map architecture.
+- ✅ Aggregate unit-test registration is currently consistent: every root `test/*.test.ts` module is imported by `test/all.test.ts`.
+- ⏳ Full local `npm test`, VSIX size comparison, and browser acceptance execution still require a network-enabled/materialized checkout. No CI was manually triggered in this implementation pass.
+- ⏳ README demo GIF compression remains pending; the binary is still excluded from VSIX packaging.
 
 ### Current next step
 
-1. Complete the remaining static compatibility review for the new Local code-map/source-link contracts.
-2. Execute full unit/browser regression and measure VSIX size + representative Local scan latency in an environment with repository/package access.
-3. Then return to repository safety work: package lock, `npm ci`, normal push/PR CI, and tag-based VSIX release. Do not manually trigger CI in this implementation session.
+1. Generate and commit `package-lock.json` from a network-enabled/local checkout.
+2. Switch CI/release install steps from `npm install` to `npm ci`.
+3. When explicitly allowed to run normal push CI, remove the `.github/ci-trigger` path gate and enable every `main` push.
+4. Run the full unit/browser regression suite and package a VSIX to measure bundle/package-size impact.
+5. Continue optional architecture cleanup (further splitting `htmlTemplate.ts` / sidebar webview internals) only after the current behavior is verified green.
 
 
 ---
