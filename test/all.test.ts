@@ -81,3 +81,5 @@ import "./sidebarCsp.test";
 import "./configurationPreference.test";
 
 import "./configurationNamespace.test";
+
+import "./htmlTemplatePolicy.test";
