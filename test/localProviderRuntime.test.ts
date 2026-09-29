@@ -66,3 +66,34 @@ test("sidebar exposes local presets and requires a local model without showing a
   assert.match(client, /e\.g\. qwen3:8b/);
   assert.match(client, /Enter model ID served by LM Studio/);
 });
+
+
+test("sidebar discovers local models through the fixed local-provider bridge", () => {
+  const host = readFileSync(
+    join(process.cwd(), "src/views/sidebarProvider.ts"),
+    "utf8",
+  );
+  const template = readFileSync(
+    join(process.cwd(), "src/views/sidebarTemplate.ts"),
+    "utf8",
+  );
+  const client = readFileSync(
+    join(process.cwd(), "src/views/sidebarClientScript.ts"),
+    "utf8",
+  );
+
+  assert.match(host, /case "discover-local-models":/);
+  assert.match(host, /discoverLocalProviderModels\(provider\)/);
+  assert.match(host, /type: "local-models"/);
+
+  assert.match(template, /list="localModelSuggestions"/);
+  assert.match(template, /id="localModelSuggestions"/);
+  assert.match(template, /id="localModelStatus"/);
+
+  assert.match(client, /function requestLocalProviderModels\(/);
+  assert.match(client, /type: 'discover-local-models'/);
+  assert.match(client, /case 'local-models':/);
+  assert.match(client, /function applyLocalProviderModels\(/);
+  assert.match(client, /models\.length === 1 && !modelInput\.value\.trim\(\)/);
+  assert.match(client, /You can still enter a model ID manually/);
+});
