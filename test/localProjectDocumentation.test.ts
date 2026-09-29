@@ -149,3 +149,37 @@ test("Local overview labels environment names as references rather than requirem
   assert.match(output, /\`API_URL\`/);
   assert.doesNotMatch(output, /Required environment variables/);
 });
+
+
+test("local project overview lists referenced environment variables conservatively", () => {
+  const envFiles: WorkspaceFile[] = [
+    {
+      path: "src/index.ts",
+      language: "typescript",
+      content: [
+        'const key = process.env.API_KEY;',
+        'const mode = import.meta.env.MODE;',
+      ].join("\n"),
+    },
+    {
+      path: "worker.py",
+      language: "python",
+      content: [
+        "import os",
+        'region = os.getenv("REGION")',
+      ].join("\n"),
+    },
+  ];
+  const envProject = analyzer.analyzeProject(envFiles);
+  const output = renderLocalProjectDocumentation({
+    projectName: "Env Example",
+    files: envFiles,
+    project: envProject,
+  });
+
+  assert.match(output, /## Referenced environment variables/);
+  assert.match(output, /`API_KEY`/);
+  assert.match(output, /`MODE`/);
+  assert.match(output, /`REGION`/);
+  assert.match(output, /does not claim they are required/i);
+});
