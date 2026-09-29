@@ -338,3 +338,27 @@ test("TypeScript AST extracts only real static environment references", () => {
     "VITE_PUBLIC_URL",
   ]);
 });
+
+
+test("TypeScript environment references come from AST expressions, not comments or strings", () => {
+  const analysis = analyzer.analyzeFile(
+    file(
+      "src/env.ts",
+      "typescript",
+      [
+        'const key = process.env.API_KEY;',
+        'const region = process.env["REGION"];',
+        "const mode = import.meta.env.MODE;",
+        '// const fake = process.env.COMMENT_ONLY;',
+        'const text = "process.env.STRING_ONLY";',
+        'const dynamic = process.env[name];',
+      ].join("\n"),
+    ),
+  );
+
+  assert.deepEqual(analysis.referencedEnvironmentVariables, [
+    "API_KEY",
+    "MODE",
+    "REGION",
+  ]);
+});
