@@ -104,3 +104,20 @@ test("README project structure documents public facades and implementation modul
     /Runtime AI code should import the public facade modules/,
   );
 });
+
+
+test("release workflow publishes VSIX as a tag release asset without mutating main", () => {
+  const workflow = readFileSync(
+    join(process.cwd(), ".github/workflows/release.yml"),
+    "utf8",
+  );
+
+  assert.match(workflow, /tags:\s*\n\s*- "v\*"/);
+  assert.match(workflow, /npx @vscode\/vsce package --out/);
+  assert.match(workflow, /gh release (?:create|upload)/);
+  assert.match(workflow, /gh release upload/);
+  assert.match(workflow, /gh release create/);
+  assert.doesNotMatch(workflow, /git\s+push/);
+  assert.doesNotMatch(workflow, /git\s+add\s+-f/);
+  assert.doesNotMatch(workflow, /HEAD:main/);
+});
