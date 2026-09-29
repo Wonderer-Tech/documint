@@ -71,11 +71,22 @@ export class LocalDocumentationGenerator {
     this.throwIfCancelled("parse");
     const outputFormat = options.outputFormat ?? "both";
     const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, DOCUMINT_OUTPUT_DIRECTORY);
-    const readme = await this.readOptionalProjectReadme(workspaceFolder);
+    const readme = await this.readOptionalProjectFile(
+      workspaceFolder,
+      ["README.md", "README.MD", "readme.md"],
+    );
+    const makefile = await this.readOptionalProjectFile(
+      workspaceFolder,
+      ["Makefile", "makefile"],
+    );
+    const dockerfile = await this.readOptionalProjectFile(
+      workspaceFolder,
+      ["Dockerfile", "dockerfile"],
+    );
     const cacheKey = buildLocalDocumentationCacheKey(
       workspaceFolder.name,
       files,
-      { readme },
+      { readme, makefile, dockerfile },
     );
 
     this.report({
@@ -130,7 +141,7 @@ export class LocalDocumentationGenerator {
       workspaceFolder.name,
       files,
       project,
-      { readme },
+      { readme, makefile, dockerfile },
     );
 
     this.throwIfCancelled("write");
@@ -196,16 +207,17 @@ export class LocalDocumentationGenerator {
     return outputPaths;
   }
 
-  private async readOptionalProjectReadme(
+  private async readOptionalProjectFile(
     workspaceFolder: vscode.WorkspaceFolder,
+    names: string[],
   ): Promise<string | undefined> {
-    for (const name of ["README.md", "README.MD", "readme.md"]) {
+    for (const name of names) {
       const uri = vscode.Uri.joinPath(workspaceFolder.uri, name);
       try {
         const content = await vscode.workspace.fs.readFile(uri);
         return Buffer.from(content).toString("utf-8");
       } catch {
-        // README is optional. Try the next common casing.
+        // Optional project metadata/build file. Try the next known casing.
       }
     }
     return undefined;
