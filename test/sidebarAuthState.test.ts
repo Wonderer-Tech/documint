@@ -3,34 +3,40 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-test("custom provider renders a neutral optional API-key state", () => {
-  const source = readFileSync(
-    join(process.cwd(), "src/views/sidebarProvider.ts"),
-    "utf8",
-  );
+const providerSource = readFileSync(
+  join(process.cwd(), "src/views/sidebarProvider.ts"),
+  "utf8",
+);
+const styleSource = readFileSync(
+  join(process.cwd(), "src/views/sidebarStyles.ts"),
+  "utf8",
+);
+const clientSource = readFileSync(
+  join(process.cwd(), "src/views/sidebarClientScript.ts"),
+  "utf8",
+);
 
-  assert.match(source, /\.auth-status\.optional/);
-  assert.match(source, /selectedProvider === 'custom'/);
-  assert.match(source, /authText\.textContent = 'API Key optional'/);
-  assert.match(source, /setApiKeyStatus\(s\.apiKeyConfigured, s\.settings && s\.settings\.provider\)/);
-  assert.match(source, /setApiKeyStatus\(msg\.configured, msg\.provider\)/);
+test("custom provider renders a neutral optional API-key state", () => {
+  assert.match(styleSource, /\.auth-status\.optional/);
+  assert.match(clientSource, /selectedProvider === 'custom'/);
+  assert.match(clientSource, /authText\.textContent = 'API Key optional'/);
+  assert.match(
+    clientSource,
+    /setApiKeyStatus\(s\.apiKeyConfigured, s\.settings && s\.settings\.provider\)/,
+  );
+  assert.match(clientSource, /setApiKeyStatus\(msg\.configured, msg\.provider\)/);
 });
 
 test("provider switches refresh Secret Storage status for the selected provider", () => {
-  const source = readFileSync(
-    join(process.cwd(), "src/views/sidebarProvider.ts"),
-    "utf8",
-  );
-
   assert.match(
-    source,
+    providerSource,
     /if \(typeof payload\.provider === "string"\) \{\s*await this\._refreshSelectedProviderApiKeyStatus\(\);/,
   );
   assert.match(
-    source,
+    providerSource,
     /const key = await this\._secretManager\.getApiKey\(provider\);/,
   );
-  assert.match(source, /this\.updateApiKeyStatus\(!!key, provider\)/);
+  assert.match(providerSource, /this\.updateApiKeyStatus\(!!key, provider\)/);
 });
 
 test("extension API-key refresh carries provider identity to the sidebar", () => {
