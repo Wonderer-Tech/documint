@@ -95,3 +95,5 @@ import "./localProviderPolicy.test";
 import "./localProviderRuntime.test";
 
 import "./localProviderDiscovery.test";
+
+import "./localBuildFacts.test";
