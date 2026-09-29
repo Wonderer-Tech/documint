@@ -55,6 +55,29 @@ export interface LocalDocumentationModuleEdge {
   count: number;
 }
 
+export interface LocalPackageScript {
+  name: string;
+  command: string;
+}
+
+export interface LocalVsCodeCommand {
+  id: string;
+  title?: string;
+}
+
+export interface LocalVsCodeSetting {
+  key: string;
+  defaultValue?: unknown;
+}
+
+export interface LocalGettingStartedFacts {
+  packageManager: "npm";
+  scripts: LocalPackageScript[];
+  vscodeCommands: LocalVsCodeCommand[];
+  vscodeSettings: LocalVsCodeSetting[];
+  extensionEntry?: string;
+}
+
 export interface LocalDocumentationModel {
   projectName: string;
   files: LocalDocumentationFile[];
@@ -68,6 +91,7 @@ export interface LocalDocumentationModel {
   totalExports: number;
   totalTodos: number;
   languages: string[];
+  gettingStarted?: LocalGettingStartedFacts;
 }
 
 export interface BuildLocalDocumentationModelOptions {
@@ -139,6 +163,7 @@ export function buildLocalDocumentationModel(
 
   const modules = buildModules(fileModels);
   const moduleEdges = buildModuleEdges(project.internalDependencies);
+  const gettingStarted = extractGettingStartedFacts(sortedFiles);
 
   return {
     projectName: cleanText(projectName) || "Project",
@@ -168,7 +193,97 @@ export function buildLocalDocumentationModel(
     languages: uniqueSorted(
       fileModels.map((file) => file.language).filter(Boolean),
     ),
+    gettingStarted,
   };
+}
+
+function extractGettingStartedFacts(
+  files: WorkspaceFile[],
+): LocalGettingStartedFacts | undefined {
+  const manifest = files.find(
+    (file) => normalizeProjectPath(file.path) === "package.json",
+  );
+  if (!manifest) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(manifest.content) as {
+      main?: unknown;
+      scripts?: unknown;
+      contributes?: {
+        commands?: unknown;
+        configuration?: {
+          properties?: unknown;
+        };
+      };
+    };
+
+    const scripts =
+      parsed.scripts && typeof parsed.scripts === "object"
+        ? Object.entries(parsed.scripts as Record<string, unknown>)
+            .filter((entry): entry is [string, string] =>
+              typeof entry[1] === "string",
+            )
+            .map(([name, command]) => ({ name, command }))
+            .sort((a, b) => a.name.localeCompare(b.name))
+        : [];
+
+    const vscodeCommands = Array.isArray(parsed.contributes?.commands)
+      ? parsed.contributes!.commands
+          .filter(
+            (value): value is { command: string; title?: string } =>
+              Boolean(
+                value &&
+                typeof value === "object" &&
+                typeof (value as { command?: unknown }).command === "string",
+              ),
+          )
+          .map((value) => ({
+            id: value.command,
+            title: typeof value.title === "string" ? value.title : undefined,
+          }))
+          .sort((a, b) => a.id.localeCompare(b.id))
+      : [];
+
+    const properties = parsed.contributes?.configuration?.properties;
+    const vscodeSettings =
+      properties && typeof properties === "object"
+        ? Object.entries(properties as Record<string, unknown>)
+            .map(([key, value]) => ({
+              key,
+              defaultValue:
+                value &&
+                typeof value === "object" &&
+                "default" in value
+                  ? (value as { default?: unknown }).default
+                  : undefined,
+            }))
+            .sort((a, b) => a.key.localeCompare(b.key))
+        : [];
+
+    const extensionEntry =
+      typeof parsed.main === "string" ? parsed.main : undefined;
+
+    if (
+      scripts.length === 0 &&
+      vscodeCommands.length === 0 &&
+      vscodeSettings.length === 0 &&
+      !extensionEntry
+    ) {
+      return undefined;
+    }
+
+    return {
+      packageManager: "npm",
+      scripts,
+      vscodeCommands,
+      vscodeSettings,
+      extensionEntry,
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 function buildDependencyIndex(project: ProjectAnalysis): {
