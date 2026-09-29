@@ -17,6 +17,12 @@ import type { LocalPresetProviderName } from "./localProviderPolicy";
 
 type MetadataProviderName = GuardedProviderName | LocalPresetProviderName | "custom";
 
+function isGuardedProviderName(
+  provider: MetadataProviderName,
+): provider is GuardedProviderName {
+  return provider in PROVIDER_DEFAULT_MODELS;
+}
+
 const CUSTOM_DEFAULT_MODEL = "default";
 
 /**
@@ -42,7 +48,7 @@ export function withModelMetadata(
   const providerName = provider.name as MetadataProviderName;
   if (
     providerName !== "custom" &&
-    !(providerName in PROVIDER_DEFAULT_MODELS)
+    !isGuardedProviderName(providerName)
   ) {
     return provider;
   }
