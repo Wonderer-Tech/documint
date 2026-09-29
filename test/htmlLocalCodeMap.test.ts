@@ -148,3 +148,16 @@ test("Local Big Picture layout starts from entry modules and clips edges at modu
   assert.match(fragments.script, /var end = clipModuleEdge\(b, a\)/);
   assert.doesNotMatch(fragments.script, /Math\.ceil\(Math\.sqrt\(modules\.length\)\)/);
 });
+
+
+test("Local code map source links stay relative and line-addressable", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /function relativeSourceHref/);
+  assert.match(fragments.script, /return '\.\.\/' \+ encoded/);
+  assert.match(fragments.script, /'#L' \+ line/);
+  assert.match(fragments.script, /Open source/);
+  assert.match(fragments.script, /exportLink\.href = relativeSourceHref\(file\.path, item\.line\)/);
+  assert.doesNotMatch(fragments.script, /github\.com\/Wonderer-Tech/);
+  assert.doesNotMatch(fragments.script, /vscode:\/\/file/);
+});
