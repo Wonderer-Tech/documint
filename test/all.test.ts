@@ -80,3 +80,5 @@ import "./htmlLocalCodeMap.test";
 import "./sidebarCsp.test";
 
 import "./configurationPreference.test";
+
+import "./configurationNamespace.test";
