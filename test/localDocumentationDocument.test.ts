@@ -55,7 +55,7 @@ test("Local document assembly remains independent of provider/model inputs", () 
 });
 
 
-test("Markdown stays compact while HTML retains rich Local visual payloads", () => {
+test("Markdown stays compact and Local HTML uses the code map instead of legacy visual payloads", () => {
   const analyzer = new SourceAnalyzer();
   const project = analyzer.analyzeProject(files);
   const document = buildLocalDocumentationDocument("Example Project", files, project);
@@ -67,9 +67,13 @@ test("Markdown stays compact while HTML retains rich Local visual payloads", () 
   assert.doesNotMatch(document.markdown, /### Module Architecture — D2/);
   assert.match(document.markdown, /### Module Architecture/);
 
-  assert.match(document.html, /architecture-blueprint/);
-  assert.match(document.html, /excalidraw-blueprint/);
-  assert.match(document.html, /dependency-graph/);
+  assert.match(document.html, /data-documint-local-code-map/);
+  assert.match(document.html, /Find your way through the code/);
+  assert.doesNotMatch(document.html, /language-architecture-blueprint/);
+  assert.doesNotMatch(document.html, /language-excalidraw-blueprint/);
+  assert.doesNotMatch(document.html, /language-dependency-graph/);
+  assert.doesNotMatch(document.html, /File Dependency Graph — Mermaid/);
+  assert.doesNotMatch(document.html, /Module Architecture — D2/);
 });
 
 
