@@ -7,6 +7,12 @@ import type {
 import type { WorkspaceFile } from "../types";
 import { extractLocalReadmeFacts } from "./localReadmeFacts";
 import {
+  parseDockerfileFacts,
+  parseMakefileTargets,
+  type LocalDockerfileFacts,
+  type LocalMakeTarget,
+} from "./localBuildFacts";
+import {
   normalizeProjectPath,
   structuralModuleName,
 } from "./structuralModule";
@@ -77,12 +83,19 @@ export interface LocalVsCodeSetting {
 }
 
 export interface LocalGettingStartedFacts {
-  packageJsonPath: string;
-  packageManager: "npm" | "pnpm" | "yarn" | "bun";
+  packageJsonPath?: string;
+  packageManager?: "npm" | "pnpm" | "yarn" | "bun";
   extensionEntry?: string;
   scripts: LocalPackageScript[];
   vscodeCommands: LocalVsCodeCommand[];
   vscodeSettings: LocalVsCodeSetting[];
+  makefile?: {
+    path: string;
+    targets: LocalMakeTarget[];
+  };
+  dockerfile?: LocalDockerfileFacts & {
+    path: string;
+  };
 }
 
 export interface LocalReadingPathItem {
@@ -111,6 +124,8 @@ export interface LocalDocumentationModel {
 
 export interface BuildLocalDocumentationModelOptions {
   readme?: string;
+  makefile?: string;
+  dockerfile?: string;
 }
 
 export function buildLocalDocumentationModel(
@@ -184,7 +199,10 @@ export function buildLocalDocumentationModel(
     readmeFacts.descriptionsByModule,
   );
   const moduleEdges = buildModuleEdges(project.internalDependencies);
-  const gettingStarted = extractGettingStartedFacts(sortedFiles);
+  const gettingStarted = extractGettingStartedFacts(
+    sortedFiles,
+    options,
+  );
   const referencedEnvironmentVariables = uniqueSorted(
     fileModels.flatMap((file) => file.referencedEnvironmentVariables),
   );
@@ -349,34 +367,42 @@ function buildModuleEdges(
 
 function extractGettingStartedFacts(
   files: WorkspaceFile[],
+  supplemental: BuildLocalDocumentationModelOptions,
 ): LocalGettingStartedFacts | undefined {
   const packageFile = files.find(
     (file) => normalizeProjectPath(file.path) === "package.json",
   );
-  if (!packageFile) {
-    return undefined;
-  }
 
   let manifest: any;
-  try {
-    manifest = JSON.parse(packageFile.content);
-  } catch {
-    return undefined;
+  if (packageFile) {
+    try {
+      manifest = JSON.parse(packageFile.content);
+    } catch {
+      manifest = undefined;
+    }
   }
 
-  const packageManager = detectPackageManager(manifest?.packageManager);
-  const scripts = Object.entries(
-    manifest?.scripts && typeof manifest.scripts === "object"
-      ? manifest.scripts
-      : {},
-  )
-    .filter((entry): entry is [string, string] => typeof entry[1] === "string")
-    .map(([name, command]) => ({
-      name,
-      command,
-      run: `${packageManager} run ${name}`,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const packageManager = manifest
+    ? detectPackageManager(manifest.packageManager)
+    : undefined;
+
+  const scripts: LocalPackageScript[] = manifest
+    ? Object.entries(
+        manifest?.scripts && typeof manifest.scripts === "object"
+          ? manifest.scripts
+          : {},
+      )
+        .filter(
+          (entry): entry is [string, string] =>
+            typeof entry[1] === "string",
+        )
+        .map(([name, command]) => ({
+          name,
+          command,
+          run: `${packageManager ?? "npm"} run ${name}`,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    : [];
 
   const vscodeCommands: LocalVsCodeCommand[] = Array.isArray(
     manifest?.contributes?.commands,
@@ -423,7 +449,9 @@ function extractGettingStartedFacts(
         .map(([key, value]) => ({
           key,
           defaultValue:
-            value && typeof value === "object" && "default" in (value as object)
+            value &&
+            typeof value === "object" &&
+            "default" in (value as object)
               ? (value as any).default
               : undefined,
         }));
@@ -433,24 +461,61 @@ function extractGettingStartedFacts(
     );
 
   const extensionEntry =
-    typeof manifest?.main === "string" ? manifest.main : undefined;
+    typeof manifest?.main === "string"
+      ? manifest.main
+      : undefined;
+
+  const makeTargets = parseMakefileTargets(
+    supplemental.makefile,
+  );
+  const makefile =
+    supplemental.makefile !== undefined
+      ? {
+          path: "Makefile",
+          targets: makeTargets,
+        }
+      : undefined;
+
+  const dockerFacts = parseDockerfileFacts(
+    supplemental.dockerfile,
+  );
+  const dockerfile = dockerFacts
+    ? {
+        path: "Dockerfile",
+        ...dockerFacts,
+      }
+    : undefined;
+
+  if (
+    !packageFile &&
+    !makefile &&
+    !dockerfile
+  ) {
+    return undefined;
+  }
 
   if (
     scripts.length === 0 &&
     vscodeCommands.length === 0 &&
     vscodeSettings.length === 0 &&
-    !extensionEntry
+    !extensionEntry &&
+    !makefile &&
+    !dockerfile
   ) {
     return undefined;
   }
 
   return {
-    packageJsonPath: "package.json",
+    packageJsonPath: packageFile
+      ? "package.json"
+      : undefined,
     packageManager,
     extensionEntry,
     scripts,
     vscodeCommands,
     vscodeSettings,
+    makefile,
+    dockerfile,
   };
 }
 
