@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { SourceAnalyzer } from "../src/analyzer/sourceAnalyzer";
 import type { WorkspaceFile } from "../src/types";
 
@@ -200,7 +201,6 @@ test("TypeScript AST honors explicit export lists for local declarations", () =>
 
 
 test("DocuMint BaseAIProvider is detected from the real source file", () => {
-  const { readFileSync } = require("node:fs") as typeof import("node:fs");
   const source = readFileSync(
     "src/providers/aiProvider.ts",
     "utf8",
