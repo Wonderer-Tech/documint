@@ -9,6 +9,28 @@
 
 ---
 
+## Implementation status
+
+_Last updated: 2026-09-30_
+
+- ✅ Retired the obsolete 1.0.6/1.0.7 navigation/reader source-repair workflows and Python repair scripts after verifying their intended markers already exist in current source.
+- ⏸ Normal CI trigger + lockfile migration is still pending. No workflow was manually triggered during this implementation pass.
+- ✅ Added an AST-backed JS/TS-family analyzer using the TypeScript compiler API behind the existing public `SourceAnalyzer` facade.
+- ✅ Added symbol scope metadata for module/class declarations.
+- ✅ Multiline imports are now structurally parsed.
+- ✅ Multiline functions/methods and `export abstract class` declarations are structurally parsed.
+- ✅ Function-local temporary variables are excluded from the JS/TS module symbol list.
+- ✅ JS/TS TODO/FIXME/HACK extraction now uses TypeScript comment trivia, so strings containing TODO text are not treated as comments.
+- ✅ Added targeted AST regression coverage plus a real-source self-check for `BaseAIProvider`.
+- ✅ New AST module passed an isolated strict TypeScript compile check against the compiler API in the implementation environment.
+- ⏳ Full repository regression execution and VSIX size/scan-latency measurement remain required before this analyzer slice is considered release-verified.
+
+### Current next step
+
+Finish verification of the analyzer slice, then build the canonical Local documentation model and trustworthy description extraction before changing the production HTML UI.
+
+---
+
 ## 1. Goal
 
 Make DocuMint answer the questions a developer actually asks, in this order:
