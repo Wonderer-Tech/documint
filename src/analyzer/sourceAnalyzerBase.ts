@@ -17,7 +17,11 @@ export type SourceSymbolScope = "module" | "class" | "function" | "unknown";
 
 export interface SourceDescription {
   text: string;
-  source: "file-comment" | "declaration-comment";
+  source:
+    | "file-comment"
+    | "declaration-comment"
+    | "module-docstring"
+    | "package-comment";
   line?: number;
 }
 
@@ -249,6 +253,7 @@ export class SourceAnalyzer {
       imports: this.uniqueImports(imports),
       symbols: this.uniqueSymbols(symbols),
       todos,
+      description: this.extractStructuredFileDescription(file),
     };
   }
 
@@ -368,6 +373,176 @@ export class SourceAnalyzer {
       "TODO/FIXME/HACK comments:",
       todos.join("\n") || "none detected",
     ].join("\n");
+  }
+
+  private extractStructuredFileDescription(
+    file: WorkspaceFile,
+  ): SourceDescription | undefined {
+    switch (file.language) {
+      case "python":
+        return this.extractPythonModuleDocstring(file.content);
+      case "rust":
+        return this.extractRustModuleDocumentation(file.content);
+      case "go":
+        return this.extractGoPackageComment(file.content);
+      default:
+        return undefined;
+    }
+  }
+
+  private extractPythonModuleDocstring(
+    content: string,
+  ): SourceDescription | undefined {
+    const lines = content.split(/\r?\n/);
+    let index = 0;
+
+    if (lines[0]?.startsWith("#!")) {
+      index++;
+    }
+
+    while (
+      index < lines.length &&
+      (!lines[index].trim() || lines[index].trimStart().startsWith("#"))
+    ) {
+      index++;
+    }
+
+    if (index >= lines.length) {
+      return undefined;
+    }
+
+    const first = lines[index];
+    const startMatch = first.match(
+      /^\s*[rRuUbBfF]*(?:"""|''')/,
+    );
+    if (!startMatch) {
+      return undefined;
+    }
+
+    const delimiter = startMatch[0].includes('"""') ? '"""' : "'''";
+    const openingIndex = first.indexOf(delimiter);
+    const collected: string[] = [];
+    let remainder = first.slice(openingIndex + delimiter.length);
+    const sameLineClose = remainder.indexOf(delimiter);
+
+    if (sameLineClose >= 0) {
+      remainder = remainder.slice(0, sameLineClose);
+      const text = this.cleanDescriptionText(remainder);
+      return text
+        ? {
+            text,
+            source: "module-docstring",
+            line: index + 1,
+          }
+        : undefined;
+    }
+
+    if (remainder) {
+      collected.push(remainder);
+    }
+
+    for (let lineIndex = index + 1; lineIndex < lines.length; lineIndex++) {
+      const line = lines[lineIndex];
+      const closeIndex = line.indexOf(delimiter);
+      if (closeIndex >= 0) {
+        collected.push(line.slice(0, closeIndex));
+        const text = this.cleanDescriptionText(collected.join(" "));
+        return text
+          ? {
+              text,
+              source: "module-docstring",
+              line: index + 1,
+            }
+          : undefined;
+      }
+      collected.push(line);
+    }
+
+    return undefined;
+  }
+
+  private extractRustModuleDocumentation(
+    content: string,
+  ): SourceDescription | undefined {
+    const lines = content.split(/\r?\n/);
+    const collected: string[] = [];
+    let startLine: number | undefined;
+    let started = false;
+
+    for (let index = 0; index < lines.length; index++) {
+      const trimmed = lines[index].trim();
+      if (!started && !trimmed) {
+        continue;
+      }
+      if (trimmed.startsWith("//!")) {
+        started = true;
+        startLine ??= index + 1;
+        collected.push(trimmed.slice(3).trim());
+        continue;
+      }
+      if (started && !trimmed) {
+        collected.push("");
+        continue;
+      }
+      break;
+    }
+
+    const text = this.cleanDescriptionText(collected.join(" "));
+    return text && startLine
+      ? {
+          text,
+          source: "file-comment",
+          line: startLine,
+        }
+      : undefined;
+  }
+
+  private extractGoPackageComment(
+    content: string,
+  ): SourceDescription | undefined {
+    const lines = content.split(/\r?\n/);
+    const packageIndex = lines.findIndex((line) =>
+      /^\s*package\s+[A-Za-z_]\w*/.test(line),
+    );
+    if (packageIndex <= 0) {
+      return undefined;
+    }
+
+    const packageName =
+      lines[packageIndex].match(/^\s*package\s+([A-Za-z_]\w*)/)?.[1];
+    if (!packageName) {
+      return undefined;
+    }
+
+    const collected: string[] = [];
+    let startIndex = packageIndex;
+
+    for (let index = packageIndex - 1; index >= 0; index--) {
+      const trimmed = lines[index].trim();
+      if (!trimmed.startsWith("//")) {
+        break;
+      }
+      startIndex = index;
+      collected.unshift(trimmed.slice(2).trim());
+    }
+
+    const text = this.cleanDescriptionText(collected.join(" "));
+    if (!text || !new RegExp(`^Package\\s+${packageName}\\b`).test(text)) {
+      return undefined;
+    }
+
+    return {
+      text,
+      source: "package-comment",
+      line: startIndex + 1,
+    };
+  }
+
+  private cleanDescriptionText(value: string): string {
+    return String(value)
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 500);
   }
 
   private extractImports(
