@@ -599,7 +599,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   </div>
 </div>
 
-<div class="section" id="authSection">
+<div class="section hidden" id="authSection">
   <div class="section-label">
     Authentication
     <div class="section-label-line"></div>
@@ -630,7 +630,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   </div>
 </div>
 
-<div class="section" id="providerSection">
+<div class="section hidden" id="providerSection">
   <div class="section-label">
     Provider &amp; Model
     <div class="section-label-line"></div>
@@ -668,13 +668,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   <div class="field">
     <label class="field-label">Generation Mode</label>
     <select id="generationMode">
-      <option value="ai" selected>AI Documentation</option>
-      <option value="local">Local Documentation — No AI</option>
+      <option value="ai">AI Documentation</option>
+      <option value="local" selected>Local Documentation — No AI</option>
     </select>
-    <div class="field-help hidden" id="localModeHelp">Runs entirely on this machine. No API key, internet connection, or AI model required.</div>
+    <div class="field-help" id="localModeHelp">Runs entirely on this machine. No API key, internet connection, or AI model required.</div>
   </div>
 
-  <div class="field" id="depthField">
+  <div class="field hidden" id="depthField">
     <label class="field-label">Documentation Depth</label>
     <select id="depth">
       <option value="simple">Simple — Plain English overview</option>
@@ -698,7 +698,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <polygon points="5 3 19 12 5 21 5 3"/>
       </svg>
-      <span id="generateBtnText">Generate Documentation</span>
+      <span id="generateBtnText">Generate Local Documentation</span>
     </button>
     <button class="btn btn-secondary" id="cancelBtn" disabled>
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
