@@ -112,8 +112,11 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   .local-map-question {
     margin: 4px 0 0;
     color: var(--accent);
+    font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
     font-size: 13px;
-    font-style: italic;
+    font-style: normal;
+    transform: rotate(-.25deg);
+    transform-origin: left center;
   }
   .local-map-hint {
     max-width: 540px;
@@ -138,6 +141,8 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     fill: var(--bg-secondary);
     stroke: var(--border);
     stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
   .local-map-module-node:hover rect,
   .local-map-module-node:focus rect {
@@ -170,6 +175,7 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   .local-map-module-edge {
     stroke: color-mix(in srgb, var(--text-muted) 58%, transparent);
     stroke-width: 1.35;
+    stroke-linecap: round;
     fill: none;
   }
   .local-map-module-edge.strong {
@@ -840,6 +846,28 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
     svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
 
     var defs = makeSvg('defs', {}, svg);
+    var sketchFilter = makeSvg('filter', {
+      id: 'localMapSketch',
+      x: '-8%',
+      y: '-12%',
+      width: '116%',
+      height: '124%'
+    }, defs);
+    makeSvg('feTurbulence', {
+      type: 'fractalNoise',
+      baseFrequency: '0.018',
+      numOctaves: 1,
+      seed: 11,
+      result: 'noise'
+    }, sketchFilter);
+    makeSvg('feDisplacementMap', {
+      in: 'SourceGraphic',
+      in2: 'noise',
+      scale: 1.15,
+      xChannelSelector: 'R',
+      yChannelSelector: 'G'
+    }, sketchFilter);
+
     var marker = makeSvg('marker', {
       id: 'localMapArrow',
       markerWidth: 8,
@@ -862,6 +890,7 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
         x2: end.x,
         y2: end.y,
         class: 'local-map-module-edge' + (edge.count >= 3 ? ' strong' : ''),
+        filter: 'url(#localMapSketch)',
         'data-from': edge.from,
         'data-to': edge.to,
         'marker-end': 'url(#localMapArrow)'
@@ -895,7 +924,8 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
         y: pos.y - 31,
         width: 184,
         height: 62,
-        rx: 12
+        rx: 12,
+        filter: 'url(#localMapSketch)'
       }, g);
       var title = makeSvg('text', {
         x: pos.x,
