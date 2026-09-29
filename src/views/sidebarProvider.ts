@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { getDocuMintConfiguration } from "../config/configuration";
 import { randomBytes } from "crypto";
 import { SecretStorageManager } from "../config/secretStorage";
 import { resolveProviderSelection } from "../providers/providerSelection";
@@ -202,7 +203,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
 
   private async _restoreState() {
-    const config = vscode.workspace.getConfiguration("aiDocGenerator");
+    const config = getDocuMintConfiguration();
     const selection = resolveProviderSelection(
       config.get<string>("aiProvider") || this._state.settings.provider,
       config.get<string>("model") || this._state.settings.model,
@@ -237,7 +238,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
 
   private async _persistSettings(payload: Record<string, unknown>) {
-    const config = vscode.workspace.getConfiguration("aiDocGenerator");
+    const config = getDocuMintConfiguration();
     const updates: Array<[string, unknown]> = [];
 
     if (typeof payload.generationMode === "string") {
