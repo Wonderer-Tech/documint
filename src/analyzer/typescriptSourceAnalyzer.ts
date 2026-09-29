@@ -203,6 +203,15 @@ function cleanJSDocSummary(value: string): string {
       }
       continue;
     }
+
+    const fileTag = line.match(/^@(?:file|module)\b\s*(.*)$/);
+    if (fileTag) {
+      if (fileTag[1]) {
+        summary.push(fileTag[1]);
+      }
+      continue;
+    }
+
     if (line.startsWith("@")) {
       break;
     }
