@@ -14,18 +14,26 @@ export interface LocalArchitectureDocumentationInput {
   project: ProjectAnalysis;
 }
 
+export interface LocalArchitectureRenderOptions {
+  surface?: "markdown" | "html";
+}
+
 export function renderLocalArchitectureDocumentation(
   input: LocalArchitectureDocumentationInput,
+  options: LocalArchitectureRenderOptions = {},
 ): string {
   return renderLocalArchitectureDocumentationFromModel(
     buildLocalDocumentationModel(input.projectName, input.files, input.project),
+    options,
   );
 }
 
 export function renderLocalArchitectureDocumentationFromModel(
   model: LocalDocumentationModel,
+  options: LocalArchitectureRenderOptions = {},
 ): string {
-  return [
+  const surface = options.surface ?? "html";
+  const sections = [
     "## Architecture & Dependencies",
     "",
     `> Deterministic architecture view for ${inlineCode(model.projectName)}. Relationships below come only from resolved source imports; no AI interpretation is used.`,
@@ -33,6 +41,23 @@ export function renderLocalArchitectureDocumentationFromModel(
     "### Module Relationships",
     "",
     renderModuleRelationshipTable(model),
+  ];
+
+  if (surface === "markdown") {
+    if (model.modules.length <= 15) {
+      sections.push(
+        "",
+        "### Module Architecture",
+        "",
+        "```mermaid",
+        renderModuleMermaid(model),
+        "```",
+      );
+    }
+    return sections.join("\n");
+  }
+
+  sections.push(
     "",
     renderLocalArchitectureVisualSectionsFromModel(model),
     "",
@@ -57,7 +82,9 @@ export function renderLocalArchitectureDocumentationFromModel(
     "### Internal Dependency Edges",
     "",
     renderDependencyTable(model),
-  ].join("\n");
+  );
+
+  return sections.join("\n");
 }
 
 function renderModuleRelationshipTable(model: LocalDocumentationModel): string {
