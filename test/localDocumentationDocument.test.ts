@@ -39,7 +39,7 @@ test("complete Local document combines overview, architecture, and per-file fact
   assert.match(document.markdown, /No AI inference, model, API key, or external provider is used/);
   assert.match(document.html, /Example Project — Local Documentation/);
   assert.match(document.html, /href="#architecture-dependencies"/);
-  assert.match(document.html, /language-mermaid/);
+  assert.doesNotMatch(document.html, /language-mermaid/);
   assert.match(document.html, /data-documint-local-code-map/);
   assert.match(document.html, /How do the parts fit together\?/);
   assert.match(document.html, /Which files are used by the most project files\?/);
