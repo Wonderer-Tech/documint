@@ -60,6 +60,8 @@ export function renderLocalFileDocumentationFromModel(
       : "> _No module-level description found._",
     "",
     `**Module:** ${inlineCode(file.module)} · **Language:** ${inlineCode(file.language)} · **Lines:** ${file.lineCount}`,
+    "",
+    `**Source:** [Open file](${relativeSourceHref(file.path)})`,
   ];
 
   if (file.uses.length > 0) {
