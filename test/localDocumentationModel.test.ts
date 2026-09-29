@@ -157,6 +157,7 @@ test("canonical model extracts deterministic package scripts and VS Code metadat
 
   assert.ok(model.gettingStarted);
   assert.equal(model.gettingStarted.packageJsonPath, "package.json");
+  assert.equal(model.gettingStarted.packageManager, "npm");
   assert.equal(model.gettingStarted.extensionEntry, "./dist/extension.js");
   assert.deepEqual(model.gettingStarted.scripts, [
     { name: "compile", command: "tsc --noEmit", run: "npm run compile" },
@@ -197,4 +198,27 @@ test("canonical Local model aggregates verified environment references", () => {
       ?.referencedEnvironmentVariables,
     ["API_TOKEN", "API_URL"],
   );
+});
+
+
+test("canonical model derives npm-compatible script runners from packageManager", () => {
+  for (const [packageManager, expected] of [
+    ["pnpm@9.15.4", "pnpm run build"],
+    ["yarn@4.5.0", "yarn run build"],
+    ["bun@1.2.0", "bun run build"],
+    ["npm@10.9.0", "npm run build"],
+  ] as const) {
+    const manifest: WorkspaceFile = {
+      path: "package.json",
+      language: "json",
+      content: JSON.stringify({
+        packageManager,
+        scripts: { build: "tsc --noEmit" },
+      }),
+    };
+    const project = new SourceAnalyzer().analyzeProject([manifest]);
+    const model = buildLocalDocumentationModel("Runner", [manifest], project);
+
+    assert.equal(model.gettingStarted?.scripts[0]?.run, expected);
+  }
 });
