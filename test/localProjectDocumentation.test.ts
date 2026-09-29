@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { SourceAnalyzer } from "../src/analyzer/sourceAnalyzer";
-import { renderLocalProjectDocumentation } from "../src/services/localProjectDocumentation";
+import {
+  renderLocalProjectDocumentation,
+  renderLocalProjectDocumentationFromModel,
+} from "../src/services/localProjectDocumentation";
+import { buildLocalDocumentationModel } from "../src/services/localDocumentationModel";
 import type { WorkspaceFile } from "../src/types";
 
 const files: WorkspaceFile[] = [
@@ -217,4 +221,41 @@ test("local project facts report trusted-description coverage", () => {
 
   assert.match(output, /\*\*Files with trusted descriptions:\*\* 1/);
   assert.match(output, /\*\*Undocumented files:\*\* 1/);
+});
+
+
+test("How to run renders Makefile targets and Dockerfile facts without inventing Docker commands", () => {
+  const projectFiles: WorkspaceFile[] = [
+    {
+      path: "src/main.ts",
+      language: "typescript",
+      content: "export const value = 1;",
+    },
+  ];
+  const buildProject = analyzer.analyzeProject(projectFiles);
+  const model = buildLocalDocumentationModel(
+    "Build Example",
+    projectFiles,
+    buildProject,
+    {
+      makefile: "build:\n\tnpm run build\n",
+      dockerfile: [
+        "FROM node:22-alpine AS runtime",
+        "EXPOSE 3000",
+        'ENTRYPOINT ["node"]',
+        'CMD ["dist/server.js"]',
+      ].join("\n"),
+    },
+  );
+  const output = renderLocalProjectDocumentationFromModel(model);
+
+  assert.match(output, /### Makefile/);
+  assert.match(output, /\| `build` \| `make build` \|/);
+  assert.match(output, /### Dockerfile facts/);
+  assert.match(output, /\*\*Base images:\*\* `node:22-alpine`/);
+  assert.match(output, /\*\*Stages:\*\* `runtime`/);
+  assert.match(output, /\*\*Exposed ports:\*\* `3000`/);
+  assert.match(output, /\*\*ENTRYPOINT:\*\* `\["node"\]`/);
+  assert.match(output, /\*\*CMD:\*\* `\["dist\/server\.js"\]`/);
+  assert.doesNotMatch(output, /docker build/);
 });
