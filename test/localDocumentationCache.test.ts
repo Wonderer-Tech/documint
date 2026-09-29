@@ -32,6 +32,17 @@ test("Local cache identity is stable across scanner ordering", () => {
   assert.equal(first.length, 64);
 });
 
+test("Local cache identity changes when README facts change", () => {
+  const first = buildLocalDocumentationCacheKey("Example", files, {
+    readme: "# Example\n\nOld description\n",
+  });
+  const second = buildLocalDocumentationCacheKey("Example", files, {
+    readme: "# Example\n\nNew description\n",
+  });
+
+  assert.notEqual(first, second);
+});
+
 test("Local cache identity changes with source or project identity", () => {
   const base = buildLocalDocumentationCacheKey("Example", files);
   const changedSource = buildLocalDocumentationCacheKey("Example", [
@@ -58,7 +69,7 @@ test("Local cache manifest preserves verified output hashes", () => {
 
   assert.deepEqual(parsed, manifest);
   assert.equal(LOCAL_DOCUMENTATION_CACHE_FILE, ".documint-local-cache.json");
-  assert.equal(LOCAL_DOCUMENTATION_CACHE_VERSION, "local-documentation-cache-v5");
+  assert.equal(LOCAL_DOCUMENTATION_CACHE_VERSION, "local-documentation-cache-v6");
 });
 
 test("Local cache parser rejects stale or malformed manifests", () => {
