@@ -412,13 +412,21 @@ function extractGettingStartedFacts(
         typeof configuration.properties === "object"
           ? configuration.properties
           : {};
-      return Object.entries(properties).map(([key, value]) => ({
-        key,
-        defaultValue:
-          value && typeof value === "object" && "default" in (value as object)
-            ? (value as any).default
-            : undefined,
-      }));
+      return Object.entries(properties)
+        .filter(([, value]) => {
+          return !(
+            value &&
+            typeof value === "object" &&
+            "deprecationMessage" in (value as object)
+          );
+        })
+        .map(([key, value]) => ({
+          key,
+          defaultValue:
+            value && typeof value === "object" && "default" in (value as object)
+              ? (value as any).default
+              : undefined,
+        }));
     })
     .sort((a: LocalVsCodeSetting, b: LocalVsCodeSetting) =>
       a.key.localeCompare(b.key),
