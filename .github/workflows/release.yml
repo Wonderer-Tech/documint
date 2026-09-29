@@ -1,0 +1,66 @@
+name: Release VSIX
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-vsix-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Verify, package, and publish VSIX
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Switch this to npm ci as soon as package-lock.json is committed.
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Verify tag matches package version
+        shell: bash
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$VERSION" != "$TAG_VERSION" ]; then
+            echo "Tag version $TAG_VERSION does not match package.json version $VERSION"
+            exit 1
+          fi
+
+      - name: Compile and test
+        run: npm test
+
+      - name: Package VSIX
+        shell: bash
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          mkdir -p release-artifacts
+          VSIX="release-artifacts/documint-${VERSION}.vsix"
+          npx @vscode/vsce package --out "$VSIX"
+          unzip -t "$VSIX"
+          echo "VSIX=$VSIX" >> "$GITHUB_ENV"
+
+      - name: Publish GitHub Release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$VSIX" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$VSIX"               --title "DocuMint ${GITHUB_REF_NAME#v}"               --generate-notes
+          fi
