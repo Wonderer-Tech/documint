@@ -44,10 +44,7 @@ export class SourceAnalyzer extends BaseSourceAnalyzer {
       return super.analyzeFile(file);
     }
 
-    // Preserve the existing comment/TODO behavior while using the TypeScript
-    // compiler AST as the source of truth for JS/TS imports and declarations.
-    const legacyFacts = super.analyzeFile(file);
-    return analyzeJavaScriptLikeFile(file, legacyFacts.todos);
+    return analyzeJavaScriptLikeFile(file);
   }
 
   analyzeProject(files: WorkspaceFile[]): ProjectAnalysis {
