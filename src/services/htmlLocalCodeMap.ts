@@ -1231,12 +1231,14 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
       var name = fileName(file.path).toLowerCase();
       var description = String(file.description || '').toLowerCase();
       var exportText = file.exports.map(function (item) { return item.name; }).join(' ').toLowerCase();
+      var environmentText = (file.environmentVariables || []).join(' ').toLowerCase();
       var score = 0;
       if (name === query) score = 100;
       else if (name.startsWith(query)) score = 80;
       else if (name.includes(query)) score = 60;
       else if (file.path.toLowerCase().includes(query)) score = 45;
       else if (description.includes(query)) score = 30;
+      else if (environmentText.includes(query)) score = 25;
       else if (exportText.includes(query)) score = 20;
       return { file: file, score: score };
     }).filter(function (item) { return item.score > 0; })
@@ -1373,6 +1375,14 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
       source.className = 'local-map-card-meta';
       source.textContent = 'Description source: ' + file.descriptionSource;
       card.appendChild(source);
+    }
+
+    if (Array.isArray(file.environmentVariables) && file.environmentVariables.length) {
+      var environment = document.createElement('p');
+      environment.className = 'local-map-card-meta';
+      environment.textContent =
+        'Environment references: ' + file.environmentVariables.join(', ');
+      card.appendChild(environment);
     }
 
     var relations = document.createElement('div');
