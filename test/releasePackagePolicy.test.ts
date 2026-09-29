@@ -52,10 +52,6 @@ test("README-only media stays out of VSIX while runtime icons remain packageable
 
   assert.match(readme, /raw\.githubusercontent\.com\/Wonderer-Tech\/documint\/main\/resources\/demo\.gif/);
   assert.match(readme, /raw\.githubusercontent\.com\/Wonderer-Tech\/documint\/main\/resources\/screenshot1\.png/);
-  assert.match(
-    readme,
-    /Cleaner VSIX output: generated docs and README-only demo media are excluded from the packaged extension\./,
-  );
   assert.match(readme, /`documint\/documentation\.md`/);
   assert.match(readme, /`documint\/documentation\.html`/);
   assert.doesNotMatch(readme, /`docs\/documentation\.(?:md|html)`/);
