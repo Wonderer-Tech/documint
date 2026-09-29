@@ -104,7 +104,7 @@ Local Markdown is intentionally compact and does not carry raw architecture/whit
 
 ## Supported Providers
 
-AI mode is configured using `aiDocGenerator.aiProvider`:
+AI mode is configured using `documint.aiProvider`:
 
 - `openai`
 - `anthropic` — current fallback model: `claude-sonnet-5`
@@ -144,7 +144,7 @@ The following scanner languages are enabled by default on new installs:
 
 Notes:
 
-- `aiDocGenerator.targetLanguages` controls which languages are scanned.
+- `documint.targetLanguages` controls which languages are scanned.
 - Workspace scans exclude `node_modules`, generated/build folders, `.git`, `docs`, the generated `documint` folder, test/spec files, lockfiles, `.env` files, logs, and other common non-source artifacts by default.
 - Deliberately selecting a folder relaxes DocuMint's default test/spec exclusion, but explicit user-configured exclusions remain authoritative.
 
@@ -203,29 +203,29 @@ Internal scope commands used by sidebar:
 
 ## Configuration
 
-All settings are under `aiDocGenerator`.
+New settings are published under `documint.*`. Existing explicit `aiDocGenerator.*` settings remain supported as deprecated compatibility aliases; explicit `documint.*` values take precedence.
 
 ### Key Settings
 
-- `aiDocGenerator.generationMode` (`ai | local`, `local` by default)
-- `aiDocGenerator.aiProvider` (`openai` by default; AI mode only)
-- `aiDocGenerator.model` (`gpt-5.4-nano` by default; AI mode only)
-- `aiDocGenerator.documentationDepth` (`simple | basic | standard | comprehensive`; AI mode only)
-- `aiDocGenerator.outputFormat` (`markdown | html | both`)
-- `aiDocGenerator.targetLanguages` (all listed supported scanner languages by default)
-- `aiDocGenerator.maxTokens`
-- `aiDocGenerator.temperature`
-- `aiDocGenerator.rateLimitDelay`
-- `aiDocGenerator.concurrentRequests`
-- `aiDocGenerator.excludePatterns`
-- `aiDocGenerator.customApiEndpoint`
+- `documint.generationMode` (`ai | local`, `local` by default)
+- `documint.aiProvider` (`openai` by default; AI mode only)
+- `documint.model` (`gpt-5.4-nano` by default; AI mode only)
+- `documint.documentationDepth` (`simple | basic | standard | comprehensive`; AI mode only)
+- `documint.outputFormat` (`markdown | html | both`)
+- `documint.targetLanguages` (all listed supported scanner languages by default)
+- `documint.maxTokens`
+- `documint.temperature`
+- `documint.rateLimitDelay`
+- `documint.concurrentRequests`
+- `documint.excludePatterns`
+- `documint.customApiEndpoint`
 
 ### Local `settings.json`
 
 ```json
 {
-  "aiDocGenerator.generationMode": "local",
-  "aiDocGenerator.outputFormat": "both"
+  "documint.generationMode": "local",
+  "documint.outputFormat": "both"
 }
 ```
 
@@ -233,16 +233,16 @@ All settings are under `aiDocGenerator`.
 
 ```json
 {
-  "aiDocGenerator.generationMode": "ai",
-  "aiDocGenerator.aiProvider": "openai",
-  "aiDocGenerator.model": "gpt-5.4-nano",
-  "aiDocGenerator.documentationDepth": "standard",
-  "aiDocGenerator.outputFormat": "both",
-  "aiDocGenerator.maxTokens": 4000,
-  "aiDocGenerator.temperature": 0.3,
-  "aiDocGenerator.concurrentRequests": 5,
-  "aiDocGenerator.rateLimitDelay": 1000,
-  "aiDocGenerator.excludePatterns": [
+  "documint.generationMode": "ai",
+  "documint.aiProvider": "openai",
+  "documint.model": "gpt-5.4-nano",
+  "documint.documentationDepth": "standard",
+  "documint.outputFormat": "both",
+  "documint.maxTokens": 4000,
+  "documint.temperature": 0.3,
+  "documint.concurrentRequests": 5,
+  "documint.rateLimitDelay": 1000,
+  "documint.excludePatterns": [
     "**/node_modules/**",
     "**/dist/**",
     "**/build/**",
@@ -255,9 +255,9 @@ Anthropic example:
 
 ```json
 {
-  "aiDocGenerator.generationMode": "ai",
-  "aiDocGenerator.aiProvider": "anthropic",
-  "aiDocGenerator.model": "claude-sonnet-5"
+  "documint.generationMode": "ai",
+  "documint.aiProvider": "anthropic",
+  "documint.model": "claude-sonnet-5"
 }
 ```
 
@@ -265,9 +265,9 @@ DeepSeek example:
 
 ```json
 {
-  "aiDocGenerator.generationMode": "ai",
-  "aiDocGenerator.aiProvider": "deepseek",
-  "aiDocGenerator.model": "deepseek-flash"
+  "documint.generationMode": "ai",
+  "documint.aiProvider": "deepseek",
+  "documint.model": "deepseek-flash"
 }
 ```
 
@@ -275,10 +275,10 @@ Custom endpoint example:
 
 ```json
 {
-  "aiDocGenerator.generationMode": "ai",
-  "aiDocGenerator.aiProvider": "custom",
-  "aiDocGenerator.model": "your-model-name",
-  "aiDocGenerator.customApiEndpoint": "https://api.example.com/v1/chat/completions"
+  "documint.generationMode": "ai",
+  "documint.aiProvider": "custom",
+  "documint.model": "your-model-name",
+  "documint.customApiEndpoint": "https://api.example.com/v1/chat/completions"
 }
 ```
 
@@ -295,7 +295,7 @@ Local mode deliberately hides provider/model/authentication and Documentation De
 
 ### AI Documentation Depth
 
-`aiDocGenerator.documentationDepth` applies only to AI mode.
+`documint.documentationDepth` applies only to AI mode.
 
 | Depth | Best For | What It Generates |
 |------|----------|-------------------|
@@ -424,7 +424,7 @@ npx @vscode/vsce package
 - Local mode does not invent business-logic explanations, intent, usage examples, or architectural rationale that cannot be established from static source evidence.
 - AI documentation quality depends on the selected model and the source code/context available in the workspace.
 - Cloud providers receive selected source code only after confirmation. Use Local Documentation when code must remain entirely on the machine.
-- `aiDocGenerator.concurrentRequests` defaults to `5` for broader provider compatibility. Increase it only when your provider rate limits allow.
+- `documint.concurrentRequests` defaults to `5` for broader provider compatibility. Increase it only when your provider rate limits allow.
 
 ## Contributing
 
