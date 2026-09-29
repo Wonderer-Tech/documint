@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { getDocuMintConfiguration } from "../config/configuration";
 import {
   buildGenerationCacheIdentity,
   GenerationCacheIdentityInput,
@@ -92,10 +93,7 @@ function buildSerializedIdentity(
   workspaceFolder: vscode.WorkspaceFolder,
   input: GenerationCacheIdentityInput,
 ): string {
-  const configuration = vscode.workspace.getConfiguration(
-    "aiDocGenerator",
-    workspaceFolder.uri,
-  );
+  const configuration = getDocuMintConfiguration(workspaceFolder.uri);
   const settings: GenerationCacheSettings = {
     model: configuration.get<string>("model"),
     documentationDepth: configuration.get<string>("documentationDepth"),
