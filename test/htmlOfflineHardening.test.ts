@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { hardenGeneratedHtmlForOffline } from "../src/services/htmlOfflineHardening";
 import { generateHtmlTemplate } from "../src/services/htmlTemplate";
+import { buildHtmlBaseScript } from "../src/services/htmlBaseScript";
 
 const htmlFixture = [
   "<!doctype html>",
@@ -37,11 +38,11 @@ test("offline hardening is idempotent and leaves unrelated HTML untouched", () =
   assert.equal(hardenGeneratedHtmlForOffline("<html><body>plain</body></html>"), "<html><body>plain</body></html>");
 });
 
-test("HTML template already preserves Mermaid source when rendering fails", () => {
-  const source = readFileSync(
-    join(process.cwd(), "src/services/htmlTemplate.ts"),
-    "utf8",
-  );
+test("HTML runtime preserves Mermaid source when rendering fails", () => {
+  const source = buildHtmlBaseScript({
+    highlightThemeDark: "",
+    highlightThemeLight: "",
+  });
 
   assert.match(source, /async function renderOneDiagram\(/);
   assert.match(source, /catch \(err\) \{[\s\S]*Diagram syntax error — showing source/);
