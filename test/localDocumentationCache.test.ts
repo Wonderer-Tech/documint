@@ -69,7 +69,7 @@ test("Local cache manifest preserves verified output hashes", () => {
 
   assert.deepEqual(parsed, manifest);
   assert.equal(LOCAL_DOCUMENTATION_CACHE_FILE, ".documint-local-cache.json");
-  assert.equal(LOCAL_DOCUMENTATION_CACHE_VERSION, "local-documentation-cache-v7");
+  assert.equal(LOCAL_DOCUMENTATION_CACHE_VERSION, "local-documentation-cache-v8");
 });
 
 test("Local cache parser rejects stale or malformed manifests", () => {
@@ -116,4 +116,35 @@ test("shared Clear Cache removes the separate Local cache manifest", () => {
     source,
     /"\.documint-generation-cache-key\.json",\s*LOCAL_DOCUMENTATION_CACHE_FILE/,
   );
+});
+
+
+test("Local cache identity changes when Makefile or Dockerfile facts change", () => {
+  const base = buildLocalDocumentationCacheKey("Example", files, {
+    makefile: "build:\n\tnpm run build\n",
+    dockerfile: "FROM node:22-alpine\n",
+  });
+  const changedMake = buildLocalDocumentationCacheKey("Example", files, {
+    makefile: "build:\n\tnpm run compile\n",
+    dockerfile: "FROM node:22-alpine\n",
+  });
+  const changedDocker = buildLocalDocumentationCacheKey("Example", files, {
+    makefile: "build:\n\tnpm run build\n",
+    dockerfile: "FROM node:24-alpine\n",
+  });
+
+  assert.notEqual(base, changedMake);
+  assert.notEqual(base, changedDocker);
+});
+
+
+test("Local generator reads optional root build files before cache lookup", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/services/localDocumentationGenerator.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /\["Makefile", "makefile"\]/);
+  assert.match(source, /\["Dockerfile", "dockerfile"\]/);
+  assert.match(source, /\{ readme, makefile, dockerfile \}/);
 });
