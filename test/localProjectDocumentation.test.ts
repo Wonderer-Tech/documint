@@ -158,3 +158,17 @@ test("local project overview derives run commands and VS Code surface from packa
   assert.match(output, /`documint\.mode`/);
   assert.match(output, /`local`/);
 });
+
+
+test("Local overview uses portable relative source links", () => {
+  const output = renderLocalProjectDocumentation({
+    projectName: "Example Project",
+    files,
+    project,
+  });
+
+  assert.match(output, /\[\`src\/index\.ts\`\]\(\.\.\/src\/index\.ts\)/);
+  assert.match(output, /\[\`lib\/helper\.ts\`\]\(\.\.\/lib\/helper\.ts\)/);
+  assert.doesNotMatch(output, /vscode:\/\/file/i);
+  assert.doesNotMatch(output, /github\.com\/Wonderer-Tech\/documint/i);
+});
