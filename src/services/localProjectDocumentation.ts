@@ -42,6 +42,7 @@ export function renderLocalProjectDocumentationFromModel(
     `- **Internal dependency links:** ${model.internalDependencies.length}`,
     `- **External dependencies:** ${model.externalDependencies.length}`,
     `- **TODO/FIXME/HACK comments:** ${model.totalTodos}`,
+    ...renderGettingStartedSections(model),
     "",
     "## Where is what",
     "",
@@ -77,6 +78,106 @@ export function renderLocalProjectDocumentationFromModel(
     renderSourceTree(model.projectName, model.files.map((file) => file.path)),
     "```",
   ].join("\n");
+}
+
+function renderGettingStartedSections(
+  model: LocalDocumentationModel,
+): string[] {
+  const facts = model.gettingStarted;
+  if (!facts) {
+    return [];
+  }
+
+  const sections: string[] = [];
+
+  if (facts.scripts.length > 0) {
+    sections.push(
+      "",
+      "## How to run",
+      "",
+      "Commands detected from `package.json` scripts:",
+      "",
+      "| Script | Command |",
+      "| --- | --- |",
+      ...facts.scripts.map(
+        (script) =>
+          `| ${inlineCode(`npm run ${script.name}`)} | ${inlineCode(script.command)} |`,
+      ),
+    );
+  }
+
+  if (
+    facts.extensionEntry ||
+    facts.vscodeCommands.length > 0 ||
+    facts.vscodeSettings.length > 0
+  ) {
+    sections.push("", "## VS Code extension surface", "");
+
+    if (facts.extensionEntry) {
+      sections.push(
+        `- **Extension entry:** ${inlineCode(facts.extensionEntry)}`,
+      );
+    }
+
+    if (facts.vscodeCommands.length > 0) {
+      sections.push(
+        "",
+        "### Commands",
+        "",
+        "| Command ID | Title |",
+        "| --- | --- |",
+        ...facts.vscodeCommands.map(
+          (command) =>
+            `| ${inlineCode(command.id)} | ${escapeTableText(command.title ?? "—")} |`,
+        ),
+      );
+    }
+
+    if (facts.vscodeSettings.length > 0) {
+      sections.push(
+        "",
+        "### Settings",
+        "",
+        "| Setting | Default |",
+        "| --- | --- |",
+        ...facts.vscodeSettings.map(
+          (setting) =>
+            `| ${inlineCode(setting.key)} | ${formatSettingDefault(setting.defaultValue)} |`,
+        ),
+      );
+    }
+  }
+
+  return sections;
+}
+
+function formatSettingDefault(value: unknown): string {
+  if (value === undefined) {
+    return "—";
+  }
+  if (typeof value === "string") {
+    return inlineCode(value);
+  }
+  if (
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    value === null
+  ) {
+    return inlineCode(String(value));
+  }
+
+  try {
+    return inlineCode(JSON.stringify(value));
+  } catch {
+    return "—";
+  }
+}
+
+function escapeTableText(value: string): string {
+  return String(value)
+    .replace(/\|/g, "\\|")
+    .replace(/[\r\n]+/g, " ")
+    .trim();
 }
 
 function renderWhereIsWhat(model: LocalDocumentationModel): string {
