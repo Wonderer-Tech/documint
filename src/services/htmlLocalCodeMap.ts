@@ -649,7 +649,7 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
 
   function relativeSourceHref(path, line) {
     var encoded = String(path || '')
-      .replace(/\\\\/g, '/')
+      .replace(/\\/g, '/')
       .split('/')
       .map(function (segment) { return encodeURIComponent(segment); })
       .join('/');
