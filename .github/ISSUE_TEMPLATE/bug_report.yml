@@ -1,0 +1,93 @@
+name: Bug report
+description: Report a reproducible DocuMint problem
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a DocuMint bug. Do not paste API keys, private source code, or other secrets.
+
+  - type: input
+    id: version
+    attributes:
+      label: DocuMint version / commit
+      placeholder: "1.0.7 or commit SHA"
+    validations:
+      required: true
+
+  - type: input
+    id: vscode
+    attributes:
+      label: VS Code version
+      placeholder: "1.110.x"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "Windows 11 / Ubuntu 24.04 / macOS ..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Generation mode
+      options:
+        - Local Documentation — No AI
+        - AI Documentation
+        - Both / not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - Workspace
+        - Folder
+        - File
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction steps
+      description: Use a small public/sanitized example where possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant sanitized logs
+      description: Remove API keys, tokens, private paths/content, and other secrets.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed API keys, tokens, private source code, and other secrets from this report.
+          required: true
