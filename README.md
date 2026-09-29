@@ -4,7 +4,7 @@
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
 ![Version](https://img.shields.io/badge/version-1.0.7-green)
 
-DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file. Generate deterministic documentation entirely on your machine with **Local Documentation — No AI**, or use AI providers such as OpenAI, Anthropic, OpenRouter, DeepSeek, or a custom OpenAI-compatible endpoint for enhanced explanations.
+DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file. Generate deterministic documentation entirely on your machine with **Local Documentation — No AI**, or use AI providers such as OpenAI, Anthropic, OpenRouter, DeepSeek, **Ollama**, **LM Studio**, or a custom OpenAI-compatible endpoint for enhanced explanations.
 
 ![DocuMint Demo](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/demo.gif)
 
@@ -110,9 +110,13 @@ AI mode is configured using `documint.aiProvider`:
 - `anthropic` — current fallback model: `claude-sonnet-5`
 - `openrouter`
 - `deepseek` — current fallback model: `deepseek-flash`
+- `ollama` — local OpenAI-compatible preset at `http://127.0.0.1:11434/v1/chat/completions`
+- `lmstudio` — local OpenAI-compatible preset at `http://127.0.0.1:1234/v1/chat/completions`
 - `custom`
 
-Local mode does not use a provider.
+Ollama and LM Studio do not require an API key or cloud-source-transfer consent. Set `documint.model` to a model currently served by the selected local runtime. DocuMint does not guess an installed local model name.
+
+Local Documentation mode does not use any AI provider.
 
 Provider implementations live in `src/providers/`.
 
@@ -189,7 +193,7 @@ npm run compile
 2. Open the **Documint** view in the activity bar.
 3. Choose **Local Documentation — No AI** or **AI Documentation**.
 4. For Local mode, choose Output Format and generate immediately. No API key or model setup is required.
-5. For AI mode, select provider/model and run **Configure API Key** when required.
+5. For AI mode, select provider/model. Cloud providers may require **Configure API Key**; Ollama and LM Studio do not.
 6. Click **Generate Documentation** / **Generate Local Documentation** for workspace scope, or use **File** / **Folder** quick buttons.
 7. Open generated files from `documint/`.
 
@@ -214,7 +218,7 @@ New settings are published under `documint.*`. Existing explicit `aiDocGenerator
 ### Key Settings
 
 - `documint.generationMode` (`ai | local`, `local` by default)
-- `documint.aiProvider` (`openai` by default; AI mode only)
+- `documint.aiProvider` (`openai | anthropic | openrouter | deepseek | ollama | lmstudio | custom`; `openai` by default; AI mode only)
 - `documint.model` (`gpt-5.4-nano` by default; AI mode only)
 - `documint.documentationDepth` (`simple | basic | standard | comprehensive`; AI mode only)
 - `documint.outputFormat` (`markdown | html | both`)
@@ -274,6 +278,24 @@ DeepSeek example:
   "documint.generationMode": "ai",
   "documint.aiProvider": "deepseek",
   "documint.model": "deepseek-flash"
+}
+```
+
+Local AI provider examples:
+
+```json
+{
+  "documint.generationMode": "ai",
+  "documint.aiProvider": "ollama",
+  "documint.model": "qwen3:8b"
+}
+```
+
+```json
+{
+  "documint.generationMode": "ai",
+  "documint.aiProvider": "lmstudio",
+  "documint.model": "your-loaded-model-id"
 }
 ```
 
