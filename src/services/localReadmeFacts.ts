@@ -117,10 +117,23 @@ function collectTreeDescriptions(
       continue;
     }
 
-    const rootMatch = trimmed.match(/^([A-Za-z0-9_.-]+)\/$/);
+    const rootMatch = trimmed.match(
+      /^([A-Za-z0-9_.-]+)\/(?:\s+#\s+(.+))?$/,
+    );
     if (rootMatch) {
       root = rootMatch[1];
       directories.length = 0;
+      const rootDescription = cleanDescription(rootMatch[2] ?? "");
+      if (
+        rootDescription &&
+        knownModules.has(root) &&
+        !moduleOutput.has(root)
+      ) {
+        moduleOutput.set(root, {
+          text: rootDescription,
+          source: "readme",
+        });
+      }
       continue;
     }
     if (!root) {
