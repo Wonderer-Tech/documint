@@ -54,6 +54,7 @@ export interface FileAnalysis {
   symbols: SourceSymbol[];
   todos: TodoComment[];
   description?: SourceDescription;
+  referencedEnvironmentVariables?: string[];
 }
 
 export interface ProjectAnalysis {
