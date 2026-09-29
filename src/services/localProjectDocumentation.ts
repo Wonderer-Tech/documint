@@ -165,11 +165,20 @@ function renderGettingStarted(model: LocalDocumentationModel): string {
     return "No supported project manifest facts detected.";
   }
 
-  const sections: string[] = [
-    `Detected from ${inlineCode(facts.packageJsonPath)}.`,
-    "",
-    `**Package manager:** ${inlineCode(facts.packageManager)}`,
-  ];
+  const sections: string[] = [];
+
+  if (facts.packageJsonPath) {
+    sections.push(
+      `Detected package metadata from ${inlineCode(facts.packageJsonPath)}.`,
+    );
+  }
+
+  if (facts.packageManager) {
+    sections.push(
+      sections.length ? "" : "",
+      `**Package manager:** ${inlineCode(facts.packageManager)}`,
+    );
+  }
 
   if (facts.extensionEntry) {
     sections.push(
@@ -190,6 +199,65 @@ function renderGettingStarted(model: LocalDocumentationModel): string {
           `| ${inlineCode(script.name)} | ${inlineCode(script.run)} | ${inlineCode(script.command)} |`,
       ),
     );
+  }
+
+  if (facts.makefile) {
+    sections.push(
+      "",
+      "### Makefile",
+      "",
+      `Detected from ${inlineCode(facts.makefile.path)}.`,
+    );
+
+    if (facts.makefile.targets.length > 0) {
+      sections.push(
+        "",
+        "| Target | Run |",
+        "| --- | --- |",
+        ...facts.makefile.targets.map(
+          (target) =>
+            `| ${inlineCode(target.name)} | ${inlineCode(`make ${target.name}`)} |`,
+        ),
+      );
+    } else {
+      sections.push("", "No concrete Make targets detected.");
+    }
+  }
+
+  if (facts.dockerfile) {
+    const docker = facts.dockerfile;
+    sections.push(
+      "",
+      "### Dockerfile facts",
+      "",
+      `Detected from ${inlineCode(docker.path)}.`,
+    );
+
+    if (docker.baseImages.length > 0) {
+      sections.push(
+        `- **Base images:** ${docker.baseImages.map(inlineCode).join(", ")}`,
+      );
+    }
+    if (docker.stages.length > 0) {
+      sections.push(
+        `- **Stages:** ${docker.stages.map(inlineCode).join(", ")}`,
+      );
+    }
+    if (docker.exposedPorts.length > 0) {
+      sections.push(
+        `- **Exposed ports:** ${docker.exposedPorts.map(inlineCode).join(", ")}`,
+      );
+    }
+    if (docker.entrypoint) {
+      sections.push(
+        `- **ENTRYPOINT:** ${inlineCode(docker.entrypoint)}`,
+      );
+    }
+    if (docker.command) {
+      sections.push(
+        `- **CMD:** ${inlineCode(docker.command)}`,
+      );
+    }
   }
 
   if (facts.vscodeCommands.length > 0) {
@@ -220,7 +288,9 @@ function renderGettingStarted(model: LocalDocumentationModel): string {
     );
   }
 
-  return sections.join("\n");
+  return sections.length > 0
+    ? sections.join("\n")
+    : "No supported project manifest facts detected.";
 }
 
 function renderSuggestedReadingPath(
