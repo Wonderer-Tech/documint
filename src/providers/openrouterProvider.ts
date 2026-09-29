@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { getDocuMintConfiguration } from "../config/configuration";
 import axios from "axios";
 import {
   BaseAIProvider,
@@ -52,8 +53,7 @@ export class OpenRouterProvider extends BaseAIProvider {
   }
 
   private resolveCompatibleModel(requestedModel?: string): string {
-    const configuredModel = vscode.workspace
-      .getConfiguration("aiDocGenerator")
+    const configuredModel = getDocuMintConfiguration()
       .get<string>("model");
     return normalizeProviderModel(
       "openrouter",
