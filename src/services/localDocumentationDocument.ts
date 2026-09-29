@@ -84,6 +84,7 @@ export function buildLocalDocumentationDocument(
       languages,
       totalLines,
       localCodeMap: buildLocalCodeMapData(model),
+      externalAssets: false,
     }),
     fileCount: model.files.length,
     totalLines,
