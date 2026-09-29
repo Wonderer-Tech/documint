@@ -22,6 +22,8 @@ export interface LocalDocumentationDocument {
 
 export interface LocalDocumentationDocumentOptions {
   readme?: string;
+  makefile?: string;
+  dockerfile?: string;
 }
 
 /**
@@ -39,7 +41,11 @@ export function buildLocalDocumentationDocument(
     projectName,
     files,
     project,
-    { readme: options.readme },
+    {
+      readme: options.readme,
+      makefile: options.makefile,
+      dockerfile: options.dockerfile,
+    },
   );
   const markdownOverview = renderLocalProjectDocumentationFromModel(
     model,
