@@ -43,6 +43,8 @@ export function renderLocalFileDocumentation(
     exportedSymbols,
     internalSymbols: input.analysis.symbols.filter((symbol) => !symbol.exported),
     todos: input.analysis.todos,
+    referencedEnvironmentVariables:
+      input.analysis.referencedEnvironmentVariables ?? [],
     uses,
     usedBy,
     entryPoint: input.project.entryPoints.includes(input.file.path),
@@ -63,6 +65,15 @@ export function renderLocalFileDocumentationFromModel(
     "",
     `**Source:** [Open file](${relativeSourceHref(file.path)})`,
   ];
+
+  if (file.referencedEnvironmentVariables.length > 0) {
+    sections.push(
+      "",
+      `**Environment references:** ${file.referencedEnvironmentVariables
+        .map(inlineCode)
+        .join(", ")}`,
+    );
+  }
 
   if (file.uses.length > 0) {
     sections.push(
