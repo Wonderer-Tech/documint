@@ -197,6 +197,18 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     fill: var(--text-muted);
     font-size: 10px;
   }
+  .local-map-note {
+    fill: var(--accent);
+    font-family: "Segoe Print", "Bradley Hand", cursive;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .local-map-note-line {
+    stroke: var(--accent);
+    stroke-width: 1.1;
+    fill: none;
+    opacity: .78;
+  }
   .local-map-filter-row {
     display: flex;
     gap: 8px;
@@ -922,6 +934,25 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
       label.textContent = String(edge.count);
     });
 
+    var entryModules = Array.from(new Set(
+      data.files
+        .filter(function (file) { return file.entryPoint; })
+        .map(function (file) { return file.module; })
+    ));
+    var connectivity = new Map();
+    modules.forEach(function (module) { connectivity.set(module.name, 0); });
+    edgeCounts.forEach(function (edge) {
+      connectivity.set(edge.from, (connectivity.get(edge.from) || 0) + edge.count);
+      connectivity.set(edge.to, (connectivity.get(edge.to) || 0) + edge.count);
+    });
+    var mostConnected = modules.slice().sort(function (a, b) {
+      return (connectivity.get(b.name) || 0) - (connectivity.get(a.name) || 0) ||
+        a.name.localeCompare(b.name);
+    })[0];
+    var largestModule = modules.slice().sort(function (a, b) {
+      return b.lines - a.lines || a.name.localeCompare(b.name);
+    })[0];
+
     modules.forEach(function (module) {
       var pos = positions.get(module.name);
       var g = makeSvg('g', {
@@ -1001,6 +1032,54 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
         }
       });
     });
+
+    function addNote(moduleName, text, offsetX, offsetY) {
+      var pos = positions.get(moduleName);
+      if (!pos || !text) return;
+      var noteX = Math.max(55, Math.min(width - 55, pos.x + offsetX));
+      var noteY = Math.max(20, Math.min(height - 16, pos.y + offsetY));
+      var note = makeSvg('text', {
+        x: noteX,
+        y: noteY,
+        class: 'local-map-note',
+        'text-anchor': offsetX < 0 ? 'end' : 'start'
+      }, svg);
+      note.textContent = text;
+      makeSvg('line', {
+        x1: noteX + (offsetX < 0 ? 8 : -8),
+        y1: noteY + 4,
+        x2: pos.x + (offsetX < 0 ? -88 : 88),
+        y2: pos.y - 24,
+        class: 'local-map-note-line'
+      }, svg);
+    }
+
+    if (entryModules.length) {
+      addNote(entryModules[0], 'detected entry module', -108, -52);
+    }
+    if (
+      mostConnected &&
+      (!entryModules.length || mostConnected.name !== entryModules[0])
+    ) {
+      addNote(
+        mostConnected.name,
+        'cross-module links: ' + (connectivity.get(mostConnected.name) || 0),
+        104,
+        -50
+      );
+    }
+    if (
+      largestModule &&
+      (!entryModules.length || largestModule.name !== entryModules[0]) &&
+      (!mostConnected || largestModule.name !== mostConnected.name)
+    ) {
+      addNote(
+        largestModule.name,
+        'largest module: ' + formatNumber(largestModule.lines) + ' lines',
+        105,
+        54
+      );
+    }
   }
 
   function splitLayout(items, x, y, w, h, vertical) {
