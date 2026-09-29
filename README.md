@@ -388,6 +388,8 @@ src/
 |-- providers/
 |   |-- aiProvider.ts              # Base provider and prompt/chunking pipeline
 |   |-- providerFactory.ts         # Provider resolution and creation
+|   |-- localProviderPolicy.ts     # Ollama/LM Studio loopback + model policy
+|   |-- localOpenAICompatibleProvider.ts # Keyless local OpenAI-compatible runtime
 |   |-- providerModelGuard.ts      # Prevents stale cross-provider model IDs
 |   |-- providerMetadataDecorator.ts # Context-window metadata/override layer
 |   |-- openAICapabilities.ts      # Canonical OpenAI context/output capability table
