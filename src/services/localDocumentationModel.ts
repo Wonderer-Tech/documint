@@ -14,6 +14,8 @@ import {
 export type LocalDescriptionSource =
   | "file-comment"
   | "declaration-comment"
+  | "module-docstring"
+  | "package-comment"
   | "readme";
 
 export interface LocalDescription {
