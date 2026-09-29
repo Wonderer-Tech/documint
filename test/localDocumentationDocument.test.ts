@@ -87,3 +87,19 @@ test("Local HTML omits external CDN assets while keeping the interactive code ma
   assert.match(document.html, /data-documint-local-code-map/);
   assert.match(document.html, /Find your way through the code/);
 });
+
+
+test("Local Markdown keeps orientation sections while HTML avoids duplicating code-map answers", () => {
+  const analyzer = new SourceAnalyzer();
+  const project = analyzer.analyzeProject(files);
+  const document = buildLocalDocumentationDocument("Example Project", files, project);
+
+  assert.match(document.markdown, /## Where is what/);
+  assert.match(document.markdown, /## Suggested reading path/);
+  assert.match(document.markdown, /## Core files/);
+
+  assert.doesNotMatch(document.html, /<h2[^>]*>Where is what<\/h2>/);
+  assert.doesNotMatch(document.html, /<h2[^>]*>Suggested reading path<\/h2>/);
+  assert.doesNotMatch(document.html, /<h2[^>]*>Core files<\/h2>/);
+  assert.match(document.html, /data-documint-local-code-map/);
+});
