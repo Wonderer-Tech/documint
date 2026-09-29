@@ -39,7 +39,7 @@ test("Local HTML chrome distinguishes project-file search from docs search", () 
 
 test("generated timestamp formatting is deterministic for valid and legacy values", () => {
   assert.deepEqual(
-    formatGeneratedTimestamp("2026-09-30T00:00:00.000Z"),
+    formatGeneratedTimestamp("2026-09-30T00:00:00"),
     {
       month: "SEP",
       day: "30",
