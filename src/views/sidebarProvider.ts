@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { randomBytes } from "crypto";
 import { SecretStorageManager } from "../config/secretStorage";
 import { resolveProviderSelection } from "../providers/providerSelection";
 import { normalizeGenerationMode } from "../services/generationMode";
@@ -40,7 +41,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [this._extensionUri],
     };
 
-    webviewView.webview.html = this._buildHtml();
+    webviewView.webview.html = this._buildHtml(webviewView.webview);
 
     webviewView.webview.onDidReceiveMessage(async (msg) => {
       try {
@@ -321,14 +322,17 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  private _buildHtml(): string {
+  private _buildHtml(webview: vscode.Webview): string {
+    const nonce = randomBytes(16).toString("base64");
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} data:; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}';">
 <title>Documint</title>
-<style>
+<style nonce="${nonce}">
   :root {
     --bg: var(--vscode-sideBar-background, #1e1e1e);
     --fg: var(--vscode-sideBar-foreground, #cccccc);
@@ -387,6 +391,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
   .status-dot.running { background: var(--warning); animation: blink 1.2s infinite; }
   .status-dot.error { background: var(--error); }
+  .status-text { font-size: 11px; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
 
   .section {
@@ -401,6 +406,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   .section-label-line {
     flex: 1; height: 1px; background: var(--border);
   }
+  .section-label.no-margin { margin: 0; }
 
   .auth-status {
     display: flex; align-items: center; gap: 8px;
@@ -508,6 +514,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   .btn-secondary:hover:not(:disabled) { background: var(--btn-sec-hover); }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
 
+  .generation-actions { margin-top: 10px; }
   .scope-row { display: flex; gap: 5px; margin-top: 8px; }
   .scope-btn {
     flex: 1; padding: 5px 4px; font-size: 11px; font-weight: 500;
@@ -587,7 +594,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   <div class="header-spacer"></div>
   <div class="status-pill">
     <div class="status-dot" id="statusDot"></div>
-    <span id="statusText" style="font-size:11px;">Ready</span>
+    <span class="status-text" id="statusText">Ready</span>
   </div>
 </div>
 
@@ -685,7 +692,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     </select>
   </div>
 
-  <div style="margin-top:10px;">
+  <div class="generation-actions">
     <button class="btn btn-primary" id="generateBtn">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <polygon points="5 3 19 12 5 21 5 3"/>
@@ -733,15 +740,15 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   <div class="progress-file" id="progressFile"></div>
 </div>
 
-<div class="log-section" id="logSection" style="display:none;">
+<div class="log-section" id="logSection" hidden>
   <div class="log-header">
-    <span class="section-label" style="margin:0;">Output</span>
+    <span class="section-label no-margin">Output</span>
     <button class="log-clear" id="logClear">Clear</button>
   </div>
   <div id="logContainer"></div>
 </div>
 
-<script>
+<script nonce="${nonce}">
 (function() {
   'use strict';
   var vscode = acquireVsCodeApi();
@@ -869,7 +876,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
 
   function addLog(message, type, ts) {
-    logSection.style.display = '';
+    logSection.hidden = false;
     var entry = document.createElement('div');
     entry.className = 'log-entry';
     entry.innerHTML =
@@ -1046,7 +1053,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   logClear.addEventListener('click', function() {
     logContainer.innerHTML = '';
-    logSection.style.display = 'none';
+    logSection.hidden = true;
   });
 
   window.addEventListener('message', function(event) {
