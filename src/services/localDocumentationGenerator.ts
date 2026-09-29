@@ -71,7 +71,12 @@ export class LocalDocumentationGenerator {
     this.throwIfCancelled("parse");
     const outputFormat = options.outputFormat ?? "both";
     const docsFolder = vscode.Uri.joinPath(workspaceFolder.uri, DOCUMINT_OUTPUT_DIRECTORY);
-    const cacheKey = buildLocalDocumentationCacheKey(workspaceFolder.name, files);
+    const readme = await this.readOptionalProjectReadme(workspaceFolder);
+    const cacheKey = buildLocalDocumentationCacheKey(
+      workspaceFolder.name,
+      files,
+      { readme },
+    );
 
     this.report({
       phase: "parsing",
@@ -125,6 +130,7 @@ export class LocalDocumentationGenerator {
       workspaceFolder.name,
       files,
       project,
+      { readme },
     );
 
     this.throwIfCancelled("write");
@@ -188,6 +194,21 @@ export class LocalDocumentationGenerator {
     });
 
     return outputPaths;
+  }
+
+  private async readOptionalProjectReadme(
+    workspaceFolder: vscode.WorkspaceFolder,
+  ): Promise<string | undefined> {
+    for (const name of ["README.md", "README.MD", "readme.md"]) {
+      const uri = vscode.Uri.joinPath(workspaceFolder.uri, name);
+      try {
+        const content = await vscode.workspace.fs.readFile(uri);
+        return Buffer.from(content).toString("utf-8");
+      } catch {
+        // README is optional. Try the next common casing.
+      }
+    }
+    return undefined;
   }
 
   private async tryReuseCachedOutputs(
