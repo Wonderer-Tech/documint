@@ -93,3 +93,17 @@ test("Local code map data stays source-factual and relation-driven", () => {
   assert.match(fragments.script, /renderScatter/);
   assert.doesNotMatch(fragments.script, /good to split|will break|only place that calls/i);
 });
+
+
+test("Local code map connects module focus and file-card navigation", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.styles, /local-map-module-canvas\.focused/);
+  assert.match(fragments.script, /focusModule/);
+  assert.match(fragments.script, /data-from/);
+  assert.match(fragments.script, /data-to/);
+  assert.match(fragments.script, /openFileAndReveal/);
+  assert.match(fragments.script, /revealFullDocumentation/);
+  assert.match(fragments.script, /Open full file documentation/);
+  assert.match(fragments.script, /data-documint-file-path/);
+});
