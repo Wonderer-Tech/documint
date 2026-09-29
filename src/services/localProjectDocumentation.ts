@@ -167,6 +167,8 @@ function renderGettingStarted(model: LocalDocumentationModel): string {
 
   const sections: string[] = [
     `Detected from ${inlineCode(facts.packageJsonPath)}.`,
+    "",
+    `**Package manager:** ${inlineCode(facts.packageManager)}`,
   ];
 
   if (facts.extensionEntry) {
