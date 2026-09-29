@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { buildSidebarHtml } from "./sidebarTemplate";
 import { SecretStorageManager } from "../config/secretStorage";
 import { resolveProviderSelection } from "../providers/providerSelection";
+import { discoverLocalProviderModels } from "../providers/localProviderDiscovery";
 import { normalizeGenerationMode } from "../services/generationMode";
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
@@ -95,6 +96,36 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
               typeof msg.apiKey === "string" ? msg.apiKey : "",
             );
             break;
+
+          case "discover-local-models": {
+            const provider =
+              typeof msg.provider === "string"
+                ? msg.provider.trim().toLowerCase()
+                : "";
+            if (provider !== "ollama" && provider !== "lmstudio") {
+              break;
+            }
+
+            try {
+              const models = await discoverLocalProviderModels(provider);
+              this._post({
+                type: "local-models",
+                provider,
+                models,
+              });
+            } catch (error) {
+              this._post({
+                type: "local-models",
+                provider,
+                models: [],
+                error:
+                  error instanceof Error
+                    ? error.message
+                    : String(error),
+              });
+            }
+            break;
+          }
 
           case "update-settings": {
             const payload: Record<string, unknown> =
