@@ -45,6 +45,21 @@ const data: LocalCodeMapData = {
       reason: "Imported by src/extension.ts.",
     },
   ],
+  gettingStarted: {
+    extensionEntry: "./dist/extension.js",
+    scripts: [
+      {
+        name: "compile",
+        run: "npm run compile",
+        command: "tsc --noEmit",
+      },
+      {
+        name: "test",
+        run: "npm run test",
+        command: "node --test",
+      },
+    ],
+  },
 };
 
 test("Local code map exposes question-first interactive surfaces without external assets", () => {
@@ -106,4 +121,17 @@ test("Local code map connects module focus and file-card navigation", () => {
   assert.match(fragments.script, /revealFullDocumentation/);
   assert.match(fragments.script, /Open full file documentation/);
   assert.match(fragments.script, /data-documint-file-path/);
+});
+
+
+test("Local code map surfaces detected run commands and owns Ctrl/Cmd+K file search", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.markup, /localMapRun/);
+  assert.match(fragments.markup, /Ctrl\/⌘ K/);
+  assert.match(fragments.script, /npm run compile/);
+  assert.match(fragments.script, /npm run test/);
+  assert.match(fragments.script, /event\.stopImmediatePropagation\(\)/);
+  assert.match(fragments.script, /event\.key\.toLowerCase\(\) === 'k'/);
+  assert.match(fragments.script, /input\.focus\(\)/);
 });
