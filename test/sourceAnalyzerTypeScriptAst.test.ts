@@ -197,3 +197,23 @@ test("TypeScript AST honors explicit export lists for local declarations", () =>
     true,
   );
 });
+
+
+test("DocuMint BaseAIProvider is detected from the real source file", () => {
+  const { readFileSync } = require("node:fs") as typeof import("node:fs");
+  const source = readFileSync(
+    "src/providers/aiProvider.ts",
+    "utf8",
+  );
+  const analysis = analyzer.analyzeFile(
+    file("src/providers/aiProvider.ts", "typescript", source),
+  );
+
+  const base = analysis.symbols.find(
+    (symbol) => symbol.name === "BaseAIProvider",
+  );
+  assert.ok(base);
+  assert.equal(base.kind, "class");
+  assert.equal(base.exported, true);
+  assert.equal(base.scope, "module");
+});
