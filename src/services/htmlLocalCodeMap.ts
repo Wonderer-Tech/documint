@@ -727,7 +727,16 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
     var facts = document.getElementById('localMapFacts');
     if (facts) {
       var lines = data.files.reduce(function (sum, file) { return sum + Number(file.lines || 0); }, 0);
-      facts.textContent = formatNumber(data.files.length) + ' files · ' + formatNumber(lines) + ' lines';
+      var described = data.files.filter(function (file) {
+        return Boolean(file.description);
+      }).length;
+      facts.textContent =
+        formatNumber(data.files.length) +
+        ' files · ' +
+        formatNumber(lines) +
+        ' lines · ' +
+        formatNumber(described) +
+        ' described';
     }
 
     var run = document.getElementById('localMapRun');
