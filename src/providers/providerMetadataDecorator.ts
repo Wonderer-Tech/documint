@@ -13,8 +13,9 @@ import {
 } from "./contextWindowPolicy";
 import { generationRunContext } from "../services/generationRunContext";
 import { ModelMetadataService } from "../services/modelMetadataService";
+import type { LocalPresetProviderName } from "./localProviderPolicy";
 
-type MetadataProviderName = GuardedProviderName | "custom";
+type MetadataProviderName = GuardedProviderName | LocalPresetProviderName | "custom";
 
 const CUSTOM_DEFAULT_MODEL = "default";
 
