@@ -1,4 +1,3 @@
-import * as vscode from "vscode";
 import { getDocuMintConfiguration } from "../config/configuration";
 import axios from "axios";
 import { BaseAIProvider, ApiCallParams } from "./aiProvider";
