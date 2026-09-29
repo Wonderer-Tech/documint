@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { getDocuMintConfiguration } from "../config/configuration";
 import { DocumentationContext, DocumentationResult } from "../types";
 import { SecretStorageManager } from "../config/secretStorage";
 import { mergeChunkDocumentation } from "./chunkDocumentationMerge";
@@ -76,7 +77,7 @@ export abstract class BaseAIProvider implements AIProvider {
   public async generateDocumentation(
     context: DocumentationContext,
   ): Promise<DocumentationResult> {
-    const cfg = vscode.workspace.getConfiguration("aiDocGenerator");
+    const cfg = getDocuMintConfiguration();
     // Priority: context.model (sidebar) → VS Code setting → provider default
     const model =
       context.model || cfg.get<string>("model") || this.defaultModel();
@@ -97,7 +98,7 @@ export abstract class BaseAIProvider implements AIProvider {
   public async generateMarkdownFromPrompt(
     params: RawMarkdownPromptParams,
   ): Promise<DocumentationResult> {
-    const cfg = vscode.workspace.getConfiguration("aiDocGenerator");
+    const cfg = getDocuMintConfiguration();
     const model = params.model || cfg.get<string>("model") || this.defaultModel();
     const apiKey = this.isLocal ? "" : await this.getApiKey();
     const maxCtx = this.getMaxContextWindow(model);
@@ -159,8 +160,7 @@ export abstract class BaseAIProvider implements AIProvider {
 
   protected get temperature(): number {
     return (
-      vscode.workspace
-        .getConfiguration("aiDocGenerator")
+      getDocuMintConfiguration()
         .get<number>("temperature") ?? 0.2
     );
   }
@@ -554,8 +554,7 @@ export abstract class BaseAIProvider implements AIProvider {
   private resolveRateLimitDelay(overrideDelay?: number): number {
     const configured =
       overrideDelay ??
-      vscode.workspace
-        .getConfiguration("aiDocGenerator")
+      getDocuMintConfiguration()
         .get<number>("rateLimitDelay") ??
       0;
     const parsed = Number(configured);
