@@ -15,12 +15,13 @@ test("generation mode policy preserves local and defaults everything else to AI"
 });
 
 test("manifest exposes AI and Local generation modes with Local as the new-install default", () => {
-  const property = manifest.contributes.configuration.properties[
-    "aiDocGenerator.generationMode"
-  ];
+  const properties = manifest.contributes.configuration.properties;
+  const property = properties["documint.generationMode"];
+  const legacy = properties["aiDocGenerator.generationMode"];
 
   assert.deepEqual(property.enum, ["ai", "local"]);
   assert.equal(property.default, "local");
+  assert.match(legacy.deprecationMessage, /Use documint\.generationMode/);
 });
 
 test("sidebar keeps Local mode focused on controls that affect Local output", () => {
