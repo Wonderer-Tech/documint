@@ -71,3 +71,15 @@ test("Markdown stays compact while HTML retains rich Local visual payloads", () 
   assert.match(document.html, /excalidraw-blueprint/);
   assert.match(document.html, /dependency-graph/);
 });
+
+
+test("Local HTML omits external CDN assets while keeping the interactive code map", () => {
+  const analyzer = new SourceAnalyzer();
+  const project = analyzer.analyzeProject(files);
+  const document = buildLocalDocumentationDocument("Example Project", files, project);
+
+  assert.doesNotMatch(document.html, /cdnjs\.cloudflare\.com/i);
+  assert.doesNotMatch(document.html, /<script[^>]+src=["']https?:\/\//i);
+  assert.match(document.html, /data-documint-local-code-map/);
+  assert.match(document.html, /Find your way through the code/);
+});
