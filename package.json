@@ -133,7 +133,7 @@
         "documint.model": {
           "type": "string",
           "default": "gpt-5.4-nano",
-          "description": "AI mode only: model to use for documentation generation."
+          "description": "AI mode only: model to use for documentation generation. Ollama and LM Studio model IDs are discovered from their fixed local /v1/models endpoint when available; manual model IDs remain supported."
         },
         "documint.documentationDepth": {
           "type": "string",
@@ -271,7 +271,7 @@
         "aiDocGenerator.model": {
           "type": "string",
           "default": "gpt-5.4-nano",
-          "description": "AI mode only: model to use for documentation generation.",
+          "description": "AI mode only: model to use for documentation generation. Ollama and LM Studio model IDs are discovered from their fixed local /v1/models endpoint when available; manual model IDs remain supported.",
           "deprecationMessage": "Deprecated setting key. Use documint.model instead."
         },
         "aiDocGenerator.documentationDepth": {
