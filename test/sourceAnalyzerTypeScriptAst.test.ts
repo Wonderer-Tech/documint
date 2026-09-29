@@ -217,3 +217,59 @@ test("DocuMint BaseAIProvider is detected from the real source file", () => {
   assert.equal(base.exported, true);
   assert.equal(base.scope, "module");
 });
+
+
+test("TypeScript descriptions require explicit file docs or one documented export", () => {
+  const explicit = analyzer.analyzeFile(
+    file(
+      "src/explicit.ts",
+      "typescript",
+      [
+        "/**",
+        " * Handles deterministic cache identity.",
+        " * @file",
+        " */",
+        "export const CACHE_VERSION = 1;",
+      ].join("\n"),
+    ),
+  );
+  assert.deepEqual(explicit.description, {
+    text: "Handles deterministic cache identity.",
+    source: "file-comment",
+    line: 1,
+  });
+
+  const single = analyzer.analyzeFile(
+    file(
+      "src/single.ts",
+      "typescript",
+      [
+        "/** Creates provider instances from normalized names. */",
+        "export class ProviderFactory {}",
+      ].join("\n"),
+    ),
+  );
+  assert.deepEqual(single.description, {
+    text: "Creates provider instances from normalized names.",
+    source: "declaration-comment",
+    line: 1,
+  });
+
+  const ambiguous = analyzer.analyzeFile(
+    file(
+      "src/ambiguous.ts",
+      "typescript",
+      [
+        "/** First exported API. */",
+        "export function first() {}",
+        "/** Second exported API. */",
+        "export function second() {}",
+      ].join("\n"),
+    ),
+  );
+  assert.equal(ambiguous.description, undefined);
+  assert.equal(
+    ambiguous.symbols.find((symbol) => symbol.name === "first")?.description?.text,
+    "First exported API.",
+  );
+});
