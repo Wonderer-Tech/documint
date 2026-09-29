@@ -17,3 +17,7 @@ The current roadmap combines:
 - the interactive code-map prototype review;
 - analyzer correctness findings;
 - the ordered implementation strategy.
+
+## Reference artifacts
+
+- [Claude code-map redesign prototype](./reference/documint-code-map-redesign-prototype.html) — interactive HTML prototype reviewed alongside the active roadmap. Keep this as a visual/interaction reference; production code must follow the roadmap's correctness, provenance, offline, and generic-renderer constraints.
