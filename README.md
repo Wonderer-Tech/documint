@@ -351,6 +351,9 @@ src/
 |-- extensionBase.ts               # Activation, commands, AI/Local routing, consent, cache clearing
 |-- types.ts                       # Shared types and error models
 |-- config/
+|   |-- apiKeyValidation.ts        # Local API-key sanity checks
+|   |-- configuration.ts           # documint.* settings bridge + legacy fallback
+|   |-- configurationPreference.ts # Pure namespace-precedence policy
 |   `-- secretStorage.ts           # VS Code secret storage wrapper
 |-- scanner/
 |   `-- workspaceScanner.ts        # Workspace/selected-path discovery and filtering
@@ -428,10 +431,11 @@ npx @vscode/vsce package
 
 ## Contributing
 
-Issues and PRs are welcome.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development rules and regression-test expectations.
 
 - Repository: https://github.com/Wonderer-Tech/documint
 - Issues: https://github.com/Wonderer-Tech/documint/issues
+- Security policy: [SECURITY.md](SECURITY.md)
 - Release history: [CHANGELOG.md](CHANGELOG.md)
 
 ## License
