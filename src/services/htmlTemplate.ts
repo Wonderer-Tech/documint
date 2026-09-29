@@ -87,10 +87,10 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="Documentation Generator">
-  <title>${${HTML_BASE_STYLES}
-    ion-iteration-count: 1 !important;
-      }
-    }
+  <title>${safeTitle}</title>
+  ${highlightThemeLink}
+  <style>
+${HTML_BASE_STYLES}
     ${READER_STYLES}
     ${localCodeMap.styles}
   </style>
