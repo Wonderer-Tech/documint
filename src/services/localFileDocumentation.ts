@@ -63,10 +63,16 @@ export function renderLocalFileDocumentationFromModel(
   ];
 
   if (file.uses.length > 0) {
-    sections.push("", `**Uses:** ${file.uses.map(inlineCode).join(", ")}`);
+    sections.push(
+      "",
+      `**Uses:** ${file.uses.map((path) => markdownFileLink(path)).join(", ")}`,
+    );
   }
   if (file.usedBy.length > 0) {
-    sections.push("", `**Used by:** ${file.usedBy.map(inlineCode).join(", ")}`);
+    sections.push(
+      "",
+      `**Used by:** ${file.usedBy.map((path) => markdownFileLink(path)).join(", ")}`,
+    );
   }
 
   if (file.exportedSymbols.length > 0) {
@@ -74,7 +80,7 @@ export function renderLocalFileDocumentationFromModel(
       "",
       "### Exported API",
       "",
-      renderSymbolTable(file.exportedSymbols, ""),
+      renderSymbolTable(file.exportedSymbols, "", file.path),
     );
   }
 
@@ -83,7 +89,7 @@ export function renderLocalFileDocumentationFromModel(
       "",
       "### Internal API",
       "",
-      renderSymbolTable(file.internalSymbols, ""),
+      renderSymbolTable(file.internalSymbols, "", file.path),
     );
   }
 
@@ -98,16 +104,25 @@ export function renderLocalFileDocumentationFromModel(
   return sections.join("\n");
 }
 
-function renderSymbolTable(symbols: SourceSymbol[], emptyMessage: string): string {
+function renderSymbolTable(
+  symbols: SourceSymbol[],
+  emptyMessage: string,
+  filePath?: string,
+): string {
   if (symbols.length === 0) return emptyMessage;
 
   return [
     "| Kind | Name | Signature | Line |",
     "| --- | --- | --- | ---: |",
-    ...symbols.map(
-      (symbol) =>
-        `| ${escapeTableCell(symbol.kind)} | ${inlineCode(symbol.name)} | ${inlineCode(symbol.signature)} | ${symbol.line} |`,
-    ),
+    ...symbols.map((symbol) => {
+      const name = filePath
+        ? `[${inlineCode(symbol.name)}](${relativeSourceHref(filePath, symbol.line)})`
+        : inlineCode(symbol.name);
+      const line = filePath
+        ? `[${symbol.line}](${relativeSourceHref(filePath, symbol.line)})`
+        : String(symbol.line);
+      return `| ${escapeTableCell(symbol.kind)} | ${name} | ${inlineCode(symbol.signature)} | ${line} |`;
+    }),
   ].join("\n");
 }
 
@@ -174,6 +189,19 @@ function buildDependencyIndex(project: ProjectAnalysis): FileDependencyIndex {
 
 function uniqueSorted(values: string[]): string[] {
   return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b));
+}
+
+function markdownFileLink(filePath: string): string {
+  return `[${inlineCode(filePath)}](${relativeSourceHref(filePath)})`;
+}
+
+function relativeSourceHref(filePath: string, line?: number): string {
+  const encoded = String(filePath)
+    .replace(/\\/g, "/")
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  return `../${encoded}${line ? `#L${line}` : ""}`;
 }
 
 function descriptionSourceLabel(source: string): string {
