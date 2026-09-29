@@ -6,6 +6,7 @@ import type {
   SourceSymbol,
   SourceSymbolKind,
   SourceSymbolScope,
+  TodoComment,
 } from "./sourceAnalyzerBase";
 
 const JAVASCRIPT_LIKE_EXTENSIONS = new Set([
@@ -26,7 +27,6 @@ export function isJavaScriptLikeWorkspaceFile(file: WorkspaceFile): boolean {
 
 export function analyzeJavaScriptLikeFile(
   file: WorkspaceFile,
-  todos: FileAnalysis["todos"],
 ): FileAnalysis {
   const sourceFile = ts.createSourceFile(
     file.path,
@@ -59,8 +59,62 @@ export function analyzeJavaScriptLikeFile(
       imports.sort((a, b) => a.line - b.line),
     ),
     symbols: uniqueSymbols(symbols),
-    todos,
+    todos: collectTodoComments(file, sourceFile),
   };
+}
+
+function collectTodoComments(
+  file: WorkspaceFile,
+  sourceFile: ts.SourceFile,
+): TodoComment[] {
+  const extension = file.path.split(".").pop()?.toLowerCase();
+  const variant =
+    extension === "tsx" || extension === "jsx"
+      ? ts.LanguageVariant.JSX
+      : ts.LanguageVariant.Standard;
+  const scanner = ts.createScanner(
+    ts.ScriptTarget.Latest,
+    false,
+    variant,
+    file.content,
+  );
+  const todos: TodoComment[] = [];
+
+  for (
+    let token = scanner.scan();
+    token !== ts.SyntaxKind.EndOfFileToken;
+    token = scanner.scan()
+  ) {
+    if (
+      token !== ts.SyntaxKind.SingleLineCommentTrivia &&
+      token !== ts.SyntaxKind.MultiLineCommentTrivia
+    ) {
+      continue;
+    }
+
+    const startLine =
+      sourceFile.getLineAndCharacterOfPosition(scanner.getTokenPos()).line + 1;
+    const commentLines = scanner
+      .getTokenText()
+      .replace(/^\/\//, "")
+      .replace(/^\/\*/, "")
+      .replace(/\*\/$/, "")
+      .split(/\r?\n/);
+
+    commentLines.forEach((rawLine, index) => {
+      const line = rawLine.replace(/^\s*\*\s?/, "").trim();
+      const match = line.match(/\b(TODO|FIXME|HACK)\b[:\s-]*(.+)$/i);
+      if (!match) {
+        return;
+      }
+      todos.push({
+        line: startLine + index,
+        text: `${match[1].toUpperCase()}: ${match[2].trim()}`,
+      });
+    });
+  }
+
+  return todos;
 }
 
 function scriptKindForPath(filePath: string): ts.ScriptKind {
