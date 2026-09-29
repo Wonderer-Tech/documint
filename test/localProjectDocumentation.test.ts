@@ -111,3 +111,50 @@ test("local project overview renders package scripts and VS Code manifest facts 
   assert.match(output, /`documint\.generate`/);
   assert.match(output, /`documint\.mode`/);
 });
+
+
+test("local project overview derives run commands and VS Code surface from package.json", () => {
+  const manifest: WorkspaceFile = {
+    path: "package.json",
+    language: "json",
+    content: JSON.stringify({
+      main: "./dist/extension.js",
+      scripts: {
+        compile: "npm run typecheck && npm run bundle",
+        test: "npm run compile && npm run test:unit",
+      },
+      contributes: {
+        commands: [
+          {
+            command: "documint.generate",
+            title: "Generate Documentation",
+          },
+        ],
+        configuration: {
+          properties: {
+            "documint.mode": {
+              type: "string",
+              default: "local",
+            },
+          },
+        },
+      },
+    }),
+  };
+  const extendedFiles = [...files, manifest];
+  const extendedProject = analyzer.analyzeProject(extendedFiles);
+  const output = renderLocalProjectDocumentation({
+    projectName: "Example Project",
+    files: extendedFiles,
+    project: extendedProject,
+  });
+
+  assert.match(output, /## How to run/);
+  assert.match(output, /`npm run compile`/);
+  assert.match(output, /`npm run test`/);
+  assert.match(output, /`\.\/dist\/extension\.js`/);
+  assert.match(output, /`documint\.generate`/);
+  assert.match(output, /Generate Documentation/);
+  assert.match(output, /`documint\.mode`/);
+  assert.match(output, /`local`/);
+});
