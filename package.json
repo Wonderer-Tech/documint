@@ -91,7 +91,7 @@
     "configuration": {
       "title": "Documint",
       "properties": {
-        "aiDocGenerator.generationMode": {
+        "documint.generationMode": {
           "type": "string",
           "enum": [
             "ai",
@@ -104,7 +104,7 @@
           "default": "local",
           "description": "Documentation generation mode. AI preserves the provider-backed workflow; Local runs entirely on-device from source analysis."
         },
-        "aiDocGenerator.aiProvider": {
+        "documint.aiProvider": {
           "type": "string",
           "enum": [
             "openai",
@@ -116,12 +116,12 @@
           "default": "openai",
           "description": "AI mode only: provider for documentation generation."
         },
-        "aiDocGenerator.model": {
+        "documint.model": {
           "type": "string",
           "default": "gpt-5.4-nano",
           "description": "AI mode only: model to use for documentation generation."
         },
-        "aiDocGenerator.documentationDepth": {
+        "documint.documentationDepth": {
           "type": "string",
           "enum": [
             "simple",
@@ -132,7 +132,7 @@
           "default": "standard",
           "description": "AI mode only: controls the depth of provider-generated documentation. Local mode is deterministic and does not use this setting."
         },
-        "aiDocGenerator.outputFormat": {
+        "documint.outputFormat": {
           "type": "string",
           "enum": [
             "markdown",
@@ -142,7 +142,7 @@
           "default": "both",
           "description": "Documentation files to generate. Applies to both AI and Local modes."
         },
-        "aiDocGenerator.targetLanguages": {
+        "documint.targetLanguages": {
           "type": "array",
           "items": {
             "type": "string"
@@ -173,33 +173,33 @@
           ],
           "description": "Languages and source-file types included in workspace/folder scanning. Applies to both AI and Local modes."
         },
-        "aiDocGenerator.maxTokens": {
+        "documint.maxTokens": {
           "type": "number",
           "minimum": 1,
           "default": 4000,
           "description": "AI mode only: maximum output tokens requested per provider response. Provider and context-window safety limits can reduce this further."
         },
-        "aiDocGenerator.temperature": {
+        "documint.temperature": {
           "type": "number",
           "minimum": 0,
           "maximum": 1,
           "default": 0.3,
           "description": "AI mode only: provider sampling temperature."
         },
-        "aiDocGenerator.rateLimitDelay": {
+        "documint.rateLimitDelay": {
           "type": "number",
           "minimum": 0,
           "default": 1000,
           "description": "AI mode only: delay between provider API request starts in milliseconds."
         },
-        "aiDocGenerator.concurrentRequests": {
+        "documint.concurrentRequests": {
           "type": "number",
           "minimum": 1,
           "maximum": 15,
           "default": 5,
           "description": "AI mode only: maximum number of detailed file documentation requests to run at the same time. Defaults to 5 for broader provider compatibility; increase it only when your provider rate limits allow."
         },
-        "aiDocGenerator.excludePatterns": {
+        "documint.excludePatterns": {
           "type": "array",
           "items": {
             "type": "string"
@@ -212,9 +212,146 @@
           ],
           "description": "Additional source-scan exclusions used by both AI and Local modes."
         },
-        "aiDocGenerator.customApiEndpoint": {
+        "documint.customApiEndpoint": {
           "type": "string",
           "description": "AI mode only: custom OpenAI-compatible chat completions URL, for example https://api.example.com/v1/chat/completions"
+        },
+        "aiDocGenerator.generationMode": {
+          "type": "string",
+          "enum": [
+            "ai",
+            "local"
+          ],
+          "enumDescriptions": [
+            "Generate enhanced documentation with the selected AI provider.",
+            "Generate deterministic documentation locally without an AI provider or API key."
+          ],
+          "default": "local",
+          "description": "Documentation generation mode. AI preserves the provider-backed workflow; Local runs entirely on-device from source analysis.",
+          "deprecationMessage": "Deprecated setting key. Use documint.generationMode instead."
+        },
+        "aiDocGenerator.aiProvider": {
+          "type": "string",
+          "enum": [
+            "openai",
+            "anthropic",
+            "openrouter",
+            "deepseek",
+            "custom"
+          ],
+          "default": "openai",
+          "description": "AI mode only: provider for documentation generation.",
+          "deprecationMessage": "Deprecated setting key. Use documint.aiProvider instead."
+        },
+        "aiDocGenerator.model": {
+          "type": "string",
+          "default": "gpt-5.4-nano",
+          "description": "AI mode only: model to use for documentation generation.",
+          "deprecationMessage": "Deprecated setting key. Use documint.model instead."
+        },
+        "aiDocGenerator.documentationDepth": {
+          "type": "string",
+          "enum": [
+            "simple",
+            "basic",
+            "standard",
+            "comprehensive"
+          ],
+          "default": "standard",
+          "description": "AI mode only: controls the depth of provider-generated documentation. Local mode is deterministic and does not use this setting.",
+          "deprecationMessage": "Deprecated setting key. Use documint.documentationDepth instead."
+        },
+        "aiDocGenerator.outputFormat": {
+          "type": "string",
+          "enum": [
+            "markdown",
+            "html",
+            "both"
+          ],
+          "default": "both",
+          "description": "Documentation files to generate. Applies to both AI and Local modes.",
+          "deprecationMessage": "Deprecated setting key. Use documint.outputFormat instead."
+        },
+        "aiDocGenerator.targetLanguages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "typescript",
+            "javascript",
+            "python",
+            "java",
+            "cpp",
+            "c",
+            "csharp",
+            "go",
+            "rust",
+            "php",
+            "ruby",
+            "swift",
+            "kotlin",
+            "scala",
+            "shell",
+            "yaml",
+            "json",
+            "xml",
+            "html",
+            "css",
+            "scss",
+            "sql"
+          ],
+          "description": "Languages and source-file types included in workspace/folder scanning. Applies to both AI and Local modes.",
+          "deprecationMessage": "Deprecated setting key. Use documint.targetLanguages instead."
+        },
+        "aiDocGenerator.maxTokens": {
+          "type": "number",
+          "minimum": 1,
+          "default": 4000,
+          "description": "AI mode only: maximum output tokens requested per provider response. Provider and context-window safety limits can reduce this further.",
+          "deprecationMessage": "Deprecated setting key. Use documint.maxTokens instead."
+        },
+        "aiDocGenerator.temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.3,
+          "description": "AI mode only: provider sampling temperature.",
+          "deprecationMessage": "Deprecated setting key. Use documint.temperature instead."
+        },
+        "aiDocGenerator.rateLimitDelay": {
+          "type": "number",
+          "minimum": 0,
+          "default": 1000,
+          "description": "AI mode only: delay between provider API request starts in milliseconds.",
+          "deprecationMessage": "Deprecated setting key. Use documint.rateLimitDelay instead."
+        },
+        "aiDocGenerator.concurrentRequests": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 15,
+          "default": 5,
+          "description": "AI mode only: maximum number of detailed file documentation requests to run at the same time. Defaults to 5 for broader provider compatibility; increase it only when your provider rate limits allow.",
+          "deprecationMessage": "Deprecated setting key. Use documint.concurrentRequests instead."
+        },
+        "aiDocGenerator.excludePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/build/**",
+            "**/.git/**"
+          ],
+          "description": "Additional source-scan exclusions used by both AI and Local modes.",
+          "deprecationMessage": "Deprecated setting key. Use documint.excludePatterns instead."
+        },
+        "aiDocGenerator.customApiEndpoint": {
+          "type": "string",
+          "description": "AI mode only: custom OpenAI-compatible chat completions URL, for example https://api.example.com/v1/chat/completions",
+          "deprecationMessage": "Deprecated setting key. Use documint.customApiEndpoint instead."
         }
       }
     }
