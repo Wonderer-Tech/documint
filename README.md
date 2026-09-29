@@ -371,25 +371,26 @@ AI output can additionally include richer source-grounded visual/semantic sectio
 ## Project Structure
 
 ```text
-src/
-|-- analyzer/
+src/ # VS Code extension source
+|-- analyzer/ # Source analysis, symbols, imports, and dependency facts
 |   |-- sourceAnalyzer.ts          # Public analyzer facade + AST-backed JS/TS routing
 |   `-- sourceAnalyzerBase.ts      # Core cross-language analysis and non-JS/TS facts
 |-- extension.ts                   # Public VS Code activation entry point
 |-- extensionBase.ts               # Activation, commands, AI/Local routing, consent, cache clearing
 |-- types.ts                       # Shared types and error models
-|-- config/
+|-- config/ # Settings migration, API-key validation, and Secret Storage
 |   |-- apiKeyValidation.ts        # Local API-key sanity checks
 |   |-- configuration.ts           # documint.* settings bridge + legacy fallback
 |   |-- configurationPreference.ts # Pure namespace-precedence policy
 |   `-- secretStorage.ts           # VS Code secret storage wrapper
-|-- scanner/
+|-- scanner/ # Workspace/file discovery, language filtering, and exclusions
 |   `-- workspaceScanner.ts        # Workspace/selected-path discovery and filtering
-|-- providers/
+|-- providers/ # Cloud and local AI-provider runtimes, models, retry, and limits
 |   |-- aiProvider.ts              # Base provider and prompt/chunking pipeline
 |   |-- providerFactory.ts         # Provider resolution and creation
 |   |-- localProviderPolicy.ts     # Ollama/LM Studio loopback + model policy
 |   |-- localOpenAICompatibleProvider.ts # Keyless local OpenAI-compatible runtime
+|   |-- localProviderDiscovery.ts  # Fixed-loopback /v1/models discovery
 |   |-- providerModelGuard.ts      # Prevents stale cross-provider model IDs
 |   |-- providerMetadataDecorator.ts # Context-window metadata/override layer
 |   |-- openAICapabilities.ts      # Canonical OpenAI context/output capability table
@@ -400,7 +401,7 @@ src/
 |   |-- openrouterProvider.ts
 |   |-- deepseekProvider.ts
 |   `-- customProvider.ts
-|-- services/
+|-- services/ # Local/AI generation, cache, rendering, navigation, and output policy
 |   |-- docGenerator.ts                 # Public AI generator facade
 |   |-- docGeneratorBase.ts             # AI orchestration + canonical prompt/cache binding
 |   |-- generationMode.ts               # Canonical AI/Local mode normalization
@@ -424,8 +425,9 @@ src/
 |   |-- htmlBaseStyles.ts               # Generated HTML base/Jelly UI styles
 |   |-- htmlBaseScript.ts               # Generated HTML reader/visual runtime
 |   `-- modelMetadataService.ts         # Context window metadata fetch/cache
-`-- views/
+`-- views/ # Sidebar webview host, template, styles, and client runtime
     |-- sidebarProvider.ts              # Sidebar host/state/message bridge
+    |-- sidebarTemplate.ts              # CSP-aware sidebar HTML composition
     |-- sidebarStyles.ts                # Sidebar webview styles
     `-- sidebarClientScript.ts          # Sidebar webview client runtime
 ```
