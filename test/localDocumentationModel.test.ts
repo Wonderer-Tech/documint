@@ -161,3 +161,49 @@ test("suggested reading path starts from detected entry points and follows depen
     /Imported by src\/extension\.ts/,
   );
 });
+
+
+test("canonical model extracts deterministic package scripts and VS Code metadata", () => {
+  const manifest: WorkspaceFile = {
+    path: "package.json",
+    language: "json",
+    content: JSON.stringify({
+      main: "./dist/extension.js",
+      scripts: {
+        test: "node --test",
+        compile: "tsc --noEmit",
+      },
+      contributes: {
+        commands: [
+          { command: "documint.generate", title: "Generate Documentation" },
+        ],
+        configuration: {
+          properties: {
+            "documint.mode": { default: "local" },
+            "documint.limit": { default: 5 },
+          },
+        },
+      },
+    }),
+  };
+  const projectFiles = [...files, manifest];
+  const project = new SourceAnalyzer().analyzeProject(projectFiles);
+  const model = buildLocalDocumentationModel("Example", projectFiles, project);
+
+  assert.ok(model.gettingStarted);
+  assert.equal(model.gettingStarted.packageJsonPath, "package.json");
+  assert.equal(model.gettingStarted.extensionEntry, "./dist/extension.js");
+  assert.deepEqual(model.gettingStarted.scripts, [
+    { name: "compile", command: "tsc --noEmit", run: "npm run compile" },
+    { name: "test", command: "node --test", run: "npm run test" },
+  ]);
+  assert.deepEqual(model.gettingStarted.vscodeCommands, [
+    { id: "documint.generate", title: "Generate Documentation" },
+  ]);
+  assert.deepEqual(model.gettingStarted.vscodeSettings, [
+    { key: "documint.limit", defaultValue: 5 },
+    { key: "documint.mode", defaultValue: "local" },
+  ]);
+  assert.ok(model.suggestedReadingPath.length > 0);
+  assert.equal(model.suggestedReadingPath[0].path, "src/extension.ts");
+});
