@@ -103,3 +103,17 @@ test("Local Markdown keeps orientation sections while HTML avoids duplicating co
   assert.doesNotMatch(document.html, /<h2[^>]*>Core files<\/h2>/);
   assert.match(document.html, /data-documint-local-code-map/);
 });
+
+
+test("Local HTML exposes Project map navigation and distinct file/docs search hints", () => {
+  const analyzer = new SourceAnalyzer();
+  const project = analyzer.analyzeProject(files);
+  const document = buildLocalDocumentationDocument("Example Project", files, project);
+
+  assert.match(
+    document.html,
+    /href="#documint-local-code-map"[^>]*>[sS]*Project map/,
+  );
+  assert.match(document.html, /Ctrl/⌘ K</kbd> Files/);
+  assert.match(document.html, /<kbd>/</kbd> Docs/);
+});
