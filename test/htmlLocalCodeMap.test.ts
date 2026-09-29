@@ -198,3 +198,17 @@ test("Local code map search and file card include verified environment reference
 });
 
 
+
+
+test("Local module-map handwritten notes stay metric-backed and conservative", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.styles, /\.local-map-note/);
+  assert.match(fragments.script, /detected entry module/);
+  assert.match(fragments.script, /cross-module links:/);
+  assert.match(fragments.script, /largest module:/);
+  assert.doesNotMatch(
+    fragments.script,
+    /everything passes through|only place that calls|will break|good to split/i,
+  );
+});
