@@ -164,8 +164,14 @@ ext install wonderertech.documint
 
 ### VSIX
 
+Tagged releases publish the packaged VSIX as a GitHub Release asset instead of committing binaries to the source tree.
+
+1. Open the repository's **Releases** page.
+2. Download `documint-<version>.vsix`.
+3. Install it:
+
 ```bash
-code --install-extension documint-1.0.7.vsix
+code --install-extension /path/to/documint-<version>.vsix
 ```
 
 ### Build from Source
