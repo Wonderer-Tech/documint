@@ -16,7 +16,7 @@ import { normalizeProviderRequestError } from "./providerHttpError";
  *
  * Configure via:
  *   documint.customApiEndpoint  — full URL to /chat/completions
- *   aiDocGenerator.model              — model name expected by the endpoint
+ *   documint.model                    — model name expected by the endpoint
  */
 export class CustomProvider extends BaseAIProvider {
   name = "custom";
