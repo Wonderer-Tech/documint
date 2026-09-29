@@ -427,6 +427,11 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     color: var(--text-muted);
     font-size: 10.5px;
   }
+  .local-map-source-link {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .local-map-source-link:hover { text-decoration: underline; }
   .local-map-card-actions {
     display: flex;
     flex-wrap: wrap;
@@ -630,6 +635,15 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
     Object.keys(attrs || {}).forEach(function (key) { node.setAttribute(key, String(attrs[key])); });
     if (parent) parent.appendChild(node);
     return node;
+  }
+
+  function relativeSourceHref(path, line) {
+    var encoded = String(path || '')
+      .replace(/\\\\/g, '/')
+      .split('/')
+      .map(function (segment) { return encodeURIComponent(segment); })
+      .join('/');
+    return '../' + encoded + (line ? '#L' + line : '');
   }
 
   function fileName(path) {
@@ -1264,7 +1278,16 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
 
     var meta = document.createElement('p');
     meta.className = 'local-map-card-meta';
-    meta.textContent = file.lines + ' lines · ' + file.exports.length + ' exports · used by ' + file.usedBy.length;
+    meta.appendChild(document.createTextNode(
+      file.lines + ' lines · ' + file.exports.length + ' exports · used by ' + file.usedBy.length + ' · '
+    ));
+    var sourceLink = document.createElement('a');
+    sourceLink.className = 'local-map-source-link';
+    sourceLink.href = relativeSourceHref(file.path);
+    sourceLink.target = '_blank';
+    sourceLink.rel = 'noopener';
+    sourceLink.textContent = 'Open source';
+    meta.appendChild(sourceLink);
     card.appendChild(meta);
 
     var actions = document.createElement('div');
@@ -1312,11 +1335,29 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
       var tbody = document.createElement('tbody');
       file.exports.forEach(function (item) {
         var row = document.createElement('tr');
-        [item.name, item.kind, String(item.line)].forEach(function (value) {
-          var cell = document.createElement('td');
-          cell.textContent = value;
-          row.appendChild(cell);
-        });
+        var nameCell = document.createElement('td');
+        var exportLink = document.createElement('a');
+        exportLink.className = 'local-map-source-link';
+        exportLink.href = relativeSourceHref(file.path, item.line);
+        exportLink.target = '_blank';
+        exportLink.rel = 'noopener';
+        exportLink.textContent = item.name;
+        nameCell.appendChild(exportLink);
+        row.appendChild(nameCell);
+
+        var kindCell = document.createElement('td');
+        kindCell.textContent = item.kind;
+        row.appendChild(kindCell);
+
+        var lineCell = document.createElement('td');
+        var lineLink = document.createElement('a');
+        lineLink.className = 'local-map-source-link';
+        lineLink.href = relativeSourceHref(file.path, item.line);
+        lineLink.target = '_blank';
+        lineLink.rel = 'noopener';
+        lineLink.textContent = String(item.line);
+        lineCell.appendChild(lineLink);
+        row.appendChild(lineCell);
         tbody.appendChild(row);
       });
       table.appendChild(tbody);
