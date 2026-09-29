@@ -59,35 +59,6 @@ export interface LocalDocumentationModuleEdge {
 export interface LocalPackageScript {
   name: string;
   command: string;
-}
-
-export interface LocalVsCodeCommand {
-  id: string;
-  title?: string;
-}
-
-export interface LocalVsCodeSetting {
-  key: string;
-  defaultValue?: unknown;
-}
-
-export interface LocalGettingStartedFacts {
-  packageManager: "npm";
-  scripts: LocalPackageScript[];
-  vscodeCommands: LocalVsCodeCommand[];
-  vscodeSettings: LocalVsCodeSetting[];
-  extensionEntry?: string;
-}
-
-export interface LocalReadingPathItem {
-  path: string;
-  reason: string;
-  entryPoint: boolean;
-}
-
-export interface LocalPackageScript {
-  name: string;
-  command: string;
   run: string;
 }
 
@@ -107,6 +78,12 @@ export interface LocalGettingStartedFacts {
   scripts: LocalPackageScript[];
   vscodeCommands: LocalVsCodeCommand[];
   vscodeSettings: LocalVsCodeSetting[];
+}
+
+export interface LocalReadingPathItem {
+  path: string;
+  reason: string;
+  entryPoint: boolean;
 }
 
 export interface LocalDocumentationModel {
@@ -155,14 +132,14 @@ export function buildLocalDocumentationModel(
   );
 
   const fileModels: LocalDocumentationFile[] = sortedFiles.map((file) => {
-    const path = normalizeProjectPath(file.path);
-    const analysis = analysisByPath.get(path);
+    const filePath = normalizeProjectPath(file.path);
+    const analysis = analysisByPath.get(filePath);
     if (!analysis) {
-      throw new Error(`Missing source analysis for ${path}`);
+      throw new Error(`Missing source analysis for ${filePath}`);
     }
 
     const sourceDescription = analysis.description;
-    const readmeDescription = readmeFacts.descriptionsByPath.get(path);
+    const readmeDescription = readmeFacts.descriptionsByPath.get(filePath);
     const description: LocalDescription | undefined = sourceDescription
       ? { ...sourceDescription }
       : readmeDescription
@@ -177,8 +154,8 @@ export function buildLocalDocumentationModel(
     );
 
     return {
-      path,
-      module: structuralModuleName(path),
+      path: filePath,
+      module: structuralModuleName(filePath),
       language: file.language,
       lineCount: countLines(file.content),
       description,
@@ -187,9 +164,9 @@ export function buildLocalDocumentationModel(
       exportedSymbols,
       internalSymbols,
       todos: [...analysis.todos],
-      uses: uniqueSorted(dependencyIndex.uses.get(path) ?? []),
-      usedBy: uniqueSorted(dependencyIndex.usedBy.get(path) ?? []),
-      entryPoint: entryPoints.has(path),
+      uses: uniqueSorted(dependencyIndex.uses.get(filePath) ?? []),
+      usedBy: uniqueSorted(dependencyIndex.usedBy.get(filePath) ?? []),
+      entryPoint: entryPoints.has(filePath),
     };
   });
 
@@ -203,7 +180,9 @@ export function buildLocalDocumentationModel(
     files: fileModels,
     modules,
     moduleEdges,
-    entryPoints: uniqueSorted(project.entryPoints.map(normalizeProjectPath)),
+    entryPoints: uniqueSorted(
+      project.entryPoints.map((value) => normalizeProjectPath(value)),
+    ),
     externalDependencies: uniqueSorted(project.externalDependencies),
     internalDependencies: project.internalDependencies.map((edge) => ({
       ...edge,
@@ -229,181 +208,6 @@ export function buildLocalDocumentationModel(
     gettingStarted,
     suggestedReadingPath,
   };
-}
-
-function buildSuggestedReadingPath(
-  files: LocalDocumentationFile[],
-): LocalReadingPathItem[] {
-  const byPath = new Map(files.map((file) => [file.path, file]));
-  const selected: LocalReadingPathItem[] = [];
-  const seen = new Set<string>();
-  const queue: Array<{ path: string; parent?: string }> = files
-    .filter((file) => file.entryPoint)
-    .sort((a, b) => a.path.localeCompare(b.path))
-    .map((file) => ({ path: file.path }));
-
-  while (queue.length > 0 && selected.length < 8) {
-    const current = queue.shift()!;
-    if (seen.has(current.path)) {
-      continue;
-    }
-    const file = byPath.get(current.path);
-    if (!file) {
-      continue;
-    }
-
-    seen.add(file.path);
-    selected.push({
-      path: file.path,
-      entryPoint: file.entryPoint,
-      reason: file.entryPoint
-        ? "Detected project entry point."
-        : current.parent
-          ? `Imported by ${current.parent}.`
-          : readingReason(file),
-    });
-
-    const next = file.uses
-      .map((path) => byPath.get(path))
-      .filter((value): value is LocalDocumentationFile => Boolean(value))
-      .filter((value) => !seen.has(value.path))
-      .sort(
-        (a, b) =>
-          b.usedBy.length - a.usedBy.length ||
-          b.exportedSymbols.length - a.exportedSymbols.length ||
-          a.path.localeCompare(b.path),
-      );
-
-    for (const dependency of next) {
-      queue.push({ path: dependency.path, parent: file.path });
-    }
-  }
-
-  if (selected.length < 8) {
-    const fallbacks = files
-      .filter((file) => !seen.has(file.path))
-      .sort(
-        (a, b) =>
-          b.usedBy.length - a.usedBy.length ||
-          b.uses.length - a.uses.length ||
-          b.exportedSymbols.length - a.exportedSymbols.length ||
-          a.path.localeCompare(b.path),
-      );
-
-    for (const file of fallbacks) {
-      if (selected.length >= 8) break;
-      seen.add(file.path);
-      selected.push({
-        path: file.path,
-        entryPoint: file.entryPoint,
-        reason: readingReason(file),
-      });
-    }
-  }
-
-  return selected;
-}
-
-function readingReason(file: LocalDocumentationFile): string {
-  if (file.usedBy.length > 0) {
-    return `Used by ${file.usedBy.length} project file${file.usedBy.length === 1 ? "" : "s"}.`;
-  }
-  if (file.uses.length > 0) {
-    return `Uses ${file.uses.length} internal project file${file.uses.length === 1 ? "" : "s"}.`;
-  }
-  if (file.exportedSymbols.length > 0) {
-    return `Exports ${file.exportedSymbols.length} detected API symbol${file.exportedSymbols.length === 1 ? "" : "s"}.`;
-  }
-  return "Included as a structurally relevant source file.";
-}
-
-function extractGettingStartedFacts(
-  files: WorkspaceFile[],
-): LocalGettingStartedFacts | undefined {
-  const manifest = files.find(
-    (file) => normalizeProjectPath(file.path) === "package.json",
-  );
-  if (!manifest) {
-    return undefined;
-  }
-
-  try {
-    const parsed = JSON.parse(manifest.content) as {
-      main?: unknown;
-      scripts?: unknown;
-      contributes?: {
-        commands?: unknown;
-        configuration?: {
-          properties?: unknown;
-        };
-      };
-    };
-
-    const scripts =
-      parsed.scripts && typeof parsed.scripts === "object"
-        ? Object.entries(parsed.scripts as Record<string, unknown>)
-            .filter((entry): entry is [string, string] =>
-              typeof entry[1] === "string",
-            )
-            .map(([name, command]) => ({ name, command }))
-            .sort((a, b) => a.name.localeCompare(b.name))
-        : [];
-
-    const vscodeCommands = Array.isArray(parsed.contributes?.commands)
-      ? parsed.contributes!.commands
-          .filter(
-            (value): value is { command: string; title?: string } =>
-              Boolean(
-                value &&
-                typeof value === "object" &&
-                typeof (value as { command?: unknown }).command === "string",
-              ),
-          )
-          .map((value) => ({
-            id: value.command,
-            title: typeof value.title === "string" ? value.title : undefined,
-          }))
-          .sort((a, b) => a.id.localeCompare(b.id))
-      : [];
-
-    const properties = parsed.contributes?.configuration?.properties;
-    const vscodeSettings =
-      properties && typeof properties === "object"
-        ? Object.entries(properties as Record<string, unknown>)
-            .map(([key, value]) => ({
-              key,
-              defaultValue:
-                value &&
-                typeof value === "object" &&
-                "default" in value
-                  ? (value as { default?: unknown }).default
-                  : undefined,
-            }))
-            .sort((a, b) => a.key.localeCompare(b.key))
-        : [];
-
-    const extensionEntry =
-      typeof parsed.main === "string" ? parsed.main : undefined;
-
-    if (
-      scripts.length === 0 &&
-      vscodeCommands.length === 0 &&
-      vscodeSettings.length === 0 &&
-      !extensionEntry
-    ) {
-      return undefined;
-    }
-
-    return {
-      packageManager: "npm",
-      scripts,
-      vscodeCommands,
-      vscodeSettings,
-      extensionEntry,
-    };
-  } catch {
-    return undefined;
-  }
 }
 
 function buildDependencyIndex(project: ProjectAnalysis): {
@@ -463,16 +267,9 @@ function buildModules(
     .map((module) => {
       const filePaths = uniqueSorted(module.filePaths);
       const primaryFilePaths = filePaths
-        .map((path) => filesByPath.get(path))
+        .map((filePath) => filesByPath.get(filePath))
         .filter((file): file is LocalDocumentationFile => Boolean(file))
-        .sort(
-          (a, b) =>
-            Number(b.entryPoint) - Number(a.entryPoint) ||
-            b.usedBy.length - a.usedBy.length ||
-            b.exportedSymbols.length - a.exportedSymbols.length ||
-            b.uses.length - a.uses.length ||
-            a.path.localeCompare(b.path),
-        )
+        .sort(comparePrimaryFiles)
         .slice(0, 2)
         .map((file) => file.path);
 
@@ -488,6 +285,19 @@ function buildModules(
         b.fileCount - a.fileCount ||
         a.name.localeCompare(b.name),
     );
+}
+
+function comparePrimaryFiles(
+  a: LocalDocumentationFile,
+  b: LocalDocumentationFile,
+): number {
+  return (
+    Number(b.entryPoint) - Number(a.entryPoint) ||
+    b.usedBy.length - a.usedBy.length ||
+    b.exportedSymbols.length - a.exportedSymbols.length ||
+    b.uses.length - a.uses.length ||
+    a.path.localeCompare(b.path)
+  );
 }
 
 function buildModuleEdges(
@@ -514,6 +324,181 @@ function buildModuleEdges(
       a.from.localeCompare(b.from) ||
       a.to.localeCompare(b.to),
   );
+}
+
+function extractGettingStartedFacts(
+  files: WorkspaceFile[],
+): LocalGettingStartedFacts | undefined {
+  const packageFile = files.find(
+    (file) => normalizeProjectPath(file.path) === "package.json",
+  );
+  if (!packageFile) {
+    return undefined;
+  }
+
+  let manifest: any;
+  try {
+    manifest = JSON.parse(packageFile.content);
+  } catch {
+    return undefined;
+  }
+
+  const scripts = Object.entries(
+    manifest?.scripts && typeof manifest.scripts === "object"
+      ? manifest.scripts
+      : {},
+  )
+    .filter((entry): entry is [string, string] => typeof entry[1] === "string")
+    .map(([name, command]) => ({
+      name,
+      command,
+      run: `npm run ${name}`,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const vscodeCommands: LocalVsCodeCommand[] = Array.isArray(
+    manifest?.contributes?.commands,
+  )
+    ? manifest.contributes.commands
+        .filter(
+          (command: any) =>
+            command &&
+            typeof command.command === "string" &&
+            typeof command.title === "string",
+        )
+        .map((command: any) => ({
+          id: command.command,
+          title: command.title,
+        }))
+        .sort((a: LocalVsCodeCommand, b: LocalVsCodeCommand) =>
+          a.id.localeCompare(b.id),
+        )
+    : [];
+
+  const configurationEntries = Array.isArray(
+    manifest?.contributes?.configuration,
+  )
+    ? manifest.contributes.configuration
+    : manifest?.contributes?.configuration
+      ? [manifest.contributes.configuration]
+      : [];
+
+  const vscodeSettings: LocalVsCodeSetting[] = configurationEntries
+    .flatMap((configuration: any) => {
+      const properties =
+        configuration?.properties &&
+        typeof configuration.properties === "object"
+          ? configuration.properties
+          : {};
+      return Object.entries(properties).map(([key, value]) => ({
+        key,
+        defaultValue:
+          value && typeof value === "object" && "default" in (value as object)
+            ? (value as any).default
+            : undefined,
+      }));
+    })
+    .sort((a: LocalVsCodeSetting, b: LocalVsCodeSetting) =>
+      a.key.localeCompare(b.key),
+    );
+
+  const extensionEntry =
+    typeof manifest?.main === "string" ? manifest.main : undefined;
+
+  if (
+    scripts.length === 0 &&
+    vscodeCommands.length === 0 &&
+    vscodeSettings.length === 0 &&
+    !extensionEntry
+  ) {
+    return undefined;
+  }
+
+  return {
+    packageJsonPath: "package.json",
+    extensionEntry,
+    scripts,
+    vscodeCommands,
+    vscodeSettings,
+  };
+}
+
+function buildSuggestedReadingPath(
+  files: LocalDocumentationFile[],
+): LocalReadingPathItem[] {
+  const byPath = new Map(files.map((file) => [file.path, file]));
+  const selected: LocalReadingPathItem[] = [];
+  const seen = new Set<string>();
+  const queue: Array<{ path: string; parent?: string }> = files
+    .filter((file) => file.entryPoint)
+    .sort((a, b) => a.path.localeCompare(b.path))
+    .map((file) => ({ path: file.path }));
+
+  while (queue.length > 0 && selected.length < 8) {
+    const current = queue.shift()!;
+    if (seen.has(current.path)) {
+      continue;
+    }
+
+    const file = byPath.get(current.path);
+    if (!file) {
+      continue;
+    }
+
+    seen.add(file.path);
+    selected.push({
+      path: file.path,
+      entryPoint: file.entryPoint,
+      reason: file.entryPoint
+        ? "Detected project entry point."
+        : current.parent
+          ? `Imported by ${current.parent}.`
+          : readingReason(file),
+    });
+
+    const next = file.uses
+      .map((filePath) => byPath.get(filePath))
+      .filter((value): value is LocalDocumentationFile => Boolean(value))
+      .filter((value) => !seen.has(value.path))
+      .sort(comparePrimaryFiles);
+
+    for (const dependency of next) {
+      queue.push({ path: dependency.path, parent: file.path });
+    }
+  }
+
+  if (selected.length < 8) {
+    const fallbacks = files
+      .filter((file) => !seen.has(file.path))
+      .sort(comparePrimaryFiles);
+
+    for (const file of fallbacks) {
+      if (selected.length >= 8) {
+        break;
+      }
+      seen.add(file.path);
+      selected.push({
+        path: file.path,
+        entryPoint: file.entryPoint,
+        reason: readingReason(file),
+      });
+    }
+  }
+
+  return selected;
+}
+
+function readingReason(file: LocalDocumentationFile): string {
+  if (file.usedBy.length > 0) {
+    return `Used by ${file.usedBy.length} project file${file.usedBy.length === 1 ? "" : "s"}.`;
+  }
+  if (file.uses.length > 0) {
+    return `Uses ${file.uses.length} internal project file${file.uses.length === 1 ? "" : "s"}.`;
+  }
+  if (file.exportedSymbols.length > 0) {
+    return `Exports ${file.exportedSymbols.length} detected API symbol${file.exportedSymbols.length === 1 ? "" : "s"}.`;
+  }
+  return "Included as a structurally relevant source file.";
 }
 
 function countLines(content: string): number {
