@@ -1636,9 +1636,9 @@ export class DocGeneratorService {
     const configured =
       options.concurrentRequests ??
       configuration.get<number>("concurrentRequests") ??
-      15;
+      5;
     const parsed = Number(configured);
-    const bounded = Number.isFinite(parsed) ? Math.floor(parsed) : 15;
+    const bounded = Number.isFinite(parsed) ? Math.floor(parsed) : 5;
     return Math.min(Math.max(bounded, 1), Math.min(totalFiles, 15));
   }
 
