@@ -108,3 +108,24 @@ test("sidebar initial state matches the Local-first manifest default", () => {
 
   assert.match(source, /generationMode:\s*"local"/);
 });
+
+
+test("sidebar first paint matches the Local-first default", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/views/sidebarProvider.ts"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /<option value="local" selected>Local Documentation — No AI<\/option>/,
+  );
+  assert.match(source, /class="section hidden" id="authSection"/);
+  assert.match(source, /class="section hidden" id="providerSection"/);
+  assert.match(source, /class="field hidden" id="depthField"/);
+  assert.match(source, /id="localModeHelp">Runs entirely on this machine/);
+  assert.match(
+    source,
+    /<span id="generateBtnText">Generate Local Documentation<\/span>/,
+  );
+});
