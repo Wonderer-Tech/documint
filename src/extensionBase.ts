@@ -68,6 +68,10 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   function sendsCodeToExternalProvider(provider: string): boolean {
+    if (provider === "ollama" || provider === "lmstudio") {
+      return false;
+    }
+
     if (provider === "custom") {
       const endpoint = getDocuMintConfiguration()
         .get<string>("customApiEndpoint");
