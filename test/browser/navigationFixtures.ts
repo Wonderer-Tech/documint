@@ -32,10 +32,10 @@ function emit(
   writeFileSync(`${output}/${name}.html`, hardenGeneratedHtmlForOffline(sanitizeHtml(html)));
   fixtures.push({ name, files: count, lines, chart, codeMap });
 }
-emit("local", local.html, files.length, local.totalLines);
+emit("local", local.html, files.length, local.totalLines, false);
 const singleFiles: WorkspaceFile[] = [{ path: "index.ts", language: "typescript", content: "export const single = 1;\n" }];
 const single = buildLocalDocumentationDocument("Single File", singleFiles, analyzer.analyzeProject(singleFiles));
-emit("single-file", single.html, 1, single.totalLines);
+emit("single-file", single.html, 1, single.totalLines, false);
 
 const codeMapFiles: WorkspaceFile[] = [
   {
@@ -110,7 +110,7 @@ emit(
   codeMapDocument.html,
   codeMapFiles.length,
   codeMapDocument.totalLines,
-  true,
+  false,
   true,
 );
 
@@ -127,7 +127,7 @@ const blueprint = {
       name: "src/providers",
       role: "Module",
       fileCount: 1,
-      lineCount: aiFiles[0].content.split(/\\r?\\n/).length,
+      lineCount: aiFiles[0].content.split(/\r?\n/).length,
       languages: ["typescript"],
       importantFiles: [],
     },
@@ -136,7 +136,7 @@ const blueprint = {
       name: "src/scanner",
       role: "Module",
       fileCount: 1,
-      lineCount: aiFiles[1].content.split(/\\r?\\n/).length,
+      lineCount: aiFiles[1].content.split(/\r?\n/).length,
       languages: ["typescript"],
       importantFiles: [],
     },
@@ -154,7 +154,7 @@ const blueprint = {
       language: file.language,
       symbolCount: aiProject.files[index]?.symbols.length ?? 0,
       dependencyCount: 0,
-      lineCount: file.content.split(/\\r?\\n/).length,
+      lineCount: file.content.split(/\r?\n/).length,
     })),
     edges: [],
   },
@@ -171,11 +171,11 @@ const content = '<h1>AI Format Fixture</h1><h2 id="overview">Project Overview</h
   aiFiles.map((file, i) => `<h1 id="file-${i}">${escape(file.path)}</h1><p>Fixture file documentation.</p>`).join("");
 const ai = generateHtmlTemplate({ title: "AI Format Fixture", projectName: "AI Format Fixture", fileCount: 2,
   generationDate: "2026-09-18T00:00:00.000Z", languages: ["typescript"], totalLines: 4, tocHtml: toc, contentHtml: content });
-emit("ai-format", ai, 2, 4);
+emit("ai-format", ai, 2, 4, true);
 emit(
   "malformed-chart",
   ai.replace(
-    /(<code class="language-architecture-blueprint">)[\\s\\S]*?(<\\/code>)/,
+    /(<code class="language-architecture-blueprint">)[\s\S]*?(<\\/code>)/,
     '$1{"modules":[null]}$2',
   ),
   2,
@@ -183,5 +183,5 @@ emit(
   false,
 );
 const legacyToc = toc.replace(/ class="toc-link level-[1-6]"/g, "").replace(/<span class="toc-text">([\s\S]*?)<\/span>/g, "$1");
-emit("legacy-bare-links", ai.replace(toc, legacyToc), 2, 4);
+emit("legacy-bare-links", ai.replace(toc, legacyToc), 2, 4, true);
 writeFileSync(`${output}/fixtures.json`, JSON.stringify(fixtures, null, 2));
