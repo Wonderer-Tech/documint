@@ -710,6 +710,103 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
     }
   }
 
+  function layoutModules(modules, edges, width) {
+    var names = new Set(modules.map(function (module) { return module.name; }));
+    var outgoing = new Map();
+    var incomingCount = new Map();
+    modules.forEach(function (module) {
+      outgoing.set(module.name, []);
+      incomingCount.set(module.name, 0);
+    });
+    edges.forEach(function (edge) {
+      if (!names.has(edge.from) || !names.has(edge.to) || edge.from === edge.to) return;
+      outgoing.get(edge.from).push(edge.to);
+      incomingCount.set(edge.to, (incomingCount.get(edge.to) || 0) + 1);
+    });
+
+    var roots = Array.from(new Set(
+      data.files
+        .filter(function (file) { return file.entryPoint; })
+        .map(function (file) { return file.module; })
+        .filter(function (name) { return names.has(name); })
+    ));
+    if (!roots.length) {
+      roots = modules
+        .filter(function (module) { return (incomingCount.get(module.name) || 0) === 0; })
+        .map(function (module) { return module.name; });
+    }
+    if (!roots.length && modules.length) roots = [modules[0].name];
+
+    var levels = new Map();
+    var queue = roots.map(function (name) { return { name: name, level: 0 }; });
+    while (queue.length) {
+      var current = queue.shift();
+      if (levels.has(current.name)) continue;
+      levels.set(current.name, current.level);
+      (outgoing.get(current.name) || []).forEach(function (next) {
+        if (!levels.has(next)) queue.push({ name: next, level: current.level + 1 });
+      });
+    }
+
+    modules.forEach(function (module) {
+      if (!levels.has(module.name)) levels.set(module.name, 0);
+    });
+
+    var maxLevel = Math.max.apply(null, Array.from(levels.values()).concat([0]));
+    var groups = new Map();
+    modules.forEach(function (module) {
+      var level = levels.get(module.name) || 0;
+      var group = groups.get(level) || [];
+      group.push(module);
+      groups.set(level, group);
+    });
+    groups.forEach(function (group) {
+      group.sort(function (a, b) {
+        return b.files - a.files || a.name.localeCompare(b.name);
+      });
+    });
+
+    var maxRows = Math.max.apply(
+      null,
+      Array.from(groups.values()).map(function (group) { return group.length; }).concat([1])
+    );
+    var height = Math.max(360, maxRows * 92 + 80);
+    var positions = new Map();
+
+    groups.forEach(function (group, level) {
+      var x = maxLevel === 0
+        ? width / 2
+        : 115 + level * ((width - 230) / maxLevel);
+      var gap = height / (group.length + 1);
+      group.forEach(function (module, index) {
+        positions.set(module.name, {
+          x: x,
+          y: gap * (index + 1),
+          level: level
+        });
+      });
+    });
+
+    return { positions: positions, height: height };
+  }
+
+  function clipModuleEdge(from, to) {
+    var dx = to.x - from.x;
+    var dy = to.y - from.y;
+    var length = Math.sqrt(dx * dx + dy * dy) || 1;
+    var ux = dx / length;
+    var uy = dy / length;
+    var halfW = 96;
+    var halfH = 35;
+    var tx = Math.abs(ux) > 0.0001 ? halfW / Math.abs(ux) : Infinity;
+    var ty = Math.abs(uy) > 0.0001 ? halfH / Math.abs(uy) : Infinity;
+    var distance = Math.min(tx, ty);
+    return {
+      x: from.x + ux * distance,
+      y: from.y + uy * distance
+    };
+  }
+
   function renderModules() {
     var svg = document.getElementById('localMapModules');
     if (!svg) return;
@@ -718,20 +815,11 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
     var modules = data.modules || [];
     if (!modules.length) return;
     var edgeCounts = data.edges || [];
-    var cols = Math.min(4, Math.max(2, Math.ceil(Math.sqrt(modules.length))));
-    var rows = Math.ceil(modules.length / cols);
-    var width = 960, height = Math.max(360, rows * 118 + 70);
+    var width = 960;
+    var layout = layoutModules(modules, edgeCounts, width);
+    var height = layout.height;
+    var positions = layout.positions;
     svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-
-    var positions = new Map();
-    modules.forEach(function (module, index) {
-      var col = index % cols;
-      var row = Math.floor(index / cols);
-      var cellW = width / cols;
-      var x = cellW * col + cellW / 2;
-      var y = 60 + row * 118;
-      positions.set(module.name, { x: x, y: y });
-    });
 
     var defs = makeSvg('defs', {}, svg);
     var marker = makeSvg('marker', {
@@ -748,11 +836,13 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
     edgeCounts.forEach(function (edge) {
       var a = positions.get(edge.from), b = positions.get(edge.to);
       if (!a || !b) return;
+      var start = clipModuleEdge(a, b);
+      var end = clipModuleEdge(b, a);
       var line = makeSvg('line', {
-        x1: a.x,
-        y1: a.y,
-        x2: b.x,
-        y2: b.y,
+        x1: start.x,
+        y1: start.y,
+        x2: end.x,
+        y2: end.y,
         class: 'local-map-module-edge' + (edge.count >= 3 ? ' strong' : ''),
         'data-from': edge.from,
         'data-to': edge.to,
@@ -760,8 +850,8 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
       }, svg);
       line.style.color = 'var(--text-muted)';
 
-      var mx = (a.x + b.x) / 2;
-      var my = (a.y + b.y) / 2;
+      var mx = (start.x + end.x) / 2;
+      var my = (start.y + end.y) / 2;
       var label = makeSvg('text', {
         x: mx,
         y: my - 5,
