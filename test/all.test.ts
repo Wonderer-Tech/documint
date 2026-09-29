@@ -71,3 +71,6 @@ test("aggregate regression entry imports every sibling test module", () => {
 import "./htmlNavigationRuntime.test";
 
 import "./sourceAnalyzerTypeScriptAst.test";
+
+import "./localReadmeFacts.test";
+import "./localDocumentationModel.test";
