@@ -23,7 +23,7 @@ const files: WorkspaceFile[] = [
 const analyzer = new SourceAnalyzer();
 const project = analyzer.analyzeProject(files);
 
-test("local architecture renderer derives module and file edges from source imports", () => {
+test("local architecture renderer derives cross-module relationships from resolved imports", () => {
   const output = renderLocalArchitectureDocumentation({
     projectName: "Example Project",
     files,
@@ -31,54 +31,11 @@ test("local architecture renderer derives module and file edges from source impo
   });
 
   assert.match(output, /no AI interpretation is used/i);
+  assert.match(output, /### Module Relationships/);
   assert.match(output, /\| `src` \| `lib` \| 1 \|/);
-  assert.match(output, /\| `src\/index\.ts` \| `lib\/helper\.ts` \| `\.\.\/lib\/helper` \|/);
 });
 
-test("local architecture renderer emits consistent Mermaid and D2 diagrams", () => {
-  const output = renderLocalArchitectureDocumentation({
-    projectName: "Example Project",
-    files,
-    project,
-  });
-
-  assert.match(output, /### Module Architecture — Mermaid/);
-  assert.match(output, /m0\["lib \(1 file\)"\]/);
-  assert.match(output, /m1\["src \(1 file\)"\]/);
-  assert.match(output, /m1 -->\|"1 link"\| m0/);
-
-  assert.match(output, /### File Dependency Graph — Mermaid/);
-  assert.match(output, /f0\["lib\/helper\.ts"\]/);
-  assert.match(output, /f1\["src\/index\.ts"\]/);
-  assert.match(output, /f1 --> f0/);
-
-  assert.match(output, /### Module Architecture — D2/);
-  assert.match(output, /m1 -> m0: "1 link"/);
-});
-
-
-test("local architecture renderer emits HTML visual-enhancer payloads without semantic role guessing", () => {
-  const output = renderLocalArchitectureDocumentation({
-    projectName: "Example Project",
-    files,
-    project,
-  });
-
-  assert.match(output, /### Local Visual Blueprint: Architecture Map/);
-  assert.match(output, /```architecture-blueprint/);
-  assert.match(output, /"source": "local"/);
-  assert.match(output, /"role": "Module"/);
-  assert.doesNotMatch(
-    output,
-    /"role": "(?:Provider|Service|UI|Analysis|Configuration|Assets|Tests)"/,
-  );
-  assert.match(output, /```excalidraw-blueprint/);
-  assert.match(output, /### Interactive Dependency Graph/);
-  assert.match(output, /```dependency-graph/);
-});
-
-
-test("Markdown architecture surface excludes HTML-only visual payloads", () => {
+test("local Markdown architecture keeps one compact module Mermaid graph", () => {
   const output = renderLocalArchitectureDocumentation(
     {
       projectName: "Example Project",
@@ -89,9 +46,32 @@ test("Markdown architecture surface excludes HTML-only visual payloads", () => {
   );
 
   assert.match(output, /### Module Architecture/);
-  assert.doesNotMatch(output, /```architecture-blueprint/);
-  assert.doesNotMatch(output, /```excalidraw-blueprint/);
-  assert.doesNotMatch(output, /```dependency-graph/);
-  assert.doesNotMatch(output, /### File Dependency Graph/);
-  assert.doesNotMatch(output, /### Module Architecture — D2/);
+  assert.match(output, /```mermaid/);
+  assert.match(output, /m0\["lib \(1 file\)"\]/);
+  assert.match(output, /m1\["src \(1 file\)"\]/);
+  assert.match(output, /m1 -->\|"1 link"\| m0/);
+
+  assert.doesNotMatch(output, /architecture-blueprint/);
+  assert.doesNotMatch(output, /excalidraw-blueprint/);
+  assert.doesNotMatch(output, /dependency-graph/);
+  assert.doesNotMatch(output, /File Dependency Graph/);
+  assert.doesNotMatch(output, /Module Architecture — D2/);
+});
+
+test("summary architecture surface contains facts only and no diagram payload", () => {
+  const output = renderLocalArchitectureDocumentation(
+    {
+      projectName: "Example Project",
+      files,
+      project,
+    },
+    { surface: "summary" },
+  );
+
+  assert.match(output, /### Module Relationships/);
+  assert.match(output, /\| `src` \| `lib` \| 1 \|/);
+  assert.doesNotMatch(output, /```mermaid/);
+  assert.doesNotMatch(output, /architecture-blueprint/);
+  assert.doesNotMatch(output, /excalidraw-blueprint/);
+  assert.doesNotMatch(output, /dependency-graph/);
 });
