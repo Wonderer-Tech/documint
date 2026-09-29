@@ -143,13 +143,16 @@ function renderWhereIsWhat(model: LocalDocumentationModel): string {
   }
 
   return [
-    "| Module | Files | Lines | Start with |",
-    "| --- | ---: | ---: | --- |",
+    "| Module | What's inside | Files | Lines | Start with |",
+    "| --- | --- | ---: | ---: | --- |",
     ...model.modules.map((module) => {
       const primary = module.primaryFilePaths.length
         ? module.primaryFilePaths.map(markdownDocumentationFileLink).join(", ")
         : "—";
-      return `| ${inlineCode(module.name)} | ${module.fileCount} | ${module.lineCount} | ${primary} |`;
+      const description = module.description
+        ? escapeTableText(module.description.text)
+        : "—";
+      return `| ${inlineCode(module.name)} | ${description} | ${module.fileCount} | ${module.lineCount} | ${primary} |`;
     }),
   ].join("\n");
 }
