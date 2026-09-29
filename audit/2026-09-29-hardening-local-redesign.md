@@ -13,21 +13,47 @@
 
 _Last updated: 2026-09-30_
 
-- ✅ Retired the obsolete 1.0.6/1.0.7 navigation/reader source-repair workflows and Python repair scripts after verifying their intended markers already exist in current source.
-- ⏸ Normal CI trigger + lockfile migration is still pending. No workflow was manually triggered during this implementation pass.
-- ✅ Added an AST-backed JS/TS-family analyzer using the TypeScript compiler API behind the existing public `SourceAnalyzer` facade.
-- ✅ Added symbol scope metadata for module/class declarations.
-- ✅ Multiline imports are now structurally parsed.
-- ✅ Multiline functions/methods and `export abstract class` declarations are structurally parsed.
-- ✅ Function-local temporary variables are excluded from the JS/TS module symbol list.
-- ✅ JS/TS TODO/FIXME/HACK extraction now uses TypeScript comment trivia, so strings containing TODO text are not treated as comments.
-- ✅ Added targeted AST regression coverage plus a real-source self-check for `BaseAIProvider`.
-- ✅ New AST module passed an isolated strict TypeScript compile check against the compiler API in the implementation environment.
-- ⏳ Full repository regression execution and VSIX size/scan-latency measurement remain required before this analyzer slice is considered release-verified.
+### Completed
+
+- ✅ Retired obsolete 1.0.6/1.0.7 navigation/reader source-repair workflows and Python repair scripts after verifying their intended markers were already integrated.
+- ✅ Added AST-backed JS/TS-family analysis with the TypeScript compiler API.
+- ✅ Multiline imports, multiline declarations, `export abstract class`, class methods, and explicit export lists are structurally analyzed.
+- ✅ Function-local temporary variables no longer pollute the JS/TS module symbol list.
+- ✅ JS/TS TODO/FIXME/HACK extraction uses comment trivia instead of line regex.
+- ✅ Added source-backed description metadata with provenance. Explicit file/module comments win; a declaration comment is promoted to a file description only when exactly one exported top-level declaration makes that unambiguous.
+- ✅ Added exact README project-tree/path description extraction without filename-based semantic guessing.
+- ✅ README content participates in Local cache identity; Local cache version is now v6.
+- ✅ Added one canonical `LocalDocumentationModel` for file facts, structural modules, dependencies, descriptions, entry points, totals, manifest facts, and suggested reading order.
+- ✅ Project, file, architecture, visual, Markdown, and Local HTML assembly now consume the canonical model in the production path.
+- ✅ Structural grouping is shared and uses useful groups such as `src/providers`, `src/services`, `src/scanner`, etc.
+- ✅ Local Markdown no longer carries raw architecture/excalidraw/dependency JSON transport payloads.
+- ✅ Per-file Local output is compact: empty sections are omitted, routine "No ... detected" placeholders are removed, and the repeated per-file "No AI" banner is gone.
+- ✅ Added deterministic `Where is what`, `How to run`, VS Code commands/settings, `Suggested reading path`, `Core files`, and undocumented-file coverage.
+- ✅ Added a Local-only question-first Project map to generated HTML:
+  - Big picture module/dependency view
+  - proportional file-size map
+  - suggested reading path
+  - dependency-reach scatter
+  - searchable file card with Uses / Used by / exports
+- ✅ The new Project map is implemented in dedicated modules instead of growing the main HTML template further.
+- ✅ Local HTML now disables external highlight.js/Mermaid CDN assets at template generation time. The existing offline hardening/source fallback remains in place.
+- ✅ AI/shared HTML keeps its existing external-asset behavior by default.
+- ✅ Added targeted regressions for AST analysis, descriptions, README facts, canonical model, manifest facts, reading path, compact Markdown, code-map fragments, and Local external-asset policy.
+
+### Verification still required
+
+- ⏳ Full repository `npm test` has not been executed in this environment. Direct GitHub clone failed because DNS/network access to github.com is unavailable.
+- ⏳ CI was intentionally not triggered during implementation.
+- ⏳ VSIX size and representative Local scan latency must be measured after the TypeScript runtime parser addition.
+- ⏳ Browser acceptance must be extended to the new Project map interactions and the Local no-external-request policy.
+- ⏳ Normal push/PR CI and `package-lock.json` + `npm ci` migration remain pending; do not conflate this with the product implementation already completed.
 
 ### Current next step
 
-Finish verification of the analyzer slice, then build the canonical Local documentation model and trustworthy description extraction before changing the production HTML UI.
+1. Add browser acceptance fixtures/assertions for the Project map: module filtering, file-size map, reading path, scatter click, search, relation navigation, mobile behavior, and no external requests.
+2. Review whether the conceptual Big picture should adopt the preserved prototype's rough/sketch treatment; keep quantitative visuals clean-lined.
+3. Add source-link/line navigation without hard-coded GitHub URLs or machine-specific absolute paths.
+4. Then continue repository security/release cleanup (sidebar CSP, normal CI/lockfile, tag-based VSIX release) when CI execution is allowed.
 
 ---
 
