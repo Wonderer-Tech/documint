@@ -47,3 +47,14 @@ test("extension API-key refresh carries provider identity to the sidebar", () =>
 
   assert.match(source, /sidebarProvider\.updateApiKeyStatus\(!!apiKey, provider\)/);
 });
+
+
+test("local AI provider presets render as keyless and hide authentication controls", () => {
+  assert.match(clientSource, /function isLocalProvider\(provider\)/);
+  assert.match(clientSource, /selected === 'ollama' \|\| selected === 'lmstudio'/);
+  assert.match(
+    clientSource,
+    /authSection\.classList\.toggle\('hidden', local \|\| localProvider\)/,
+  );
+  assert.match(clientSource, /'No API key required'/);
+});
