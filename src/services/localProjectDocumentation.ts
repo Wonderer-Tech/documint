@@ -113,7 +113,7 @@ function renderWhereIsWhat(model: LocalDocumentationModel): string {
     "| --- | ---: | ---: | --- |",
     ...model.modules.map((module) => {
       const primary = module.primaryFilePaths.length
-        ? module.primaryFilePaths.map(inlineCode).join(", ")
+        ? module.primaryFilePaths.map(markdownDocumentationFileLink).join(", ")
         : "—";
       return `| ${inlineCode(module.name)} | ${module.fileCount} | ${module.lineCount} | ${primary} |`;
     }),
@@ -192,7 +192,7 @@ function renderSuggestedReadingPath(
   return model.suggestedReadingPath
     .map(
       (item, index) =>
-        `${index + 1}. ${inlineCode(item.path)} — ${escapeTableText(item.reason)}`,
+        `${index + 1}. ${markdownDocumentationFileLink(item.path)} — ${escapeTableText(item.reason)}`,
     )
     .join("\n");
 }
@@ -258,7 +258,7 @@ function renderCoreFiles(model: LocalDocumentationModel): string {
     "| --- | --- | --- | ---: | ---: | ---: | ---: | --- |",
     ...ranked.map(
       (file) =>
-        `| ${inlineCode(file.path)} | ${inlineCode(file.module)} | ${inlineCode(file.language)} | ${file.lineCount} | ${file.exportedSymbols.length} | ${file.uses.length} | ${file.usedBy.length} | ${file.entryPoint ? "Yes" : "No"} |`,
+        `| ${markdownDocumentationFileLink(file.path)} | ${inlineCode(file.module)} | ${inlineCode(file.language)} | ${file.lineCount} | ${file.exportedSymbols.length} | ${file.uses.length} | ${file.usedBy.length} | ${file.entryPoint ? "Yes" : "No"} |`,
     ),
   ].join("\n");
 }
@@ -274,7 +274,7 @@ function renderUndocumentedFiles(
   return [
     `${undocumented.length} file${undocumented.length === 1 ? "" : "s"} have no trusted module-level description yet.`,
     "",
-    ...undocumented.map((file) => `- ${inlineCode(file.path)}`),
+    ...undocumented.map((file) => `- ${markdownDocumentationFileLink(file.path)}`),
   ].join("\n");
 }
 
@@ -355,7 +355,9 @@ function appendTreeChildren(
 
 function renderPathList(paths: string[], emptyMessage: string): string {
   return paths.length > 0
-    ? paths.map((value) => `- ${inlineCode(value)}`).join("\n")
+    ? paths
+        .map((value) => `- ${markdownDocumentationFileLink(value)}`)
+        .join("\n")
     : emptyMessage;
 }
 
@@ -379,6 +381,23 @@ function cleanTreeLabel(value: string): string {
 
 function escapeHeading(value: string): string {
   return cleanText(value).replace(/[#]/g, "\\#");
+}
+
+function documentationFileHref(filePath: string): string {
+  return `#${slugHeading(filePath)}`;
+}
+
+function markdownDocumentationFileLink(filePath: string): string {
+  return `[${inlineCode(filePath)}](${documentationFileHref(filePath)})`;
+}
+
+function slugHeading(value: string): string {
+  return String(value)
+    .toLowerCase()
+    .replace(/[`'"<>]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
 }
 
 function inlineCode(value: string): string {
