@@ -117,3 +117,31 @@ test("Local HTML exposes Project map navigation and distinct file/docs search hi
   assert.match(document.html, /Ctrl/⌘ K</kbd> Files/);
   assert.match(document.html, /<kbd>/</kbd> Docs/);
 });
+
+
+test("README module descriptions appear in Where is what without inference", () => {
+  const analyzer = new SourceAnalyzer();
+  const project = analyzer.analyzeProject(files);
+  const document = buildLocalDocumentationDocument(
+    "Example Project",
+    files,
+    project,
+    {
+      readme: [
+        "```text",
+        "src/",
+        "`-- main.ts",
+        "lib/",
+        "`-- format.ts",
+        "```",
+        "",
+        "src/ — Application source",
+        "lib/ — Shared formatting helpers",
+      ].join("\n"),
+    },
+  );
+
+  assert.match(document.markdown, /\| Module \| What's inside \| Files \| Lines \| Start with \|/);
+  assert.match(document.markdown, /\| `src` \| Application source \|/);
+  assert.match(document.markdown, /\| `lib` \| Shared formatting helpers \|/);
+});
