@@ -67,6 +67,10 @@ export function renderLocalProjectDocumentationFromModel(
       "No external dependencies detected from source imports.",
     ),
     "",
+    "## Suggested reading path",
+    "",
+    renderSuggestedReadingPath(model),
+    "",
     "## Core files",
     "",
     renderStructuralFiles(model),
@@ -263,6 +267,21 @@ function renderModuleSummary(model: LocalDocumentationModel): string {
         `| ${inlineCode(module.name)} | ${module.fileCount} | ${module.lineCount} | ${module.exportedSymbolCount} | ${module.dependencyCount} | ${module.dependentCount} |`,
     ),
   ].join("\n");
+}
+
+function renderSuggestedReadingPath(
+  model: LocalDocumentationModel,
+): string {
+  if (model.suggestedReadingPath.length === 0) {
+    return "No source-backed reading path could be derived.";
+  }
+
+  return model.suggestedReadingPath
+    .map(
+      (item, index) =>
+        `${index + 1}. ${inlineCode(item.path)} — ${escapeTableText(item.reason)}`,
+    )
+    .join("\n");
 }
 
 function renderStructuralFiles(model: LocalDocumentationModel): string {
