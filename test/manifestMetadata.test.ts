@@ -124,3 +124,14 @@ test("default target language list includes the scanner's broad source types", (
     assert.ok(languages.has(language), `missing default language: ${language}`);
   }
 });
+
+
+test("manifest uses a provider-friendly default AI concurrency", () => {
+  const property = manifest.contributes.configuration.properties[
+    "aiDocGenerator.concurrentRequests"
+  ];
+
+  assert.equal(property.default, 5);
+  assert.equal(property.minimum, 1);
+  assert.equal(property.maximum, 15);
+});
