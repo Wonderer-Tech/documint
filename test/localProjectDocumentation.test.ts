@@ -126,3 +126,26 @@ test("Local overview uses portable relative source links", () => {
   assert.doesNotMatch(output, /vscode:\/\/file/i);
   assert.doesNotMatch(output, /github\.com\/Wonderer-Tech\/documint/i);
 });
+
+
+test("Local overview labels environment names as references rather than requirements", () => {
+  const envFiles: WorkspaceFile[] = [
+    ...files,
+    {
+      path: "src/env.ts",
+      language: "typescript",
+      content: "export const api = process.env.API_URL;",
+    },
+  ];
+  const envProject = analyzer.analyzeProject(envFiles);
+  const output = renderLocalProjectDocumentation({
+    projectName: "Example Project",
+    files: envFiles,
+    project: envProject,
+  });
+
+  assert.match(output, /## Referenced environment variables/);
+  assert.match(output, /static analysis does not claim they are required/i);
+  assert.match(output, /\`API_URL\`/);
+  assert.doesNotMatch(output, /Required environment variables/);
+});
