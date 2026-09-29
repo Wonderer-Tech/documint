@@ -51,6 +51,7 @@ export interface LocalCodeMapData {
   edges: LocalCodeMapEdge[];
   readingPath: LocalCodeMapReadingItem[];
   gettingStarted?: {
+    packageManager: "npm" | "pnpm" | "yarn" | "bun";
     extensionEntry?: string;
     scripts: LocalCodeMapRunScript[];
   };
@@ -91,6 +92,7 @@ export function buildLocalCodeMapData(
     })),
     gettingStarted: model.gettingStarted
       ? {
+          packageManager: model.gettingStarted.packageManager,
           extensionEntry: model.gettingStarted.extensionEntry,
           scripts: model.gettingStarted.scripts.map((script) => ({
             name: script.name,
