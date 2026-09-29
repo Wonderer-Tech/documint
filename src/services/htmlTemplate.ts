@@ -90,6 +90,9 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
   const localCodeMapToc = options.localCodeMap
     ? '<ul><li><a class="toc-link level-1" href="#documint-local-code-map"><span class="toc-text">Project map</span></a></li></ul>'
     : "";
+  const keyboardHints = options.localCodeMap
+    ? '<kbd>Ctrl/⌘ K</kbd> Files &nbsp; <kbd>/</kbd> Docs &nbsp; <kbd>T</kbd> Theme'
+    : '<kbd>/</kbd> Search &nbsp; <kbd>T</kbd> Theme';
 
   const languagesStr = options.languages?.length
     ? options.languages.map(escapeHtmlAttr).join(", ")
@@ -2720,7 +2723,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     </svg>
   </button>
 
-  <div class="kb-hints"><kbd>/</kbd> Search &nbsp; <kbd>T</kbd> Theme</div>
+  <div class="kb-hints">${keyboardHints}</div>
 
   ${externalScriptTags}
   <script>
