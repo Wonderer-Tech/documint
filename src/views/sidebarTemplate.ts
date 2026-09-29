@@ -89,7 +89,9 @@ ${SIDEBAR_STYLES}
 
   <div class="field">
     <label class="field-label">Model</label>
-    <input type="text" id="model" value="gpt-5.4-nano" placeholder="e.g. gpt-5.4-nano, claude-sonnet-5, anthropic/claude-sonnet-5">
+    <input type="text" id="model" list="localModelSuggestions" value="gpt-5.4-nano" placeholder="e.g. gpt-5.4-nano, claude-sonnet-5, anthropic/claude-sonnet-5">
+    <datalist id="localModelSuggestions"></datalist>
+    <div class="field-help hidden" id="localModelStatus" role="status" aria-live="polite"></div>
   </div>
 
   <div class="field hidden" id="customEndpointField">
