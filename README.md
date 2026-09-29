@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
-![Version](https://img.shields.io/badge/version-1.0.6-green)
+![Version](https://img.shields.io/badge/version-1.0.7-green)
 
 DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file. Generate deterministic documentation entirely on your machine with **Local Documentation — No AI**, or use AI providers such as OpenAI, Anthropic, OpenRouter, DeepSeek, or a custom OpenAI-compatible endpoint for enhanced explanations.
 
@@ -22,8 +22,8 @@ It produces:
 ## Table of Contents
 
 - [What It Does](#what-it-does)
-- [What's New in 1.0.5](#whats-new-in-105)
 - [How It Works](#how-it-works)
+- [Local Project Map](#local-project-map)
 - [Supported Providers](#supported-providers)
 - [Supported Languages](#supported-languages)
 - [Install](#install)
@@ -53,48 +53,12 @@ Both paths support workspace, folder, and file scope and can produce:
 - Source-derived architecture and dependency information
 - Markdown and/or HTML output
 - HTML table of contents with navigation and search
-- Mermaid diagram rendering support in generated HTML
+- Question-first Local project map plus source-derived architecture/dependency views
+- Mermaid rendering for AI-format/source blocks when the optional renderer is available
 
 Local mode also maintains its own source/output fingerprint cache so unchanged Local documentation can be reused without touching AI-generation cache state.
 
 The extension runs directly inside VS Code through a sidebar webview.
-
-## What's New in 1.0.5
-
-DocuMint 1.0.5 adds a complete **Local Documentation — No AI** path and hardens the AI pipeline for safer production use.
-
-### 1.0.5 Highlights
-
-- **Local Documentation — No AI:** generate source-grounded documentation entirely on-device with no API key, internet connection, model, or provider.
-- **File / Folder / Workspace parity:** Local mode uses the same exact target-path scanner semantics as AI mode.
-- **Deterministic Local project docs:** project facts, language/module summaries, source tree, entry points, dependencies, exported APIs, symbols, imports, dependents, and TODO/FIXME/HACK evidence.
-- **Local architecture visuals:** source-derived module/file dependency views now include the interactive architecture dashboard, Files/Lines Module Scale Chart, Mermaid, D2, whiteboard/Excalidraw export, and searchable dependency graph—without invented architecture roles.
-- Local mode now renders the same visual surfaces directly from scanner/analyzer facts; no provider call is made to build those charts or maps.
-- **Separate Local cache:** source fingerprints plus sanitized-output hashes allow safe reuse while keeping Local cache identity isolated from AI caches.
-- **Cleaner Local UX:** provider, model, authentication, custom endpoint, and AI-only Documentation Depth controls disappear in Local mode; the primary action becomes **Generate Local Documentation**.
-- **Safer AI context budgeting:** non-positive chunk budgets fail clearly instead of risking non-advancing loops, and raw/normal/chunked output budgets never exceed the remaining context window.
-- **Cancellation-safe provider pacing:** cancelled requests no longer reserve phantom future rate-limit slots.
-- **Canonical AI depth handling:** blank, mixed-case, or unsupported programmatic depth values normalize once and the same value drives runtime generation and cache identity.
-- **Provider/auth hardening:** custom OpenAI-compatible endpoints may run without a key, keyless custom providers show **API Key optional**, provider switching refreshes the correct Secret Storage state, and custom endpoint locality/URL rules are enforced consistently.
-- **Updated model capability handling:** current OpenAI GPT-5.6 and o4-mini, Anthropic, DeepSeek, and OpenRouter-routed capability metadata share canonical context/output limits and retired model IDs are guarded.
-- **Broader scanner coverage:** C/C++ headers and modern JS/TS module extensions such as `.mjs`, `.cjs`, `.mts`, and `.cts` are included in discovery/dependency resolution.
-- **Output resilience:** generated HTML preserves Mermaid source when rendering/CDN assets fail, and Local TOC anchors decode escaped heading entities correctly.
-- **Soft Jelly UI:** generated HTML now uses floating rounded navigation, softer cards/tables/code surfaces, calmer borders and shadows, improved spacing, smoother focus/hover states, and reduced-motion-aware interactions in both dark and light themes.
-- **Verified build:** current release code passes TypeScript typecheck, esbuild bundle, and the full **218/218 regression suite** in GitHub Actions.
-- Cleaner VSIX output: generated docs and README-only demo media are excluded from the packaged extension.
-
-### Local vs AI
-
-| Area | Local Documentation | AI Documentation |
-|---|---|---|
-| API key | Not required | Depends on provider |
-| Internet | Not required | Required for cloud providers |
-| Semantic inference | None | Yes, source-grounded |
-| File / Folder / Workspace | Yes | Yes |
-| Markdown / HTML | Yes | Yes |
-| Project facts and APIs | Deterministic static analysis | Static analysis + provider enhancement |
-| Architecture/dependencies | Resolved source relationships + chart/map/whiteboard/dependency visuals | Source relationships + AI explanation |
-| Cache | Separate Local fingerprint/output cache | Provider/model/settings-aware AI cache |
 
 ## How It Works
 
@@ -121,6 +85,22 @@ Common first steps:
 Both modes save normal DocuMint output into `documint/`.
 
 Public AI-generation facade: `src/services/docGenerator.ts`. Local runtime orchestration lives in `src/services/localDocumentationGenerator.ts` and uses deterministic renderers under `src/services/local*Documentation.ts`.
+
+## Local Project Map
+
+Local HTML now starts with a question-first project map built from the same deterministic model used by Local Markdown:
+
+- **Big picture** — structural modules and resolved cross-module import counts.
+- **What's inside** — a file-size treemap grouped by structural module.
+- **Start here** — a suggested reading path derived from detected entry points and dependency reach.
+- **Dependency reach** — file size versus incoming project dependents.
+- **Look up a file** — search by path, trusted description, exported symbol, or referenced environment variable, then inspect Uses / Used by relationships and exported API.
+
+For TypeScript/JavaScript-family files, DocuMint uses the TypeScript compiler AST for multiline imports/declarations, export modifiers, class methods, and module-vs-function scope. This prevents function-local temporary variables from flooding Local API documentation.
+
+Local descriptions are source-backed only: explicit file/module docs, safe declaration comments, supported language module/package docs, or exact README path descriptions. When no trusted description exists, DocuMint says so instead of inventing one.
+
+Local Markdown is intentionally compact and does not carry raw architecture/whiteboard/dependency JSON payloads. Local HTML uses the interactive project map as its rich visual layer and does not require CDN assets to render that Local experience.
 
 ## Supported Providers
 
@@ -185,7 +165,7 @@ ext install wonderertech.documint
 ### VSIX
 
 ```bash
-code --install-extension documint-1.0.6.vsix
+code --install-extension documint-1.0.7.vsix
 ```
 
 ### Build from Source
@@ -346,16 +326,16 @@ Local and AI modes use the same output paths, so the latest successful generatio
 
 The HTML renderer includes:
 
-- Sidebar TOC
-- Route-based folder/file navigation
-- Section anchors
-- Search
+- Folder-first sidebar navigation
+- Section anchors and ranked documentation search
+- Local file/description/export search with Ctrl/Cmd+K
 - Theme toggle
-- Syntax highlighting
-- Mermaid rendering
-- Project tree
-- Architecture/dependency sections
-- D2 source
+- Question-first Local project map
+- File-size treemap and dependency-reach view
+- Suggested reading path
+- Connected file cards with Uses / Used by relationships
+- Portable source-file and line links
+- Project tree and deterministic architecture/dependency facts
 - Copy-to-clipboard for code blocks
 
 AI output can additionally include richer source-grounded visual/semantic sections depending on the selected depth and available evidence.
@@ -365,8 +345,8 @@ AI output can additionally include richer source-grounded visual/semantic sectio
 ```text
 src/
 |-- analyzer/
-|   |-- sourceAnalyzer.ts          # Public analyzer facade + modern module compatibility
-|   `-- sourceAnalyzerBase.ts      # Core cross-language import/export/symbol analysis
+|   |-- sourceAnalyzer.ts          # Public analyzer facade + AST-backed JS/TS routing
+|   `-- sourceAnalyzerBase.ts      # Core cross-language analysis and non-JS/TS facts
 |-- extension.ts                   # Public VS Code activation entry point
 |-- extensionBase.ts               # Activation, commands, AI/Local routing, consent, cache clearing
 |-- types.ts                       # Shared types and error models
@@ -393,6 +373,11 @@ src/
 |   |-- generationMode.ts               # Canonical AI/Local mode normalization
 |   |-- localDocumentationGenerator.ts  # Local scan/analyze/write/cache runtime
 |   |-- localDocumentationDocument.ts   # Complete deterministic Local document assembly
+|   |-- localDocumentationModel.ts      # Canonical Local facts/model shared by Markdown and HTML
+|   |-- localReadmeFacts.ts             # Exact README path-description extraction
+|   |-- structuralModule.ts             # Shared structural module grouping
+|   |-- localCodeMapData.ts             # Local interactive project-map data contract
+|   |-- htmlLocalCodeMap.ts             # Question-first Local HTML project map
 |   |-- localProjectDocumentation.ts    # Deterministic Local project overview
 |   |-- localArchitectureDocumentation.ts # Deterministic dependency diagrams/edges
 |   |-- localFileDocumentation.ts       # Deterministic per-file facts/API sections
@@ -435,7 +420,7 @@ npx @vscode/vsce package
 
 ## Known Limitations
 
-- Static analysis is intentionally lightweight. Local mode reports detected source facts; it is not a full compiler or semantic program prover for every language.
+- TypeScript/JavaScript-family structure uses the TypeScript compiler AST; other languages use deterministic language-specific static analysis. Local mode is not a full semantic program prover for every language.
 - Local mode does not invent business-logic explanations, intent, usage examples, or architectural rationale that cannot be established from static source evidence.
 - AI documentation quality depends on the selected model and the source code/context available in the workspace.
 - Cloud providers receive selected source code only after confirmation. Use Local Documentation when code must remain entirely on the machine.
@@ -447,18 +432,8 @@ Issues and PRs are welcome.
 
 - Repository: https://github.com/Wonderer-Tech/documint
 - Issues: https://github.com/Wonderer-Tech/documint/issues
+- Release history: [CHANGELOG.md](CHANGELOG.md)
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
-## 1.0.6 — Generated navigation repair
-
-Local and AI-format HTML now share working folder-wise collapsible navigation. Local TOCs emit the canonical link classes and explicit file identity, including route-group and spaced filenames. The chart function/map collision is fixed; optional chart failures cannot block navigation or search. Module chart totals include every emitted module. Local cache v4 regenerates older HTML once. Browser acceptance covers collapse, filtering, anchors, themes, charts, offline rendering and failure isolation.
-
-
-## Reader navigation — 1.0.7
-
-Folder-first navigation now has persistent, report-scoped open/closed state, Expand all / Collapse all, file counts, clearable filtering, keyboard navigation, current-file context and a section selector. Ranked search supports Ctrl/Cmd+K, arrow selection, Enter and Escape; all results point to real document headings. Mobile uses the same folder tree in a focus-managed drawer. Wide tables scroll within the report; charts and documentation facts remain unchanged. Local cache v5 refreshes older generated HTML once.
-
-Install `releases/documint-1.0.7.vsix`, reload VS Code, and regenerate documentation to update existing HTML.
