@@ -19,6 +19,7 @@ import { normalizeDocumentationDepth } from "./services/generationDepth";
 import { ProviderFactory } from "./providers/providerFactory";
 import { resolveProviderSelection } from "./providers/providerSelection";
 import { evaluateCustomEndpoint } from "./providers/customEndpointPolicy";
+import { localPresetModelRequiredMessage } from "./providers/localProviderPolicy";
 import { setWorkspaceScannerRunTargets } from "./scanner/workspaceScanner";
 import {
   getDefaultTargetLanguages,
@@ -301,11 +302,22 @@ export function activate(context: vscode.ExtensionContext) {
     const providerName = runSelection.provider;
     const modelName = runSelection.model;
 
-    if (payload.model?.trim() && payload.model.trim() !== modelName) {
+    if (payload.model?.trim() && payload.model.trim() !== modelName && modelName) {
       sidebarProvider.addLogEntry(
         `Model adjusted to ${modelName} for ${providerName}.`,
         "info",
       );
+    }
+
+    if (
+      (providerName === "ollama" || providerName === "lmstudio") &&
+      !modelName
+    ) {
+      const message = localPresetModelRequiredMessage(providerName);
+      sidebarProvider.reportError(message);
+      sidebarProvider.addLogEntry(message, "error");
+      vscode.window.showErrorMessage(message);
+      return;
     }
 
     if (providerName === "custom") {
@@ -598,6 +610,16 @@ export function activate(context: vscode.ExtensionContext) {
       "aiDocGenerator.configureApiKey",
       async (provider?: string) => {
         const targetProvider = resolveRunProvider(provider);
+        if (
+          targetProvider === "ollama" ||
+          targetProvider === "lmstudio"
+        ) {
+          vscode.window.showInformationMessage(
+            `${targetProvider === "ollama" ? "Ollama" : "LM Studio"} does not require an API key.`,
+          );
+          return;
+        }
+
         const apiKey = await vscode.window.showInputBox({
           prompt: `Enter your ${targetProvider} API Key`,
           placeHolder: targetProvider === "anthropic" ? "sk-ant-..." : "sk-...",
