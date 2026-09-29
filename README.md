@@ -93,6 +93,7 @@ Local HTML now starts with a question-first project map built from the same dete
 - **Big picture** — structural modules and resolved cross-module import counts.
 - **What's inside** — a file-size treemap grouped by structural module.
 - **Start here** — a suggested reading path derived from detected entry points and dependency reach.
+- **How to run** — package scripts/manager, VS Code commands/settings, concrete Makefile targets, and Dockerfile source facts when those files are present.
 - **Dependency reach** — file size versus incoming project dependents.
 - **Look up a file** — search by path, trusted description, exported symbol, or referenced environment variable, then inspect Uses / Used by relationships and exported API.
 
@@ -409,6 +410,7 @@ src/ # VS Code extension source
 |   |-- localDocumentationDocument.ts   # Complete deterministic Local document assembly
 |   |-- localDocumentationModel.ts      # Canonical Local facts/model shared by Markdown and HTML
 |   |-- localReadmeFacts.ts             # Exact README path-description extraction
+|   |-- localBuildFacts.ts              # Makefile targets and Dockerfile source facts
 |   |-- structuralModule.ts             # Shared structural module grouping
 |   |-- localCodeMapData.ts             # Local interactive project-map data contract
 |   |-- htmlLocalCodeMap.ts             # Question-first Local HTML project map
