@@ -185,3 +185,15 @@ test("only the conceptual module map gets an offline sketch treatment", () => {
   assert.doesNotMatch(fragments.script, /rough\.svg|rough\.canvas/);
   assert.doesNotMatch(fragments.styles, /local-map-scatter[^}]*filter:/);
 });
+
+
+test("Local code map exposes keyboard-accessible search and live filter state", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.markup, /localMapFilterState" role="status" aria-live="polite"/);
+  assert.match(fragments.markup, /aria-autocomplete="list"/);
+  assert.match(fragments.markup, /aria-label="Project file search results"/);
+  assert.match(fragments.script, /aria-activedescendant/);
+  assert.match(fragments.script, /scrollIntoView\(\{ block: 'nearest' \}\)/);
+  assert.match(fragments.styles, /\.local-code-map \.sr-only/);
+});
