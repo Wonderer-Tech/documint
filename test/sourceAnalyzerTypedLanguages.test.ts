@@ -161,3 +161,91 @@ test("Python dotted imports collapse to the external package root", () => {
 
   assert.deepEqual(project.externalDependencies, ["google", "numpy", "requests"]);
 });
+
+
+test("trusted module descriptions are extracted for Python Rust and Go", () => {
+  const python = analyzer.analyzeFile(
+    file(
+      "app.py",
+      "python",
+      [
+        "#!/usr/bin/env python3",
+        "# module bootstrap",
+        '"""Loads application configuration and starts the worker."""',
+        "",
+        "def run():",
+        "    return True",
+      ].join("\n"),
+    ),
+  );
+  assert.deepEqual(python.description, {
+    text: "Loads application configuration and starts the worker.",
+    source: "module-docstring",
+    line: 3,
+  });
+
+  const rust = analyzer.analyzeFile(
+    file(
+      "src/lib.rs",
+      "rust",
+      [
+        "//! Shared request scheduling primitives.",
+        "//! Keeps cancellation isolated per request.",
+        "",
+        "pub fn schedule() {}",
+      ].join("\n"),
+    ),
+  );
+  assert.deepEqual(rust.description, {
+    text: "Shared request scheduling primitives. Keeps cancellation isolated per request.",
+    source: "file-comment",
+    line: 1,
+  });
+
+  const go = analyzer.analyzeFile(
+    file(
+      "worker.go",
+      "go",
+      [
+        "// Package worker coordinates background jobs.",
+        "// It exposes deterministic queue helpers.",
+        "package worker",
+        "",
+        "func Run() {}",
+      ].join("\n"),
+    ),
+  );
+  assert.deepEqual(go.description, {
+    text: "Package worker coordinates background jobs. It exposes deterministic queue helpers.",
+    source: "package-comment",
+    line: 1,
+  });
+});
+
+test("non-module strings and unrelated Go comments are not treated as file descriptions", () => {
+  const python = analyzer.analyzeFile(
+    file(
+      "app.py",
+      "python",
+      [
+        "def run():",
+        '    """Function docstring only."""',
+        "    return True",
+      ].join("\n"),
+    ),
+  );
+  assert.equal(python.description, undefined);
+
+  const go = analyzer.analyzeFile(
+    file(
+      "worker.go",
+      "go",
+      [
+        "// Coordinates background jobs.",
+        "package worker",
+        "func Run() {}",
+      ].join("\n"),
+    ),
+  );
+  assert.equal(go.description, undefined);
+});
