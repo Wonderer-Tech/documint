@@ -129,6 +129,18 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     font-weight: 700;
     pointer-events: none;
   }
+  .local-map-module-node,
+  .local-map-module-edge,
+  .local-map-edge-label {
+    transition: opacity .15s ease;
+  }
+  .local-map-module-canvas.focused .local-map-module-edge:not(.on),
+  .local-map-module-canvas.focused .local-map-edge-label:not(.on) {
+    opacity: .12;
+  }
+  .local-map-module-canvas.focused .local-map-module-node:not(.on) {
+    opacity: .32;
+  }
   .local-map-module-node .local-map-module-meta {
     fill: var(--text-muted);
     font-size: 10px;
@@ -386,6 +398,27 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     color: var(--text-muted);
     font-size: 10.5px;
   }
+  .local-map-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 10px;
+  }
+  .local-map-card-actions button {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 9px;
+    background: var(--bg-secondary);
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 10.5px;
+    font-weight: 700;
+  }
+  .local-map-card-actions button:hover,
+  .local-map-card-actions button:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
   .local-map-card-desc {
     margin: 12px 0;
     color: var(--text-secondary);
@@ -582,6 +615,25 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
     renderCard();
   }
 
+  function openFileAndReveal(path) {
+    openFile(path);
+    var card = document.getElementById('localMapCard');
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function revealFullDocumentation(path) {
+    var targets = Array.from(document.querySelectorAll('[data-documint-file-path]'));
+    var target = targets.find(function (element) {
+      return /^H[1-6]$/.test(element.tagName) &&
+        element.getAttribute('data-documint-file-path') === path;
+    });
+    if (!target) return;
+    if (target.id) {
+      try { history.replaceState(null, '', '#' + target.id); } catch (_) {}
+    }
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function setModuleFilter(name) {
     moduleFilter = name || null;
     renderTreemap();
@@ -642,6 +694,8 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
         x2: b.x,
         y2: b.y,
         class: 'local-map-module-edge' + (edge.count >= 3 ? ' strong' : ''),
+        'data-from': edge.from,
+        'data-to': edge.to,
         'marker-end': 'url(#localMapArrow)'
       }, svg);
       line.style.color = 'var(--text-muted)';
@@ -652,6 +706,8 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
         x: mx,
         y: my - 5,
         class: 'local-map-edge-label',
+        'data-from': edge.from,
+        'data-to': edge.to,
         'text-anchor': 'middle'
       }, svg);
       label.textContent = String(edge.count);
@@ -661,6 +717,7 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
       var pos = positions.get(module.name);
       var g = makeSvg('g', {
         class: 'local-map-module-node',
+        'data-module': module.name,
         tabindex: 0,
         role: 'button',
         'aria-label': module.name + ', ' + module.files + ' files'
@@ -686,11 +743,46 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
       }, g);
       meta.textContent = module.files + ' files · ' + formatNumber(module.lines) + ' lines';
 
+      function focusModule() {
+        svg.classList.add('focused');
+        var connected = new Set([module.name]);
+        svg.querySelectorAll('.local-map-module-edge').forEach(function (edgeNode) {
+          var from = edgeNode.getAttribute('data-from');
+          var to = edgeNode.getAttribute('data-to');
+          var on = from === module.name || to === module.name;
+          edgeNode.classList.toggle('on', on);
+          if (on) {
+            if (from) connected.add(from);
+            if (to) connected.add(to);
+          }
+        });
+        svg.querySelectorAll('.local-map-edge-label').forEach(function (labelNode) {
+          var from = labelNode.getAttribute('data-from');
+          var to = labelNode.getAttribute('data-to');
+          labelNode.classList.toggle(
+            'on',
+            from === module.name || to === module.name,
+          );
+        });
+        svg.querySelectorAll('.local-map-module-node').forEach(function (node) {
+          node.classList.toggle('on', connected.has(node.getAttribute('data-module')));
+        });
+      }
+      function clearModuleFocus() {
+        svg.classList.remove('focused');
+        svg.querySelectorAll('.on').forEach(function (node) {
+          node.classList.remove('on');
+        });
+      }
       function select() {
         setModuleFilter(module.name);
         var target = document.getElementById('localMapTreemap');
         if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
+      g.addEventListener('mouseenter', focusModule);
+      g.addEventListener('mouseleave', clearModuleFocus);
+      g.addEventListener('focus', focusModule);
+      g.addEventListener('blur', clearModuleFocus);
       g.addEventListener('click', select);
       g.addEventListener('keydown', function (event) {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -800,9 +892,7 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
         }
 
         button.addEventListener('click', function () {
-          openFile(file.path);
-          var card = document.getElementById('localMapCard');
-          if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          openFileAndReveal(file.path);
         });
         wrapper.appendChild(button);
       });
@@ -826,7 +916,7 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
       var button = document.createElement('button');
       button.type = 'button';
       button.textContent = item.path;
-      button.addEventListener('click', function () { openFile(item.path); });
+      button.addEventListener('click', function () { openFileAndReveal(item.path); });
       body.appendChild(button);
       var reason = document.createElement('p');
       reason.textContent = item.reason;
@@ -885,7 +975,7 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
       }, svg);
       var title = makeSvg('title', {}, point);
       title.textContent = file.path + '\n' + file.lines + ' lines · used by ' + file.usedBy.length;
-      function select() { openFile(file.path); }
+      function select() { openFileAndReveal(file.path); }
       point.addEventListener('click', select);
       point.addEventListener('keydown', function (event) {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -905,7 +995,7 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
 
   function chooseSearch(index) {
     if (index < 0 || index >= searchHits.length) return;
-    openFile(searchHits[index].file.path);
+    openFileAndReveal(searchHits[index].file.path);
     var input = document.getElementById('localMapSearch');
     if (input) input.value = '';
     closeResults();
@@ -1026,6 +1116,17 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
     meta.className = 'local-map-card-meta';
     meta.textContent = file.lines + ' lines · ' + file.exports.length + ' exports · used by ' + file.usedBy.length;
     card.appendChild(meta);
+
+    var actions = document.createElement('div');
+    actions.className = 'local-map-card-actions';
+    var fullDocs = document.createElement('button');
+    fullDocs.type = 'button';
+    fullDocs.textContent = 'Open full file documentation';
+    fullDocs.addEventListener('click', function () {
+      revealFullDocumentation(file.path);
+    });
+    actions.appendChild(fullDocs);
+    card.appendChild(actions);
 
     var desc = document.createElement('p');
     desc.className = 'local-map-card-desc';
