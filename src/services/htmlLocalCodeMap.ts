@@ -438,7 +438,8 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     gap: 7px;
     margin-top: 10px;
   }
-  .local-map-card-actions button {
+  .local-map-card-actions button,
+  .local-map-card-actions a {
     border: 1px solid var(--border);
     border-radius: 999px;
     padding: 5px 9px;
@@ -447,9 +448,12 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     cursor: pointer;
     font-size: 10.5px;
     font-weight: 700;
+    text-decoration: none;
   }
   .local-map-card-actions button:hover,
-  .local-map-card-actions button:focus {
+  .local-map-card-actions button:focus,
+  .local-map-card-actions a:hover,
+  .local-map-card-actions a:focus {
     border-color: var(--accent);
     outline: none;
   }
@@ -1299,6 +1303,12 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
       revealFullDocumentation(file.path);
     });
     actions.appendChild(fullDocs);
+
+    var sourceLink = document.createElement('a');
+    sourceLink.href = relativeSourceHref(file.path);
+    sourceLink.textContent = 'Open source file';
+    sourceLink.title = file.path;
+    actions.appendChild(sourceLink);
     card.appendChild(actions);
 
     var desc = document.createElement('p');
