@@ -182,6 +182,10 @@ function descriptionSourceLabel(source: string): string {
       return "file/module comment";
     case "declaration-comment":
       return "documented exported declaration";
+    case "module-docstring":
+      return "module docstring";
+    case "package-comment":
+      return "package comment";
     case "readme":
       return "README";
     default:
