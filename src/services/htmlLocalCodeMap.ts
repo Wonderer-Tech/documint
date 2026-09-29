@@ -31,6 +31,17 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     box-shadow: 0 20px 60px rgba(0, 0, 0, .12);
   }
   .local-code-map * { box-sizing: border-box; }
+  .local-code-map .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
   .local-map-hero {
     display: flex;
     gap: 18px;
@@ -560,7 +571,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     </div>
     <div class="local-map-panel">
       <div class="local-map-filter-row">
-        <span class="local-map-filter-state" id="localMapFilterState">Showing all modules</span>
+        <span class="local-map-filter-state" id="localMapFilterState" role="status" aria-live="polite">Showing all modules</span>
         <button class="local-map-clear" id="localMapClearFilter" type="button" hidden>Show all</button>
       </div>
       <div class="local-map-treemap" id="localMapTreemap"></div>
@@ -601,9 +612,10 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     </div>
     <div class="local-map-lookup">
       <div class="local-map-search-wrap">
-        <input class="local-map-search" id="localMapSearch" type="search" autocomplete="off" placeholder="Search files, descriptions, exports…" role="combobox" aria-expanded="false" aria-controls="localMapResults">
+        <label class="sr-only" for="localMapSearch">Search project files, descriptions, and exports</label>
+        <input class="local-map-search" id="localMapSearch" type="search" autocomplete="off" placeholder="Search files, descriptions, exports…" role="combobox" aria-expanded="false" aria-controls="localMapResults" aria-autocomplete="list">
         <span class="local-map-shortcut" aria-hidden="true">Ctrl/⌘ K</span>
-        <ul class="local-map-results" id="localMapResults" role="listbox"></ul>
+        <ul class="local-map-results" id="localMapResults" role="listbox" aria-label="Project file search results"></ul>
       </div>
       <article class="local-map-card" id="localMapCard" aria-live="polite"></article>
     </div>
@@ -1188,7 +1200,10 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
     var results = document.getElementById('localMapResults');
     var input = document.getElementById('localMapSearch');
     if (results) results.classList.remove('open');
-    if (input) input.setAttribute('aria-expanded', 'false');
+    if (input) {
+      input.setAttribute('aria-expanded', 'false');
+      input.removeAttribute('aria-activedescendant');
+    }
   }
 
   function chooseSearch(index) {
@@ -1262,6 +1277,13 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
 
     results.classList.add('open');
     input.setAttribute('aria-expanded', 'true');
+    var selected = results.querySelector('button[aria-selected="true"]');
+    if (selected) {
+      if (!selected.id) selected.id = 'localMapResult-' + searchIndex;
+      input.setAttribute('aria-activedescendant', selected.id);
+    } else {
+      input.removeAttribute('aria-activedescendant');
+    }
   }
 
   function relationColumn(title, paths) {
@@ -1443,7 +1465,13 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
         if (!searchHits.length) return;
         searchIndex = (searchIndex + (event.key === 'ArrowDown' ? 1 : -1) + searchHits.length) % searchHits.length;
         results.querySelectorAll('button').forEach(function (button, index) {
-          button.setAttribute('aria-selected', index === searchIndex ? 'true' : 'false');
+          var selected = index === searchIndex;
+          button.setAttribute('aria-selected', selected ? 'true' : 'false');
+          if (selected) {
+            if (!button.id) button.id = 'localMapResult-' + index;
+            input.setAttribute('aria-activedescendant', button.id);
+            button.scrollIntoView({ block: 'nearest' });
+          }
         });
       } else if (event.key === 'Enter' && searchIndex >= 0) {
         event.preventDefault();
