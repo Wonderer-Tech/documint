@@ -48,7 +48,7 @@ export function buildLocalDocumentationDocument(
   );
   const htmlArchitecture = renderLocalArchitectureDocumentationFromModel(
     model,
-    { surface: "html" },
+    { surface: "summary" },
   );
   const fileSections = model.files.map((file) =>
     renderLocalFileDocumentationFromModel(file),
