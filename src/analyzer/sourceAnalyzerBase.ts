@@ -413,7 +413,7 @@ export class SourceAnalyzer {
 
     const first = lines[index];
     const startMatch = first.match(
-      /^\s*[rRuUbBfF]*(?:"""|''')/,
+      /^\s*[rRuU]*(?:"""|''')/,
     );
     if (!startMatch) {
       return undefined;
