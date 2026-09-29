@@ -6,6 +6,7 @@ import { AnthropicProvider } from "./anthropicProvider";
 import { OpenRouterProvider } from "./openrouterProvider";
 import { DeepSeekProvider } from "./deepseekProvider";
 import { CustomProvider } from "./customProvider";
+import { LocalOpenAICompatibleProvider } from "./localOpenAICompatibleProvider";
 import { withModelMetadata } from "./providerMetadataDecorator";
 import {
   normalizeProviderName,
@@ -34,6 +35,13 @@ export class ProviderFactory {
         break;
       case "deepseek":
         instance = new DeepSeekProvider(context);
+        break;
+      case "ollama":
+      case "lmstudio":
+        instance = new LocalOpenAICompatibleProvider(
+          context,
+          providerName,
+        );
         break;
       case "custom":
         instance = new CustomProvider(context);
