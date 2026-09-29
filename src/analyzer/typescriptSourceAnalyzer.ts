@@ -55,7 +55,9 @@ export function analyzeJavaScriptLikeFile(
   return {
     path: file.path,
     language: file.language,
-    imports: uniqueImports(imports),
+    imports: uniqueImports(
+      imports.sort((a, b) => a.line - b.line),
+    ),
     symbols: uniqueSymbols(symbols),
     todos,
   };
