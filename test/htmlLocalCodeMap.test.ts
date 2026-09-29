@@ -16,6 +16,7 @@ const data: LocalCodeMapData = {
       description: "Extension entry point",
       descriptionSource: "readme",
       exports: [{ name: "activate", kind: "function", line: 3 }],
+      environmentVariables: [],
       uses: ["src/services/run.ts"],
       usedBy: [],
       entryPoint: true,
@@ -28,6 +29,7 @@ const data: LocalCodeMapData = {
       description: "Runs the Local pipeline",
       descriptionSource: "declaration-comment",
       exports: [{ name: "run", kind: "function", line: 10 }],
+      environmentVariables: ["API_TOKEN"],
       uses: [],
       usedBy: ["src/extension.ts"],
       entryPoint: false,
@@ -183,4 +185,14 @@ test("Local code map exposes keyboard-accessible search and live filter state", 
   assert.match(fragments.script, /aria-activedescendant/);
   assert.match(fragments.script, /scrollIntoView\(\{ block: 'nearest' \}\)/);
   assert.match(fragments.styles, /\.local-code-map \.sr-only/);
+});
+
+
+test("Local code map search and file card include verified environment references", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /environmentVariables/);
+  assert.match(fragments.script, /environmentText\.includes\(query\)/);
+  assert.match(fragments.script, /Environment references:/);
+  assert.match(fragments.script, /API_TOKEN/);
 });
