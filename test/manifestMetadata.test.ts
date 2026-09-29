@@ -24,22 +24,21 @@ test("marketplace metadata advertises implemented documentation capabilities", (
 test("manifest distinguishes shared settings from AI-only controls", () => {
   const properties = manifest.contributes.configuration.properties;
 
-  assert.match(properties["aiDocGenerator.aiProvider"].description, /AI mode only/i);
-  assert.match(properties["aiDocGenerator.model"].description, /AI mode only/i);
+  assert.match(properties["documint.aiProvider"].description, /AI mode only/i);
+  assert.match(properties["documint.model"].description, /AI mode only/i);
   assert.match(
-    properties["aiDocGenerator.documentationDepth"].description,
+    properties["documint.documentationDepth"].description,
     /AI mode only/i,
   );
-  assert.match(properties["aiDocGenerator.outputFormat"].description, /both AI and Local/i);
-  assert.match(properties["aiDocGenerator.targetLanguages"].description, /both AI and Local/i);
+  assert.match(properties["documint.outputFormat"].description, /both AI and Local/i);
+  assert.match(properties["documint.targetLanguages"].description, /both AI and Local/i);
 });
 
-test("command activation events cover contributed command-palette entry points", () => {
-  const activationEvents = new Set(manifest.activationEvents);
-  assert.ok(activationEvents.has("onCommand:aiDocGenerator.generateDocumentation"));
-  assert.ok(activationEvents.has("onCommand:aiDocGenerator.configureApiKey"));
-  assert.ok(activationEvents.has("onCommand:aiDocGenerator.clearCache"));
-  assert.ok(activationEvents.has("onCommand:aiDocGenerator.cancelGeneration"));
+test("manifest relies on automatic command/view activation for the current VS Code engine", () => {
+  const activationEvents = (manifest as { activationEvents?: string[] }).activationEvents;
+
+  assert.equal(activationEvents, undefined);
+  assert.equal(manifest.engines.vscode, "^1.110.0");
 });
 
 test("manifest commands stay aligned with runtime registration and internal scope commands", () => {
@@ -55,14 +54,9 @@ test("manifest commands stay aligned with runtime registration and internal scop
   const contributed = new Set(
     manifest.contributes.commands.map((entry) => entry.command),
   );
-  const activationEvents = new Set(manifest.activationEvents);
 
   for (const command of contributed) {
     assert.ok(registered.has(command), `contributed command is not registered: ${command}`);
-    assert.ok(
-      activationEvents.has(`onCommand:${command}`),
-      `contributed command has no activation event: ${command}`,
-    );
   }
 
   for (const command of [
@@ -70,10 +64,6 @@ test("manifest commands stay aligned with runtime registration and internal scop
     "aiDocGenerator.pickAndGenerateFolder",
   ]) {
     assert.ok(registered.has(command), `internal scope command is not registered: ${command}`);
-    assert.ok(
-      activationEvents.has(`onCommand:${command}`),
-      `internal scope command has no activation event: ${command}`,
-    );
     assert.equal(
       contributed.has(command),
       false,
@@ -84,7 +74,7 @@ test("manifest commands stay aligned with runtime registration and internal scop
 
 test("manifest prevents negative provider request spacing", () => {
   const property = manifest.contributes.configuration.properties[
-    "aiDocGenerator.rateLimitDelay"
+    "documint.rateLimitDelay"
   ];
   assert.equal(property.minimum, 0);
   assert.equal(property.default, 1000);
@@ -93,7 +83,7 @@ test("manifest prevents negative provider request spacing", () => {
 test("default target language list includes the scanner's broad source types", () => {
   const languages = new Set(
     manifest.contributes.configuration.properties[
-      "aiDocGenerator.targetLanguages"
+      "documint.targetLanguages"
     ].default,
   );
 
@@ -128,7 +118,7 @@ test("default target language list includes the scanner's broad source types", (
 
 test("manifest uses a provider-friendly default AI concurrency", () => {
   const property = manifest.contributes.configuration.properties[
-    "aiDocGenerator.concurrentRequests"
+    "documint.concurrentRequests"
   ];
 
   assert.equal(property.default, 5);
@@ -155,4 +145,30 @@ test("AI generator runtime fallback matches the manifest concurrency default", (
     source,
     /Math\.min\(Math\.max\(bounded, 1\), Math\.min\(totalFiles, 15\)\)/,
   );
+});
+
+
+test("legacy aiDocGenerator settings remain deprecated compatibility aliases", () => {
+  const properties = manifest.contributes.configuration.properties;
+
+  for (const key of [
+    "generationMode",
+    "aiProvider",
+    "model",
+    "documentationDepth",
+    "outputFormat",
+    "targetLanguages",
+    "maxTokens",
+    "temperature",
+    "rateLimitDelay",
+    "concurrentRequests",
+    "excludePatterns",
+    "customApiEndpoint",
+  ]) {
+    assert.ok(properties[`documint.${key}`], `missing documint.${key}`);
+    assert.match(
+      properties[`aiDocGenerator.${key}`].deprecationMessage,
+      new RegExp(`Use documint\\.${key}`),
+    );
+  }
 });
