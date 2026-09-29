@@ -198,10 +198,3 @@ test("Local code map search and file card include verified environment reference
 });
 
 
-test("Local code map search and cards surface referenced environment variables", () => {
-  const fragments = renderLocalCodeMapFragments(data);
-
-  assert.match(fragments.script, /environmentText/);
-  assert.match(fragments.script, /Environment references:/);
-  assert.match(fragments.script, /DOCUMINT_MODE/);
-});
