@@ -9,6 +9,8 @@ export interface DocGeneratorConfig {
     | "anthropic"
     | "openrouter"
     | "deepseek"
+    | "ollama"
+    | "lmstudio"
     | "custom";
   model: string;
   documentationDepth: "simple" | "basic" | "standard" | "comprehensive";
