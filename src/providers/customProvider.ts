@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { getDocuMintConfiguration } from "../config/configuration";
 import axios from "axios";
 import { BaseAIProvider, ApiCallParams } from "./aiProvider";
 import { DocumentationContext, DocumentationResult } from "../types";
@@ -15,7 +16,7 @@ import { normalizeProviderRequestError } from "./providerHttpError";
  * OpenAI, Together AI, Fireworks, Groq, or any OpenAI-compatible server.
  *
  * Configure via:
- *   aiDocGenerator.customApiEndpoint  — full URL to /chat/completions
+ *   documint.customApiEndpoint  — full URL to /chat/completions
  *   aiDocGenerator.model              — model name expected by the endpoint
  */
 export class CustomProvider extends BaseAIProvider {
@@ -35,15 +36,14 @@ export class CustomProvider extends BaseAIProvider {
     if (!policy.valid) {
       throw new Error(
         policy.reason ??
-          `Set "aiDocGenerator.customApiEndpoint" to a valid http or https URL.`,
+          `Set "documint.customApiEndpoint" to a valid http or https URL.`,
       );
     }
     return policy.normalizedEndpoint;
   }
 
   private getEndpointPolicy() {
-    const endpoint = vscode.workspace
-      .getConfiguration("aiDocGenerator")
+    const endpoint = getDocuMintConfiguration()
       .get<string>("customApiEndpoint");
     return evaluateCustomEndpoint(endpoint);
   }
@@ -64,7 +64,7 @@ export class CustomProvider extends BaseAIProvider {
   public async generateDocumentation(
     context: DocumentationContext,
   ): Promise<DocumentationResult> {
-    const cfg = vscode.workspace.getConfiguration("aiDocGenerator");
+    const cfg = getDocuMintConfiguration();
     const model =
       context.model || cfg.get<string>("model") || this.defaultModel();
     const apiKey = await this.getApiKey();
