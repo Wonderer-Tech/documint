@@ -14,6 +14,7 @@ export type {
   FileAnalysis,
   FileDependencyIndex,
   ProjectAnalysis,
+  SourceDescription,
   SourceImport,
   SourceSymbol,
   SourceSymbolKind,
