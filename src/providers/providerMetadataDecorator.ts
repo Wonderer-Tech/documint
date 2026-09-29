@@ -13,7 +13,10 @@ import {
 } from "./contextWindowPolicy";
 import { generationRunContext } from "../services/generationRunContext";
 import { ModelMetadataService } from "../services/modelMetadataService";
-import type { LocalPresetProviderName } from "./localProviderPolicy";
+import {
+  type LocalPresetProviderName,
+  resolveLocalPresetModel,
+} from "./localProviderPolicy";
 
 type MetadataProviderName = GuardedProviderName | LocalPresetProviderName | "custom";
 
@@ -46,12 +49,8 @@ export function withModelMetadata(
   context: vscode.ExtensionContext,
 ): BaseAIProvider {
   const providerName = provider.name as MetadataProviderName;
-  if (
-    providerName !== "custom" &&
-    !isGuardedProviderName(providerName)
-  ) {
-    return provider;
-  }
+  const localPreset =
+    providerName === "ollama" || providerName === "lmstudio";
 
   const metadataService = ModelMetadataService.getInstance(context);
   const resolvedWindows = new Map<string, number>();
@@ -72,6 +71,17 @@ export function withModelMetadata(
       return requestedModel?.trim() || configuredModel || CUSTOM_DEFAULT_MODEL;
     }
 
+    if (localPreset) {
+      return resolveLocalPresetModel(
+        requestedModel,
+        configuredModel,
+      );
+    }
+
+    if (!isGuardedProviderName(providerName)) {
+      return requestedModel?.trim() || configuredModel || "";
+    }
+
     return normalizeProviderModel(
       providerName,
       requestedModel ?? configuredModel,
@@ -82,7 +92,11 @@ export function withModelMetadata(
   const warmContextWindow = async (requestedModel?: string): Promise<void> => {
     const model = resolveModel(requestedModel);
     const key = model.toLowerCase();
-    if (resolvedWindows.has(key) || providerName === "custom") {
+    if (
+      resolvedWindows.has(key) ||
+      providerName === "custom" ||
+      localPreset
+    ) {
       return;
     }
 
