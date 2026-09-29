@@ -17,6 +17,7 @@ export interface HtmlTemplateOptions {
   totalLines?: number;
   logoSrc?: string;
   localCodeMap?: LocalCodeMapData;
+  externalAssets?: boolean;
 }
 
 function escapeHtmlAttr(str: string): string {
@@ -73,6 +74,13 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     ? `<img class="footer-logo-img" src="${safeLogoSrc}" alt="DocuMint logo">`
     : "";
   const localCodeMap = renderLocalCodeMapFragments(options.localCodeMap);
+  const externalAssets = options.externalAssets !== false;
+  const highlightThemeLink = externalAssets
+    ? '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-theme">'
+    : "";
+  const externalScriptTags = externalAssets
+    ? '<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>\n  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>'
+    : "";
   const localCodeMapToc = options.localCodeMap
     ? '<ul><li><a class="toc-link level-1" href="#documint-local-code-map"><span class="toc-text">Project map</span></a></li></ul>'
     : "";
@@ -106,7 +114,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="Documentation Generator">
   <title>${safeTitle}</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-theme">
+  ${highlightThemeLink}
   <style>
     :root[data-theme="dark"] {
       --bg-primary: #0d1117;
@@ -2708,8 +2716,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
 
   <div class="kb-hints"><kbd>/</kbd> Search &nbsp; <kbd>T</kbd> Theme</div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>
+  ${externalScriptTags}
   <script>
   (function () {
     'use strict';
