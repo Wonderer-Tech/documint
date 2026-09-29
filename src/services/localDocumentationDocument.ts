@@ -1,9 +1,13 @@
 import { marked } from "marked";
 import type { ProjectAnalysis } from "../analyzer/sourceAnalyzer";
 import type { WorkspaceFile } from "../types";
-import { renderLocalArchitectureDocumentation } from "./localArchitectureDocumentation";
-import { renderLocalFileDocumentation } from "./localFileDocumentation";
-import { renderLocalProjectDocumentation } from "./localProjectDocumentation";
+import { renderLocalArchitectureDocumentationFromModel } from "./localArchitectureDocumentation";
+import { renderLocalFileDocumentationFromModel } from "./localFileDocumentation";
+import { renderLocalProjectDocumentationFromModel } from "./localProjectDocumentation";
+import {
+  buildLocalDocumentationModel,
+  type LocalDocumentationModel,
+} from "./localDocumentationModel";
 import { generateHtmlTemplate } from "./htmlTemplate";
 
 export interface LocalDocumentationDocument {
@@ -12,6 +16,11 @@ export interface LocalDocumentationDocument {
   fileCount: number;
   totalLines: number;
   languages: string[];
+  model: LocalDocumentationModel;
+}
+
+export interface LocalDocumentationDocumentOptions {
+  readme?: string;
 }
 
 /**
@@ -23,28 +32,19 @@ export function buildLocalDocumentationDocument(
   projectName: string,
   files: WorkspaceFile[],
   project: ProjectAnalysis,
+  options: LocalDocumentationDocumentOptions = {},
 ): LocalDocumentationDocument {
-  const sortedFiles = [...files].sort((a, b) => a.path.localeCompare(b.path));
-  const analysisByPath = new Map(
-    project.files.map((analysis) => [analysis.path, analysis]),
+  const model = buildLocalDocumentationModel(
+    projectName,
+    files,
+    project,
+    { readme: options.readme },
   );
-  const overview = renderLocalProjectDocumentation({
-    projectName,
-    files: sortedFiles,
-    project,
-  });
-  const architecture = renderLocalArchitectureDocumentation({
-    projectName,
-    files: sortedFiles,
-    project,
-  });
-  const fileSections = sortedFiles.map((file) => {
-    const analysis = analysisByPath.get(file.path);
-    if (!analysis) {
-      throw new Error(`Missing source analysis for ${file.path}`);
-    }
-    return renderLocalFileDocumentation({ file, analysis, project });
-  });
+  const overview = renderLocalProjectDocumentationFromModel(model);
+  const architecture = renderLocalArchitectureDocumentationFromModel(model);
+  const fileSections = model.files.map((file) =>
+    renderLocalFileDocumentationFromModel(file),
+  );
   const markdown = [
     overview,
     "",
@@ -57,16 +57,14 @@ export function buildLocalDocumentationDocument(
     "",
     "*Generated locally by **DocuMint** from static source analysis. No AI provider was used.*",
   ].join("\n");
-  const totalLines = sortedFiles.reduce(
-    (sum, file) => sum + file.content.split(/\r?\n/).length,
-    0,
+  const totalLines = model.totalLines;
+  const languages = model.languages;
+  const { contentHtml, tocHtml } = renderMarkdownForTemplate(
+    markdown,
+    model.files.map((file) => file.path),
   );
-  const languages = Array.from(
-    new Set(sortedFiles.map((file) => file.language).filter(Boolean)),
-  ).sort((a, b) => a.localeCompare(b));
-  const { contentHtml, tocHtml } = renderMarkdownForTemplate(markdown, sortedFiles.map((file) => file.path));
   const generationDate = new Date().toISOString();
-  const safeProjectName = cleanText(projectName) || "Project";
+  const safeProjectName = model.projectName;
 
   return {
     markdown,
@@ -75,14 +73,15 @@ export function buildLocalDocumentationDocument(
       tocHtml,
       contentHtml,
       projectName: safeProjectName,
-      fileCount: sortedFiles.length,
+      fileCount: model.files.length,
       generationDate,
       languages,
       totalLines,
     }),
-    fileCount: sortedFiles.length,
+    fileCount: model.files.length,
     totalLines,
     languages,
+    model,
   };
 }
 
