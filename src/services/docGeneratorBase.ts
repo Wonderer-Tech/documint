@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { getDocuMintConfiguration } from "../config/configuration";
 import * as crypto from "crypto";
 import { marked } from "marked";
 import { WorkspaceScanner } from "../scanner/workspaceScanner";
@@ -1153,8 +1154,7 @@ export class DocGeneratorService {
     const rateLimitDelay = this.resolveRateLimitDelay(options);
     const configuredModel =
       options.model ||
-      vscode.workspace
-        .getConfiguration("aiDocGenerator")
+      getDocuMintConfiguration()
         .get<string>("model") ||
       "";
 
@@ -1632,7 +1632,7 @@ export class DocGeneratorService {
     options: DocGeneratorOptions,
     totalFiles: number,
   ): number {
-    const configuration = vscode.workspace.getConfiguration("aiDocGenerator");
+    const configuration = getDocuMintConfiguration();
     const configured =
       options.concurrentRequests ??
       configuration.get<number>("concurrentRequests") ??
@@ -1647,7 +1647,7 @@ export class DocGeneratorService {
       return 0;
     }
 
-    const configuration = vscode.workspace.getConfiguration("aiDocGenerator");
+    const configuration = getDocuMintConfiguration();
     const configured =
       options.rateLimitDelay ??
       configuration.get<number>("rateLimitDelay") ??
@@ -2028,8 +2028,7 @@ export class DocGeneratorService {
       const depth = options.depth || "standard";
       const model =
         options.model ||
-        vscode.workspace
-          .getConfiguration("aiDocGenerator")
+        getDocuMintConfiguration()
           .get<string>("model") ||
         "";
       const cacheKey = this.createProjectSummaryCacheKey({
