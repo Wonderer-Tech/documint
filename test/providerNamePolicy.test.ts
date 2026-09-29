@@ -12,6 +12,8 @@ test("provider name policy preserves supported providers", () => {
   assert.equal(normalizeProviderName(" Anthropic "), "anthropic");
   assert.equal(normalizeProviderName("OPENROUTER"), "openrouter");
   assert.equal(normalizeProviderName("deepseek"), "deepseek");
+  assert.equal(normalizeProviderName("ollama"), "ollama");
+  assert.equal(normalizeProviderName(" LMSTUDIO "), "lmstudio");
   assert.equal(normalizeProviderName("custom"), "custom");
 });
 
