@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { Script } from "node:vm";
 import { SIDEBAR_STYLES } from "../src/views/sidebarStyles";
 import { SIDEBAR_CLIENT_SCRIPT } from "../src/views/sidebarClientScript";
+import { buildSidebarHtml } from "../src/views/sidebarTemplate";
 
 test("extracted sidebar styles preserve Local/AI visibility states", () => {
   assert.ok(SIDEBAR_STYLES.length > 8_000);
@@ -22,16 +23,36 @@ test("extracted sidebar client script remains syntactically valid", () => {
   assert.match(SIDEBAR_CLIENT_SCRIPT, /setApiKeyStatus/);
 });
 
-test("SidebarProvider delegates static assets to extracted modules", () => {
+test("sidebar template composes extracted styles and client runtime", () => {
+  const html = buildSidebarHtml({
+    cspSource: "vscode-webview://documint",
+    nonce: "test-nonce",
+  });
+
+  assert.match(html, /style-src 'nonce-test-nonce'/);
+  assert.match(html, /script-src 'nonce-test-nonce'/);
+  assert.match(html, /\.auth-status\.optional/);
+  assert.match(html, /syncGenerationModeUi/);
+  assert.match(html, /Local Documentation — No AI/);
+});
+
+test("SidebarProvider delegates webview rendering to the extracted template", () => {
   const source = readFileSync(
     join(process.cwd(), "src/views/sidebarProvider.ts"),
     "utf8",
   );
+  const templateSource = readFileSync(
+    join(process.cwd(), "src/views/sidebarTemplate.ts"),
+    "utf8",
+  );
 
-  assert.match(source, /from "\.\/sidebarStyles"/);
-  assert.match(source, /from "\.\/sidebarClientScript"/);
-  assert.match(source, /\$\{SIDEBAR_STYLES\}/);
-  assert.match(source, /\$\{SIDEBAR_CLIENT_SCRIPT\}/);
+  assert.match(source, /from "\.\/sidebarTemplate"/);
+  assert.match(source, /return buildSidebarHtml\(/);
   assert.doesNotMatch(source, /\.auth-status\.optional/);
   assert.doesNotMatch(source, /function syncGenerationModeUi/);
+
+  assert.match(templateSource, /from "\.\/sidebarStyles"/);
+  assert.match(templateSource, /from "\.\/sidebarClientScript"/);
+  assert.match(templateSource, /\$\{SIDEBAR_STYLES\}/);
+  assert.match(templateSource, /\$\{SIDEBAR_CLIENT_SCRIPT\}/);
 });
