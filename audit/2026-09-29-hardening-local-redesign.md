@@ -37,6 +37,9 @@ _Last updated: 2026-09-30_
 - ✅ Published canonical `documint.*` settings while preserving explicit `aiDocGenerator.*` values as deprecated compatibility aliases. Runtime reads/writes go through the shared namespace bridge; command IDs remain unchanged.
 - ✅ Removed obsolete activation events and deprecated `@types/marked`.
 - ✅ Added CONTRIBUTING, SECURITY, issue templates, PR checklist, and source-of-truth audit docs.
+- ✅ `htmlTemplate.ts` is now a small composition shell; static generated-HTML styles/runtime/policy moved to dedicated modules with focused regressions.
+- ✅ `sidebarProvider.ts` now focuses on host state/messages; CSP-aware markup, styles, and webview client runtime live in dedicated modules.
+- ✅ Added weekly Dependabot configuration for npm and GitHub Actions.
 - ✅ Retired the unused `localVisualBlueprint.ts` Local payload path and aligned Local browser/Jelly/architecture regressions with the code-map architecture.
 - ✅ Aggregate unit-test registration is currently consistent: every root `test/*.test.ts` module is imported by `test/all.test.ts`.
 - ⏳ Full local `npm test`, VSIX size comparison, and browser acceptance execution still require a network-enabled/materialized checkout. No CI was manually triggered in this implementation pass.
