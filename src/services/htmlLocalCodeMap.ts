@@ -955,13 +955,23 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
 
     modules.forEach(function (module) {
       var pos = positions.get(module.name);
+      var moduleAria =
+        module.name +
+        ', ' +
+        module.files +
+        ' files' +
+        (module.description ? ', ' + module.description : '');
       var g = makeSvg('g', {
         class: 'local-map-module-node',
         'data-module': module.name,
         tabindex: 0,
         role: 'button',
-        'aria-label': module.name + ', ' + module.files + ' files'
+        'aria-label': moduleAria
       }, svg);
+      if (module.description) {
+        var tooltip = makeSvg('title', {}, g);
+        tooltip.textContent = module.name + ': ' + module.description;
+      }
       makeSvg('rect', {
         x: pos.x - 92,
         y: pos.y - 31,
