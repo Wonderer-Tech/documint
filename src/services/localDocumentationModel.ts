@@ -35,6 +35,7 @@ export interface LocalDocumentationFile {
   exportedSymbols: SourceSymbol[];
   internalSymbols: SourceSymbol[];
   todos: TodoComment[];
+  referencedEnvironmentVariables: string[];
   uses: string[];
   usedBy: string[];
   entryPoint: boolean;
@@ -167,6 +168,9 @@ export function buildLocalDocumentationModel(
       exportedSymbols,
       internalSymbols,
       todos: [...analysis.todos],
+      referencedEnvironmentVariables: uniqueSorted(
+        analysis.referencedEnvironmentVariables ?? [],
+      ),
       uses: uniqueSorted(dependencyIndex.uses.get(filePath) ?? []),
       usedBy: uniqueSorted(dependencyIndex.usedBy.get(filePath) ?? []),
       entryPoint: entryPoints.has(filePath),
@@ -176,8 +180,9 @@ export function buildLocalDocumentationModel(
   const modules = buildModules(fileModels);
   const moduleEdges = buildModuleEdges(project.internalDependencies);
   const gettingStarted = extractGettingStartedFacts(sortedFiles);
-  const referencedEnvironmentVariables =
-    extractReferencedEnvironmentVariables(sortedFiles);
+  const referencedEnvironmentVariables = uniqueSorted(
+    fileModels.flatMap((file) => file.referencedEnvironmentVariables),
+  );
   const suggestedReadingPath = buildSuggestedReadingPath(fileModels);
 
   return {
@@ -330,54 +335,6 @@ function buildModuleEdges(
       a.from.localeCompare(b.from) ||
       a.to.localeCompare(b.to),
   );
-}
-
-function extractReferencedEnvironmentVariables(
-  files: WorkspaceFile[],
-): string[] {
-  const names = new Set<string>();
-
-  for (const file of files) {
-    const language = file.language.toLowerCase();
-    const content = file.content;
-
-    if (
-      ["typescript", "typescriptreact", "javascript", "javascriptreact"].includes(
-        language,
-      )
-    ) {
-      for (const match of content.matchAll(
-        /\bprocess\.env\.([A-Za-z_][A-Za-z0-9_]*)\b/g,
-      )) {
-        names.add(match[1]);
-      }
-      for (const match of content.matchAll(
-        /\bprocess\.env\[\s*["']([A-Za-z_][A-Za-z0-9_]*)["']\s*\]/g,
-      )) {
-        names.add(match[1]);
-      }
-      for (const match of content.matchAll(
-        /\bimport\.meta\.env\.([A-Za-z_][A-Za-z0-9_]*)\b/g,
-      )) {
-        names.add(match[1]);
-      }
-    }
-
-    if (language === "python") {
-      for (const match of content.matchAll(
-        /\bos\.environ\[\s*["']([A-Za-z_][A-Za-z0-9_]*)["']\s*\]/g,
-      )) {
-        names.add(match[1]);
-      }
-      for (const match of content.matchAll(
-        /\bos\.(?:getenv|environ\.get)\(\s*["']([A-Za-z_][A-Za-z0-9_]*)["']/g,
-      )) {
-        names.add(match[1]);
-      }
-    }
-  }
-
-  return Array.from(names).sort((a, b) => a.localeCompare(b));
 }
 
 function extractGettingStartedFacts(
