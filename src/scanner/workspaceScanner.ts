@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { getDocuMintConfiguration } from "../config/configuration";
 import * as path from "path";
 import { WorkspaceFile } from "../types";
 import {
@@ -58,10 +59,7 @@ export class WorkspaceScanner {
     if (effectiveTargetPaths && effectiveTargetPaths.length > 0) {
       // A deliberate folder selection relaxes only DocuMint's default test/spec
       // exclusions. User/workspace and programmatic exclusions remain authoritative.
-      const settings = vscode.workspace.getConfiguration(
-        "aiDocGenerator",
-        workspaceFolder.uri,
-      );
+      const settings = getDocuMintConfiguration(workspaceFolder.uri);
       const configuredExcludePatterns =
         settings.get<string[]>("excludePatterns") ?? [];
       excludePatterns = buildExplicitFolderExcludePatterns(
@@ -167,10 +165,7 @@ export class WorkspaceScanner {
   private resolveConfig(
     workspaceFolder: vscode.WorkspaceFolder,
   ): Required<ScannerConfig> {
-    const settings = vscode.workspace.getConfiguration(
-      "aiDocGenerator",
-      workspaceFolder.uri,
-    );
+    const settings = getDocuMintConfiguration(workspaceFolder.uri);
     const configuredExcludePatterns =
       settings.get<string[]>("excludePatterns") ?? [];
 
