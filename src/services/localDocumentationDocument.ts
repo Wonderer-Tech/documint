@@ -41,7 +41,14 @@ export function buildLocalDocumentationDocument(
     project,
     { readme: options.readme },
   );
-  const overview = renderLocalProjectDocumentationFromModel(model);
+  const markdownOverview = renderLocalProjectDocumentationFromModel(
+    model,
+    { surface: "markdown" },
+  );
+  const htmlOverview = renderLocalProjectDocumentationFromModel(
+    model,
+    { surface: "html" },
+  );
   const markdownArchitecture = renderLocalArchitectureDocumentationFromModel(
     model,
     { surface: "markdown" },
@@ -54,12 +61,12 @@ export function buildLocalDocumentationDocument(
     renderLocalFileDocumentationFromModel(file),
   );
   const markdown = assembleDocumentMarkdown(
-    overview,
+    markdownOverview,
     markdownArchitecture,
     fileSections,
   );
   const htmlSourceMarkdown = assembleDocumentMarkdown(
-    overview,
+    htmlOverview,
     htmlArchitecture,
     fileSections,
   );
