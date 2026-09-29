@@ -1,7 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { SourceAnalyzer } from "../../src/analyzer/sourceAnalyzer";
 import { buildLocalDocumentationDocument } from "../../src/services/localDocumentationDocument";
-import { buildLocalArchitectureVisualBlueprint } from "../../src/services/localVisualBlueprint";
 import { generateHtmlTemplate } from "../../src/services/htmlTemplate";
 import { sanitizeHtml } from "../../src/services/outputSanitizerCore";
 import { hardenGeneratedHtmlForOffline } from "../../src/services/htmlOfflineHardening";
@@ -34,8 +33,6 @@ function emit(
   fixtures.push({ name, files: count, lines, chart, codeMap });
 }
 emit("local", local.html, files.length, local.totalLines);
-emit("malformed-chart", local.html.replace(/(<code class="language-architecture-blueprint">)[\s\S]*?(<\/code>)/,
-  '$1{"modules":[null]}$2'), files.length, local.totalLines, false);
 const singleFiles: WorkspaceFile[] = [{ path: "index.ts", language: "typescript", content: "export const single = 1;\n" }];
 const single = buildLocalDocumentationDocument("Single File", singleFiles, analyzer.analyzeProject(singleFiles));
 emit("single-file", single.html, 1, single.totalLines);
@@ -121,7 +118,47 @@ emit(
 // canonical TOC links and the original ASCII project-tree payload.
 const aiFiles = files.slice(0, 2);
 const aiProject = analyzer.analyzeProject(aiFiles);
-const blueprint = { ...buildLocalArchitectureVisualBlueprint({ projectName: "AI Format Fixture", files: aiFiles, project: aiProject }), source: "ai" };
+const blueprint = {
+  source: "ai",
+  projectName: "AI Format Fixture",
+  modules: [
+    {
+      id: "src-providers",
+      name: "src/providers",
+      role: "Module",
+      fileCount: 1,
+      lineCount: aiFiles[0].content.split(/\\r?\\n/).length,
+      languages: ["typescript"],
+      importantFiles: [],
+    },
+    {
+      id: "src-scanner",
+      name: "src/scanner",
+      role: "Module",
+      fileCount: 1,
+      lineCount: aiFiles[1].content.split(/\\r?\\n/).length,
+      languages: ["typescript"],
+      importantFiles: [],
+    },
+  ],
+  moduleEdges: [],
+  importantFiles: [],
+  entryPoints: aiProject.entryPoints,
+  externalDependencies: aiProject.externalDependencies,
+  dependencyGraph: {
+    nodes: aiFiles.map((file, index) => ({
+      id: `fixture-${index}`,
+      label: file.path.split("/").pop() || file.path,
+      path: file.path,
+      module: index === 0 ? "src/providers" : "src/scanner",
+      language: file.language,
+      symbolCount: aiProject.files[index]?.symbols.length ?? 0,
+      dependencyCount: 0,
+      lineCount: file.content.split(/\\r?\\n/).length,
+    })),
+    edges: [],
+  },
+};
 const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const toc = '<ul><li><a class="toc-link level-2" href="#overview"><span class="toc-text">Project Overview</span></a></li>' +
   '<li><a class="toc-link level-3" href="#visual"><span class="toc-text">Visual Blueprint: Architecture Map</span></a></li>' +
@@ -135,6 +172,16 @@ const content = '<h1>AI Format Fixture</h1><h2 id="overview">Project Overview</h
 const ai = generateHtmlTemplate({ title: "AI Format Fixture", projectName: "AI Format Fixture", fileCount: 2,
   generationDate: "2026-09-18T00:00:00.000Z", languages: ["typescript"], totalLines: 4, tocHtml: toc, contentHtml: content });
 emit("ai-format", ai, 2, 4);
+emit(
+  "malformed-chart",
+  ai.replace(
+    /(<code class="language-architecture-blueprint">)[\\s\\S]*?(<\\/code>)/,
+    '$1{"modules":[null]}$2',
+  ),
+  2,
+  4,
+  false,
+);
 const legacyToc = toc.replace(/ class="toc-link level-[1-6]"/g, "").replace(/<span class="toc-text">([\s\S]*?)<\/span>/g, "$1");
 emit("legacy-bare-links", ai.replace(toc, legacyToc), 2, 4);
 writeFileSync(`${output}/fixtures.json`, JSON.stringify(fixtures, null, 2));
