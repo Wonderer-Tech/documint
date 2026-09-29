@@ -78,6 +78,12 @@ export interface LocalGettingStartedFacts {
   extensionEntry?: string;
 }
 
+export interface LocalReadingPathItem {
+  path: string;
+  reason: string;
+  entryPoint: boolean;
+}
+
 export interface LocalDocumentationModel {
   projectName: string;
   files: LocalDocumentationFile[];
@@ -92,6 +98,7 @@ export interface LocalDocumentationModel {
   totalTodos: number;
   languages: string[];
   gettingStarted?: LocalGettingStartedFacts;
+  suggestedReadingPath: LocalReadingPathItem[];
 }
 
 export interface BuildLocalDocumentationModelOptions {
@@ -164,6 +171,7 @@ export function buildLocalDocumentationModel(
   const modules = buildModules(fileModels);
   const moduleEdges = buildModuleEdges(project.internalDependencies);
   const gettingStarted = extractGettingStartedFacts(sortedFiles);
+  const suggestedReadingPath = buildSuggestedReadingPath(fileModels);
 
   return {
     projectName: cleanText(projectName) || "Project",
@@ -194,7 +202,94 @@ export function buildLocalDocumentationModel(
       fileModels.map((file) => file.language).filter(Boolean),
     ),
     gettingStarted,
+    suggestedReadingPath,
   };
+}
+
+function buildSuggestedReadingPath(
+  files: LocalDocumentationFile[],
+): LocalReadingPathItem[] {
+  const byPath = new Map(files.map((file) => [file.path, file]));
+  const selected: LocalReadingPathItem[] = [];
+  const seen = new Set<string>();
+  const queue: Array<{ path: string; parent?: string }> = files
+    .filter((file) => file.entryPoint)
+    .sort((a, b) => a.path.localeCompare(b.path))
+    .map((file) => ({ path: file.path }));
+
+  while (queue.length > 0 && selected.length < 8) {
+    const current = queue.shift()!;
+    if (seen.has(current.path)) {
+      continue;
+    }
+    const file = byPath.get(current.path);
+    if (!file) {
+      continue;
+    }
+
+    seen.add(file.path);
+    selected.push({
+      path: file.path,
+      entryPoint: file.entryPoint,
+      reason: file.entryPoint
+        ? "Detected project entry point."
+        : current.parent
+          ? `Imported by ${current.parent}.`
+          : readingReason(file),
+    });
+
+    const next = file.uses
+      .map((path) => byPath.get(path))
+      .filter((value): value is LocalDocumentationFile => Boolean(value))
+      .filter((value) => !seen.has(value.path))
+      .sort(
+        (a, b) =>
+          b.usedBy.length - a.usedBy.length ||
+          b.exportedSymbols.length - a.exportedSymbols.length ||
+          a.path.localeCompare(b.path),
+      );
+
+    for (const dependency of next) {
+      queue.push({ path: dependency.path, parent: file.path });
+    }
+  }
+
+  if (selected.length < 8) {
+    const fallbacks = files
+      .filter((file) => !seen.has(file.path))
+      .sort(
+        (a, b) =>
+          b.usedBy.length - a.usedBy.length ||
+          b.uses.length - a.uses.length ||
+          b.exportedSymbols.length - a.exportedSymbols.length ||
+          a.path.localeCompare(b.path),
+      );
+
+    for (const file of fallbacks) {
+      if (selected.length >= 8) break;
+      seen.add(file.path);
+      selected.push({
+        path: file.path,
+        entryPoint: file.entryPoint,
+        reason: readingReason(file),
+      });
+    }
+  }
+
+  return selected;
+}
+
+function readingReason(file: LocalDocumentationFile): string {
+  if (file.usedBy.length > 0) {
+    return `Used by ${file.usedBy.length} project file${file.usedBy.length === 1 ? "" : "s"}.`;
+  }
+  if (file.uses.length > 0) {
+    return `Uses ${file.uses.length} internal project file${file.uses.length === 1 ? "" : "s"}.`;
+  }
+  if (file.exportedSymbols.length > 0) {
+    return `Exports ${file.exportedSymbols.length} detected API symbol${file.exportedSymbols.length === 1 ? "" : "s"}.`;
+  }
+  return "Included as a structurally relevant source file.";
 }
 
 function extractGettingStartedFacts(
