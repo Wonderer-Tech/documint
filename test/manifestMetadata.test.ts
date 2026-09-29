@@ -135,3 +135,24 @@ test("manifest uses a provider-friendly default AI concurrency", () => {
   assert.equal(property.minimum, 1);
   assert.equal(property.maximum, 15);
 });
+
+
+test("AI generator runtime fallback matches the manifest concurrency default", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/services/docGeneratorBase.ts"),
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /configuration\.get<number>\("concurrentRequests"\)\s*\?\?\s*5/,
+  );
+  assert.match(
+    source,
+    /Number\.isFinite\(parsed\) \? Math\.floor\(parsed\) : 5/,
+  );
+  assert.match(
+    source,
+    /Math\.min\(Math\.max\(bounded, 1\), Math\.min\(totalFiles, 15\)\)/,
+  );
+});
