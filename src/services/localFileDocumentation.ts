@@ -82,7 +82,7 @@ export function renderLocalFileDocumentationFromModel(
       "",
       "### Exported API",
       "",
-      renderSymbolTable(file.exportedSymbols, "", file.path),
+      renderSymbolTable(file.exportedSymbols, file.path),
     );
   }
 
@@ -91,7 +91,7 @@ export function renderLocalFileDocumentationFromModel(
       "",
       "### Internal API",
       "",
-      renderSymbolTable(file.internalSymbols, "", file.path),
+      renderSymbolTable(file.internalSymbols, file.path),
     );
   }
 
@@ -108,10 +108,8 @@ export function renderLocalFileDocumentationFromModel(
 
 function renderSymbolTable(
   symbols: SourceSymbol[],
-  emptyMessage: string,
   filePath?: string,
 ): string {
-  if (symbols.length === 0) return emptyMessage;
 
   return [
     "| Kind | Name | Signature | Line |",
@@ -129,8 +127,6 @@ function renderSymbolTable(
 }
 
 function renderImports(file: LocalDocumentationFile): string {
-  if (file.imports.length === 0) return "No imports detected.";
-
   return [
     "| Source | Imported Symbols | Resolved Project File | Line |",
     "| --- | --- | --- | ---: |",
@@ -146,17 +142,8 @@ function renderImports(file: LocalDocumentationFile): string {
   ].join("\n");
 }
 
-function renderPathList(paths: string[], emptyMessage: string): string {
-  return paths.length > 0
-    ? paths.map((filePath) => `- ${inlineCode(filePath)}`).join("\n")
-    : emptyMessage;
-}
 
 function renderTodos(file: LocalDocumentationFile): string {
-  if (file.todos.length === 0) {
-    return "No TODO, FIXME, or HACK comments detected.";
-  }
-
   return [
     "| Line | Comment |",
     "| ---: | --- |",
