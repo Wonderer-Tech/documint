@@ -87,3 +87,5 @@ import "./htmlTemplatePolicy.test";
 import "./htmlBaseStyles.test";
 
 import "./htmlBaseScript.test";
+
+import "./sidebarAssets.test";
