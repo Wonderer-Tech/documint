@@ -54,7 +54,8 @@ test("local project overview includes module facts and a stable source tree", ()
   assert.match(output, /## Module Summary/);
   assert.match(output, /\| `lib` \| 1 \|/);
   assert.match(output, /\| `src` \| 1 \|/);
-  assert.match(output, /## Structurally Connected Files/);
+  assert.match(output, /## Where is what/);
+  assert.match(output, /## Core files/);
   assert.match(output, /`src\/index\.ts`/);
   assert.match(output, /`lib\/helper\.ts`/);
   assert.match(output, /Example Project\//);
