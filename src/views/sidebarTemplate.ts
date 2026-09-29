@@ -81,6 +81,8 @@ ${SIDEBAR_STYLES}
       <option value="anthropic">Anthropic</option>
       <option value="openrouter">OpenRouter</option>
       <option value="deepseek">DeepSeek</option>
+      <option value="ollama">Ollama — Local</option>
+      <option value="lmstudio">LM Studio — Local</option>
       <option value="custom">Custom Endpoint</option>
     </select>
   </div>
