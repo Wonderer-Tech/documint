@@ -9,6 +9,7 @@ import {
   type LocalDocumentationModel,
 } from "./localDocumentationModel";
 import { generateHtmlTemplate } from "./htmlTemplate";
+import { buildLocalCodeMapData } from "./localCodeMapData";
 
 export interface LocalDocumentationDocument {
   markdown: string;
@@ -82,6 +83,7 @@ export function buildLocalDocumentationDocument(
       generationDate,
       languages,
       totalLines,
+      localCodeMap: buildLocalCodeMapData(model),
     }),
     fileCount: model.files.length,
     totalLines,
