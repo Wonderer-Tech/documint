@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { extractLocalReadmeFacts } from "../src/services/localReadmeFacts";
 
 test("README tree descriptions map to exact project paths", () => {
@@ -81,4 +83,45 @@ test("README tree root comments become trusted structural-module descriptions", 
     text: "Application source",
     source: "readme",
   });
+});
+
+
+test("DocuMint README provides trusted descriptions for its structural modules", () => {
+  const readme = readFileSync(
+    join(process.cwd(), "README.md"),
+    "utf8",
+  );
+  const facts = extractLocalReadmeFacts(readme, [
+    "src/analyzer/sourceAnalyzer.ts",
+    "src/config/secretStorage.ts",
+    "src/scanner/workspaceScanner.ts",
+    "src/providers/providerFactory.ts",
+    "src/services/localDocumentationModel.ts",
+    "src/views/sidebarProvider.ts",
+  ]);
+
+  assert.match(
+    facts.descriptionsByModule.get("src/analyzer")?.text ?? "",
+    /Source analysis/i,
+  );
+  assert.match(
+    facts.descriptionsByModule.get("src/config")?.text ?? "",
+    /Settings migration/i,
+  );
+  assert.match(
+    facts.descriptionsByModule.get("src/scanner")?.text ?? "",
+    /Workspace\/file discovery/i,
+  );
+  assert.match(
+    facts.descriptionsByModule.get("src/providers")?.text ?? "",
+    /Cloud and local AI-provider runtimes/i,
+  );
+  assert.match(
+    facts.descriptionsByModule.get("src/services")?.text ?? "",
+    /Local\/AI generation/i,
+  );
+  assert.match(
+    facts.descriptionsByModule.get("src/views")?.text ?? "",
+    /Sidebar webview/i,
+  );
 });
