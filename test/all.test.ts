@@ -74,3 +74,5 @@ import "./sourceAnalyzerTypeScriptAst.test";
 
 import "./localReadmeFacts.test";
 import "./localDocumentationModel.test";
+
+import "./htmlLocalCodeMap.test";
