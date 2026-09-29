@@ -89,6 +89,25 @@ test("provider selection preserves routed and custom model ids", () => {
   });
 });
 
+test("provider selection clears cloud defaults for local presets and preserves local models", () => {
+  assert.deepEqual(resolveProviderSelection("ollama", "gpt-5.4-nano"), {
+    provider: "ollama",
+    model: "",
+  });
+  assert.deepEqual(resolveProviderSelection("lmstudio", "claude-sonnet-5"), {
+    provider: "lmstudio",
+    model: "",
+  });
+  assert.deepEqual(resolveProviderSelection("ollama", "qwen3:8b"), {
+    provider: "ollama",
+    model: "qwen3:8b",
+  });
+  assert.deepEqual(resolveProviderSelection("lmstudio", "local/model.gguf"), {
+    provider: "lmstudio",
+    model: "local/model.gguf",
+  });
+});
+
 test("invalid provider values canonicalize before model selection", () => {
   assert.deepEqual(resolveProviderSelection(" UNKNOWN ", "claude-sonnet-5"), {
     provider: "openai",
@@ -118,15 +137,23 @@ test("sidebar delegates provider-switch model correction to the shared host poli
     join(process.cwd(), "src/views/sidebarProvider.ts"),
     "utf8",
   );
+  const templateSource = readFileSync(
+    join(process.cwd(), "src/views/sidebarTemplate.ts"),
+    "utf8",
+  );
   const clientSource = readFileSync(
     join(process.cwd(), "src/views/sidebarClientScript.ts"),
     "utf8",
   );
-  const source = hostSource + "\n" + clientSource;
+  const source = hostSource + "\n" + templateSource + "\n" + clientSource;
 
   assert.match(hostSource, /resolveProviderSelection\(/);
   assert.match(hostSource, /type: "settings-normalized"/);
   assert.match(clientSource, /case 'settings-normalized':/);
+  assert.match(
+    clientSource,
+    /typeof settings\.model === 'string'\) modelInput\.value = settings\.model/,
+  );
   assert.doesNotMatch(source, /var providerDefaults = \{\s*deepseek:/);
-  assert.match(hostSource, /claude-sonnet-5/);
+  assert.match(templateSource, /claude-sonnet-5/);
 });
