@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { getDocuMintConfiguration } from "../config/configuration";
 import { BaseAIProvider } from "./aiProvider";
 import { OpenAIProvider } from "./openaiProvider";
 import { AnthropicProvider } from "./anthropicProvider";
@@ -51,8 +52,7 @@ export class ProviderFactory {
    * consent checks and provider construction use the value.
    */
   static resolveProviderName(optionProvider?: string): ProviderName {
-    const configuredProvider = vscode.workspace
-      .getConfiguration("aiDocGenerator")
+    const configuredProvider = getDocuMintConfiguration()
       .get<string>("aiProvider");
     return resolveProviderNameWithFallback(optionProvider, configuredProvider);
   }
