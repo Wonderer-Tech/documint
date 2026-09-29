@@ -175,3 +175,24 @@ test("legacy aiDocGenerator settings remain deprecated compatibility aliases", (
     );
   }
 });
+
+
+test("manifest exposes Ollama and LM Studio as explicit local provider presets", () => {
+  const properties = manifest.contributes.configuration.properties;
+  const provider = properties["documint.aiProvider"];
+
+  assert.deepEqual(provider.enum, [
+    "openai",
+    "anthropic",
+    "openrouter",
+    "deepseek",
+    "ollama",
+    "lmstudio",
+    "custom",
+  ]);
+  assert.match(provider.description, /Ollama and LM Studio are local loopback presets/i);
+  assert.match(
+    properties["aiDocGenerator.aiProvider"].deprecationMessage,
+    /Use documint\.aiProvider/,
+  );
+});
