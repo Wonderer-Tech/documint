@@ -476,6 +476,7 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     .local-code-map { padding: 17px; border-radius: 16px; }
     .local-map-hero { align-items: flex-start; flex-direction: column; }
     .local-map-lookup { grid-template-columns: 1fr; }
+    .local-map-relations { grid-template-columns: 1fr; }
     .local-map-treemap { height: 620px; }
   }
 `;
