@@ -135,3 +135,16 @@ test("Local code map surfaces detected run commands and owns Ctrl/Cmd+K file sea
   assert.match(fragments.script, /event\.key\.toLowerCase\(\) === 'k'/);
   assert.match(fragments.script, /input\.focus\(\)/);
 });
+
+
+test("Local Big Picture layout starts from entry modules and clips edges at module boxes", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /function layoutModules/);
+  assert.match(fragments.script, /file\.entryPoint/);
+  assert.match(fragments.script, /incomingCount/);
+  assert.match(fragments.script, /function clipModuleEdge/);
+  assert.match(fragments.script, /var start = clipModuleEdge\(a, b\)/);
+  assert.match(fragments.script, /var end = clipModuleEdge\(b, a\)/);
+  assert.doesNotMatch(fragments.script, /Math\.ceil\(Math\.sqrt\(modules\.length\)\)/);
+});
