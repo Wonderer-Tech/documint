@@ -13,47 +13,30 @@
 
 _Last updated: 2026-09-30_
 
-### Completed
-
-- ✅ Retired obsolete 1.0.6/1.0.7 navigation/reader source-repair workflows and Python repair scripts after verifying their intended markers were already integrated.
-- ✅ Added AST-backed JS/TS-family analysis with the TypeScript compiler API.
-- ✅ Multiline imports, multiline declarations, `export abstract class`, class methods, and explicit export lists are structurally analyzed.
+- ✅ Retired the obsolete 1.0.6/1.0.7 navigation/reader source-repair workflows and Python repair scripts after verifying their intended markers already exist in current source.
+- ⏸ Normal CI trigger + lockfile migration is still pending. No workflow was manually triggered during this implementation pass.
+- ✅ Added an AST-backed JS/TS-family analyzer using the TypeScript compiler API behind the existing public `SourceAnalyzer` facade.
+- ✅ Multiline imports, multiline declarations, `export abstract class`, class methods, explicit export lists, and module-vs-function scope are structurally analyzed.
 - ✅ Function-local temporary variables no longer pollute the JS/TS module symbol list.
-- ✅ JS/TS TODO/FIXME/HACK extraction uses comment trivia instead of line regex.
-- ✅ Added source-backed description metadata with provenance. Explicit file/module comments win; a declaration comment is promoted to a file description only when exactly one exported top-level declaration makes that unambiguous.
-- ✅ Added exact README project-tree/path description extraction without filename-based semantic guessing.
-- ✅ README content participates in Local cache identity; Local cache version is now v6.
-- ✅ Added one canonical `LocalDocumentationModel` for file facts, structural modules, dependencies, descriptions, entry points, totals, manifest facts, and suggested reading order.
-- ✅ Project, file, architecture, visual, Markdown, and Local HTML assembly now consume the canonical model in the production path.
-- ✅ Structural grouping is shared and uses useful groups such as `src/providers`, `src/services`, `src/scanner`, etc.
-- ✅ Local Markdown no longer carries raw architecture/excalidraw/dependency JSON transport payloads.
-- ✅ Per-file Local output is compact: empty sections are omitted, routine "No ... detected" placeholders are removed, and the repeated per-file "No AI" banner is gone.
-- ✅ Added deterministic `Where is what`, `How to run`, VS Code commands/settings, `Suggested reading path`, `Core files`, and undocumented-file coverage.
-- ✅ Added a Local-only question-first Project map to generated HTML:
-  - Big picture module/dependency view
-  - proportional file-size map
-  - suggested reading path
-  - dependency-reach scatter
-  - searchable file card with Uses / Used by / exports
-- ✅ The new Project map is implemented in dedicated modules instead of growing the main HTML template further.
-- ✅ Local HTML now disables external highlight.js/Mermaid CDN assets at template generation time. The existing offline hardening/source fallback remains in place.
-- ✅ AI/shared HTML keeps its existing external-asset behavior by default.
-- ✅ Added targeted regressions for AST analysis, descriptions, README facts, canonical model, manifest facts, reading path, compact Markdown, code-map fragments, and Local external-asset policy.
-
-### Verification still required
-
-- ⏳ Full repository `npm test` has not been executed in this environment. Direct GitHub clone failed because DNS/network access to github.com is unavailable.
-- ⏳ CI was intentionally not triggered during implementation.
-- ⏳ VSIX size and representative Local scan latency must be measured after the TypeScript runtime parser addition.
-- ⏳ Browser acceptance must be extended to the new Project map interactions and the Local no-external-request policy.
-- ⏳ Normal push/PR CI and `package-lock.json` + `npm ci` migration remain pending; do not conflate this with the product implementation already completed.
+- ✅ JS/TS TODO/FIXME/HACK extraction uses compiler comment trivia rather than line regexes.
+- ✅ Trusted description metadata now supports explicit TS/JS file/module JSDoc, documented single exports, Python module docstrings, Rust module docs, Go package comments, and exact README path descriptions.
+- ✅ Added one canonical `LocalDocumentationModel` for file facts, modules, resolved relationships, descriptions/provenance, package scripts, VS Code commands/settings, and suggested reading order.
+- ✅ Structural module grouping is shared and produces useful groups such as `src/providers`, `src/services`, and `src/scanner` instead of collapsing everything into `src`.
+- ✅ Local Markdown and Local HTML now use separate architecture render surfaces: Markdown stays human-readable and omits raw architecture/excalidraw/dependency JSON, while HTML keeps rich visual payloads.
+- ✅ Per-file Local output is compact: repeated Local-mode banners and routine empty sections are gone; Uses/Used by are concise; description provenance is visible.
+- ✅ Project overview is question-first with **Where is what**, **How to run**, **Suggested reading path**, **Core files**, and **Undocumented files**.
+- ✅ Added a production Local code-map shell backed by the canonical model: Big Picture, file-size treemap, suggested reading path, dependency-reach scatter, description/export search, and connected file cards.
+- ✅ Cross-view interactions are connected: module focus isolates related edges, module click filters the treemap, file selections reveal the file card, and the card can jump to the full generated file documentation.
+- ✅ Local code-map hero surfaces detected run commands; Local `Ctrl/Cmd+K` focuses file/description/export search while the existing `/` documentation search remains available.
+- ✅ Big Picture uses a deterministic entry-point-driven layered module layout and clips arrows at module boundaries.
+- ✅ Local HTML passes `externalAssets: false`; CDN tags/theme URLs are conditionally omitted from Local output, while AI-format HTML keeps its existing external-asset behavior.
+- ✅ Added/expanded targeted regression coverage for analyzer AST behavior, description provenance, README facts, canonical Local model, compact Markdown vs rich HTML, Local offline policy, and code-map interactions.
+- ⏳ Full repository regression execution and VSIX size/scan-latency measurement remain required before release verification. Direct sandbox clone currently fails because the environment cannot resolve `github.com`; this limitation does not affect GitHub connector writes.
 
 ### Current next step
 
-1. Add browser acceptance fixtures/assertions for the Project map: module filtering, file-size map, reading path, scatter click, search, relation navigation, mobile behavior, and no external requests.
-2. Review whether the conceptual Big picture should adopt the preserved prototype's rough/sketch treatment; keep quantitative visuals clean-lined.
-3. Add source-link/line navigation without hard-coded GitHub URLs or machine-specific absolute paths.
-4. Then continue repository security/release cleanup (sidebar CSP, normal CI/lockfile, tag-based VSIX release) when CI execution is allowed.
+Finish static review of the new Local code-map/data contracts, then move to source navigation/permalink handling and final Local HTML polish. After that, return to repository safety work (lockfile/normal CI) without manually triggering CI.
+
 
 ---
 
