@@ -1,0 +1,47 @@
+name: Feature request
+description: Propose a focused DocuMint improvement
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What developer question or workflow is difficult today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Area
+      options:
+        - Local Documentation
+        - AI Documentation
+        - Generated HTML
+        - Markdown output
+        - Scanner / analyzer
+        - Sidebar / settings
+        - Provider integration
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: grounding
+    attributes:
+      label: Source-grounding considerations
+      description: If this affects Local mode, explain which source facts can support the output without semantic guessing.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
