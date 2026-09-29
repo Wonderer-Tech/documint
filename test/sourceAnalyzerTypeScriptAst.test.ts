@@ -1,0 +1,199 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { SourceAnalyzer } from "../src/analyzer/sourceAnalyzer";
+import type { WorkspaceFile } from "../src/types";
+
+const analyzer = new SourceAnalyzer();
+
+function file(
+  path: string,
+  language: string,
+  content: string,
+): WorkspaceFile {
+  return { path, language, content };
+}
+
+test("TypeScript multiline imports preserve symbols and internal dependency resolution", () => {
+  const project = analyzer.analyzeProject([
+    file(
+      "src/main.ts",
+      "typescript",
+      [
+        "import {",
+        "  alpha,",
+        "  beta as renamedBeta,",
+        "} from \"./dependency\";",
+        "",
+        "export const ready = true;",
+      ].join("\n"),
+    ),
+    file(
+      "src/dependency.ts",
+      "typescript",
+      [
+        "export const alpha = 1;",
+        "export const beta = 2;",
+      ].join("\n"),
+    ),
+  ]);
+
+  const main = project.files.find((item) => item.path === "src/main.ts");
+  assert.ok(main);
+  assert.deepEqual(main.imports, [
+    {
+      source: "./dependency",
+      line: 1,
+      symbols: ["alpha", "beta"],
+      resolvedPath: "src/dependency.ts",
+    },
+  ]);
+  assert.deepEqual(project.internalDependencies, [
+    {
+      from: "src/main.ts",
+      to: "src/dependency.ts",
+      source: "./dependency",
+    },
+  ]);
+});
+
+test("TypeScript AST detects exported abstract classes and class methods", () => {
+  const analysis = analyzer.analyzeFile(
+    file(
+      "src/providers/aiProvider.ts",
+      "typescript",
+      [
+        "export interface AIProvider {",
+        "  generate(): Promise<void>;",
+        "}",
+        "",
+        "export abstract class BaseAIProvider implements AIProvider {",
+        "  public abstract getMaxContextWindow(",
+        "    model?: string,",
+        "  ): number;",
+        "",
+        "  public async generate(): Promise<void> {",
+        "    const temporary = 1;",
+        "    void temporary;",
+        "  }",
+        "}",
+      ].join("\n"),
+    ),
+  );
+
+  const base = analysis.symbols.find(
+    (symbol) => symbol.name === "BaseAIProvider",
+  );
+  assert.deepEqual(
+    base && {
+      kind: base.kind,
+      exported: base.exported,
+      scope: base.scope,
+      signature: base.signature,
+      line: base.line,
+    },
+    {
+      kind: "class",
+      exported: true,
+      scope: "module",
+      signature: "export abstract class BaseAIProvider implements AIProvider",
+      line: 5,
+    },
+  );
+
+  assert.equal(
+    analysis.symbols.some((symbol) => symbol.name === "temporary"),
+    false,
+  );
+  assert.equal(
+    analysis.symbols.some(
+      (symbol) =>
+        symbol.name === "generate" &&
+        symbol.kind === "method" &&
+        symbol.scope === "class",
+    ),
+    true,
+  );
+});
+
+test("TypeScript AST detects multiline functions and excludes function-local variables", () => {
+  const analysis = analyzer.analyzeFile(
+    file(
+      "src/example.ts",
+      "typescript",
+      [
+        "const MODULE_LIMIT = 3;",
+        "",
+        "export async function buildDocumentation(",
+        "  projectName: string,",
+        "  fileCount: number,",
+        "): Promise<string> {",
+        "  const files = [];",
+        "  let content = projectName;",
+        "  return content + fileCount + files.length;",
+        "}",
+      ].join("\n"),
+    ),
+  );
+
+  const fn = analysis.symbols.find(
+    (symbol) => symbol.name === "buildDocumentation",
+  );
+  assert.ok(fn);
+  assert.equal(fn.kind, "function");
+  assert.equal(fn.exported, true);
+  assert.equal(fn.scope, "module");
+  assert.equal(fn.line, 3);
+  assert.equal(
+    fn.signature,
+    "export async function buildDocumentation( projectName: string, fileCount: number, ): Promise<string>",
+  );
+
+  const moduleLimit = analysis.symbols.find(
+    (symbol) => symbol.name === "MODULE_LIMIT",
+  );
+  assert.deepEqual(
+    moduleLimit && {
+      kind: moduleLimit.kind,
+      exported: moduleLimit.exported,
+      scope: moduleLimit.scope,
+    },
+    {
+      kind: "constant",
+      exported: false,
+      scope: "module",
+    },
+  );
+
+  assert.equal(
+    analysis.symbols.some((symbol) => symbol.name === "files"),
+    false,
+  );
+  assert.equal(
+    analysis.symbols.some((symbol) => symbol.name === "content"),
+    false,
+  );
+});
+
+test("TypeScript AST honors explicit export lists for local declarations", () => {
+  const analysis = analyzer.analyzeFile(
+    file(
+      "src/public.ts",
+      "typescript",
+      [
+        "const hiddenUntilExported = 1;",
+        "function helper() {}",
+        "export { hiddenUntilExported, helper };",
+      ].join("\n"),
+    ),
+  );
+
+  assert.equal(
+    analysis.symbols.find((symbol) => symbol.name === "hiddenUntilExported")
+      ?.exported,
+    true,
+  );
+  assert.equal(
+    analysis.symbols.find((symbol) => symbol.name === "helper")?.exported,
+    true,
+  );
+});
