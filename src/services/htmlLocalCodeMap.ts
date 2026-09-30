@@ -1874,11 +1874,20 @@ function buildLocalCodeMapScript(
       closeResults();
       return;
     }
+    var tokens = query.split(/\s+/).filter(Boolean);
+
+    function containsAllTokens(text) {
+      var haystack = String(text || '').toLowerCase();
+      return tokens.every(function (token) {
+        return haystack.includes(token);
+      });
+    }
 
     searchHits = data.files.map(function (file) {
       var name = fileName(file.path).toLowerCase();
       var pathText = file.path.toLowerCase();
-      var description = String(file.description || '').toLowerCase();
+      var descriptionRaw = String(file.description || '');
+      var description = descriptionRaw.toLowerCase();
       var exports = Array.isArray(file.exports) ? file.exports : [];
       var internals = Array.isArray(file.internalSymbols)
         ? file.internalSymbols
@@ -1888,47 +1897,64 @@ function buildLocalCodeMapScript(
         : [];
       var todos = Array.isArray(file.todos) ? file.todos : [];
       var exportMatch = exports.find(function (item) {
-        return String(item.name || '').toLowerCase().includes(query);
+        return containsAllTokens(item.name);
       });
       var internalMatch = internals.find(function (item) {
-        return String(item.name || '').toLowerCase().includes(query);
+        return containsAllTokens(item.name);
       });
-      var environmentMatch = environments.find(function (name) {
-        return String(name || '').toLowerCase().includes(query);
+      var environmentMatch = environments.find(function (environmentName) {
+        return containsAllTokens(environmentName);
       });
       var todoMatch = todos.find(function (todo) {
-        return String(todo.text || '').toLowerCase().includes(query);
+        return containsAllTokens(todo.text);
       });
+      var combinedEvidence = [
+        pathText,
+        description,
+        exports.map(function (item) { return item.name; }).join(' '),
+        internals.map(function (item) { return item.name; }).join(' '),
+        environments.join(' '),
+        todos.map(function (todo) { return todo.text; }).join(' ')
+      ].join(' ').toLowerCase();
       var score = 0;
       var match = '';
+
+      if (!containsAllTokens(combinedEvidence)) {
+        return { file: file, score: 0, match: '' };
+      }
+
       if (name === query) {
         score = 100;
         match = 'Filename';
-      } else if (name.startsWith(query)) {
+      } else if (tokens.length === 1 && name.startsWith(query)) {
         score = 80;
         match = 'Filename';
-      } else if (name.includes(query)) {
-        score = 60;
+      } else if (containsAllTokens(name)) {
+        score = 65;
         match = 'Filename';
-      } else if (pathText.includes(query)) {
-        score = 45;
+      } else if (containsAllTokens(pathText)) {
+        score = 50;
         match = 'Path';
-      } else if (description.includes(query)) {
-        score = 30;
-        match = file.description || 'Description';
+      } else if (containsAllTokens(description)) {
+        score = 35;
+        match = descriptionRaw || 'Description';
       } else if (environmentMatch) {
-        score = 25;
+        score = 28;
         match = 'Environment: ' + environmentMatch;
       } else if (exportMatch) {
-        score = 22;
+        score = 25;
         match = 'Export: ' + exportMatch.name;
       } else if (internalMatch) {
-        score = 20;
+        score = 23;
         match = 'Internal symbol: ' + internalMatch.name;
       } else if (todoMatch) {
-        score = 18;
+        score = 21;
         match = 'Source note: ' + todoMatch.text;
+      } else {
+        score = 16;
+        match = 'Matched across file facts';
       }
+
       return { file: file, score: score, match: match };
     }).filter(function (item) { return item.score > 0; })
       .sort(function (a, b) {
