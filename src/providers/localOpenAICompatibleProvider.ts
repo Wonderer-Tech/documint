@@ -94,6 +94,7 @@ export class LocalOpenAICompatibleProvider extends BaseAIProvider {
               },
               timeout: LOCAL_PROVIDER_REQUEST_TIMEOUT_MS,
               maxRedirects: 0,
+              proxy: false,
               signal: params.signal,
             },
           ),
