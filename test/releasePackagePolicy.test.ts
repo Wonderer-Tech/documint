@@ -142,6 +142,21 @@ test("release workflow publishes VSIX reproducibly as a tag asset without mutati
 });
 
 
+test("unit test bundle runs outside node_modules", () => {
+  const script = manifest.scripts["test:unit"];
+
+  assert.match(
+    script,
+    /--outfile=test-results\/documint-regression\.test\.cjs/,
+  );
+  assert.match(
+    script,
+    /node --test \.\/test-results\/documint-regression\.test\.cjs/,
+  );
+  assert.doesNotMatch(script, /node --test node_modules\//);
+});
+
+
 test("release readiness command runs strict verification and writes measurable evidence", () => {
   const readiness = readFileSync(
     join(process.cwd(), "tools/release-readiness.mjs"),
