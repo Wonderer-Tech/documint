@@ -455,6 +455,7 @@ npm run watch
 npm test
 npm run audit:self
 npm run verify
+npm run release:readiness
 ```
 
 Self-audit:
@@ -482,11 +483,23 @@ The suite verifies navigation, reader controls, Local code-map interactions, res
 
 When dependency registry access is available, `npm run lockfile:generate` creates/refreshes `package-lock.json` without running package scripts.
 
-Package extension:
+### Release readiness
+
+After the lockfile is committed and Python Playwright/Chromium are installed, run the complete release gate with one command:
 
 ```bash
-npx @vscode/vsce package
+npm run release:readiness
 ```
+
+It requires the local locked `@vscode/vsce` binary and does not download packaging tools at runtime. The command runs `npm run verify`, the full browser acceptance suite, packages `release-artifacts/documint-<version>.vsix`, checks the archive, and writes machine-readable evidence to `release-artifacts/readiness/readiness.json`. The evidence includes verify/browser/package timings, Local self-audit timing/report, bundle and VSIX sizes, VSIX SHA-256, and browser-result summaries.
+
+To record a size delta against an older VSIX:
+
+```bash
+DOCUMINT_BASELINE_VSIX=/path/to/previous.vsix npm run release:readiness
+```
+
+The tag-release workflow uses this same readiness command before publishing the GitHub Release asset.
 
 ## Known Limitations
 
