@@ -129,6 +129,14 @@ try {
   }
   evidence.checks.packageLock = { passed: true };
 
+  evidence.checks.lockfileIdentity = {
+    passed: true,
+    durationMs: run("Validate package-lock identity", npmCommand, [
+      "run",
+      "lockfile:validate",
+    ]),
+  };
+
   if (!existsSync(vsceCommand)) {
     throw new Error(
       "Local @vscode/vsce binary is missing. Install locked dependencies with npm ci first.",
