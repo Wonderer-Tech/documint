@@ -89,7 +89,7 @@ The readiness command is intentionally strict: it runs unit/regression verificat
 
 Set `DOCUMINT_BASELINE_VSIX` to an earlier VSIX path when a before/after package-size delta is required. Browser scripts automatically select Python 3 through `tools/run-python.mjs`; set `DOCUMINT_PYTHON` when a specific interpreter is required.
 
-The Lockfile Bootstrap workflow is artifact-only: it has read-only repository permissions and never commits or pushes. Once the validated `package-lock.json` exists on the branch, the manual **Release Readiness** GitHub Actions workflow runs the same gate and uploads the evidence/VSIX without changing the automatic-main CI policy.
+The Lockfile Bootstrap workflow has read-only repository permissions and never commits or pushes. By default it also runs the full readiness gate against the transient generated lockfile and uploads readiness/VSIX evidence; disable its `run_readiness` input only when you want the lockfile artifact by itself. Once the validated `package-lock.json` exists on the branch, the manual **Release Readiness** workflow runs the same gate directly from the committed lockfile without changing the automatic-main CI policy.
 
 ## Pull requests
 
