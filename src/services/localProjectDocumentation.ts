@@ -49,7 +49,7 @@ export function renderLocalProjectDocumentationFromModel(
     );
   }
 
-  if (model.gettingStarted) {
+  if (surface === "markdown" && model.gettingStarted) {
     sections.push(
       "",
       "## How to run",
@@ -58,7 +58,10 @@ export function renderLocalProjectDocumentationFromModel(
     );
   }
 
-  if (model.referencedEnvironmentVariables.length > 0) {
+  if (
+    surface === "markdown" &&
+    model.referencedEnvironmentVariables.length > 0
+  ) {
     sections.push(
       "",
       "## Referenced environment variables",
