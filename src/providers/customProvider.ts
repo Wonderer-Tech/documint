@@ -91,6 +91,7 @@ export class CustomProvider extends BaseAIProvider {
               },
               timeout: CUSTOM_PROVIDER_REQUEST_TIMEOUT_MS,
               maxRedirects: 0,
+              proxy: this.isLocal ? false : undefined,
               signal: params.signal,
             },
           ),
