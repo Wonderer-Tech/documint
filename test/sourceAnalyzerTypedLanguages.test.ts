@@ -277,3 +277,42 @@ test("Python environment references are detected without comment or string false
     "TIMEOUT",
   ]);
 });
+
+
+test("Python direct os env imports are detected only with import evidence", () => {
+  const imported = analyzer.analyzeFile(
+    file(
+      "env.py",
+      "python",
+      [
+        "from os import getenv, environ",
+        'api = getenv("API_KEY")',
+        'region = environ["REGION"]',
+        'mode = environ.get("MODE")',
+      ].join("\n"),
+    ),
+  );
+
+  assert.deepEqual(imported.referencedEnvironmentVariables, [
+    "API_KEY",
+    "MODE",
+    "REGION",
+  ]);
+
+  const unrelated = analyzer.analyzeFile(
+    file(
+      "fake.py",
+      "python",
+      [
+        "def getenv(name):",
+        "    return name",
+        'value = getenv("NOT_OS_ENV")',
+      ].join("\n"),
+    ),
+  );
+
+  assert.deepEqual(
+    unrelated.referencedEnvironmentVariables,
+    [],
+  );
+});
