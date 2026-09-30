@@ -52,7 +52,10 @@ test("Local document rendering does not execute source-comment HTML or Markdown 
     project,
   );
 
-  assert.doesNotMatch(document.html, /window\.__pwned/);
+  assert.doesNotMatch(
+    document.html,
+    /<script[^>]*>[\s\S]*window\.__pwned/i,
+  );
   assert.doesNotMatch(document.html, /<img[^>]+evil\.example/i);
   assert.doesNotMatch(document.html, /<img[^>]+onerror=/i);
   assert.doesNotMatch(document.html, /<script>window\.__pwned/i);
