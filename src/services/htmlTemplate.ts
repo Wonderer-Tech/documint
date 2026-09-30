@@ -70,6 +70,9 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     tocHtml: localCodeMapToc,
     keyboardHints,
   } = resolveHtmlLocalSurfaceChrome(Boolean(options.localCodeMap));
+  const bodyClassName = options.localCodeMap
+    ? "documint-jelly-ui documint-local-report"
+    : "documint-jelly-ui";
 
   const languagesStr = options.languages?.length
     ? options.languages.map(escapeHtmlAttr).join(", ")
@@ -108,7 +111,7 @@ ${HTML_BASE_STYLES}
     ${localCodeMap.styles}
   </style>
 </head>
-<body class="documint-jelly-ui">
+<body class="${bodyClassName}">
 
   <nav class="topbar">
     <a class="topbar-client" href="#" title="${safeProjectName}">${safeProjectName}</a>
