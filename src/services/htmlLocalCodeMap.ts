@@ -1447,10 +1447,41 @@ function buildLocalCodeMapScript(
       });
     });
 
+    function resolveHashSection() {
+      var raw = String(window.location.hash || '').replace(/^#/, '');
+      if (!raw) return null;
+
+      var id;
+      try { id = decodeURIComponent(raw); } catch (_) { id = raw; }
+
+      var link = links.find(function (candidate) {
+        return candidate.getAttribute('href') === '#' + id;
+      });
+      var target = link ? document.getElementById(id) : null;
+      if (!link || link.hidden || !target || target.hidden) return null;
+      return { id: id, link: link, target: target };
+    }
+
+    function restoreHashSection(shouldScroll) {
+      var resolved = resolveHashSection();
+      if (!resolved) return false;
+      setActive(resolved.id);
+      if (shouldScroll) {
+        requestAnimationFrame(function () {
+          resolved.target.scrollIntoView({ behavior: 'auto', block: 'start' });
+        });
+      }
+      return true;
+    }
+
     var firstVisible = links.find(function (link) { return !link.hidden; });
-    if (firstVisible) {
+    if (!restoreHashSection(true) && firstVisible) {
       setActive(firstVisible.getAttribute('href').slice(1));
     }
+
+    window.addEventListener('hashchange', function () {
+      restoreHashSection(true);
+    });
 
     if ('IntersectionObserver' in window) {
       var observer = new IntersectionObserver(function (entries) {
