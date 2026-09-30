@@ -15,6 +15,10 @@ All notable changes to DocuMint are documented here.
 
 ### Changed
 
+- Added a one-command `npm run release:readiness` gate that requires the lockfile, reuses normal verification and full browser acceptance, packages with the installed local VSCE binary, validates the VSIX archive, and emits machine-readable timing/size/hash/self-audit/browser evidence.
+- Release packaging now excludes `tools/**`, `audit/**`, and `release-artifacts/**` so readiness evidence and audit/reference material cannot inflate or recursively contaminate the VSIX.
+- Tag releases now reuse the same release-readiness command and upload its evidence alongside browser artifacts before publishing the VSIX.
+
 - Reworked Local Documentation around a canonical source-factual project model shared by Markdown and HTML.
 - Added AST-backed TypeScript/JavaScript-family analysis using the TypeScript compiler API, including multiline imports/declarations, `export abstract class`, class methods, explicit export lists, and module-vs-function symbol scope.
 - Removed function-local temporary variables from the default JS/TS module symbol inventory while preserving top-level internal declarations.
