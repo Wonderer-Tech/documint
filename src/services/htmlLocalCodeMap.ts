@@ -8,15 +8,23 @@ export interface LocalCodeMapFragments {
 
 export function renderLocalCodeMapFragments(
   data: LocalCodeMapData | undefined,
+  scriptNonce = "",
 ): LocalCodeMapFragments {
   if (!data || data.files.length === 0) {
     return { styles: "", markup: "", script: "" };
   }
 
+  const nonceAttribute = scriptNonce
+    ? ` nonce="${escapeHtmlAttribute(scriptNonce)}"`
+    : "";
+
   return {
     styles: LOCAL_CODE_MAP_STYLES,
-    markup: LOCAL_CODE_MAP_MARKUP,
-    script: buildLocalCodeMapScript(data),
+    markup: LOCAL_CODE_MAP_MARKUP.replace(
+      "<script type=\"application/json\"",
+      `<script${nonceAttribute} type="application/json"`,
+    ),
+    script: buildLocalCodeMapScript(data, nonceAttribute),
   };
 }
 
@@ -637,7 +645,10 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
 <script type="application/json" id="documintLocalCodeMapData"></script>
 `;
 
-function buildLocalCodeMapScript(data: LocalCodeMapData): string {
+function buildLocalCodeMapScript(
+  data: LocalCodeMapData,
+  nonceAttribute: string,
+): string {
   const json = JSON.stringify(data)
     .replace(/&/g, "\\u0026")
     .replace(/</g, "\\u003c")
@@ -646,7 +657,7 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
     .replace(/\u2029/g, "\\u2029");
 
   return String.raw`
-<script>
+<script${nonceAttribute}>
 (function () {
   'use strict';
   var root = document.querySelector('[data-documint-local-code-map]');
@@ -1604,4 +1615,13 @@ function buildLocalCodeMapScript(data: LocalCodeMapData): string {
 })();
 </script>
 `;
+}
+
+
+function escapeHtmlAttribute(value: string): string {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
