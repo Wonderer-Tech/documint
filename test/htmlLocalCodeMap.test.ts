@@ -438,11 +438,12 @@ test("Local module map retains trusted provenance and suggested start files", ()
   assert.match(fragments.script, /module\.descriptionSource/);
   assert.match(fragments.script, /primaryFilePaths/);
   assert.match(fragments.script, /Suggested start:/);
+  assert.match(fragments.script, /Description source: /);
   assert.match(fragments.script, /start: /);
   assert.match(fragments.script, /src\/services\/run\.ts/);
   assert.match(
     fragments.script,
-    /module\.descriptionSource[\s\S]*' \[' \+ module\.descriptionSource \+ '\]'/,
+    /source\.textContent = 'Description source: ' \+ module\.descriptionSource/,
   );
 });
 
