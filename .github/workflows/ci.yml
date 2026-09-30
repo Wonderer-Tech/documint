@@ -40,8 +40,5 @@ jobs:
           echo "::warning::package-lock.json is missing; using npm install until the lockfile is committed."
           npm install --no-audit --no-fund
 
-      - name: Run tests
-        run: npm test
-
-      - name: Run DocuMint self-audit
-        run: npm run audit:self
+      - name: Verify DocuMint
+        run: npm run verify
