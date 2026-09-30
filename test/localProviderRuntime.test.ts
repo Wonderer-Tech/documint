@@ -110,6 +110,8 @@ test("local provider and model discovery never follow redirects away from loopba
   );
 
   assert.match(runtime, /maxRedirects:\s*0/);
+  assert.match(runtime, /proxy:\s*false/);
   assert.match(discovery, /maxRedirects:\s*0/);
+  assert.match(discovery, /proxy:\s*false/);
   assert.match(discovery, /maxContentLength:\s*1_000_000/);
 });
