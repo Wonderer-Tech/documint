@@ -6,6 +6,7 @@ import {
   renderLocalProjectDocumentationFromModel,
 } from "../src/services/localProjectDocumentation";
 import { buildLocalDocumentationModel } from "../src/services/localDocumentationModel";
+import { normalizeProjectPath, structuralModuleName } from "../src/services/structuralModule";
 import type { WorkspaceFile } from "../src/types";
 
 const files: WorkspaceFile[] = [
@@ -30,6 +31,12 @@ const files: WorkspaceFile[] = [
 
 const analyzer = new SourceAnalyzer();
 const project = analyzer.analyzeProject(files);
+
+test("structural module grouping uses the canonical normalized project path", () => {
+  assert.equal(normalizeProjectPath(".\\src\\services\\run.ts"), "src/services/run.ts");
+  assert.equal(structuralModuleName(".\\src\\services\\run.ts"), "src/services");
+  assert.equal(structuralModuleName("README.md"), "(root)");
+});
 
 test("local project overview renders deterministic project facts", () => {
   const output = renderLocalProjectDocumentation({
