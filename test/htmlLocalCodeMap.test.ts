@@ -7,6 +7,22 @@ import type { LocalCodeMapData } from "../src/services/localCodeMapData";
 
 const data: LocalCodeMapData = {
   projectName: "Example",
+  summary: {
+    files: 2,
+    lines: 92,
+    describedFiles: 2,
+    undocumentedFiles: 0,
+    symbols: 5,
+    exports: 2,
+    internalDependencies: 1,
+    externalDependencies: 1,
+    todos: 1,
+    languages: [
+      { name: "typescript", files: 2, lines: 92 },
+    ],
+    entryPoints: ["src/extension.ts"],
+    externalDependencyNames: ["vscode"],
+  },
   files: [
     {
       path: "src/extension.ts",
@@ -105,6 +121,8 @@ const data: LocalCodeMapData = {
 test("Local code map exposes question-first interactive surfaces without external assets", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
+  assert.match(fragments.markup, /At a glance/);
+  assert.match(fragments.markup, /What is this project made of\?/);
   assert.match(fragments.markup, /Big picture/);
   assert.match(fragments.markup, /How do the parts fit together\?/);
   assert.match(fragments.markup, /How to run/);
@@ -120,6 +138,21 @@ test("Local code map exposes question-first interactive surfaces without externa
     /https?:\/\//i,
   );
 });
+
+test("Local At a glance renders canonical project totals, languages, entry points and external dependencies", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /function renderOverview/);
+  assert.match(fragments.script, /summary\.describedFiles/);
+  assert.match(fragments.script, /summary\.undocumentedFiles/);
+  assert.match(fragments.script, /summary\.internalDependencies/);
+  assert.match(fragments.script, /summary\.externalDependencyNames/);
+  assert.match(fragments.script, /typescript/);
+  assert.match(fragments.script, /src\/extension\.ts/);
+  assert.match(fragments.script, /vscode/);
+  assert.match(fragments.script, /openFileAndReveal\(path\)/);
+});
+
 
 test("Local code map browser script compiles as standalone JavaScript", () => {
   const fragments = renderLocalCodeMapFragments(data);
