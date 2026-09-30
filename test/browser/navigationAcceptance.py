@@ -101,7 +101,11 @@ with sync_playwright() as playwright:
                 local_search = page.locator("#localMapSearch")
                 local_search.fill("provider")
                 assert page.locator("#localMapResults button").count() > 0
-                page.locator("#localMapResults button").first.click()
+                more_search = page.locator("#localMapResults .local-map-result-more button")
+                assert more_search.count() == 1
+                more_search.click()
+                assert page.locator('#localMapResults button[role="option"]').count() > 9
+                page.locator('#localMapResults button[role="option"]').first.click()
                 assert "provider" in page.locator("#localMapCard h4").inner_text().lower()
 
                 local_search.fill("secretStorage")
