@@ -501,16 +501,6 @@ function markdownDocumentationFileLink(filePath: string): string {
   return `[${inlineCode(filePath)}](${relativeSourceHref(filePath)})`;
 }
 
-function relativeSourceHref(filePath: string): string {
-  const encoded = String(filePath)
-    .replace(/\\/g, "/")
-    .split("/")
-    .filter(Boolean)
-    .map((segment) => encodeURIComponent(segment))
-    .join("/");
-  return `../${encoded}`;
-}
-
 function inlineCode(value: string): string {
   return `\`${cleanText(value).replace(/`/g, "'")}\``;
 }
