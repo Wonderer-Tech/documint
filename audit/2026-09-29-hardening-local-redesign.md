@@ -56,6 +56,7 @@ _Last updated: 2026-09-30_
 - ✅ Aggregate unit-test registration is currently consistent: all 68 root `test/*.test.ts` modules are imported by `test/all.test.ts`; imports remain in one alphabetical block.
 - ✅ Added `npm run audit:self`, which documents DocuMint's own source and asserts key Local Documentation release invariants; PR CI and tag releases run it after the normal regression suite.
 - ✅ Added a manual-only browser acceptance workflow plus canonical `npm run test:browser` scripts; it runs provider-free fixtures through Chromium and uploads screenshots/results without auto-running on push/PR.
+- ✅ Browser acceptance encodes the 30-second newcomer discovery test: API-key storage, provider integration, and build/test commands must be discoverable through the Local project-map search/onboarding surfaces.
 - ⏳ Full local `npm test`, VSIX size comparison, and browser acceptance execution still require a network-enabled/materialized checkout. No CI was manually triggered in this implementation pass.
 - ⏳ README demo GIF compression remains pending; the binary is still excluded from VSIX packaging.
 
