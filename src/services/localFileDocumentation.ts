@@ -222,17 +222,8 @@ function descriptionSourceLabel(source: string): string {
   }
 }
 
-function escapeMarkdownPlainText(value: string): string {
-  return String(value).replace(/[\r\n]+/g, " ").trim();
-}
 
 function inlineCode(value: string): string {
   return `\`${String(value).replace(/`/g, "'").replace(/[\r\n]+/g, " ")}\``;
 }
 
-function escapeMarkdownTableText(value: string): string {
-  return String(value)
-    .replace(/\|/g, "\\|")
-    .replace(/[\r\n]+/g, " ")
-    .trim();
-}
