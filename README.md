@@ -483,7 +483,9 @@ npm run test:browser
 
 The suite verifies navigation, reader controls, Local code-map interactions, responsive behavior, offline/external-request isolation, and AI-format chart failure isolation.
 
-When dependency registry access is available, `npm run lockfile:generate` creates/refreshes `package-lock.json` without running package scripts.
+When dependency registry access is available, `npm run lockfile:generate` creates/refreshes `package-lock.json` without running package scripts. `npm run lockfile:validate` then checks the lockfile's root package identity and dependency maps against `package.json`.
+
+If the local machine cannot reach the npm registry, run the manual **Lockfile Bootstrap** GitHub Actions workflow. It generates and validates `package-lock.json` on a network-enabled runner and uploads the lockfile plus SHA-256/metadata as an artifact without committing or pushing to the repository.
 
 ### Release readiness
 
