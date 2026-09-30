@@ -10,6 +10,7 @@ import {
 } from "./localDocumentationModel";
 import { generateHtmlTemplate } from "./htmlTemplate";
 import { buildLocalCodeMapData } from "./localCodeMapData";
+import { escapeRawHtmlOutsideMarkdownCode } from "./markdownEscaping";
 
 export interface LocalDocumentationDocument {
   markdown: string;
@@ -128,7 +129,7 @@ function renderMarkdownForTemplate(markdown: string, filePaths: string[]): {
   const usedIds = new Map<string, number>();
   const headings: Array<{ level: number; id: string; text: string; filePath?: string }> = [];
   const knownFiles = new Set(filePaths.map((filePath) => filePath.replace(/\\/g, "/")));
-  let contentHtml = marked.parse(markdown) as string;
+  let contentHtml = marked.parse(escapeRawHtmlOutsideMarkdownCode(markdown)) as string;
 
   contentHtml = contentHtml.replace(
     /<h([1-6])>([\s\S]*?)<\/h\1>/g,
