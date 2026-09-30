@@ -18,7 +18,7 @@ _Last updated: 2026-09-30_
 - ✅ Added a tag-only GitHub Release workflow for future VSIX assets; current source tree no longer carries committed VSIX binaries.
 - ✅ Tag releases require `package-lock.json`, install with `npm ci`, run `npm run verify`, run full Chromium browser acceptance, retain browser evidence, and only then package/publish the VSIX.
 - ✅ Pull requests now run CI automatically. Main-branch push CI remains intentionally trigger-file gated so the current implementation work does not auto-run CI.
-- ⏳ `package-lock.json` is now allowed by `.gitignore`, but lockfile generation is still pending. An offline `npm install --package-lock-only --offline` attempt failed immediately with `ENOTCACHED` for `@types/node`; this environment also cannot reach the npm registry. PR CI uses `npm ci` automatically once the lockfile exists and temporarily warns/falls back to `npm install` while it is absent. Tag releases now require `package-lock.json` and use `npm ci`, so an unreproducible release cannot be published.
+- ⏳ `package-lock.json` is not committed yet. Local offline generation previously failed with `ENOTCACHED` for `@types/node`; to unblock that environment, a manual-only **Lockfile Bootstrap** workflow now generates/validates the lockfile on a network-enabled runner and uploads it as an artifact without repository write permission. `npm run lockfile:validate` verifies package identity and root dependency-map parity before readiness. PR CI uses `npm ci` automatically once the lockfile exists and temporarily warns/falls back to `npm install` while it is absent. Tag releases require `package-lock.json` and use `npm ci`, so an unreproducible release cannot be published.
 - ✅ Added AST-backed JS/TS-family analysis using the TypeScript compiler API.
 - ✅ Multiline imports/declarations, `export abstract class`, class methods, explicit export lists, named export aliases, namespace re-exports, destructured top-level bindings, module scope, static environment references, and comment-safe TODO extraction are structurally analyzed.
 - ✅ JS/TS multiline signatures are normalized into compact API signatures without body braces, continuation whitespace, or trailing parameter commas.
@@ -72,7 +72,7 @@ _Last updated: 2026-09-30_
 
 All currently identified **network-independent Local redesign/hardening implementation and release-readiness automation is complete in source**. Remaining work requires execution access or an explicit workflow-policy decision:
 
-1. On a registry-enabled checkout, run `npm run lockfile:generate` and commit `package-lock.json`.
+1. Generate `package-lock.json` either locally with `npm run lockfile:generate` or via the manual **Lockfile Bootstrap** workflow; run `npm run lockfile:validate`, then commit the validated lockfile.
 2. Run `npm ci --no-audit --no-fund`, install Python Playwright + Chromium, then execute **one command**: `npm run release:readiness` (or trigger the manual **Release Readiness** workflow on that branch).
 3. Review `release-artifacts/readiness/readiness.json`; when a previous VSIX is available, rerun with `DOCUMINT_BASELINE_VSIX=/path/to/previous.vsix` to record the package-size delta automatically.
 4. When explicitly allowed to run normal push CI, remove the `.github/ci-trigger` path gate and enable every `main` push.
