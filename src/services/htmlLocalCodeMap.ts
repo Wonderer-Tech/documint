@@ -244,6 +244,11 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     font-size: 10px;
     font-weight: 500;
   }
+  .local-map-module-node .local-map-module-start {
+    fill: var(--accent);
+    font-size: 9px;
+    font-weight: 600;
+  }
   .local-map-module-edge {
     stroke: color-mix(in srgb, var(--text-muted) 58%, transparent);
     stroke-width: 1.35;
@@ -586,6 +591,21 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     font-size: 10px;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .local-map-relation-more {
+    margin-top: 4px;
+    border-top: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
+    padding-top: 4px;
+  }
+  .local-map-relation-more summary {
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 10px;
+    user-select: none;
+  }
+  .local-map-relation-more[open] summary {
+    margin-bottom: 3px;
+    color: var(--text-secondary);
   }
   .local-map-exports {
     width: 100%;
@@ -1150,7 +1170,7 @@ function buildLocalCodeMapScript(
     var ux = dx / length;
     var uy = dy / length;
     var halfW = 96;
-    var halfH = 35;
+    var halfH = 41;
     var tx = Math.abs(ux) > 0.0001 ? halfW / Math.abs(ux) : Infinity;
     var ty = Math.abs(uy) > 0.0001 ? halfH / Math.abs(uy) : Infinity;
     var distance = Math.min(tx, ty);
@@ -1260,12 +1280,17 @@ function buildLocalCodeMapScript(
 
     modules.forEach(function (module) {
       var pos = positions.get(module.name);
+      var primaryFiles = Array.isArray(module.primaryFilePaths)
+        ? module.primaryFilePaths
+        : [];
+      var startFile = primaryFiles[0] || '';
       var moduleAria =
         module.name +
         ', ' +
         module.files +
         ' files' +
-        (module.description ? ', ' + module.description : '');
+        (module.description ? ', ' + module.description : '') +
+        (startFile ? ', suggested start ' + startFile : '');
       var g = makeSvg('g', {
         class: 'local-map-module-node',
         'data-module': module.name,
@@ -1273,31 +1298,52 @@ function buildLocalCodeMapScript(
         role: 'button',
         'aria-label': moduleAria
       }, svg);
-      if (module.description) {
+      if (module.description || startFile) {
         var tooltip = makeSvg('title', {}, g);
-        tooltip.textContent = module.name + ': ' + module.description;
+        var tooltipLines = [module.name];
+        if (module.description) {
+          tooltipLines.push(
+            module.description +
+            (module.descriptionSource
+              ? ' [' + module.descriptionSource + ']'
+              : '')
+          );
+        }
+        if (primaryFiles.length) {
+          tooltipLines.push('Suggested start: ' + primaryFiles.join(', '));
+        }
+        tooltip.textContent = tooltipLines.join('\n');
       }
       makeSvg('rect', {
         x: pos.x - 92,
-        y: pos.y - 31,
+        y: pos.y - 37,
         width: 184,
-        height: 62,
+        height: 74,
         rx: 12,
         filter: 'url(#localMapSketch)'
       }, g);
       var title = makeSvg('text', {
         x: pos.x,
-        y: pos.y - 2,
+        y: pos.y - 10,
         'text-anchor': 'middle'
       }, g);
       title.textContent = module.name;
       var meta = makeSvg('text', {
         x: pos.x,
-        y: pos.y + 16,
+        y: pos.y + 7,
         class: 'local-map-module-meta',
         'text-anchor': 'middle'
       }, g);
       meta.textContent = module.files + ' files · ' + formatNumber(module.lines) + ' lines';
+      if (startFile) {
+        var start = makeSvg('text', {
+          x: pos.x,
+          y: pos.y + 23,
+          class: 'local-map-module-start',
+          'text-anchor': 'middle'
+        }, g);
+        start.textContent = 'start: ' + fileName(startFile);
+      }
 
       function focusModule() {
         svg.classList.add('focused');
@@ -1724,6 +1770,15 @@ function buildLocalCodeMapScript(
     }
   }
 
+  function relationButton(path) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = path;
+    button.title = path;
+    button.addEventListener('click', function () { openFile(path); });
+    return button;
+  }
+
   function relationColumn(title, paths) {
     var box = document.createElement('div');
     box.className = 'local-map-relation';
@@ -1741,20 +1796,19 @@ function buildLocalCodeMapScript(
     }
 
     paths.slice(0, 12).forEach(function (path) {
-      var button = document.createElement('button');
-      button.type = 'button';
-      button.textContent = path;
-      button.title = path;
-      button.addEventListener('click', function () { openFile(path); });
-      box.appendChild(button);
+      box.appendChild(relationButton(path));
     });
 
     if (paths.length > 12) {
-      var more = document.createElement('span');
-      more.textContent = '+ ' + (paths.length - 12) + ' more';
-      more.style.color = 'var(--text-muted)';
-      more.style.fontSize = '10px';
-      box.appendChild(more);
+      var details = document.createElement('details');
+      details.className = 'local-map-relation-more';
+      var summary = document.createElement('summary');
+      summary.textContent = '+ ' + (paths.length - 12) + ' more';
+      details.appendChild(summary);
+      paths.slice(12).forEach(function (path) {
+        details.appendChild(relationButton(path));
+      });
+      box.appendChild(details);
     }
 
     return box;
