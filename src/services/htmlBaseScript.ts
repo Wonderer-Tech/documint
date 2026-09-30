@@ -2174,6 +2174,11 @@ export function buildHtmlBaseScript(
 
     // ── Back to top ──────────────────────────────────────────────────────────
     var btt = document.getElementById('btt');
+    if (btt) {
+      btt.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
     window.addEventListener('scroll', function () {
       if (!btt) return;
       if (window.scrollY > 400) btt.classList.add('show');
