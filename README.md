@@ -88,7 +88,7 @@ Public AI-generation facade: `src/services/docGenerator.ts`. Local runtime orche
 
 ## Local Project Map
 
-Local HTML now starts with a question-first project map built from the same deterministic model used by Local Markdown. A compact in-map section bar jumps directly between the major questions and tracks the current section while scrolling:
+Local HTML now starts with a question-first project map built from the same deterministic model used by Local Markdown. A compact in-map section bar jumps directly between the major questions, tracks the current section while scrolling, and restores valid `#localMap…` deep links when a generated report is reopened or its hash changes:
 
 - **At a glance** — canonical project totals, description coverage, languages, detected entry points, external dependencies, and an actionable undocumented-file list that stays compact but can expand to every missing description.
 - **Big picture** — the single Local HTML architecture surface: structural modules, resolved cross-module import counts, trusted module descriptions/provenance, and suggested start files. The older duplicate Architecture & Dependencies table remains only in Markdown.
