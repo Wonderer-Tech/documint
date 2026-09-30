@@ -97,3 +97,19 @@ test("sidebar discovers local models through the fixed local-provider bridge", (
   assert.match(client, /models\.length === 1 && !modelInput\.value\.trim\(\)/);
   assert.match(client, /You can still enter a model ID manually/);
 });
+
+
+test("local provider and model discovery never follow redirects away from loopback", () => {
+  const runtime = readFileSync(
+    join(process.cwd(), "src/providers/localOpenAICompatibleProvider.ts"),
+    "utf8",
+  );
+  const discovery = readFileSync(
+    join(process.cwd(), "src/providers/localProviderDiscovery.ts"),
+    "utf8",
+  );
+
+  assert.match(runtime, /maxRedirects:\s*0/);
+  assert.match(discovery, /maxRedirects:\s*0/);
+  assert.match(discovery, /maxContentLength:\s*1_000_000/);
+});
