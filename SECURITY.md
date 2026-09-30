@@ -37,6 +37,7 @@ Important DocuMint security expectations include:
 - custom endpoint URL/locality policy is enforced before provider requests;
 - loopback/local provider requests do not follow redirects and bypass environment HTTP proxies, so a local/no-consent endpoint cannot transparently forward source-bearing requests to another host;
 - generated documentation is sanitized before cache metadata is committed.
+- provider/source Markdown is treated as untrusted when converted to HTML: raw HTML is neutralized outside code blocks, unsafe link/image schemes are blocked, and Local source-derived prose is Markdown-escaped before rendering;
 
 ## Disclosure
 
