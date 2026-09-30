@@ -150,7 +150,11 @@ test("Local HTML code map owns onboarding facts without duplicating Markdown onb
   assert.match(document.html, /npm run compile/);
   assert.match(document.html, /documint\.generate/);
   assert.match(document.html, /documint\.generationMode/);
-  assert.match(document.html, /make verify/);
+  assert.deepEqual(document.model.gettingStarted?.makefile, {
+    path: "Makefile",
+    targets: [{ name: "verify" }],
+  });
+  assert.match(document.html, /'make ' \+ target\.name/);
   assert.match(document.html, /node:22-alpine/);
   assert.match(document.html, /API_TOKEN/);
   assert.doesNotMatch(document.html, /<h2[^>]*>How to run<\/h2>/);
