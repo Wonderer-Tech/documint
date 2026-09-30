@@ -485,7 +485,7 @@ The suite verifies navigation, reader controls, Local code-map interactions, res
 
 When dependency registry access is available, `npm run lockfile:generate` creates/refreshes `package-lock.json` without running package scripts. `npm run lockfile:validate` then checks the lockfile's root package identity and dependency maps against `package.json`.
 
-If the local machine cannot reach the npm registry, run the manual **Lockfile Bootstrap** GitHub Actions workflow. It generates and validates `package-lock.json` on a network-enabled runner and uploads the lockfile plus SHA-256/metadata as an artifact without committing or pushing to the repository.
+If the local machine cannot reach the npm registry, run the manual **Lockfile Bootstrap** GitHub Actions workflow. It generates and validates `package-lock.json` on a network-enabled runner and uploads the lockfile plus SHA-256/metadata as an artifact without committing or pushing to the repository. Its default `run_readiness=true` input also runs the complete verify → browser acceptance → VSIX packaging/evidence gate against that transient lockfile, so the branch can be fully tested before the lockfile is committed.
 
 ### Release readiness
 
