@@ -146,7 +146,7 @@ test("TypeScript AST detects multiline functions and excludes function-local var
   assert.equal(fn.line, 3);
   assert.equal(
     fn.signature,
-    "export async function buildDocumentation( projectName: string, fileCount: number, ): Promise<string>",
+    "export async function buildDocumentation(projectName: string, fileCount: number): Promise<string>",
   );
 
   const moduleLimit = analysis.symbols.find(
@@ -420,4 +420,29 @@ test("TypeScript AST keeps top-level destructured bindings and export state", ()
     assert.equal(symbol.exported, false);
     assert.equal(symbol.scope, "module");
   }
+});
+
+
+test("TypeScript signatures collapse multiline formatting without body delimiters", () => {
+  const analysis = analyzer.analyzeFile(
+    file(
+      "src/signatures.ts",
+      "typescript",
+      [
+        "export const handler = (",
+        "  value: string,",
+        "  count: number,",
+        "): string => {",
+        "  return value.repeat(count);",
+        "};",
+      ].join("\n"),
+    ),
+  );
+
+  const handler = analysis.symbols.find((symbol) => symbol.name === "handler");
+  assert.ok(handler);
+  assert.equal(
+    handler.signature,
+    "export const handler = (value: string, count: number): string =>",
+  );
 });
