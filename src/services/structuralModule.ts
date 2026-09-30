@@ -1,5 +1,5 @@
 export function structuralModuleName(filePath: string): string {
-  const parts = normalizePath(filePath).split("/").filter(Boolean);
+  const parts = normalizeProjectPath(filePath).split("/").filter(Boolean);
   if (parts.length <= 1) {
     return "(root)";
   }
