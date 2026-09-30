@@ -1,5 +1,5 @@
 import * as path from "path";
-import { WorkspaceFile } from "../types";
+import type { WorkspaceFile } from "../types";
 
 export type SourceSymbolKind =
   | "class"
