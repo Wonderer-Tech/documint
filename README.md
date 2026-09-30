@@ -90,6 +90,7 @@ Public AI-generation facade: `src/services/docGenerator.ts`. Local runtime orche
 
 Local HTML now starts with a question-first project map built from the same deterministic model used by Local Markdown:
 
+- **At a glance** — canonical project totals, description coverage, languages, detected entry points, and external dependencies.
 - **Big picture** — structural modules, resolved cross-module import counts, trusted module descriptions/provenance, and suggested start files.
 - **What's inside** — a file-size treemap grouped by structural module.
 - **Start here** — a suggested reading path derived from detected entry points and dependency reach.
@@ -101,7 +102,7 @@ For TypeScript/JavaScript-family files, DocuMint uses the TypeScript compiler AS
 
 Local descriptions are source-backed only: explicit file/module docs, safe declaration comments, supported language module/package docs, or exact README path descriptions. When no trusted description exists, DocuMint says so instead of inventing one.
 
-Local Markdown is intentionally compact and does not carry raw architecture/whiteboard/dependency JSON payloads. Local HTML uses the interactive project map as its rich visual layer and does not require CDN assets to render that Local experience.
+Local Markdown is intentionally compact and keeps its standalone project-fact tables/source tree for direct GitHub reading. Local HTML moves those orientation facts into the question-first project map instead of repeating legacy Project Facts, language/module/entry-point/external-dependency tables or a second source tree. The Local project-map experience does not require CDN assets.
 
 ## Supported Providers
 
