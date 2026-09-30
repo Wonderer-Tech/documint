@@ -181,6 +181,21 @@ test("Local code map owns deterministic onboarding facts and Ctrl/Cmd+K file sea
 });
 
 
+test("Local file search indexes internal symbols and TODO evidence with match context", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.markup, /exported\/internal symbols/);
+  assert.match(fragments.markup, /TODO\/FIXME\/HACK source notes/);
+  assert.match(fragments.script, /file\.internalSymbols/);
+  assert.match(fragments.script, /file\.todos/);
+  assert.match(fragments.script, /Internal symbol: /);
+  assert.match(fragments.script, /Source note: /);
+  assert.match(fragments.script, /normalizeActivation/);
+  assert.match(fragments.script, /TODO: add smoke coverage/);
+  assert.match(fragments.script, /var detailText = hit\.match/);
+});
+
+
 test("Local Big Picture layout starts from entry modules and clips edges at module boxes", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
