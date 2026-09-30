@@ -129,6 +129,18 @@ export function buildLocalSelfAuditReport(
         document.html.includes("paths.slice(12)"),
     },
     {
+      name: "Local HTML project summary is code-map owned",
+      passed:
+        document.html.includes("At a glance") &&
+        document.html.includes("What is this project made of?") &&
+        !/<h2[^>]*>Project Facts<\/h2>/i.test(document.html) &&
+        !/<h2[^>]*>Language Summary<\/h2>/i.test(document.html) &&
+        !/<h2[^>]*>Module Summary<\/h2>/i.test(document.html) &&
+        !/<h2[^>]*>Entry Points<\/h2>/i.test(document.html) &&
+        !/<h2[^>]*>External Dependencies<\/h2>/i.test(document.html) &&
+        !/<h2[^>]*>Source Tree<\/h2>/i.test(document.html),
+    },
+    {
       name: "Local HTML has no cdnjs dependency",
       passed: !/cdnjs\.cloudflare\.com/i.test(document.html),
     },
