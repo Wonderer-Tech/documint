@@ -30,7 +30,7 @@ _Last updated: 2026-09-30_
 - ✅ Local HTML uses the question-first code map as its rich visual layer: module map, treemap, suggested reading path, dependency-reach scatter, file/description/export/environment search, connected file cards, source links, and factual handwritten notes.
 - ✅ Local code map supports cross-view navigation, module focus isolation, entry-point-driven layered layout, accessible search/listbox behavior, `Ctrl/Cmd+K` file search, and trusted module-description tooltips.
 - ✅ Local HTML disables required external CDN assets; the Local project-map experience is self-contained.
-- ✅ Local cache compatibility is now `local-documentation-cache-v7`.
+- ✅ Local cache compatibility is now `local-documentation-cache-v8`.
 - ✅ Added nonce-based CSP to the sidebar webview.
 - ✅ Hardened local-provider network boundaries: Ollama, LM Studio, local model discovery, and custom OpenAI-compatible requests do not follow HTTP redirects; loopback requests bypass environment HTTP proxies, and local model discovery also caps response size.
 - ✅ New installs default to Local mode; malformed/legacy programmatic mode values still fall back to AI.
