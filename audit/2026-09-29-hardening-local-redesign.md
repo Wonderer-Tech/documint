@@ -31,7 +31,8 @@ _Last updated: 2026-09-30_
 - ✅ Local per-file docs are compact, omit empty routine sections, show trusted description provenance, show Uses / Used by, environment references, and portable source/line links.
 - ✅ Portable source links strictly encode Markdown-sensitive path characters such as spaces, route-group parentheses, brackets, and `#`, while preserving `#Lx` line anchors.
 - ✅ Local Markdown no longer carries raw architecture/whiteboard/dependency JSON, file-level graph payloads, or D2 duplication; it keeps one compact module Mermaid view.
-- ✅ Local HTML uses the question-first code map as its rich visual layer: module map, treemap, suggested reading path, dependency-reach scatter, file/description/export/environment search, connected file cards, source links, and factual handwritten notes.
+- ✅ Local HTML uses the question-first code map as its rich visual layer: At-a-glance project summary, module map, treemap, suggested reading path, dependency-reach scatter, complete file-evidence search, connected file cards, source links, and factual handwritten notes.
+- ✅ Local HTML project orientation is code-map owned: canonical totals, description coverage, languages, entry points, and external dependencies render in **At a glance**; duplicate legacy Project Facts / Language Summary / Module Summary / Entry Points / External Dependencies / Source Tree sections are suppressed in HTML while Markdown retains them.
 - ✅ Local HTML file cards retain canonical internal symbols and TODO/FIXME/HACK source-note evidence instead of dropping those analyzer facts after model construction.
 - ✅ Local lookup indexes full file-card evidence: path, trusted description, exported/internal symbols, environment references, and TODO/FIXME/HACK source notes, with source-factual match context.
 - ✅ Big Picture module nodes retain trusted description provenance and canonical suggested start files from the shared model.
@@ -40,7 +41,7 @@ _Last updated: 2026-09-30_
 - ✅ Local code map supports cross-view navigation, module focus isolation, entry-point-driven layered layout, accessible search/listbox behavior, `Ctrl/Cmd+K` file search, and trusted module-description tooltips.
 - ✅ Local HTML disables required external CDN assets; the Local project-map experience is self-contained.
 - ✅ Hardened Markdown→HTML rendering in both Local and AI modes: source/provider raw HTML is neutralized outside code, source-derived prose is escaped as plain Markdown text, and unsafe rendered link/image URLs are blocked.
-- ✅ Local cache compatibility is now `local-documentation-cache-v12`.
+- ✅ Local cache compatibility is now `local-documentation-cache-v13`.
 - ✅ Added nonce-based CSP to the sidebar webview.
 - ✅ Hardened local-provider network boundaries: Ollama, LM Studio, local model discovery, and custom OpenAI-compatible requests do not follow HTTP redirects; loopback requests bypass environment HTTP proxies, and local model discovery also caps response size.
 - ✅ New installs default to Local mode; malformed/legacy programmatic mode values still fall back to AI.
