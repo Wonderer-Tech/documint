@@ -515,9 +515,3 @@ function inlineCode(value: string): string {
   return `\`${cleanText(value).replace(/`/g, "'")}\``;
 }
 
-function escapeMarkdownTableText(value: string): string {
-  return String(value)
-    .replace(/\|/g, "\\|")
-    .replace(/[\r\n]+/g, " ")
-    .trim();
-}
