@@ -22,6 +22,7 @@ import { generateHtmlTemplate } from "./htmlTemplate";
 import { DocumentationValidator } from "./documentationValidator";
 import { DOCUMINT_OUTPUT_DIRECTORY } from "../outputDirectory";
 import { GENERATION_PROMPT_SCHEMA_VERSION } from "./generationCacheIdentity";
+import { escapeRawHtmlOutsideMarkdownCode } from "./markdownEscaping";
 
 export interface DocGeneratorOptions {
   provider?: string;
@@ -2193,7 +2194,7 @@ ${this.sourceAnalyzer.formatProjectContext(projectAnalysis)}
     marked.setOptions({ gfm: true, breaks: true });
 
     const markdownWithoutRawHtml =
-      this.escapeRawHtmlOutsideCodeFences(markdown);
+      escapeRawHtmlOutsideMarkdownCode(markdown);
 
     // Normalise Windows backslash paths in headings before parsing
     const normalisedMarkdown = markdownWithoutRawHtml.replace(
@@ -2334,35 +2335,4 @@ ${this.sourceAnalyzer.formatProjectContext(projectAnalysis)}
     }
   }
 
-  private escapeRawHtmlOutsideCodeFences(markdown: string): string {
-    let inFence = false;
-    let fenceChar = "";
-
-    return markdown
-      .split(/\r?\n/)
-      .map((line) => {
-        const fenceMatch = line.match(/^\s*(```+|~~~+)/);
-        if (fenceMatch) {
-          const marker = fenceMatch[1][0];
-          if (!inFence) {
-            inFence = true;
-            fenceChar = marker;
-          } else if (marker === fenceChar) {
-            inFence = false;
-            fenceChar = "";
-          }
-          return line;
-        }
-
-        if (inFence || !/<\/?[a-zA-Z][^>]*>/.test(line)) {
-          return line;
-        }
-
-        return line
-          .replace(/&(?!(amp|lt|gt|quot|#039);)/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
-      })
-      .join("\n");
-  }
 }
