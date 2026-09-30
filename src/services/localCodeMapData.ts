@@ -51,16 +51,48 @@ export interface LocalCodeMapRunScript {
   command: string;
 }
 
+export interface LocalCodeMapVsCodeCommand {
+  id: string;
+  title: string;
+}
+
+export interface LocalCodeMapVsCodeSetting {
+  key: string;
+  defaultValue?: unknown;
+}
+
+export interface LocalCodeMapMakeTarget {
+  name: string;
+}
+
+export interface LocalCodeMapDockerfile {
+  path: string;
+  baseImages: string[];
+  stages: string[];
+  exposedPorts: string[];
+  entrypoint?: string;
+  command?: string;
+}
+
 export interface LocalCodeMapData {
   projectName: string;
   files: LocalCodeMapFile[];
   modules: LocalCodeMapModule[];
   edges: LocalCodeMapEdge[];
   readingPath: LocalCodeMapReadingItem[];
+  referencedEnvironmentVariables: string[];
   gettingStarted?: {
+    packageJsonPath?: string;
     packageManager?: "npm" | "pnpm" | "yarn" | "bun";
     extensionEntry?: string;
     scripts: LocalCodeMapRunScript[];
+    vscodeCommands: LocalCodeMapVsCodeCommand[];
+    vscodeSettings: LocalCodeMapVsCodeSetting[];
+    makefile?: {
+      path: string;
+      targets: LocalCodeMapMakeTarget[];
+    };
+    dockerfile?: LocalCodeMapDockerfile;
   };
 }
 
@@ -106,8 +138,12 @@ export function buildLocalCodeMapData(
       path: item.path,
       reason: item.reason,
     })),
+    referencedEnvironmentVariables: [
+      ...model.referencedEnvironmentVariables,
+    ],
     gettingStarted: model.gettingStarted
       ? {
+          packageJsonPath: model.gettingStarted.packageJsonPath,
           packageManager: model.gettingStarted.packageManager,
           extensionEntry: model.gettingStarted.extensionEntry,
           scripts: model.gettingStarted.scripts.map((script) => ({
@@ -115,6 +151,32 @@ export function buildLocalCodeMapData(
             run: script.run,
             command: script.command,
           })),
+          vscodeCommands: model.gettingStarted.vscodeCommands.map(
+            (command) => ({ ...command }),
+          ),
+          vscodeSettings: model.gettingStarted.vscodeSettings.map(
+            (setting) => ({ ...setting }),
+          ),
+          makefile: model.gettingStarted.makefile
+            ? {
+                path: model.gettingStarted.makefile.path,
+                targets: model.gettingStarted.makefile.targets.map(
+                  (target) => ({ ...target }),
+                ),
+              }
+            : undefined,
+          dockerfile: model.gettingStarted.dockerfile
+            ? {
+                path: model.gettingStarted.dockerfile.path,
+                baseImages: [...model.gettingStarted.dockerfile.baseImages],
+                stages: [...model.gettingStarted.dockerfile.stages],
+                exposedPorts: [
+                  ...model.gettingStarted.dockerfile.exposedPorts,
+                ],
+                entrypoint: model.gettingStarted.dockerfile.entrypoint,
+                command: model.gettingStarted.dockerfile.command,
+              }
+            : undefined,
         }
       : undefined,
   };
