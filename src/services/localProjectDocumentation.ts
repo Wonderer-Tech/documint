@@ -4,6 +4,7 @@ import {
   buildLocalDocumentationModel,
   type LocalDocumentationModel,
 } from "./localDocumentationModel";
+import { escapeMarkdownPlainText, escapeMarkdownTableText } from "./markdownEscaping";
 
 export interface LocalProjectDocumentationInput {
   projectName: string;
@@ -152,7 +153,7 @@ function renderWhereIsWhat(model: LocalDocumentationModel): string {
         ? module.primaryFilePaths.map(markdownDocumentationFileLink).join(", ")
         : "—";
       const description = module.description
-        ? escapeTableText(module.description.text)
+        ? escapeMarkdownTableText(module.description.text)
         : "—";
       return `| ${inlineCode(module.name)} | ${description} | ${module.fileCount} | ${module.lineCount} | ${primary} |`;
     }),
@@ -269,7 +270,7 @@ function renderGettingStarted(model: LocalDocumentationModel): string {
       "| --- | --- |",
       ...facts.vscodeCommands.map(
         (command) =>
-          `| ${inlineCode(command.id)} | ${escapeTableText(command.title)} |`,
+          `| ${inlineCode(command.id)} | ${escapeMarkdownTableText(command.title)} |`,
       ),
     );
   }
@@ -303,7 +304,7 @@ function renderSuggestedReadingPath(
   return model.suggestedReadingPath
     .map(
       (item, index) =>
-        `${index + 1}. ${markdownDocumentationFileLink(item.path)} — ${escapeTableText(item.reason)}`,
+        `${index + 1}. ${markdownDocumentationFileLink(item.path)} — ${escapeMarkdownTableText(item.reason)}`,
     )
     .join("\n");
 }
@@ -487,11 +488,13 @@ function cleanText(value: string): string {
 }
 
 function cleanTreeLabel(value: string): string {
-  return cleanText(value).replace(/[\u2500-\u257f]/g, "-");
+  return cleanText(value)
+    .replace(/[\u2500-\u257f]/g, "-")
+    .replace(/`/g, "'");
 }
 
 function escapeHeading(value: string): string {
-  return cleanText(value).replace(/[#]/g, "\\#");
+  return escapeMarkdownPlainText(value);
 }
 
 function markdownDocumentationFileLink(filePath: string): string {
@@ -512,7 +515,7 @@ function inlineCode(value: string): string {
   return `\`${cleanText(value).replace(/`/g, "'")}\``;
 }
 
-function escapeTableText(value: string): string {
+function escapeMarkdownTableText(value: string): string {
   return String(value)
     .replace(/\|/g, "\\|")
     .replace(/[\r\n]+/g, " ")
