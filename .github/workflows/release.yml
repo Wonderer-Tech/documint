@@ -44,6 +44,9 @@ jobs:
       - name: Compile and test
         run: npm test
 
+      - name: Run DocuMint self-audit
+        run: npm run audit:self
+
       - name: Package VSIX
         shell: bash
         run: |
