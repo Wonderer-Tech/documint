@@ -18,6 +18,18 @@ export interface HtmlLocalSurfaceChrome {
 }
 
 export function formatGeneratedTimestamp(value: string): GeneratedTimestamp {
+  const legacy = value.match(
+    /^([A-Za-z]{3,9}\s+\d{1,2}),\s*(\d{1,2}:\d{2}:\d{2}\s*[AP]M)$/i,
+  );
+  if (legacy) {
+    return {
+      month: "DATE",
+      day: legacy[1],
+      year: "",
+      time: legacy[2],
+    };
+  }
+
   const parsed = new Date(value);
   if (!Number.isNaN(parsed.getTime())) {
     return {
