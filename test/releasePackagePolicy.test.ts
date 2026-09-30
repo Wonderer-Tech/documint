@@ -150,6 +150,9 @@ test("release readiness command runs strict verification and writes measurable e
   assert.match(readiness, /\.bin/);
   assert.match(readiness, /vsceCommand/);
   assert.match(readiness, /Local @vscode\/vsce binary is missing/);
+  assert.match(readiness, /tools\/run-python\.mjs/);
+  assert.match(readiness, /Python Playwright\/Chromium is unavailable/);
+  assert.match(readiness, /evidence\.checks\.browserRuntime/);
   assert.match(readiness, /readiness\.json/);
   assert.match(readiness, /DOCUMINT_SELF_AUDIT_OUTPUT/);
   assert.match(readiness, /createHash\("sha256"\)/);
@@ -165,6 +168,15 @@ test("release readiness runner is valid Node ESM syntax", () => {
   execFileSync(
     process.execPath,
     ["--check", join(process.cwd(), "tools/release-readiness.mjs")],
+    { stdio: "pipe" },
+  );
+});
+
+
+test("Python launcher is valid Node ESM syntax", () => {
+  execFileSync(
+    process.execPath,
+    ["--check", join(process.cwd(), "tools/run-python.mjs")],
     { stdio: "pipe" },
   );
 });
