@@ -362,6 +362,24 @@ test("only the conceptual module map gets an offline sketch treatment", () => {
   assert.doesNotMatch(fragments.styles, /local-map-scatter[^}]*filter:/);
 });
 
+test("Local Big Picture uses prototype-style open arrows and uncluttered edge counts", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.markup, /Arrows point from the importing module to the module it imports/);
+  assert.match(fragments.script, /function buildOpenArrowPath/);
+  assert.match(fragments.script, /var reciprocalOffset = reciprocal/);
+  assert.match(fragments.script, /levelSpan > 1 && !reciprocal/);
+  assert.match(fragments.script, /quadraticMidpoint/);
+  assert.match(fragments.styles, /stroke-dasharray: 5 6/);
+  assert.match(fragments.styles, /\.local-map-module-edge\.mid/);
+  assert.match(fragments.styles, /\.local-map-module-edge\.strong/);
+  assert.match(fragments.styles, /\.local-map-edge-badge/);
+  assert.match(fragments.styles, /\.local-map-edge-count/);
+  assert.match(fragments.script, /if \(edge\.count >= 2\)/);
+  assert.match(fragments.script, /buildOpenArrowPath\(noteStart, noteEnd, noteControl, 9\)/);
+  assert.doesNotMatch(fragments.script, /marker-end|localMapArrow/);
+});
+
 
 test("Local code map exposes keyboard-accessible search and live filter state", () => {
   const fragments = renderLocalCodeMapFragments(data);
