@@ -94,6 +94,71 @@ test("Markdown stays compact and Local HTML uses the code map instead of legacy 
 });
 
 
+test("Local HTML code map owns onboarding facts without duplicating Markdown onboarding headings", () => {
+  const onboardingFiles = [
+    {
+      path: "src/main.ts",
+      language: "typescript",
+      content: [
+        "export const token = process.env.API_TOKEN;",
+        "export function run() { return token; }",
+      ].join("\n"),
+    },
+    {
+      path: "package.json",
+      language: "json",
+      content: JSON.stringify({
+        main: "./dist/extension.js",
+        scripts: {
+          compile: "tsc --noEmit",
+          test: "node --test",
+        },
+        contributes: {
+          commands: [
+            { command: "documint.generate", title: "Generate Documentation" },
+          ],
+          configuration: {
+            properties: {
+              "documint.generationMode": { default: "local" },
+            },
+          },
+        },
+      }),
+    },
+  ];
+  const analyzer = new SourceAnalyzer();
+  const project = analyzer.analyzeProject(onboardingFiles);
+  const document = buildLocalDocumentationDocument(
+    "Onboarding",
+    onboardingFiles,
+    project,
+    {
+      makefile: "verify:\n\tnpm test\n",
+      dockerfile: [
+        "FROM node:22-alpine AS runtime",
+        "EXPOSE 3000",
+        'CMD ["node", "dist/server.js"]',
+      ].join("\n"),
+    },
+  );
+
+  assert.match(document.markdown, /## How to run/);
+  assert.match(document.markdown, /## Referenced environment variables/);
+  assert.match(document.html, /<h3 id="localMapRunTitle">How to run<\/h3>/);
+  assert.match(document.html, /npm run compile/);
+  assert.match(document.html, /documint\.generate/);
+  assert.match(document.html, /documint\.generationMode/);
+  assert.match(document.html, /make verify/);
+  assert.match(document.html, /node:22-alpine/);
+  assert.match(document.html, /API_TOKEN/);
+  assert.doesNotMatch(document.html, /<h2[^>]*>How to run<\/h2>/);
+  assert.doesNotMatch(
+    document.html,
+    /<h2[^>]*>Referenced environment variables<\/h2>/,
+  );
+});
+
+
 test("Local HTML omits external CDN assets while keeping the interactive code map", () => {
   const analyzer = new SourceAnalyzer();
   const project = analyzer.analyzeProject(files);
