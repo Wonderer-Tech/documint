@@ -148,13 +148,24 @@ try {
     throw new Error("Python launcher is missing: tools/run-python.mjs");
   }
 
+  const configuredChromium = process.env.CHROMIUM_EXECUTABLE?.trim();
+  if (configuredChromium && !existsSync(configuredChromium)) {
+    throw new Error(
+      `CHROMIUM_EXECUTABLE does not exist: ${configuredChromium}`,
+    );
+  }
+
   const browserProbe = capture(process.execPath, [
     pythonRunner,
     "-c",
     [
+      "import os",
       "from playwright.sync_api import sync_playwright",
       "p=sync_playwright().start()",
-      "b=p.chromium.launch(headless=True,args=['--no-sandbox'])",
+      "launch={'headless':True,'args':['--no-sandbox']}",
+      "configured=os.environ.get('CHROMIUM_EXECUTABLE','').strip()",
+      "launch.update({'executable_path':configured} if configured else {})",
+      "b=p.chromium.launch(**launch)",
       "b.close()",
       "p.stop()",
       "print('ok')",
@@ -162,10 +173,14 @@ try {
   ]);
   if (browserProbe !== "ok") {
     throw new Error(
-      "Python Playwright/Chromium is unavailable. Install with: python -m pip install playwright && python -m playwright install chromium",
+      "Python Playwright/browser runtime is unavailable. Install Playwright in the selected Python environment and either set CHROMIUM_EXECUTABLE to an installed Chrome/Chromium binary or install Playwright Chromium with: python -m playwright install chromium",
     );
   }
-  evidence.checks.browserRuntime = { passed: true };
+  evidence.checks.browserRuntime = {
+    passed: true,
+    mode: configuredChromium ? "system-executable" : "playwright-managed",
+    chromiumExecutable: configuredChromium || undefined,
+  };
 
   phase = "verify";
   evidence.checks.verify = {
