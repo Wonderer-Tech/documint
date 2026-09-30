@@ -30,6 +30,8 @@ export interface LocalCodeMapFile {
 export interface LocalCodeMapModule {
   name: string;
   description?: string;
+  descriptionSource?: string;
+  primaryFilePaths: string[];
   files: number;
   lines: number;
 }
@@ -130,6 +132,8 @@ export function buildLocalCodeMapData(
     modules: model.modules.map((module) => ({
       name: module.name,
       description: module.description?.text,
+      descriptionSource: module.description?.source,
+      primaryFilePaths: [...module.primaryFilePaths],
       files: module.fileCount,
       lines: module.lineCount,
     })),
