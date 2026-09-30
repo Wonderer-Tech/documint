@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { buildHtmlBaseScript } from "./htmlBaseScript";
 import { HTML_BASE_STYLES } from "./htmlBaseStyles";
 import { READER_STYLES } from "./htmlReaderStyles";
@@ -47,8 +48,14 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
   const footerLogoHtml = safeLogoSrc
     ? `<img class="footer-logo-img" src="${safeLogoSrc}" alt="DocuMint logo">`
     : "";
-  const localCodeMap = renderLocalCodeMapFragments(options.localCodeMap);
   const externalAssetsEnabled = options.externalAssets !== false;
+  const scriptNonce = externalAssetsEnabled
+    ? ""
+    : randomBytes(16).toString("base64");
+  const localCodeMap = renderLocalCodeMapFragments(
+    options.localCodeMap,
+    scriptNonce,
+  );
   const {
     highlightThemeLink,
     externalScriptTags,
@@ -57,6 +64,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
   } = resolveHtmlExternalAssets(externalAssetsEnabled);
   const contentSecurityPolicy = resolveHtmlContentSecurityPolicy(
     externalAssetsEnabled,
+    scriptNonce,
   );
   const {
     tocHtml: localCodeMapToc,
@@ -161,7 +169,7 @@ ${HTML_BASE_STYLES}
     </div>
   </div>
 
-  <button class="btt" id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">
+  <button class="btt" id="btt" type="button" title="Back to top">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
     </svg>
@@ -170,7 +178,7 @@ ${HTML_BASE_STYLES}
   <div class="kb-hints">${keyboardHints}</div>
 
   ${externalScriptTags}
-  <script>
+  <script${scriptNonce ? ` nonce="${escapeHtmlAttr(scriptNonce)}"` : ""}>
 ${buildHtmlBaseScript({ highlightThemeDark, highlightThemeLight })}
   </script>
   ${localCodeMap.script}
