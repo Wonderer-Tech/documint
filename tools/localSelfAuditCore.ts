@@ -10,6 +10,12 @@ export interface LocalSelfAuditReport {
   undocumented: number;
   markdownLines: number;
   htmlBytes: number;
+  landmarks: {
+    apiKeyStorage?: string;
+    providerFactory?: string;
+    buildCommand?: string;
+    testCommand?: string;
+  };
   assertions: Array<{
     name: string;
     passed: boolean;
@@ -28,6 +34,18 @@ export function buildLocalSelfAuditReport(
   const scriptNames = new Set(
     packageFacts?.scripts.map((script) => script.name) ?? [],
   );
+  const apiKeyStorage = model.files.find(
+    (file) => file.path === "src/config/secretStorage.ts",
+  )?.path;
+  const providerFactory = model.files.find(
+    (file) => file.path === "src/providers/providerFactory.ts",
+  )?.path;
+  const buildCommand = packageFacts?.scripts.find(
+    (script) => script.name === "compile" || script.name === "build",
+  )?.run;
+  const testCommand = packageFacts?.scripts.find(
+    (script) => script.name === "test",
+  )?.run;
 
   const assertions: LocalSelfAuditReport["assertions"] = [
     {
@@ -40,19 +58,15 @@ export function buildLocalSelfAuditReport(
     },
     {
       name: "API-key storage file is present",
-      passed: model.files.some(
-        (file) => file.path === "src/config/secretStorage.ts",
-      ),
+      passed: Boolean(apiKeyStorage),
     },
     {
       name: "provider factory file is present",
-      passed: model.files.some(
-        (file) => file.path === "src/providers/providerFactory.ts",
-      ),
+      passed: Boolean(providerFactory),
     },
     {
       name: "compile script is documented",
-      passed: scriptNames.has("compile"),
+      passed: Boolean(buildCommand),
     },
     {
       name: "test script is documented",
@@ -98,6 +112,12 @@ export function buildLocalSelfAuditReport(
     undocumented: model.files.filter((file) => !file.description).length,
     markdownLines: document.markdown.split(/\r?\n/).length,
     htmlBytes: Buffer.byteLength(document.html, "utf8"),
+    landmarks: {
+      apiKeyStorage,
+      providerFactory,
+      buildCommand,
+      testCommand,
+    },
     assertions,
   };
 }
