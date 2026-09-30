@@ -2437,12 +2437,12 @@ function buildLocalCodeMapScript(
   renderFacts();
   renderOverview();
   renderOnboarding();
-  initSectionNav();
   renderModules();
   renderTreemap();
   renderReadingPath();
   renderScatter();
   renderCard();
+  initSectionNav();
 
   var clear = document.getElementById('localMapClearFilter');
   if (clear) clear.addEventListener('click', function () { setModuleFilter(null); });
