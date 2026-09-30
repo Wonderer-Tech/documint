@@ -55,6 +55,16 @@ with sync_playwright() as playwright:
                 assert page.locator("[data-documint-local-code-map]").count() == 1, name
                 assert external_requests == [], (name, external_requests)
                 assert page.locator("#localMapModules .local-map-module-node").count() >= 3, name
+                assert page.locator("#localMapRunSection").is_visible(), name
+                onboarding_text = page.locator("#localMapRunSection").inner_text()
+                assert "npm run compile" in onboarding_text
+                assert "documint.generate" in onboarding_text
+                assert "documint.generationMode" in onboarding_text
+                assert "make verify" in onboarding_text
+                assert "node:22-alpine" in onboarding_text
+                assert "API_TOKEN" in onboarding_text
+                assert page.locator("h2", has_text="How to run").count() == 0
+                assert page.locator("h2", has_text="Referenced environment variables").count() == 0
                 page.locator("#localMapModules .local-map-module-node").first.click()
                 assert page.locator("#localMapFilterState").inner_text() != "Showing all modules"
                 assert page.locator("#localMapTreemap .local-map-file-tile").count() > 0
