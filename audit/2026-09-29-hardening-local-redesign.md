@@ -15,6 +15,7 @@ _Last updated: 2026-09-30_
 
 - ✅ Retired obsolete source-repair workflows/scripts and the old VSIX self-commit workflow.
 - ✅ Added a tag-only GitHub Release workflow for future VSIX assets; current source tree no longer carries committed VSIX binaries.
+- ✅ Tag releases require `package-lock.json`, install with `npm ci`, run `npm run verify`, run full Chromium browser acceptance, retain browser evidence, and only then package/publish the VSIX.
 - ✅ Pull requests now run CI automatically. Main-branch push CI remains intentionally trigger-file gated so the current implementation work does not auto-run CI.
 - ⏳ `package-lock.json` is now allowed by `.gitignore`, but lockfile generation is still pending. An offline `npm install --package-lock-only --offline` attempt failed immediately with `ENOTCACHED` for `@types/node`; this environment also cannot reach the npm registry. PR CI uses `npm ci` automatically once the lockfile exists and temporarily warns/falls back to `npm install` while it is absent. Tag releases now require `package-lock.json` and use `npm ci`, so an unreproducible release cannot be published.
 - ✅ Added AST-backed JS/TS-family analysis using the TypeScript compiler API.
