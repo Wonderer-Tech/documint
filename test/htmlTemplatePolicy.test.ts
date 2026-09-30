@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   formatGeneratedTimestamp,
+  resolveHtmlContentSecurityPolicy,
   resolveHtmlExternalAssets,
   resolveHtmlLocalSurfaceChrome,
 } from "../src/services/htmlTemplatePolicy";
@@ -54,4 +55,21 @@ test("generated timestamp formatting is deterministic for valid and legacy value
     year: "",
     time: "01:02:03 AM",
   });
+});
+
+
+test("Local HTML CSP blocks network-capable resource types", () => {
+  const local = resolveHtmlContentSecurityPolicy(false);
+
+  assert.match(local, /Content-Security-Policy/);
+  assert.match(local, /default-src 'none'/);
+  assert.match(local, /connect-src 'none'/);
+  assert.match(local, /object-src 'none'/);
+  assert.match(local, /worker-src 'none'/);
+  assert.match(local, /base-uri 'none'/);
+  assert.match(local, /form-action 'none'/);
+  assert.match(local, /script-src 'unsafe-inline'/);
+  assert.match(local, /style-src 'unsafe-inline'/);
+
+  assert.equal(resolveHtmlContentSecurityPolicy(true), "");
 });
