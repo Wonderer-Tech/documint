@@ -176,6 +176,12 @@ test("Local Markdown keeps orientation sections while HTML avoids duplicating co
   const project = analyzer.analyzeProject(files);
   const document = buildLocalDocumentationDocument("Example Project", files, project);
 
+  assert.match(document.markdown, /## Project Facts/);
+  assert.match(document.markdown, /## Language Summary/);
+  assert.match(document.markdown, /## Module Summary/);
+  assert.match(document.markdown, /## Entry Points/);
+  assert.match(document.markdown, /## External Dependencies/);
+  assert.match(document.markdown, /## Source Tree/);
   assert.match(document.markdown, /## Where is what/);
   assert.match(document.markdown, /## Suggested reading path/);
   assert.match(document.markdown, /## Core files/);
@@ -183,6 +189,14 @@ test("Local Markdown keeps orientation sections while HTML avoids duplicating co
   assert.doesNotMatch(document.html, /<h2[^>]*>Where is what<\/h2>/);
   assert.doesNotMatch(document.html, /<h2[^>]*>Suggested reading path<\/h2>/);
   assert.doesNotMatch(document.html, /<h2[^>]*>Core files<\/h2>/);
+  assert.doesNotMatch(document.html, /<h2[^>]*>Project Facts<\/h2>/);
+  assert.doesNotMatch(document.html, /<h2[^>]*>Language Summary<\/h2>/);
+  assert.doesNotMatch(document.html, /<h2[^>]*>Module Summary<\/h2>/);
+  assert.doesNotMatch(document.html, /<h2[^>]*>Entry Points<\/h2>/);
+  assert.doesNotMatch(document.html, /<h2[^>]*>External Dependencies<\/h2>/);
+  assert.doesNotMatch(document.html, /<h2[^>]*>Source Tree<\/h2>/);
+  assert.match(document.html, /At a glance/);
+  assert.match(document.html, /What is this project made of\?/);
   assert.match(document.html, /data-documint-local-code-map/);
 });
 
