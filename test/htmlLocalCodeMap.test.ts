@@ -161,6 +161,20 @@ test("Local project map exposes accessible in-map section navigation and current
 });
 
 
+test("Local project map restores valid deep links and ignores stale section hashes safely", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /function resolveHashSection/);
+  assert.match(fragments.script, /function restoreHashSection/);
+  assert.match(fragments.script, /window\.location\.hash/);
+  assert.match(fragments.script, /decodeURIComponent/);
+  assert.match(fragments.script, /requestAnimationFrame/);
+  assert.match(fragments.script, /behavior: 'auto'/);
+  assert.match(fragments.script, /window\.addEventListener\('hashchange'/);
+  assert.match(fragments.script, /if \(!link \|\| link\.hidden \|\| !target \|\| target\.hidden\) return null/);
+});
+
+
 test("Local At a glance renders canonical project totals, languages, entry points and external dependencies", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
