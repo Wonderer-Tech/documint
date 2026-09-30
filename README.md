@@ -466,16 +466,29 @@ Self-audit:
 
 ### Browser acceptance
 
-Install Python Playwright once:
+Install Python Playwright once. A virtual environment is recommended:
 
 ```bash
-python -m pip install playwright
-python -m playwright install chromium
+python3 -m venv ~/.venvs/documint-browser
+~/.venvs/documint-browser/bin/python -m pip install playwright
+export DOCUMINT_PYTHON="$HOME/.venvs/documint-browser/bin/python"
 ```
 
 Browser scripts use `tools/run-python.mjs`, which selects an available Python 3 runtime (`python3`, `python`, or Windows `py -3`). Set `DOCUMINT_PYTHON=/custom/python` to force a specific interpreter.
 
-Then run the same provider-free generated-HTML acceptance command used by the manual GitHub workflow:
+If Chrome/Chromium is already installed locally, reuse it instead of downloading Playwright's bundled browser:
+
+```bash
+export CHROMIUM_EXECUTABLE="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+```
+
+If no local Chrome/Chromium executable is available, install Playwright Chromium instead:
+
+```bash
+"$DOCUMINT_PYTHON" -m playwright install chromium
+```
+
+Then run the provider-free generated-HTML acceptance command:
 
 ```bash
 npm run test:browser
@@ -506,7 +519,7 @@ The adopter uses the same shared lockfile policy as `lockfile:validate`; it vali
 
 ### Release readiness
 
-After the lockfile is committed and Python Playwright/Chromium are installed, run the complete release gate with one command:
+After the lockfile is committed, Python Playwright is installed, and either `CHROMIUM_EXECUTABLE` points to a local Chrome/Chromium binary or Playwright Chromium is installed, run the complete release gate with one command:
 
 ```bash
 npm run release:readiness
