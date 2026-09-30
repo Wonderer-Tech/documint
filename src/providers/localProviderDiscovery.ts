@@ -53,6 +53,7 @@ export async function discoverLocalProviderModels(
       timeout: LOCAL_MODEL_DISCOVERY_TIMEOUT_MS,
       maxRedirects: 0,
       maxContentLength: 1_000_000,
+      proxy: false,
       headers: {
         Accept: "application/json",
       },
