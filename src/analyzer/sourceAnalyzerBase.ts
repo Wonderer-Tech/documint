@@ -257,7 +257,10 @@ export class SourceAnalyzer {
       description: this.extractStructuredFileDescription(file),
       referencedEnvironmentVariables:
         file.language === "python"
-          ? this.extractPythonEnvironmentVariables(file.content)
+          ? this.extractPythonEnvironmentVariables(
+              file.content,
+              this.uniqueImports(imports),
+            )
           : undefined,
     };
   }
@@ -382,9 +385,17 @@ export class SourceAnalyzer {
 
   private extractPythonEnvironmentVariables(
     content: string,
+    imports: SourceImport[],
   ): string[] {
     const names = new Set<string>();
     const tokens = this.tokenizePythonEnvironmentSource(content);
+    const directOsSymbols = new Set(
+      imports
+        .filter((sourceImport) => sourceImport.source === "os")
+        .flatMap((sourceImport) => sourceImport.symbols),
+    );
+    const hasDirectGetenv = directOsSymbols.has("getenv");
+    const hasDirectEnviron = directOsSymbols.has("environ");
 
     for (let index = 0; index < tokens.length; index++) {
       const token = tokens[index];
@@ -432,6 +443,44 @@ export class SourceAnalyzer {
         const name = tokens[index + 4].value;
         if (this.isEnvironmentVariableName(name)) {
           names.add(name);
+        }
+      }
+
+      if (
+        hasDirectGetenv &&
+        token.value === "getenv" &&
+        tokens[index + 1]?.value === "(" &&
+        tokens[index + 2]?.type === "string"
+      ) {
+        const name = tokens[index + 2].value;
+        if (this.isEnvironmentVariableName(name)) {
+          names.add(name);
+        }
+      }
+
+      if (hasDirectEnviron && token.value === "environ") {
+        if (
+          tokens[index + 1]?.value === "[" &&
+          tokens[index + 2]?.type === "string" &&
+          tokens[index + 3]?.value === "]"
+        ) {
+          const name = tokens[index + 2].value;
+          if (this.isEnvironmentVariableName(name)) {
+            names.add(name);
+          }
+          continue;
+        }
+
+        if (
+          tokens[index + 1]?.value === "." &&
+          tokens[index + 2]?.value === "get" &&
+          tokens[index + 3]?.value === "(" &&
+          tokens[index + 4]?.type === "string"
+        ) {
+          const name = tokens[index + 4].value;
+          if (this.isEnvironmentVariableName(name)) {
+            names.add(name);
+          }
         }
       }
     }
