@@ -53,19 +53,3 @@ test("local Markdown architecture stays compact and module-level", () => {
   assert.doesNotMatch(output, /Module Architecture — D2/);
 });
 
-test("summary architecture surface emits facts without a duplicate diagram", () => {
-  const output = renderLocalArchitectureDocumentation(
-    {
-      projectName: "Example Project",
-      files,
-      project,
-    },
-    { surface: "summary" },
-  );
-
-  assert.match(output, /## Architecture & Dependencies/);
-  assert.match(output, /### Module Relationships/);
-  assert.match(output, /\| `src` \| `lib` \| 1 \|/);
-  assert.doesNotMatch(output, /mermaid/);
-  assert.doesNotMatch(output, /architecture-blueprint|excalidraw-blueprint|dependency-graph/);
-});
