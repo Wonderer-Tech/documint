@@ -24,7 +24,7 @@ All notable changes to DocuMint are documented here.
 - Extended **How to run** with concrete Makefile targets and Dockerfile source facts (`FROM`, stages, exposed ports, `ENTRYPOINT`, and `CMD`) without inventing Docker commands.
 - Made per-file Local documentation compact: empty fact sections are omitted, Uses / Used by are concise, description provenance is visible, and source/API entries use portable relative links.
 - Split Local Markdown and HTML architecture surfaces. Markdown no longer carries raw architecture, whiteboard, dependency-graph JSON, file-level Mermaid, or D2 payload duplication.
-- Added the question-first Local HTML project map: canonical At-a-glance project summary, module overview, file-size treemap, suggested reading path, dependency-reach scatter, file/evidence search, connected file cards, and source links.
+- Added the question-first Local HTML project map: canonical At-a-glance project summary, module overview, file-size treemap, suggested reading path, dependency-reach scatter, file/evidence search, connected file cards, source links, and an accessible in-map section navigator with current-section state.
 - Added one question-first Local HTML **How to run** surface backed by the canonical model: package scripts/manager, extension entry, VS Code commands/settings, Makefile targets, Dockerfile facts, and referenced environment variables. The HTML overview no longer duplicates those onboarding headings; Markdown keeps its standalone onboarding sections.
 - Local HTML file cards now retain canonical internal symbols plus TODO/FIXME/HACK source-note evidence instead of dropping those analyzer facts after model construction.
 - Local file lookup now uses deterministic token-aware search across paths, trusted descriptions, exported/internal symbols, environment references, and TODO/FIXME/HACK source-note text. Multi-word queries may match one factual field or multiple file facts, results label why they matched, and ranked results keep a compact top nine with an explicit Show all path to every remaining match.
@@ -35,7 +35,7 @@ All notable changes to DocuMint are documented here.
 - Added entry-point-driven layered layout, module hover/focus isolation, factual handwritten-style module notes, and cross-view navigation in the Local project map.
 - Local `Ctrl/Cmd+K` now focuses project-file search while `/` continues to search documentation headings.
 - Local HTML is generated with external assets disabled; the Local project-map experience does not require CDN scripts/styles.
-- Bumped Local cache compatibility to v17 so complete project-map navigation, actionable coverage, and Big Picture architecture ownership regenerate once.
+- Bumped Local cache compatibility to v18 so complete project-map ownership, navigation, coverage, and search behavior regenerate once.
 - Retired the old source-repair and VSIX self-commit workflows; CI/release automation no longer rewrites application source or force-adds a VSIX through those workflows.
 - Removed obsolete VS Code activation-event declarations and the deprecated `@types/marked` stub dependency.
 - Split the generated HTML shell into dedicated base-style, runtime-script, and policy modules; `htmlTemplate.ts` is now a small composition shell.
