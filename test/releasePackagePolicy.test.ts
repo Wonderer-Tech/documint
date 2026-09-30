@@ -24,6 +24,9 @@ test("VSIX excludes bundled dependencies and development-only content", () => {
     "docs/**",
     "documint/**",
     "coverage/**",
+    "release-artifacts/**",
+    "tools/**",
+    "audit/**",
     "*.vsix",
     "*.tgz",
   ]) {
