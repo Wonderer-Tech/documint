@@ -85,3 +85,13 @@ test("extension runtime uses the shared custom endpoint policy directly", () => 
   assert.doesNotMatch(baseSource, /function isLocalEndpoint\(/);
   assert.doesNotMatch(baseSource, /const parsed = new URL\(endpoint\)/);
 });
+
+
+test("custom provider request does not follow endpoint redirects", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/providers/customProvider.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /maxRedirects:\s*0/);
+});
