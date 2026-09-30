@@ -35,6 +35,7 @@ Important DocuMint security expectations include:
 - Local generated HTML does not require third-party CDN assets for its Local project-map experience;
 - sidebar webview scripts/styles are protected by a nonce-based Content Security Policy;
 - custom endpoint URL/locality policy is enforced before provider requests;
+- loopback/local provider requests do not follow redirects and bypass environment HTTP proxies, so a local/no-consent endpoint cannot transparently forward source-bearing requests to another host;
 - generated documentation is sanitized before cache metadata is committed.
 
 ## Disclosure
