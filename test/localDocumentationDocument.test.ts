@@ -220,10 +220,10 @@ test("Local HTML exposes Project map navigation and distinct file/docs search hi
 
   assert.match(
     document.html,
-    /href="#documint-local-code-map"[^>]*>[sS]*Project map/,
+    /href="#documint-local-code-map"[^>]*>[\s\S]*Project map/,
   );
-  assert.match(document.html, /Ctrl/⌘ K</kbd> Files/);
-  assert.match(document.html, /<kbd>/</kbd> Docs/);
+  assert.match(document.html, /Ctrl\/⌘ K<\/kbd> Files/);
+  assert.match(document.html, /<kbd>\/<\/kbd> Docs/);
 });
 
 
