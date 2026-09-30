@@ -38,7 +38,7 @@ jobs:
         run: npm run lockfile:validate
 
       - name: Validate clean locked install
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Validate dependency graph
         run: npm ls --all
