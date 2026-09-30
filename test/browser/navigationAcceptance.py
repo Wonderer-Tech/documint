@@ -88,8 +88,10 @@ with sync_playwright() as playwright:
                     "External Dependencies",
                     "Source Tree",
                     "Undocumented files",
+                    "Architecture & Dependencies",
                 ]:
                     assert page.locator("h2", has_text=duplicate_heading).count() == 0
+                assert page.locator("h3", has_text="Module Relationships").count() == 0
                 assert page.locator("#localMapModules .local-map-module-node").count() >= 3, name
                 assert page.locator("#localMapRunSection").is_visible(), name
                 onboarding_text = page.locator("#localMapRunSection").inner_text()
