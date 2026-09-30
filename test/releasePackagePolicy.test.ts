@@ -207,6 +207,10 @@ test("lockfile validator reuses the shared package-identity policy", () => {
 
 
 test("lockfile artifact adoption validates before replacing the root lockfile", () => {
+  assert.equal(
+    manifest.scripts["lockfile:adopt"],
+    "node tools/adopt-lockfile.mjs",
+  );
   const sandbox = mkdtempSync(join(tmpdir(), "documint-lockfile-adopt-"));
   const artifact = join(sandbox, "artifact");
   mkdirSync(artifact);
