@@ -1,0 +1,62 @@
+name: Release Readiness
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-readiness-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  readiness:
+    name: Verify, browser-test, package, and measure
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Require package lock
+        shell: bash
+        run: |
+          test -f package-lock.json || {
+            echo "package-lock.json is required before release readiness can run."
+            exit 1
+          }
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Playwright
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Run release readiness
+        run: npm run release:readiness
+
+      - name: Upload readiness evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: documint-release-readiness-${{ github.sha }}
+          path: |
+            release-artifacts/readiness/
+            release-artifacts/*.vsix
+            test-results/navigation-browser/
+          if-no-files-found: warn
+          retention-days: 14
