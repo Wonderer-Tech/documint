@@ -90,6 +90,7 @@ export class CustomProvider extends BaseAIProvider {
                 "Content-Type": "application/json",
               },
               timeout: CUSTOM_PROVIDER_REQUEST_TIMEOUT_MS,
+              maxRedirects: 0,
               signal: params.signal,
             },
           ),
