@@ -22,6 +22,8 @@ tsconfig.json
 *.tsbuildinfo
 *.map
 node_modules/**
+tools/**
+audit/**
 
 # Package/build artifacts
 *.vsix
@@ -33,6 +35,7 @@ docs/**
 documint/**
 out/**
 coverage/**
+release-artifacts/**
 test/**
 tests/**
 test-results/**
