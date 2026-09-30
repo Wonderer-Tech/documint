@@ -221,6 +221,21 @@ test("Local code map owns deterministic onboarding facts and Ctrl/Cmd+K file sea
 });
 
 
+test("Local ranked file search keeps top results compact while allowing every match to expand", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /var searchExpanded = false/);
+  assert.match(fragments.script, /rankedHits\.slice\(0, 9\)/);
+  assert.match(fragments.script, /Show all /);
+  assert.match(fragments.script, /searchExpanded = true/);
+  assert.match(
+    fragments.script,
+    /querySelectorAll\('button\[role="option"\]'\)/,
+  );
+  assert.match(fragments.styles, /\.local-map-result-more/);
+});
+
+
 test("Local file search supports multi-token factual queries without semantic inference", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
