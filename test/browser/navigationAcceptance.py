@@ -55,6 +55,19 @@ with sync_playwright() as playwright:
                 assert page.locator("[data-documint-local-code-map]").count() == 1, name
                 assert external_requests == [], (name, external_requests)
                 assert page.locator("#localMapOverview").is_visible(), name
+                map_nav = page.locator("#localMapNav")
+                assert map_nav.count() == 1
+                assert map_nav.locator("a").count() == 7
+                assert map_nav.locator("#localMapRunNav").is_visible()
+                map_nav.locator('a[href="#localMapBigSection"]').click()
+                page.wait_for_timeout(120)
+                assert page.evaluate("location.hash") == "#localMapBigSection"
+                assert (
+                    map_nav.locator('a[href="#localMapBigSection"]').get_attribute(
+                        "aria-current"
+                    )
+                    == "location"
+                )
                 overview_text = page.locator("#localMapOverview").inner_text()
                 assert "Files" in overview_text
                 assert "Lines" in overview_text
@@ -195,6 +208,9 @@ with sync_playwright() as playwright:
                 assert page.evaluate(
                     "document.documentElement.scrollWidth <= innerWidth + 1"
                 ), name
+                assert page.locator("#localMapNav").evaluate(
+                    "e => e.scrollWidth >= e.clientWidth"
+                )
                 page.set_viewport_size({"width": 1440, "height": 1000})
             search = page.locator("#sidebarFilter")
             search.fill("__missing_file__")
