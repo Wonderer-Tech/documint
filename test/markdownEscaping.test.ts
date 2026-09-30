@@ -18,7 +18,10 @@ test("source-derived prose stays plain text instead of executable Markdown or HT
 
   assert.doesNotMatch(escaped, /<script>/i);
   assert.match(escaped, /&lt;script&gt;/);
-  assert.match(escaped, /\\!\\\[demo\\\]\\\(https:\/\/evil\.example\/image\\\.png\\\)/);
+  assert.equal(
+    escaped,
+    String.raw`&lt;script&gt;alert\(1\)&lt;/script&gt; \!\[demo\]\(https://evil\.example/image\.png\)`,
+  );
 });
 
 test("table escaping handles separators exactly once", () => {
