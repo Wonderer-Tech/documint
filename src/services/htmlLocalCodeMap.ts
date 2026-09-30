@@ -1327,7 +1327,6 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     }
   }
   @media (max-width: 620px) {
-    .local-code-map {
     .local-map-hero h2 { font-size: 34px; }
     .local-map-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .local-map-overview-details,
