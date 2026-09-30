@@ -32,7 +32,7 @@ _Last updated: 2026-09-30_
 - ✅ Local HTML disables required external CDN assets; the Local project-map experience is self-contained.
 - ✅ Local cache compatibility is now `local-documentation-cache-v7`.
 - ✅ Added nonce-based CSP to the sidebar webview.
-- ✅ Hardened local-provider network boundaries: Ollama, LM Studio, local model discovery, and custom OpenAI-compatible requests do not follow HTTP redirects; local model discovery also caps response size.
+- ✅ Hardened local-provider network boundaries: Ollama, LM Studio, local model discovery, and custom OpenAI-compatible requests do not follow HTTP redirects; loopback requests bypass environment HTTP proxies, and local model discovery also caps response size.
 - ✅ New installs default to Local mode; malformed/legacy programmatic mode values still fall back to AI.
 - ✅ Default AI file-generation concurrency is 5, with a configurable maximum of 15.
 - ✅ Published canonical `documint.*` settings while preserving explicit `aiDocGenerator.*` values as deprecated compatibility aliases. Runtime reads/writes go through the shared namespace bridge; command IDs remain unchanged.
