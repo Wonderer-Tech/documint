@@ -55,6 +55,12 @@ test("Local self-audit report checks the release-critical documentation invarian
   assert.ok(report.totalExports >= 3);
   assert.ok(report.markdownLines > 0);
   assert.ok(report.htmlBytes > 0);
+  assert.deepEqual(report.landmarks, {
+    apiKeyStorage: "src/config/secretStorage.ts",
+    providerFactory: "src/providers/providerFactory.ts",
+    buildCommand: "npm run compile",
+    testCommand: "npm run test",
+  });
   assert.equal(selfAuditPassed(report), true);
   assert.deepEqual(
     report.assertions.filter((assertion) => !assertion.passed),
