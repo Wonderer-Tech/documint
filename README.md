@@ -96,7 +96,7 @@ Local HTML now starts with a question-first project map built from the same dete
 - **Start here** — a suggested reading path derived from detected entry points and dependency reach.
 - **How to run** — package scripts/manager, VS Code commands/settings, concrete Makefile targets, and Dockerfile source facts when those files are present.
 - **Dependency reach** — file size versus incoming project dependents.
-- **Look up a file** — token-aware factual search across path, trusted description, exported/internal symbols, referenced environment variables, and TODO/FIXME/HACK source notes. Multi-word queries can match one factual field or multiple file facts; results show why they matched. File cards expose complete Uses / Used by navigation, exported/internal symbols, and source-note evidence.
+- **Look up a file** — token-aware factual search across path, trusted description, exported/internal symbols, referenced environment variables, and TODO/FIXME/HACK source notes. Multi-word queries can match one factual field or multiple file facts; results show why they matched. The first nine ranked hits stay compact, with an explicit **Show all** control when more files match. File cards expose complete Uses / Used by navigation, exported/internal symbols, and source-note evidence.
 
 For TypeScript/JavaScript-family files, DocuMint uses the TypeScript compiler AST for multiline imports/declarations, export modifiers, class methods, and module-vs-function scope. This prevents function-local temporary variables from flooding Local API documentation.
 
