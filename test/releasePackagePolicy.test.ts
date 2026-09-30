@@ -106,18 +106,33 @@ test("README project structure documents public facades and implementation modul
 });
 
 
-test("release workflow publishes VSIX as a tag release asset without mutating main", () => {
+test("release workflow publishes VSIX reproducibly as a tag asset without mutating main", () => {
   const workflow = readFileSync(
     join(process.cwd(), ".github/workflows/release.yml"),
     "utf8",
   );
 
   assert.match(workflow, /tags:\s*\n\s*- "v\*"/);
+  assert.match(workflow, /test -f package-lock\.json/);
+  assert.match(workflow, /npm ci --no-audit --no-fund/);
+  assert.doesNotMatch(workflow, /npm install --no-audit --no-fund/);
   assert.match(workflow, /npx @vscode\/vsce package --out/);
-  assert.match(workflow, /gh release (?:create|upload)/);
   assert.match(workflow, /gh release upload/);
   assert.match(workflow, /gh release create/);
   assert.doesNotMatch(workflow, /git\s+push/);
   assert.doesNotMatch(workflow, /git\s+add\s+-f/);
   assert.doesNotMatch(workflow, /HEAD:main/);
+});
+
+
+test("CI prefers npm ci once a package lock exists and warns on the temporary fallback", () => {
+  const workflow = readFileSync(
+    join(process.cwd(), ".github/workflows/ci.yml"),
+    "utf8",
+  );
+
+  assert.match(workflow, /hashFiles\('package-lock\.json'\) != ''/);
+  assert.match(workflow, /npm ci --no-audit --no-fund/);
+  assert.match(workflow, /hashFiles\('package-lock\.json'\) == ''/);
+  assert.match(workflow, /package-lock\.json is missing/);
 });
