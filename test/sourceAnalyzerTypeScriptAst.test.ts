@@ -338,3 +338,86 @@ test("TypeScript AST extracts only real static environment references", () => {
     "VITE_PUBLIC_URL",
   ]);
 });
+
+
+test("TypeScript AST records explicit export aliases without inventing export-star symbols", () => {
+  const analysis = analyzer.analyzeFile(
+    file(
+      "src/index.ts",
+      "typescript",
+      [
+        "const helper = 1;",
+        "export { helper as publicHelper };",
+        'export { feature as renamedFeature } from "./feature";',
+        'export * as shared from "./shared";',
+        'export * from "./everything";',
+      ].join("\n"),
+    ),
+  );
+
+  assert.equal(
+    analysis.symbols.find((symbol) => symbol.name === "helper")?.exported,
+    true,
+  );
+
+  const exportSymbols = analysis.symbols
+    .filter((symbol) => symbol.kind === "export")
+    .map((symbol) => ({
+      name: symbol.name,
+      exported: symbol.exported,
+      signature: symbol.signature,
+    }));
+
+  assert.deepEqual(exportSymbols, [
+    {
+      name: "publicHelper",
+      exported: true,
+      signature: "export { helper as publicHelper }",
+    },
+    {
+      name: "renamedFeature",
+      exported: true,
+      signature: 'export { feature as renamedFeature } from "./feature"',
+    },
+    {
+      name: "shared",
+      exported: true,
+      signature: 'export * as shared from "./shared"',
+    },
+  ]);
+
+  assert.equal(
+    analysis.symbols.some((symbol) => symbol.name === "everything"),
+    false,
+  );
+});
+
+test("TypeScript AST keeps top-level destructured bindings and export state", () => {
+  const analysis = analyzer.analyzeFile(
+    file(
+      "src/destructured.ts",
+      "typescript",
+      [
+        "const source = { alpha: 1, beta: 2, nested: { gamma: 3 } };",
+        "export const { alpha, beta: renamedBeta, nested: { gamma } } = source;",
+        "const [first, , third] = [1, 2, 3];",
+      ].join("\n"),
+    ),
+  );
+
+  for (const name of ["alpha", "renamedBeta", "gamma"]) {
+    const symbol = analysis.symbols.find((item) => item.name === name);
+    assert.ok(symbol, name);
+    assert.equal(symbol.kind, "constant");
+    assert.equal(symbol.exported, true);
+    assert.equal(symbol.scope, "module");
+  }
+
+  for (const name of ["first", "third"]) {
+    const symbol = analysis.symbols.find((item) => item.name === name);
+    assert.ok(symbol, name);
+    assert.equal(symbol.kind, "constant");
+    assert.equal(symbol.exported, false);
+    assert.equal(symbol.scope, "module");
+  }
+});
