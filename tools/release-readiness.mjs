@@ -24,6 +24,7 @@ const vsceCommand = join(
   ".bin",
   process.platform === "win32" ? "vsce.cmd" : "vsce",
 );
+const pythonRunner = join(root, "tools", "run-python.mjs");
 
 function elapsedMs(startedAt) {
   return Math.round(Number(process.hrtime.bigint() - startedAt) / 10000) / 100;
@@ -135,6 +136,29 @@ try {
     );
   }
   evidence.checks.localVsce = { passed: true };
+
+  if (!existsSync(pythonRunner)) {
+    throw new Error("Python launcher is missing: tools/run-python.mjs");
+  }
+
+  const browserProbe = capture(process.execPath, [
+    pythonRunner,
+    "-c",
+    [
+      "from playwright.sync_api import sync_playwright",
+      "p=sync_playwright().start()",
+      "b=p.chromium.launch(headless=True,args=['--no-sandbox'])",
+      "b.close()",
+      "p.stop()",
+      "print('ok')",
+    ].join(";"),
+  ]);
+  if (browserProbe !== "ok") {
+    throw new Error(
+      "Python Playwright/Chromium is unavailable. Install with: python -m pip install playwright && python -m playwright install chromium",
+    );
+  }
+  evidence.checks.browserRuntime = { passed: true };
 
   phase = "verify";
   evidence.checks.verify = {
