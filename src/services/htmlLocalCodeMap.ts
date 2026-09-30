@@ -2224,7 +2224,9 @@ function buildLocalCodeMapScript(
         moreButton.type = 'button';
         moreButton.textContent =
           'Show all ' + rankedHits.length + ' matches';
-        moreButton.addEventListener('click', function () {
+        moreButton.addEventListener('click', function (event) {
+          event.preventDefault();
+          event.stopPropagation();
           searchExpanded = true;
           renderSearch();
         });
