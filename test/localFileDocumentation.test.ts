@@ -81,6 +81,7 @@ test("local renderer omits empty fact sections instead of repeating placeholders
 
 
 test("local file documentation uses portable relative source links", () => {
+  const analyzer = new SourceAnalyzer();
   const project = analyzer.analyzeProject(files);
   const analysis = project.files.find((item) => item.path === "src/main.ts");
   assert.ok(analysis);
@@ -103,6 +104,7 @@ test("local file documentation uses portable relative source links", () => {
 
 
 test("local file documentation surfaces referenced environment variables without calling them required", () => {
+  const analyzer = new SourceAnalyzer();
   const envFile: WorkspaceFile = {
     path: "src/env.ts",
     language: "typescript",
