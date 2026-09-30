@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import {
   escapeMarkdownPlainText,
   escapeMarkdownTableText,
+  escapeRawHtmlOutsideMarkdownCode,
 } from "../src/services/markdownEscaping";
+import { marked } from "marked";
+import { readFileSync } from "node:fs";
 import { SourceAnalyzer } from "../src/analyzer/sourceAnalyzer";
 import { buildLocalDocumentationDocument } from "../src/services/localDocumentationDocument";
 import type { WorkspaceFile } from "../src/types";
@@ -55,4 +58,46 @@ test("Local document rendering does not execute source-comment HTML or Markdown 
   assert.doesNotMatch(document.html, /<script>window\.__pwned/i);
   assert.match(document.html, /&lt;script&gt;/);
   assert.match(document.html, /evil\.example\/image\.png/);
+});
+
+
+test("raw HTML neutralizer blocks multiline tag starts but preserves code spans and fences", () => {
+  const input = [
+    "before <script",
+    " src=x>window.bad = true</script>",
+    "inline `<b>code</b>`",
+    "```html",
+    "<script>code sample</script>",
+    "```",
+  ].join("\n");
+
+  const escaped = escapeRawHtmlOutsideMarkdownCode(input);
+  assert.match(escaped, /before &lt;script/);
+  assert.match(escaped, /window\.bad = true&lt;\/script>/);
+  assert.match(escaped, /inline `<b>code<\/b>`/);
+  assert.match(
+    escaped,
+    /```html\n<script>code sample<\/script>\n```/,
+  );
+
+  const html = marked.parse(escaped) as string;
+  assert.doesNotMatch(html, /<script[^>]*>window\.bad/);
+  assert.match(html, /<code>&lt;b&gt;code&lt;\/b&gt;<\/code>/);
+  assert.match(html, /&lt;script&gt;code sample&lt;\/script&gt;/);
+});
+
+test("AI Markdown conversion uses the shared raw HTML safety boundary", () => {
+  const source = readFileSync(
+    "src/services/docGeneratorBase.ts",
+    "utf8",
+  );
+
+  assert.match(
+    source,
+    /escapeRawHtmlOutsideMarkdownCode\(markdown\)/,
+  );
+  assert.doesNotMatch(
+    source,
+    /private escapeRawHtmlOutsideCodeFences/,
+  );
 });
