@@ -7,6 +7,7 @@ import type {
 import type { WorkspaceFile } from "../types";
 import type { LocalDocumentationFile } from "./localDocumentationModel";
 import { structuralModuleName } from "./structuralModule";
+import { escapeMarkdownPlainText, escapeMarkdownTableText } from "./markdownEscaping";
 
 export interface LocalFileDocumentationInput {
   file: WorkspaceFile;
@@ -58,7 +59,7 @@ export function renderLocalFileDocumentationFromModel(
     `## ${inlineCode(file.path)}`,
     "",
     file.description
-      ? `> ${escapeMarkdownText(file.description.text)}  \n> _Source: ${descriptionSourceLabel(file.description.source)}${file.description.line ? `, line ${file.description.line}` : ""}._`
+      ? `> ${escapeMarkdownPlainText(file.description.text)}  \n> _Source: ${descriptionSourceLabel(file.description.source)}${file.description.line ? `, line ${file.description.line}` : ""}._`
       : "> _No module-level description found._",
     "",
     `**Module:** ${inlineCode(file.module)} · **Language:** ${inlineCode(file.language)} · **Lines:** ${file.lineCount}`,
@@ -132,7 +133,7 @@ function renderSymbolTable(
       const line = filePath
         ? `[${symbol.line}](${relativeSourceHref(filePath, symbol.line)})`
         : String(symbol.line);
-      return `| ${escapeTableCell(symbol.kind)} | ${name} | ${inlineCode(symbol.signature)} | ${line} |`;
+      return `| ${escapeMarkdownTableText(symbol.kind)} | ${name} | ${inlineCode(symbol.signature)} | ${line} |`;
     }),
   ].join("\n");
 }
@@ -159,7 +160,7 @@ function renderTodos(file: LocalDocumentationFile): string {
     "| Line | Comment |",
     "| ---: | --- |",
     ...file.todos.map(
-      (todo) => `| ${todo.line} | ${escapeTableCell(todo.text)} |`,
+      (todo) => `| ${todo.line} | ${escapeMarkdownTableText(todo.text)} |`,
     ),
   ].join("\n");
 }
@@ -221,7 +222,7 @@ function descriptionSourceLabel(source: string): string {
   }
 }
 
-function escapeMarkdownText(value: string): string {
+function escapeMarkdownPlainText(value: string): string {
   return String(value).replace(/[\r\n]+/g, " ").trim();
 }
 
@@ -229,7 +230,7 @@ function inlineCode(value: string): string {
   return `\`${String(value).replace(/`/g, "'").replace(/[\r\n]+/g, " ")}\``;
 }
 
-function escapeTableCell(value: string): string {
+function escapeMarkdownTableText(value: string): string {
   return String(value)
     .replace(/\|/g, "\\|")
     .replace(/[\r\n]+/g, " ")
