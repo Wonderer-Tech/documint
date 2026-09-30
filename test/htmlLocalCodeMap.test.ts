@@ -362,6 +362,29 @@ test("only the conceptual module map gets an offline sketch treatment", () => {
   assert.doesNotMatch(fragments.styles, /local-map-scatter[^}]*filter:/);
 });
 
+test("Local HTML adopts the redesign prototype paper-grid visual system", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.styles, /body\.documint-local-report/);
+  assert.match(fragments.styles, /--map-paper: #F6F8F7/);
+  assert.match(fragments.styles, /--map-grid: #E2EAE6/);
+  assert.match(fragments.styles, /--map-mint: #1E8C6E/);
+  assert.match(fragments.styles, /Atkinson Hyperlegible/);
+  assert.match(fragments.styles, /JetBrains Mono/);
+  assert.match(fragments.styles, /Kalam/);
+  assert.match(
+    fragments.styles,
+    /linear-gradient\(var\(--map-grid\) 1px, transparent 1px\)/,
+  );
+  assert.match(fragments.styles, /\.local-map-module-legend/);
+  assert.match(fragments.markup, /id="localMapModuleLegend"/);
+  assert.match(fragments.markup, /id="localMapProjectTitle"/);
+  assert.match(fragments.script, /function applyModulePalette/);
+  assert.match(fragments.script, /function renderModuleLegend/);
+  assert.match(fragments.script, /projectTitle\.textContent = data\.projectName/);
+});
+
+
 test("Local Big Picture uses prototype-style open arrows and uncluttered edge counts", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
