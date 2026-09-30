@@ -28,6 +28,9 @@ jobs:
       - name: Generate package lock
         run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
 
+      - name: Validate lockfile identity
+        run: npm run lockfile:validate
+
       - name: Validate clean locked install
         run: npm ci --ignore-scripts --no-audit --no-fund
 
