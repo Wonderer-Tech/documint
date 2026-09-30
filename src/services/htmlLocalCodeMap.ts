@@ -415,6 +415,50 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     fill: none;
     opacity: .78;
   }
+  .local-map-module-tooltip {
+    position: fixed;
+    z-index: 80;
+    max-width: min(340px, calc(100vw - 24px));
+    padding: 8px 10px;
+    border: 1px solid color-mix(in srgb, var(--border) 78%, var(--text-muted));
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--bg-secondary) 96%, transparent);
+    color: var(--text-primary);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .18);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(3px);
+    transition: opacity .08s ease, transform .08s ease, visibility .08s linear;
+    pointer-events: none;
+  }
+  .local-map-module-tooltip.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .local-map-module-tooltip code {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--text-primary);
+    font-size: 11.5px;
+    font-weight: 800;
+  }
+  .local-map-module-tooltip p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .local-map-module-tooltip p + p,
+  .local-map-module-tooltip small {
+    display: block;
+    margin-top: 3px;
+  }
+  .local-map-module-tooltip small {
+    color: var(--text-muted);
+    font-size: 9.5px;
+    line-height: 1.35;
+  }
   .local-map-filter-row {
     display: flex;
     gap: 8px;
@@ -851,6 +895,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <div class="local-map-panel local-map-scroll">
       <svg class="local-map-module-canvas" id="localMapModules" viewBox="0 0 960 360" role="img" aria-label="Project modules and resolved imports between them"></svg>
     </div>
+    <div class="local-map-module-tooltip" id="localMapModuleTooltip" role="tooltip" aria-hidden="true"></div>
   </section>
 
   <section class="local-map-section" id="localMapRunSection" aria-labelledby="localMapRunTitle" hidden>
@@ -1673,6 +1718,76 @@ function buildLocalCodeMapScript(
     };
   }
 
+  function positionModuleTooltip(clientX, clientY) {
+    var tooltip = document.getElementById('localMapModuleTooltip');
+    if (!tooltip || !tooltip.classList.contains('show')) return;
+
+    var margin = 12;
+    var gap = 14;
+    var width = tooltip.offsetWidth;
+    var height = tooltip.offsetHeight;
+    var left = Math.max(
+      margin,
+      Math.min(window.innerWidth - width - margin, clientX + gap)
+    );
+    var below = clientY + 16;
+    var top = below + height <= window.innerHeight - margin
+      ? below
+      : Math.max(margin, clientY - height - 12);
+
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+  }
+
+  function showModuleTooltip(module, primaryFiles, clientX, clientY) {
+    var tooltip = document.getElementById('localMapModuleTooltip');
+    if (!tooltip) return;
+    tooltip.innerHTML = '';
+
+    var heading = document.createElement('code');
+    heading.textContent = module.name;
+    tooltip.appendChild(heading);
+
+    if (module.description) {
+      var description = document.createElement('p');
+      description.textContent = module.description;
+      tooltip.appendChild(description);
+    }
+
+    if (module.descriptionSource) {
+      var source = document.createElement('small');
+      source.textContent = 'Description source: ' + module.descriptionSource;
+      tooltip.appendChild(source);
+    }
+
+    if (primaryFiles.length) {
+      var start = document.createElement('p');
+      start.textContent = 'Suggested start: ' + primaryFiles.join(', ');
+      tooltip.appendChild(start);
+    }
+
+    tooltip.classList.add('show');
+    tooltip.setAttribute('aria-hidden', 'false');
+    positionModuleTooltip(clientX, clientY);
+  }
+
+  function showModuleTooltipForNode(module, primaryFiles, node) {
+    var rect = node.getBoundingClientRect();
+    showModuleTooltip(
+      module,
+      primaryFiles,
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2
+    );
+  }
+
+  function hideModuleTooltip() {
+    var tooltip = document.getElementById('localMapModuleTooltip');
+    if (!tooltip) return;
+    tooltip.classList.remove('show');
+    tooltip.setAttribute('aria-hidden', 'true');
+  }
+
   function renderModules() {
     var svg = document.getElementById('localMapModules');
     if (!svg) return;
@@ -1830,22 +1945,6 @@ function buildLocalCodeMapScript(
         role: 'button',
         'aria-label': moduleAria
       }, svg);
-      if (module.description || startFile) {
-        var tooltip = makeSvg('title', {}, g);
-        var tooltipLines = [module.name];
-        if (module.description) {
-          tooltipLines.push(
-            module.description +
-            (module.descriptionSource
-              ? ' [' + module.descriptionSource + ']'
-              : '')
-          );
-        }
-        if (primaryFiles.length) {
-          tooltipLines.push('Suggested start: ' + primaryFiles.join(', '));
-        }
-        tooltip.textContent = tooltipLines.join('\n');
-      }
       makeSvg('rect', {
         x: pos.x - 92,
         y: pos.y - 37,
@@ -1913,11 +2012,34 @@ function buildLocalCodeMapScript(
         var target = document.getElementById('localMapTreemap');
         if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-      g.addEventListener('mouseenter', focusModule);
-      g.addEventListener('mouseleave', clearModuleFocus);
-      g.addEventListener('focus', focusModule);
-      g.addEventListener('blur', clearModuleFocus);
-      g.addEventListener('click', select);
+      g.addEventListener('mouseenter', function (event) {
+        focusModule();
+        showModuleTooltip(
+          module,
+          primaryFiles,
+          event.clientX,
+          event.clientY
+        );
+      });
+      g.addEventListener('mousemove', function (event) {
+        positionModuleTooltip(event.clientX, event.clientY);
+      });
+      g.addEventListener('mouseleave', function () {
+        clearModuleFocus();
+        hideModuleTooltip();
+      });
+      g.addEventListener('focus', function () {
+        focusModule();
+        showModuleTooltipForNode(module, primaryFiles, g);
+      });
+      g.addEventListener('blur', function () {
+        clearModuleFocus();
+        hideModuleTooltip();
+      });
+      g.addEventListener('click', function () {
+        hideModuleTooltip();
+        select();
+      });
       g.addEventListener('keydown', function (event) {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
@@ -1929,7 +2051,9 @@ function buildLocalCodeMapScript(
     function addNote(moduleName, text, offsetX, offsetY) {
       var pos = positions.get(moduleName);
       if (!pos || !text) return;
-      var noteX = Math.max(55, Math.min(width - 55, pos.x + offsetX));
+      var noteMargin = 14;
+      var desiredX = pos.x + offsetX;
+      var noteX = desiredX;
       var noteY = Math.max(20, Math.min(height - 16, pos.y + offsetY));
       var note = makeSvg('text', {
         x: noteX,
@@ -1938,6 +2062,18 @@ function buildLocalCodeMapScript(
         'text-anchor': offsetX < 0 ? 'end' : 'start'
       }, svg);
       note.textContent = text;
+
+      var noteWidth = 0;
+      try { noteWidth = note.getComputedTextLength(); } catch (_) {}
+      if (!Number.isFinite(noteWidth) || noteWidth <= 0) {
+        noteWidth = text.length * 7.2;
+      }
+      noteWidth = Math.min(noteWidth, width - noteMargin * 2);
+      noteX = offsetX < 0
+        ? Math.max(noteMargin + noteWidth, Math.min(width - noteMargin, desiredX))
+        : Math.max(noteMargin, Math.min(width - noteMargin - noteWidth, desiredX));
+      note.setAttribute('x', String(noteX));
+
       var noteStart = {
         x: noteX + (offsetX < 0 ? 8 : -8),
         y: noteY + 4
