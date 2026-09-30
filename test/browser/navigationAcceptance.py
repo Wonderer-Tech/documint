@@ -114,6 +114,17 @@ with sync_playwright() as playwright:
                 page.locator("#localMapResults button").first.click()
                 assert page.locator("#localMapCard h4").inner_text() == "src/providers/factory.ts"
 
+                local_search.fill("provider factory")
+                assert page.locator("#localMapResults button").count() > 0
+                page.locator("#localMapResults button").first.click()
+                assert page.locator("#localMapCard h4").inner_text() == "src/providers/factory.ts"
+
+                local_search.fill("api token")
+                assert page.locator("#localMapResults button").count() > 0
+                assert "Environment:" in page.locator("#localMapResults small").first.inner_text()
+                page.locator("#localMapResults button").first.click()
+                assert page.locator("#localMapCard h4").inner_text() == "src/services/run.ts"
+
                 onboarding_text = page.locator("#localMapRunSection").inner_text()
                 assert "npm run compile" in onboarding_text
                 assert "npm run test" in onboarding_text
@@ -128,6 +139,12 @@ with sync_playwright() as playwright:
                 assert page.locator("#localMapCard h4").inner_text() == "src/services/run.ts"
 
                 local_search.fill("harden provider fallback")
+                assert page.locator("#localMapResults button").count() > 0
+                assert "Source note:" in page.locator("#localMapResults small").first.inner_text()
+                page.locator("#localMapResults button").first.click()
+                assert page.locator("#localMapCard h4").inner_text() == "src/services/run.ts"
+
+                local_search.fill("provider fallback")
                 assert page.locator("#localMapResults button").count() > 0
                 assert "Source note:" in page.locator("#localMapResults small").first.inner_text()
                 page.locator("#localMapResults button").first.click()
