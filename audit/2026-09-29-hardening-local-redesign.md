@@ -63,6 +63,8 @@ _Last updated: 2026-09-30_
 - ✅ Browser acceptance encodes the 30-second newcomer discovery test: API-key storage, provider integration, and build/test commands must be discoverable through the Local project-map search/onboarding surfaces.
 - ✅ Added strict one-command release-readiness tooling: `npm run release:readiness` requires `package-lock.json`, runs `npm run verify` plus full browser acceptance, packages with the installed local VSCE binary, validates the VSIX archive, and records machine-readable timings, Local self-audit evidence, bundle/VSIX sizes, SHA-256, browser results, and optional baseline-size deltas.
 - ✅ Tag releases reuse the same readiness command and upload readiness/browser evidence; VSIX packaging excludes `tools/**`, `audit/**`, and `release-artifacts/**` so tooling/reference/evidence files cannot inflate the release package.
+- ✅ Added a manual-only **Release Readiness** workflow for on-demand execution after the lockfile exists; it does not enable automatic main-push CI.
+- ✅ Browser acceptance uses a cross-platform Python 3 launcher with `DOCUMINT_PYTHON` override support, and release readiness preflights Playwright/Chromium before verify/browser/package execution.
 - ⏳ Full execution still requires a registry-enabled/materialized checkout: generate `package-lock.json`, install locked dependencies and Playwright/Chromium, then run `npm run release:readiness`. No CI was manually triggered in this implementation pass.
 - ⏳ README demo GIF compression remains pending; the binary is still excluded from VSIX packaging.
 
@@ -71,7 +73,7 @@ _Last updated: 2026-09-30_
 All currently identified **network-independent Local redesign/hardening implementation and release-readiness automation is complete in source**. Remaining work requires execution access or an explicit workflow-policy decision:
 
 1. On a registry-enabled checkout, run `npm run lockfile:generate` and commit `package-lock.json`.
-2. Run `npm ci --no-audit --no-fund`, install Python Playwright + Chromium, then execute **one command**: `npm run release:readiness`.
+2. Run `npm ci --no-audit --no-fund`, install Python Playwright + Chromium, then execute **one command**: `npm run release:readiness` (or trigger the manual **Release Readiness** workflow on that branch).
 3. Review `release-artifacts/readiness/readiness.json`; when a previous VSIX is available, rerun with `DOCUMINT_BASELINE_VSIX=/path/to/previous.vsix` to record the package-size delta automatically.
 4. When explicitly allowed to run normal push CI, remove the `.github/ci-trigger` path gate and enable every `main` push.
 5. Compress/replace the README demo GIF if desired; it remains excluded from VSIX packaging.
