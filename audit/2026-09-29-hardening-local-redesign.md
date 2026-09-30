@@ -61,20 +61,22 @@ _Last updated: 2026-09-30_
 - ✅ Added `npm run audit:self`, which documents DocuMint's own source and asserts key Local Documentation release invariants; PR CI and tag releases run it after the normal regression suite.
 - ✅ Added a manual-only browser acceptance workflow plus canonical `npm run test:browser` scripts; it runs provider-free fixtures through Chromium and uploads screenshots/results without auto-running on push/PR.
 - ✅ Browser acceptance encodes the 30-second newcomer discovery test: API-key storage, provider integration, and build/test commands must be discoverable through the Local project-map search/onboarding surfaces.
-- ⏳ Full local `npm test`, VSIX size comparison, and browser acceptance execution still require a network-enabled/materialized checkout. No CI was manually triggered in this implementation pass.
+- ✅ Added strict one-command release-readiness tooling: `npm run release:readiness` requires `package-lock.json`, runs `npm run verify` plus full browser acceptance, packages with the installed local VSCE binary, validates the VSIX archive, and records machine-readable timings, Local self-audit evidence, bundle/VSIX sizes, SHA-256, browser results, and optional baseline-size deltas.
+- ✅ Tag releases reuse the same readiness command and upload readiness/browser evidence; VSIX packaging excludes `tools/**`, `audit/**`, and `release-artifacts/**` so tooling/reference/evidence files cannot inflate the release package.
+- ⏳ Full execution still requires a registry-enabled/materialized checkout: generate `package-lock.json`, install locked dependencies and Playwright/Chromium, then run `npm run release:readiness`. No CI was manually triggered in this implementation pass.
 - ⏳ README demo GIF compression remains pending; the binary is still excluded from VSIX packaging.
 
 ### Current next step
 
-All currently identified **network-independent Local redesign/hardening implementation is complete in source**. Remaining work requires execution access, binary handling, or an explicit workflow-policy decision:
+All currently identified **network-independent Local redesign/hardening implementation and release-readiness automation is complete in source**. Remaining work requires execution access or an explicit workflow-policy decision:
 
-1. Generate and commit `package-lock.json` from a network-enabled/local checkout.
-2. Run `npm run verify` and the full Chromium browser acceptance suite on a materialized checkout.
-3. Package a VSIX and record bundle/package-size impact plus a representative Local self-scan measurement.
+1. On a registry-enabled checkout, run `npm run lockfile:generate` and commit `package-lock.json`.
+2. Run `npm ci --no-audit --no-fund`, install Python Playwright + Chromium, then execute **one command**: `npm run release:readiness`.
+3. Review `release-artifacts/readiness/readiness.json`; when a previous VSIX is available, rerun with `DOCUMINT_BASELINE_VSIX=/path/to/previous.vsix` to record the package-size delta automatically.
 4. When explicitly allowed to run normal push CI, remove the `.github/ci-trigger` path gate and enable every `main` push.
 5. Compress/replace the README demo GIF if desired; it remains excluded from VSIX packaging.
 
-Do not add more redesign features before these execution gates are green unless a new concrete defect is found.
+Do not add more redesign features before the readiness evidence is green unless a new concrete defect is found.
 
 
 ---
