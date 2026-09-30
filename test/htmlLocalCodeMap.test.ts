@@ -261,7 +261,9 @@ test("Local code map owns deterministic onboarding facts and Ctrl/Cmd+K file sea
   assert.match(fragments.script, /npm run test/);
   assert.match(fragments.script, /documint\.generate/);
   assert.match(fragments.script, /documint\.generationMode/);
-  assert.match(fragments.script, /make verify/);
+  assert.match(fragments.script, /facts\.makefile/);
+  assert.match(fragments.script, /'make ' \+ target\.name/);
+  assert.match(fragments.script, /verify/);
   assert.match(fragments.script, /node:22-alpine/);
   assert.match(fragments.script, /API_TOKEN/);
   assert.match(fragments.script, /LOG_LEVEL/);
