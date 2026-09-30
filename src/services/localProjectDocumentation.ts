@@ -127,7 +127,7 @@ export function renderLocalProjectDocumentationFromModel(
   }
 
   const undocumented = renderUndocumentedFiles(model);
-  if (undocumented) {
+  if (surface === "markdown" && undocumented) {
     sections.push("", "## Undocumented files", "", undocumented);
   }
 
