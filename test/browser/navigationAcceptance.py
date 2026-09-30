@@ -88,6 +88,18 @@ with sync_playwright() as playwright:
                 local_search.fill("run.ts")
                 page.locator("#localMapResults button").first.click()
                 assert page.locator("#localMapCard h4").inner_text() == "src/services/run.ts"
+                local_search.fill("normalizeProviderName")
+                assert page.locator("#localMapResults button").count() > 0
+                assert "Internal symbol:" in page.locator("#localMapResults small").first.inner_text()
+                page.locator("#localMapResults button").first.click()
+                assert page.locator("#localMapCard h4").inner_text() == "src/services/run.ts"
+
+                local_search.fill("harden provider fallback")
+                assert page.locator("#localMapResults button").count() > 0
+                assert "Source note:" in page.locator("#localMapResults small").first.inner_text()
+                page.locator("#localMapResults button").first.click()
+                assert page.locator("#localMapCard h4").inner_text() == "src/services/run.ts"
+
                 relation = page.locator(".local-map-relation").first.locator(
                     'button:has-text("src/providers/factory.ts")'
                 )
