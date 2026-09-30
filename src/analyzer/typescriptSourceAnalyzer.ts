@@ -47,6 +47,7 @@ export function analyzeJavaScriptLikeFile(
 
   for (const statement of sourceFile.statements) {
     collectStaticImport(statement, sourceFile, imports);
+    collectExplicitExportSymbols(statement, sourceFile, symbols);
     collectTopLevelSymbols(
       statement,
       sourceFile,
@@ -393,6 +394,53 @@ function collectDynamicImports(
   ts.forEachChild(sourceFile, visit);
 }
 
+function collectExplicitExportSymbols(
+  statement: ts.Statement,
+  sourceFile: ts.SourceFile,
+  symbols: SourceSymbol[],
+): void {
+  if (
+    !ts.isExportDeclaration(statement) ||
+    !statement.exportClause
+  ) {
+    return;
+  }
+
+  if (ts.isNamespaceExport(statement.exportClause)) {
+    symbols.push({
+      name: statement.exportClause.name.text,
+      kind: "export",
+      line: lineOf(statement.exportClause, sourceFile),
+      exported: true,
+      signature: normalizeSignature(statement.getText(sourceFile)),
+      scope: "module",
+      description: declarationDescription(statement, sourceFile),
+    });
+    return;
+  }
+
+  for (const element of statement.exportClause.elements) {
+    const originalName = (element.propertyName ?? element.name).text;
+    const exportedName = element.name.text;
+    const crossesModuleBoundary = Boolean(statement.moduleSpecifier);
+    const isAlias = exportedName !== originalName;
+
+    if (!crossesModuleBoundary && !isAlias) {
+      continue;
+    }
+
+    symbols.push({
+      name: exportedName,
+      kind: "export",
+      line: lineOf(element, sourceFile),
+      exported: true,
+      signature: normalizeSignature(statement.getText(sourceFile)),
+      scope: "module",
+      description: declarationDescription(statement, sourceFile),
+    });
+  }
+}
+
 function collectExplicitExportNames(sourceFile: ts.SourceFile): Set<string> {
   const exported = new Set<string>();
 
@@ -506,30 +554,36 @@ function collectTopLevelSymbols(
     const statementExported = hasExportModifier(statement);
 
     for (const declaration of statement.declarationList.declarations) {
-      if (!ts.isIdentifier(declaration.name)) {
+      const names = bindingNames(declaration.name);
+      if (names.length === 0) {
         continue;
       }
 
-      const name = declaration.name.text;
-      const initializer = declaration.initializer;
-      const kind: SourceSymbolKind =
-        initializer &&
-        (ts.isArrowFunction(initializer) || ts.isFunctionExpression(initializer))
-          ? "function"
-          : declarationKind;
+      for (const name of names) {
+        const initializer = declaration.initializer;
+        const kind: SourceSymbolKind =
+          ts.isIdentifier(declaration.name) &&
+          initializer &&
+          (ts.isArrowFunction(initializer) || ts.isFunctionExpression(initializer))
+            ? "function"
+            : declarationKind;
 
-      symbols.push({
-        name,
-        kind,
-        line: lineOf(declaration, sourceFile),
-        exported: statementExported || explicitExportNames.has(name),
-        signature: variableSignature(statement, declaration, sourceFile),
-        scope: "module",
-        description:
-          statement.declarationList.declarations.length === 1
-            ? declarationDescription(statement, sourceFile)
-            : undefined,
-      });
+        symbols.push({
+          name,
+          kind,
+          line: lineOf(declaration, sourceFile),
+          exported: statementExported || explicitExportNames.has(name),
+          signature: ts.isIdentifier(declaration.name)
+            ? variableSignature(statement, declaration, sourceFile)
+            : normalizeSignature(statement.getText(sourceFile)),
+          scope: "module",
+          description:
+            statement.declarationList.declarations.length === 1 &&
+            names.length === 1
+              ? declarationDescription(statement, sourceFile)
+              : undefined,
+        });
+      }
     }
   }
 }
@@ -686,6 +740,21 @@ function variableSignature(
   return normalizeSignature(
     `${exportPrefix}${declarationKeyword} ${name}${typeText}`,
   );
+}
+
+function bindingNames(name: ts.BindingName): string[] {
+  if (ts.isIdentifier(name)) {
+    return [name.text];
+  }
+
+  const names: string[] = [];
+  for (const element of name.elements) {
+    if (ts.isOmittedExpression(element)) {
+      continue;
+    }
+    names.push(...bindingNames(element.name));
+  }
+  return names;
 }
 
 function propertyNameText(name: ts.PropertyName): string | undefined {
