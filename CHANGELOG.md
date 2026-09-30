@@ -15,6 +15,8 @@ All notable changes to DocuMint are documented here.
 
 ### Changed
 
+- Lockfile artifact adoption now verifies Bootstrap `package-lock.sha256` metadata when present and refuses checksum- or package-identity-mismatched artifacts without replacing the existing root lockfile.
+
 - Added `npm run lockfile:adopt -- <artifact-or-package-lock>`, backed by the same shared lockfile policy as validation, so Bootstrap artifacts are validated before replacing the root lockfile and the adopted SHA-256 is rechecked.
 - Lockfile validation policy now lives in one shared module consumed by both `lockfile:validate` and artifact adoption; the validator also accepts an explicit lockfile file/directory path.
 
