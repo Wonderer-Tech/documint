@@ -177,6 +177,14 @@ export function buildLocalSelfAuditReport(
         document.html.includes("IntersectionObserver"),
     },
     {
+      name: "Local project map restores section deep links",
+      passed:
+        document.html.includes("function resolveHashSection") &&
+        document.html.includes("function restoreHashSection") &&
+        document.html.includes("window.addEventListener('hashchange'") &&
+        document.html.includes("decodeURIComponent"),
+    },
+    {
       name: "Local HTML has no cdnjs dependency",
       passed: !/cdnjs\.cloudflare\.com/i.test(document.html),
     },
