@@ -1,5 +1,12 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 import { SourceAnalyzer } from "../src/analyzer/sourceAnalyzer";
 import { getLanguageFromPath } from "../src/scanner/scannerPolicy";
 import { buildLocalDocumentationDocument } from "../src/services/localDocumentationDocument";
@@ -11,6 +18,7 @@ import {
 
 const root = resolve(process.cwd());
 const srcRoot = join(root, "src");
+const auditStartedAt = process.hrtime.bigint();
 
 function collectSourceFiles(directory: string): WorkspaceFile[] {
   const files: WorkspaceFile[] = [];
@@ -62,6 +70,18 @@ const document = buildLocalDocumentationDocument(
   { readme, makefile, dockerfile },
 );
 const report = buildLocalSelfAuditReport(document);
+const durationMs =
+  Math.round(Number(process.hrtime.bigint() - auditStartedAt) / 10000) / 100;
+
+const evidencePath = process.env.DOCUMINT_SELF_AUDIT_OUTPUT;
+if (evidencePath) {
+  const absoluteEvidencePath = resolve(root, evidencePath);
+  mkdirSync(dirname(absoluteEvidencePath), { recursive: true });
+  writeFileSync(
+    absoluteEvidencePath,
+    JSON.stringify({ durationMs, report }, null, 2) + "\n",
+  );
+}
 
 console.log(JSON.stringify(report, null, 2));
 
