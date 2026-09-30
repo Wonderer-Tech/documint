@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 import "./anthropicResponse.test";
 import "./apiKeyValidation.test";
+import "./browserWorkflowPolicy.test";
 import "./chunkDocumentationMerge.test";
 import "./chunkTokenBudget.test";
 import "./configurationNamespace.test";
@@ -91,4 +92,3 @@ test("aggregate regression entry imports every sibling test module", () => {
   }
 });
 
-import "./browserWorkflowPolicy.test";
