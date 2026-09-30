@@ -48,11 +48,8 @@ jobs:
             exit 1
           fi
 
-      - name: Compile and test
-        run: npm test
-
-      - name: Run DocuMint self-audit
-        run: npm run audit:self
+      - name: Verify DocuMint
+        run: npm run verify
 
       - name: Package VSIX
         shell: bash
@@ -72,5 +69,7 @@ jobs:
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" "$VSIX" --clobber
           else
-            gh release create "$GITHUB_REF_NAME" "$VSIX"               --title "DocuMint ${GITHUB_REF_NAME#v}"               --generate-notes
+            gh release create "$GITHUB_REF_NAME" "$VSIX" \
+              --title "DocuMint ${GITHUB_REF_NAME#v}" \
+              --generate-notes
           fi
