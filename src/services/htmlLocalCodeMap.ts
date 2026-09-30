@@ -682,11 +682,21 @@ function buildLocalCodeMapScript(
     return node;
   }
 
+  function encodeSourcePathSegment(segment) {
+    return encodeURIComponent(segment).replace(
+      /[!'()*]/g,
+      function (character) {
+        return '%' + character.charCodeAt(0).toString(16).toUpperCase();
+      }
+    );
+  }
+
   function relativeSourceHref(path, line) {
     var encoded = String(path || '')
       .replace(/\\/g, '/')
       .split('/')
-      .map(function (segment) { return encodeURIComponent(segment); })
+      .filter(Boolean)
+      .map(encodeSourcePathSegment)
       .join('/');
     return '../' + encoded + (line ? '#L' + line : '');
   }
