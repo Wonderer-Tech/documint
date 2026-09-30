@@ -46,6 +46,7 @@ All notable changes to DocuMint are documented here.
 
 - Fixed multiline TypeScript/JavaScript imports that previously disappeared from dependency graphs.
 - Fixed exported abstract classes and multiline declarations that regex analysis could miss, including DocuMint's `BaseAIProvider`.
+- Added AST coverage for named export aliases, namespace re-exports, and top-level destructured bindings while keeping wildcard re-exports source-factual instead of inventing symbol names.
 - Fixed JS/TS symbol noise caused by function-local variables being reported as project symbols.
 - Added static environment-reference detection that ignores JS/TS comments/strings and uses a comment/string-aware Python scanner.
 - Repaired stale Local regression fixtures discovered while migrating to the canonical model.
