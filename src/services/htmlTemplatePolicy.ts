@@ -87,15 +87,20 @@ export function resolveHtmlLocalSurfaceChrome(
 
 export function resolveHtmlContentSecurityPolicy(
   externalAssetsEnabled: boolean,
+  scriptNonce = "",
 ): string {
   if (externalAssetsEnabled) {
     return "";
   }
 
+  const scriptPolicy = scriptNonce
+    ? `script-src 'nonce-${scriptNonce}'; `
+    : "script-src 'none'; ";
+
   return (
     '<meta http-equiv="Content-Security-Policy" ' +
     'content="default-src \'none\'; ' +
-    'script-src \'unsafe-inline\'; ' +
+    scriptPolicy +
     'style-src \'unsafe-inline\'; ' +
     'img-src data: blob:; ' +
     'font-src data:; ' +
