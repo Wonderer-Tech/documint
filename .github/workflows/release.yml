@@ -64,6 +64,15 @@ jobs:
       - name: Run browser acceptance
         run: npm run test:browser
 
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: documint-release-browser-acceptance
+          path: test-results/navigation-browser/
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Package VSIX
         shell: bash
         run: |
