@@ -16,7 +16,7 @@ jobs:
   release:
     name: Verify, package, and publish VSIX
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -48,9 +48,6 @@ jobs:
             exit 1
           fi
 
-      - name: Verify DocuMint
-        run: npm run verify
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -61,33 +58,29 @@ jobs:
           python -m pip install --disable-pip-version-check playwright
           python -m playwright install --with-deps chromium
 
-      - name: Run browser acceptance
-        run: npm run test:browser
+      - name: Run release readiness
+        run: npm run release:readiness
 
-      - name: Upload browser evidence
+      - name: Upload release readiness evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: documint-release-browser-acceptance
-          path: test-results/navigation-browser/
+          name: documint-release-readiness
+          path: |
+            release-artifacts/readiness/
+            release-artifacts/*.vsix
+            test-results/navigation-browser/
           if-no-files-found: warn
           retention-days: 14
-
-      - name: Package VSIX
-        shell: bash
-        run: |
-          VERSION="$(node -p "require('./package.json').version")"
-          mkdir -p release-artifacts
-          VSIX="release-artifacts/documint-${VERSION}.vsix"
-          npx @vscode/vsce package --out "$VSIX"
-          unzip -t "$VSIX"
-          echo "VSIX=$VSIX" >> "$GITHUB_ENV"
 
       - name: Publish GitHub Release asset
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          VSIX="release-artifacts/documint-${VERSION}.vsix"
+          test -f "$VSIX"
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" "$VSIX" --clobber
           else
