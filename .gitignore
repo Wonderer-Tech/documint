@@ -1,10 +1,14 @@
-# Added by code-review-graph
+# Review / assistant tooling
 .code-review-graph/
+.claude/
+plans/
+CLAUDE.md
+AGENTS.md
 
-# VS Code Extension Development
+# VS Code extension development
 out/
 dist/
-*.vsix
+node_modules/
 .vscode-test/
 .playwright-mcp/
 .vscode/
@@ -13,50 +17,28 @@ dist/
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# Node.js
-node_modules/
+# Package-manager noise
 npm-debug.log
 yarn-debug.log
 yarn-error.log
 yarn.lock
+# package-lock.json is intentionally tracked once generated.
 
-# TypeScript
+# TypeScript / coverage
 *.tsbuildinfo
 *.js.map
 *.d.ts.map
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# IDE
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-Thumbs.db
-
-# Logs
-logs/
-*.log
-
-# Runtime data
-pids/
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
 coverage/
 .nyc_output/
 
-# Build artifacts
+# Build / release artifacts
 build/
 release/
+releases/
+release-artifacts/
+*.vsix
+*.tgz
+.vsixmanifest
 
 # DocuMint generated output
 documint/**
@@ -69,73 +51,51 @@ docs/.documint-visual-cache.json
 docs/.documint-generation-cache-key.json
 docs/.documint-local-cache.json
 
-# Temporary files
-tmp/
-temp/
-
-# OS generated files
-.DS_Store?
-ehthumbs.db
-Icon?
-Thumbs.db
-desktop.ini
-
-# VS Code
-.history/
-*.code-workspace
-
-# Test outputs
-test-results/
-test-reports/
-
-# API keys and secrets
+# Environment variables / local secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 *.key
 *.pem
 *.crt
 config/local.json
 config/secret.json
 
-# VS Code extension packaging
-*.vsix
-.vsixmanifest
-
-# TypeScript output
-out/
-dist/
-
-# Debug logs
-debug.log
+# Runtime / temporary / test output
+logs/
 *.log
+debug.log
+pids/
+*.pid
+*.seed
+*.pid.lock
+tmp/
+temp/
+test-results/
+test-reports/
 
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Linux
+# IDE / editor files
+.idea/
+.history/
+*.code-workspace
+*.swp
+*.swo
 *~
 
-# Backup files
+# Backups
 *.bak
 *.backup
 *.old
 
-# Editor directories and files
-.vscode/
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-.history/
-
-# Project specific
-documint-*.vsix
-.claude/
-plans/
-CLAUDE.md
-AGENTS.md
+# OS metadata
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+desktop.ini
+Icon?
