@@ -40,10 +40,10 @@ _Last updated: 2026-09-30_
 - ✅ Big Picture module nodes retain trusted description provenance and canonical suggested start files from the shared model.
 - ✅ Uses / Used by stays compact for the first 12 links while every remaining relation remains expandable and navigable; no dependency links are hidden behind a count-only placeholder.
 - ✅ Local HTML has one source-grounded **How to run** surface owned by the code map: package scripts/manager, extension entry, VS Code commands/settings, Makefile targets, Dockerfile facts, and referenced environment variables come from the canonical model; duplicate HTML overview onboarding headings are suppressed while Markdown keeps them.
-- ✅ Local code map supports cross-view navigation, module focus isolation, entry-point-driven layered layout, accessible search/listbox behavior, `Ctrl/Cmd+K` file search, and trusted module-description tooltips.
+- ✅ Local code map supports cross-view navigation, module focus isolation, entry-point-driven layered layout, accessible search/listbox behavior, `Ctrl/Cmd+K` file search, trusted module-description tooltips, and an accessible in-map section navigator with `aria-current` state plus scroll tracking.
 - ✅ Local HTML disables required external CDN assets; the Local project-map experience is self-contained.
 - ✅ Hardened Markdown→HTML rendering in both Local and AI modes: source/provider raw HTML is neutralized outside code, source-derived prose is escaped as plain Markdown text, and unsafe rendered link/image URLs are blocked.
-- ✅ Local cache compatibility is now `local-documentation-cache-v17`.
+- ✅ Local cache compatibility is now `local-documentation-cache-v18`.
 - ✅ Added nonce-based CSP to the sidebar webview.
 - ✅ Hardened local-provider network boundaries: Ollama, LM Studio, local model discovery, and custom OpenAI-compatible requests do not follow HTTP redirects; loopback requests bypass environment HTTP proxies, and local model discovery also caps response size.
 - ✅ New installs default to Local mode; malformed/legacy programmatic mode values still fall back to AI.
