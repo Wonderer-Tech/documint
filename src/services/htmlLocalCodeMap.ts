@@ -1417,6 +1417,7 @@ function buildLocalCodeMapScript(
     if (!nav) return;
 
     var links = Array.from(nav.querySelectorAll('a[href^="#"]'));
+    var hashNavigationPending = false;
     var sections = links.map(function (link) {
       var id = link.getAttribute('href').slice(1);
       return document.getElementById(id);
@@ -1441,9 +1442,14 @@ function buildLocalCodeMapScript(
         var target = document.getElementById(id);
         if (!target || target.hidden) return;
         event.preventDefault();
+        hashNavigationPending = true;
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         try { history.replaceState(null, '', '#' + id); } catch (_) {}
         setActive(id);
+        window.setTimeout(function () {
+          hashNavigationPending = false;
+          setActive(id);
+        }, 260);
       });
     });
 
@@ -1465,11 +1471,18 @@ function buildLocalCodeMapScript(
     function restoreHashSection(shouldScroll) {
       var resolved = resolveHashSection();
       if (!resolved) return false;
+      hashNavigationPending = true;
       setActive(resolved.id);
       if (shouldScroll) {
         requestAnimationFrame(function () {
           resolved.target.scrollIntoView({ behavior: 'auto', block: 'start' });
+          requestAnimationFrame(function () {
+            setActive(resolved.id);
+            hashNavigationPending = false;
+          });
         });
+      } else {
+        hashNavigationPending = false;
       }
       return true;
     }
@@ -1485,6 +1498,7 @@ function buildLocalCodeMapScript(
 
     if ('IntersectionObserver' in window) {
       var observer = new IntersectionObserver(function (entries) {
+        if (hashNavigationPending) return;
         var visible = entries
           .filter(function (entry) {
             return entry.isIntersecting && !entry.target.hidden;
