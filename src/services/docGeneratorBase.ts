@@ -23,6 +23,7 @@ import { DocumentationValidator } from "./documentationValidator";
 import { DOCUMINT_OUTPUT_DIRECTORY } from "../outputDirectory";
 import { GENERATION_PROMPT_SCHEMA_VERSION } from "./generationCacheIdentity";
 import { escapeRawHtmlOutsideMarkdownCode } from "./markdownEscaping";
+import { sanitizeRenderedMarkdownUrls } from "./htmlMarkdownSafety";
 
 export interface DocGeneratorOptions {
   provider?: string;
@@ -2221,7 +2222,9 @@ ${this.sourceAnalyzer.formatProjectContext(projectAnalysis)}
     let currentH2Id = "";
 
     // Parse markdown to HTML first
-    let htmlContent = marked.parse(normalisedMarkdown) as string;
+    let htmlContent = sanitizeRenderedMarkdownUrls(
+      marked.parse(normalisedMarkdown) as string,
+    );
     htmlContent = this.renderFileMetaMarkers(htmlContent);
 
     // Replace every h1–h6 tag: strip inner tags to get plain text, build unique
