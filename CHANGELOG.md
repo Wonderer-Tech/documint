@@ -53,6 +53,8 @@ All notable changes to DocuMint are documented here.
 ### Security
 
 - Added a per-render nonce Content Security Policy to the VS Code sidebar webview.
+- Blocked HTTP redirects for Ollama, LM Studio, and custom OpenAI-compatible provider requests so a loopback/no-consent endpoint cannot redirect source-bearing requests to another host.
+- Local model discovery also blocks redirects and caps the model-list response size.
 - Local generated HTML no longer needs third-party CDN assets for the Local project-map experience.
 
 ## 1.0.5 — 2026-09-18
