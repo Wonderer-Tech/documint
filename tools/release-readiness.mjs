@@ -18,7 +18,12 @@ const selfAuditPath = join(evidenceRoot, "local-self-audit.json");
 const readinessPath = join(evidenceRoot, "readiness.json");
 const vsixPath = join(releaseRoot, `documint-${manifest.version}.vsix`);
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-const npxCommand = process.platform === "win32" ? "npx.cmd" : "npx";
+const vsceCommand = join(
+  root,
+  "node_modules",
+  ".bin",
+  process.platform === "win32" ? "vsce.cmd" : "vsce",
+);
 
 function elapsedMs(startedAt) {
   return Math.round(Number(process.hrtime.bigint() - startedAt) / 10000) / 100;
@@ -31,6 +36,7 @@ function run(label, command, args, extraEnv = {}) {
     cwd: root,
     stdio: "inherit",
     env: { ...process.env, ...extraEnv },
+    shell: process.platform === "win32",
   });
   return elapsedMs(startedAt);
 }
@@ -42,6 +48,7 @@ function capture(command, args) {
         cwd: root,
         encoding: "utf8",
         stdio: ["ignore", "pipe", "ignore"],
+        shell: process.platform === "win32",
       }),
     ).trim();
   } catch {
@@ -122,6 +129,13 @@ try {
   }
   evidence.checks.packageLock = { passed: true };
 
+  if (!existsSync(vsceCommand)) {
+    throw new Error(
+      "Local @vscode/vsce binary is missing. Install locked dependencies with npm ci first.",
+    );
+  }
+  evidence.checks.localVsce = { passed: true };
+
   phase = "verify";
   evidence.checks.verify = {
     passed: true,
@@ -139,9 +153,7 @@ try {
   phase = "package";
   evidence.checks.package = {
     passed: true,
-    durationMs: run("Package VSIX", npxCommand, [
-      "--no-install",
-      "@vscode/vsce",
+    durationMs: run("Package VSIX", vsceCommand, [
       "package",
       "--out",
       vsixPath,
