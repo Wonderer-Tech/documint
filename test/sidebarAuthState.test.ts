@@ -19,7 +19,10 @@ const clientSource = readFileSync(
 test("custom provider renders a neutral optional API-key state", () => {
   assert.match(styleSource, /\.auth-status\.optional/);
   assert.match(clientSource, /selectedProvider === 'custom'/);
-  assert.match(clientSource, /authText\.textContent = 'API Key optional'/);
+  assert.match(
+    clientSource,
+    /authText\.textContent = isLocalProvider\(selectedProvider\)[\s\S]*\? 'No API key required'[\s\S]*: 'API Key optional'/,
+  );
   assert.match(
     clientSource,
     /setApiKeyStatus\(s\.apiKeyConfigured, s\.settings && s\.settings\.provider\)/,
