@@ -10,15 +10,14 @@ Prerequisites:
 - npm 9+
 - VS Code 1.110.0+
 
-Install and verify:
+Install and run the normal development gate:
 
 ```bash
 npm install
-npm run compile
-npm test
+npm run check
 ```
 
-Use `npm run watch` while developing the extension.
+`npm run check` runs type checking plus the fast unit/regression suite. Use `npm run watch` while developing the extension. Do not run browser acceptance, self-audit, or VSIX packaging after every ordinary edit.
 
 ## Project rules
 
@@ -65,6 +64,8 @@ Every behavior change should include a focused regression test.
 
 Tests live in `test/*.test.ts` and are aggregated through `test/all.test.ts`. The aggregate suite verifies that every sibling test file is imported, so register every new test module.
 
+Prefer behavior-level assertions over exact implementation strings, helper names, CSS class inventories, or generated-source substrings. A refactor that preserves observable behavior should not break a regression test.
+
 For Local HTML/browser changes, test:
 
 - source/data correctness;
@@ -73,13 +74,15 @@ For Local HTML/browser changes, test:
 - failure isolation;
 - mobile/focus behavior when relevant.
 
+Run `npm run test:browser` only when browser-facing behavior changed or when preparing a release candidate.
+
 ## Generated files and releases
 
 Do not commit generated `documint/` output as source changes.
 
 Do not force-add new VSIX binaries to normal source commits. Release packaging should remain separate from application-source review.
 
-For a release candidate, first generate/refresh `package-lock.json` from a registry-enabled checkout (or use the manual **Lockfile Bootstrap** workflow), run `npm run lockfile:validate`, then commit the validated lockfile. Install locked dependencies with `npm ci`, install Python Playwright, and either set `CHROMIUM_EXECUTABLE` to an installed Chrome/Chromium binary or install Playwright Chromium. Then run:
+For a release candidate only, first generate/refresh `package-lock.json` from a registry-enabled checkout (or use the manual **Lockfile Bootstrap** workflow), run `npm run lockfile:validate`, then commit the validated lockfile. Install locked dependencies with `npm ci`, install Python Playwright, and either set `CHROMIUM_EXECUTABLE` to an installed Chrome/Chromium binary or install Playwright Chromium. Then run:
 
 ```bash
 npm run release:readiness
