@@ -15,7 +15,7 @@ All notable changes to DocuMint are documented here.
 
 ### Changed
 
-- Added a manual-only **Lockfile Bootstrap** workflow that generates `package-lock.json` on a network-enabled runner, validates clean locked installation/dependency resolution, records SHA-256 metadata, and uploads the lockfile as an artifact without repository write permission.
+- Added a manual-only **Lockfile Bootstrap** workflow that generates `package-lock.json` on a network-enabled runner, validates clean locked installation/dependency resolution, records SHA-256 metadata, and uploads the lockfile as an artifact without repository write permission. Its default `run_readiness=true` input also runs full verify/browser/VSIX readiness against the transient lockfile so release behavior can be tested before committing it.
 - Added `npm run lockfile:validate` so readiness/bootstrap reject lockfiles whose root name/version or dependency maps drift from `package.json`.
 
 - Added a manual-only **Release Readiness** workflow that runs the same strict local readiness gate and uploads evidence/VSIX artifacts without enabling normal main-push CI.
