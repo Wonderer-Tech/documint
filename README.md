@@ -493,7 +493,7 @@ After downloading and extracting the lockfile artifact, adopt it safely from the
 npm run lockfile:adopt -- /path/to/extracted/documint-package-lock-artifact
 ```
 
-The adopter uses the same shared lockfile policy as `lockfile:validate`; it validates the candidate before touching the root lockfile, replaces via a temporary file, and re-verifies the adopted SHA-256. Passing the artifact directory or its `package-lock.json` file is supported.
+The adopter uses the same shared lockfile policy as `lockfile:validate`; it validates the candidate before touching the root lockfile, verifies the Bootstrap artifact's `package-lock.sha256` when that metadata is present, replaces via a temporary file, and re-verifies the adopted SHA-256. Passing the artifact directory or its `package-lock.json` file is supported.
 
 ### Release readiness
 
