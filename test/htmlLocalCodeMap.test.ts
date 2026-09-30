@@ -139,6 +139,28 @@ test("Local code map exposes question-first interactive surfaces without externa
   );
 });
 
+test("Local project map exposes accessible in-map section navigation and current-location state", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.markup, /id="localMapNav"/);
+  assert.match(fragments.markup, /aria-label="Project map sections"/);
+  assert.match(fragments.markup, /href="#localMapOverviewSection"/);
+  assert.match(fragments.markup, /href="#localMapBigSection"/);
+  assert.match(fragments.markup, /href="#localMapRunSection"/);
+  assert.match(fragments.markup, /href="#localMapSizeSection"/);
+  assert.match(fragments.markup, /href="#localMapReadSection"/);
+  assert.match(fragments.markup, /href="#localMapReachSection"/);
+  assert.match(fragments.markup, /href="#localMapLookupSection"/);
+  assert.match(fragments.script, /function initSectionNav/);
+  assert.match(fragments.script, /aria-current/);
+  assert.match(fragments.script, /IntersectionObserver/);
+  assert.match(fragments.script, /runNav\.hidden = cards === 0/);
+  assert.match(fragments.styles, /\.local-map-nav/);
+  assert.match(fragments.styles, /overflow-x: auto/);
+  assert.match(fragments.styles, /scroll-margin-top: 78px/);
+});
+
+
 test("Local At a glance renders canonical project totals, languages, entry points and external dependencies", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
