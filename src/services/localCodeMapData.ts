@@ -6,6 +6,11 @@ export interface LocalCodeMapExport {
   line: number;
 }
 
+export interface LocalCodeMapTodo {
+  line: number;
+  text: string;
+}
+
 export interface LocalCodeMapFile {
   path: string;
   module: string;
@@ -14,6 +19,8 @@ export interface LocalCodeMapFile {
   description?: string;
   descriptionSource?: string;
   exports: LocalCodeMapExport[];
+  internalSymbols: LocalCodeMapExport[];
+  todos: LocalCodeMapTodo[];
   environmentVariables: string[];
   uses: string[];
   usedBy: string[];
@@ -73,6 +80,15 @@ export function buildLocalCodeMapData(
         name: symbol.name,
         kind: symbol.kind,
         line: symbol.line,
+      })),
+      internalSymbols: file.internalSymbols.map((symbol) => ({
+        name: symbol.name,
+        kind: symbol.kind,
+        line: symbol.line,
+      })),
+      todos: file.todos.map((todo) => ({
+        line: todo.line,
+        text: todo.text,
       })),
       environmentVariables: [...file.referencedEnvironmentVariables],
       uses: [...file.uses],
