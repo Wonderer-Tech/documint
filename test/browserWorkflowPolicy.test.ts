@@ -34,6 +34,10 @@ test("lockfile bootstrap workflow stays manual-only and never mutates the reposi
   assert.match(workflow, /npm ci --ignore-scripts --no-audit --no-fund/);
   assert.match(workflow, /npm ls --all/);
   assert.match(workflow, /package-lock\.sha256/);
+  assert.match(workflow, /run_readiness:/);
+  assert.match(workflow, /default: true/);
+  assert.match(workflow, /npm run release:readiness/);
+  assert.match(workflow, /documint-bootstrap-readiness/);
   assert.match(workflow, /actions\/upload-artifact@v4/);
   assert.doesNotMatch(workflow, /git\s+push/);
   assert.doesNotMatch(workflow, /git\s+commit/);
