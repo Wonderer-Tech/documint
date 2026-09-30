@@ -90,6 +90,36 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     font-size: 11px;
     font-weight: 700;
   }
+  .local-map-nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    margin: 0 0 4px;
+    padding: 0 0 10px;
+    scrollbar-width: thin;
+  }
+  .local-map-nav a {
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 9px;
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 10.5px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .local-map-nav a:hover,
+  .local-map-nav a:focus,
+  .local-map-nav a.active {
+    border-color: var(--accent);
+    background: var(--accent-subtle);
+    color: var(--accent);
+    outline: none;
+  }
+  .local-map-nav a[hidden] { display: none; }
+  .local-map-section { scroll-margin-top: 78px; }
   .local-map-section {
     padding: 22px 0;
     border-top: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
@@ -771,7 +801,17 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <span class="local-map-badge" id="localMapFacts"></span>
   </div>
 
-  <section class="local-map-section" aria-labelledby="localMapOverviewTitle">
+  <nav class="local-map-nav" id="localMapNav" aria-label="Project map sections">
+    <a href="#localMapOverviewSection">At a glance</a>
+    <a href="#localMapBigSection">Big picture</a>
+    <a href="#localMapRunSection" id="localMapRunNav" hidden>How to run</a>
+    <a href="#localMapSizeSection">What's inside</a>
+    <a href="#localMapReadSection">Start here</a>
+    <a href="#localMapReachSection">Dependency reach</a>
+    <a href="#localMapLookupSection">Look up a file</a>
+  </nav>
+
+  <section class="local-map-section" id="localMapOverviewSection" aria-labelledby="localMapOverviewTitle">
     <div class="local-map-section-head">
       <div>
         <h3 id="localMapOverviewTitle">At a glance</h3>
@@ -782,7 +822,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <div class="local-map-overview" id="localMapOverview"></div>
   </section>
 
-  <section class="local-map-section" aria-labelledby="localMapBigTitle">
+  <section class="local-map-section" id="localMapBigSection" aria-labelledby="localMapBigTitle">
     <div class="local-map-section-head">
       <div>
         <h3 id="localMapBigTitle">Big picture</h3>
@@ -806,7 +846,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <div class="local-map-onboarding" id="localMapOnboarding"></div>
   </section>
 
-  <section class="local-map-section" aria-labelledby="localMapSizeTitle">
+  <section class="local-map-section" id="localMapSizeSection" aria-labelledby="localMapSizeTitle">
     <div class="local-map-section-head">
       <div>
         <h3 id="localMapSizeTitle">What's inside</h3>
@@ -823,7 +863,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     </div>
   </section>
 
-  <section class="local-map-section" aria-labelledby="localMapReadTitle">
+  <section class="local-map-section" id="localMapReadSection" aria-labelledby="localMapReadTitle">
     <div class="local-map-section-head">
       <div>
         <h3 id="localMapReadTitle">Start here</h3>
@@ -834,7 +874,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <ol class="local-map-reading" id="localMapReading"></ol>
   </section>
 
-  <section class="local-map-section" aria-labelledby="localMapReachTitle">
+  <section class="local-map-section" id="localMapReachSection" aria-labelledby="localMapReachTitle">
     <div class="local-map-section-head">
       <div>
         <h3 id="localMapReachTitle">Dependency reach</h3>
@@ -847,7 +887,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     </div>
   </section>
 
-  <section class="local-map-section" aria-labelledby="localMapLookupTitle">
+  <section class="local-map-section" id="localMapLookupSection" aria-labelledby="localMapLookupTitle">
     <div class="local-map-section-head">
       <div>
         <h3 id="localMapLookupTitle">Look up a file</h3>
@@ -1368,6 +1408,66 @@ function buildLocalCodeMapScript(
     }
 
     section.hidden = cards === 0;
+    var runNav = document.getElementById('localMapRunNav');
+    if (runNav) runNav.hidden = cards === 0;
+  }
+
+  function initSectionNav() {
+    var nav = document.getElementById('localMapNav');
+    if (!nav) return;
+
+    var links = Array.from(nav.querySelectorAll('a[href^="#"]'));
+    var sections = links.map(function (link) {
+      var id = link.getAttribute('href').slice(1);
+      return document.getElementById(id);
+    }).filter(Boolean);
+
+    function setActive(id) {
+      links.forEach(function (link) {
+        var active = link.getAttribute('href') === '#' + id && !link.hidden;
+        link.classList.toggle('active', active);
+        if (active) {
+          link.setAttribute('aria-current', 'location');
+        } else {
+          link.removeAttribute('aria-current');
+        }
+      });
+    }
+
+    links.forEach(function (link) {
+      link.addEventListener('click', function (event) {
+        if (link.hidden) return;
+        var id = link.getAttribute('href').slice(1);
+        var target = document.getElementById(id);
+        if (!target || target.hidden) return;
+        event.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        try { history.replaceState(null, '', '#' + id); } catch (_) {}
+        setActive(id);
+      });
+    });
+
+    var firstVisible = links.find(function (link) { return !link.hidden; });
+    if (firstVisible) {
+      setActive(firstVisible.getAttribute('href').slice(1));
+    }
+
+    if ('IntersectionObserver' in window) {
+      var observer = new IntersectionObserver(function (entries) {
+        var visible = entries
+          .filter(function (entry) {
+            return entry.isIntersecting && !entry.target.hidden;
+          })
+          .sort(function (a, b) {
+            return a.boundingClientRect.top - b.boundingClientRect.top;
+          });
+        if (visible.length) setActive(visible[0].target.id);
+      }, {
+        rootMargin: '-15% 0px -70% 0px',
+        threshold: [0, 0.01]
+      });
+      sections.forEach(function (section) { observer.observe(section); });
+    }
   }
 
   function layoutModules(modules, edges, width) {
@@ -2306,6 +2406,7 @@ function buildLocalCodeMapScript(
   renderFacts();
   renderOverview();
   renderOnboarding();
+  initSectionNav();
   renderModules();
   renderTreemap();
   renderReadingPath();
