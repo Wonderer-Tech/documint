@@ -18,7 +18,7 @@ _Last updated: 2026-09-30_
 - ✅ Pull requests now run CI automatically. Main-branch push CI remains intentionally trigger-file gated so the current implementation work does not auto-run CI.
 - ⏳ `package-lock.json` is now allowed by `.gitignore`, but lockfile generation is still pending. An offline `npm install --package-lock-only --offline` attempt failed immediately with `ENOTCACHED` for `@types/node`; this environment also cannot reach the npm registry. CI/release workflows stay on `npm install` until a network-enabled checkout commits the lockfile.
 - ✅ Added AST-backed JS/TS-family analysis using the TypeScript compiler API.
-- ✅ Multiline imports/declarations, `export abstract class`, class methods, explicit exports, module scope, static environment references, and comment-safe TODO extraction are structurally analyzed.
+- ✅ Multiline imports/declarations, `export abstract class`, class methods, explicit export lists, named export aliases, namespace re-exports, destructured top-level bindings, module scope, static environment references, and comment-safe TODO extraction are structurally analyzed.
 - ✅ Function-local temporary variables no longer pollute the JS/TS module symbol list.
 - ✅ Added Python environment-reference detection that ignores comments and strings.
 - ✅ Added trusted description provenance from TS/JS file/module docs, safe declaration docs, Python module docstrings, Rust module docs, Go package comments, exact README file descriptions, and exact README structural-module descriptions.
