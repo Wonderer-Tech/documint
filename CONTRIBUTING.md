@@ -91,6 +91,8 @@ Set `DOCUMINT_BASELINE_VSIX` to an earlier VSIX path when a before/after package
 
 The Lockfile Bootstrap workflow has read-only repository permissions and never commits or pushes. By default it also runs the full readiness gate against the transient generated lockfile and uploads readiness/VSIX evidence; disable its `run_readiness` input only when you want the lockfile artifact by itself.
 
+If GitHub CLI is installed, dispatch the current branch with `npm run lockfile:bootstrap` after authenticating with `gh auth login`. Use `DOCUMINT_BOOTSTRAP_REF` or `DOCUMINT_BOOTSTRAP_REPO` only when the current Git branch/repository should not be used.
+
 After downloading/extracting the artifact, do not manually overwrite the root lockfile. Adopt it with:
 
 ```bash
