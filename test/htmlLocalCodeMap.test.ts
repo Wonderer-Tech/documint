@@ -457,14 +457,32 @@ test("Local relation cards keep every dependency accessible beyond the compact f
 });
 
 
-test("Local module map exposes only trusted module descriptions", () => {
+test("Local module map exposes only trusted module descriptions in bounded custom tooltips", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
+  assert.match(fragments.markup, /id="localMapModuleTooltip"/);
+  assert.match(fragments.styles, /\.local-map-module-tooltip/);
+  assert.match(fragments.script, /function showModuleTooltip/);
+  assert.match(fragments.script, /function positionModuleTooltip/);
   assert.match(fragments.script, /module\.description/);
   assert.match(fragments.script, /Documentation services/);
-  assert.match(fragments.script, /tooltipLines\.push/);
   assert.match(fragments.script, /module\.descriptionSource/);
-  assert.match(fragments.script, /tooltip\.textContent = tooltipLines\.join/);
+  assert.match(fragments.script, /Description source: /);
+  assert.doesNotMatch(
+    fragments.script,
+    /makeSvg\('title', \{\}, g\)[\s\S]{0,400}module\.description/,
+  );
+});
+
+
+test("Local Big Picture handwritten annotations stay inside the SVG viewport", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /var noteMargin = 14/);
+  assert.match(fragments.script, /note\.getComputedTextLength\(\)/);
+  assert.match(fragments.script, /noteWidth = text\.length \* 7\.2/);
+  assert.match(fragments.script, /width - noteMargin - noteWidth/);
+  assert.match(fragments.script, /note\.setAttribute\('x', String\(noteX\)\)/);
 });
 
 
