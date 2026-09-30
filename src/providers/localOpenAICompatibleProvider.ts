@@ -93,6 +93,7 @@ export class LocalOpenAICompatibleProvider extends BaseAIProvider {
                 "Content-Type": "application/json",
               },
               timeout: LOCAL_PROVIDER_REQUEST_TIMEOUT_MS,
+              maxRedirects: 0,
               signal: params.signal,
             },
           ),
