@@ -45,9 +45,18 @@ test("sidebar keeps Local mode focused on controls that affect Local output", ()
   assert.match(source, /id="providerSection"/);
   assert.match(source, /id="depthField"/);
   assert.match(source, /id="generateBtnText"/);
-  assert.match(source, /authSection\.classList\.toggle\('hidden', local\)/);
-  assert.match(source, /providerSection\.classList\.toggle\('hidden', local\)/);
-  assert.match(source, /depthField\.classList\.toggle\('hidden', local\)/);
+  assert.match(
+    clientSource,
+    /authSection\.classList\.toggle\('hidden', local \|\| localProvider\)/,
+  );
+  assert.match(
+    clientSource,
+    /providerSection\.classList\.toggle\('hidden', local\)/,
+  );
+  assert.match(
+    clientSource,
+    /depthField\.classList\.toggle\('hidden', local\)/,
+  );
   assert.match(source, /Generate Local Documentation/);
   assert.match(source, /generationMode:\s*generationModeSel\.value/);
   assert.match(source, /updates\.push\(\["generationMode", normalizeGenerationMode/);
