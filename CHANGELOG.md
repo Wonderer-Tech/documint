@@ -24,17 +24,18 @@ All notable changes to DocuMint are documented here.
 - Extended **How to run** with concrete Makefile targets and Dockerfile source facts (`FROM`, stages, exposed ports, `ENTRYPOINT`, and `CMD`) without inventing Docker commands.
 - Made per-file Local documentation compact: empty fact sections are omitted, Uses / Used by are concise, description provenance is visible, and source/API entries use portable relative links.
 - Split Local Markdown and HTML architecture surfaces. Markdown no longer carries raw architecture, whiteboard, dependency-graph JSON, file-level Mermaid, or D2 payload duplication.
-- Added the question-first Local HTML project map: module overview, file-size treemap, suggested reading path, dependency-reach scatter, file/description/export/environment search, connected file cards, and source links.
+- Added the question-first Local HTML project map: canonical At-a-glance project summary, module overview, file-size treemap, suggested reading path, dependency-reach scatter, file/evidence search, connected file cards, and source links.
 - Added one question-first Local HTML **How to run** surface backed by the canonical model: package scripts/manager, extension entry, VS Code commands/settings, Makefile targets, Dockerfile facts, and referenced environment variables. The HTML overview no longer duplicates those onboarding headings; Markdown keeps its standalone onboarding sections.
 - Local HTML file cards now retain canonical internal symbols plus TODO/FIXME/HACK source-note evidence instead of dropping those analyzer facts after model construction.
 - Local file lookup now searches internal symbols and TODO/FIXME/HACK source-note text in addition to paths, trusted descriptions, exports, and environment references, and labels why each result matched.
 - Big Picture module nodes now retain trusted description provenance and canonical suggested start files from the shared model instead of dropping those facts at the HTML data boundary.
 - Uses / Used by cards keep the first 12 relations compact while placing every remaining project relation in an expandable, navigable list instead of replacing them with an inaccessible count.
 - Browser acceptance now encodes the roadmap's 30-second newcomer discovery checks for API-key storage, provider integration, and build/test commands using the actual Local project-map search/onboarding UI.
+- Local HTML now owns project orientation through **At a glance** (totals, description coverage, languages, entry points, external dependencies) and suppresses duplicate legacy Project Facts, Language Summary, Module Summary, Entry Points, External Dependencies, and Source Tree sections. Markdown keeps those standalone sections for direct text use.
 - Added entry-point-driven layered layout, module hover/focus isolation, factual handwritten-style module notes, and cross-view navigation in the Local project map.
 - Local `Ctrl/Cmd+K` now focuses project-file search while `/` continues to search documentation headings.
 - Local HTML is generated with external assets disabled; the Local project-map experience does not require CDN scripts/styles.
-- Bumped Local cache compatibility to v12 so the complete Local search, onboarding, module-start/provenance, and relation-navigation surfaces regenerate once.
+- Bumped Local cache compatibility to v13 so complete project-map search/navigation and At-a-glance summary ownership regenerate once.
 - Retired the old source-repair and VSIX self-commit workflows; CI/release automation no longer rewrites application source or force-adds a VSIX through those workflows.
 - Removed obsolete VS Code activation-event declarations and the deprecated `@types/marked` stub dependency.
 - Split the generated HTML shell into dedicated base-style, runtime-script, and policy modules; `htmlTemplate.ts` is now a small composition shell.
