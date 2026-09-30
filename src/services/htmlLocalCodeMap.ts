@@ -30,6 +30,7 @@ export function renderLocalCodeMapFragments(
 
 const LOCAL_CODE_MAP_STYLES = String.raw`
   body.documint-local-report {
+    --map-grid: #E2EAE6;
     --bg-primary: #F6F8F7;
     --bg-secondary: #FFFFFF;
     --bg-tertiary: #E8EFEC;
@@ -58,13 +59,14 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     color: #24303A;
     background-color: #F6F8F7;
     background-image:
-      linear-gradient(#E2EAE6 1px, transparent 1px),
-      linear-gradient(90deg, #E2EAE6 1px, transparent 1px);
+      linear-gradient(var(--map-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--map-grid) 1px, transparent 1px);
     background-size: 28px 28px;
     font-family: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     letter-spacing: 0;
   }
   :root[data-theme="dark"] body.documint-local-report {
+    --map-grid: #1C282E;
     --bg-primary: #131B20;
     --bg-secondary: #18232A;
     --bg-tertiary: #223038;
@@ -93,8 +95,8 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     color: #DCE5E2;
     background-color: #131B20;
     background-image:
-      linear-gradient(#1C282E 1px, transparent 1px),
-      linear-gradient(90deg, #1C282E 1px, transparent 1px);
+      linear-gradient(var(--map-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--map-grid) 1px, transparent 1px);
   }
   .documint-local-report::before { display: none; }
 
