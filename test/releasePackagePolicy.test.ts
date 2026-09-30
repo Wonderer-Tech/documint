@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import manifest from "../package.json";
@@ -145,8 +146,10 @@ test("release readiness command runs strict verification and writes measurable e
   assert.match(readiness, /package-lock\.json is required/);
   assert.match(readiness, /\["run", "verify"\]/);
   assert.match(readiness, /\["run", "test:browser"\]/);
-  assert.match(readiness, /--no-install/);
-  assert.match(readiness, /@vscode\/vsce/);
+  assert.match(readiness, /node_modules/);
+  assert.match(readiness, /\.bin/);
+  assert.match(readiness, /vsceCommand/);
+  assert.match(readiness, /Local @vscode\/vsce binary is missing/);
   assert.match(readiness, /readiness\.json/);
   assert.match(readiness, /DOCUMINT_SELF_AUDIT_OUTPUT/);
   assert.match(readiness, /createHash\("sha256"\)/);
@@ -155,6 +158,15 @@ test("release readiness command runs strict verification and writes measurable e
   assert.match(readiness, /reader-results\.json/);
   assert.match(readiness, /results\.json/);
   assert.match(readiness, /VSIX does not have a ZIP signature/);
+});
+
+
+test("release readiness runner is valid Node ESM syntax", () => {
+  execFileSync(
+    process.execPath,
+    ["--check", join(process.cwd(), "tools/release-readiness.mjs")],
+    { stdio: "pipe" },
+  );
 });
 
 
