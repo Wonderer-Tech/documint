@@ -6,24 +6,53 @@ const HTML_ENTITY_MAP: Record<string, string> = {
 };
 
 export function sanitizeRenderedMarkdownUrls(html: string): string {
-  return html.replace(
-    /\b(href|src)=(["'])([\s\S]*?)\2/gi,
-    (full, attribute: string, quote: string, rawValue: string) => {
-      const decoded = decodeHtmlAttributeValue(rawValue);
-      const safe =
-        attribute.toLowerCase() === "href"
-          ? isSafeMarkdownHref(decoded)
-          : isSafeMarkdownImageSrc(decoded);
+  return html
+    .replace(
+      /<a\b[^>]*>/gi,
+      (tag) =>
+        sanitizeTagUrlAttribute(
+          tag,
+          "href",
+          isSafeMarkdownHref,
+        ),
+    )
+    .replace(
+      /<img\b[^>]*>/gi,
+      (tag) =>
+        sanitizeTagUrlAttribute(
+          tag,
+          "src",
+          isSafeMarkdownImageSrc,
+        ),
+    );
+}
 
-      if (safe) {
-        return full;
-      }
-
-      return attribute.toLowerCase() === "href"
-        ? `href=${quote}#${quote} data-documint-blocked-url="true"`
-        : `src=${quote}${quote} data-documint-blocked-url="true"`;
-    },
+function sanitizeTagUrlAttribute(
+  tag: string,
+  attribute: "href" | "src",
+  isSafe: (value: string) => boolean,
+): string {
+  const pattern = new RegExp(
+    `\\b${attribute}=(["'])([\\s\\S]*?)\\1`,
+    "i",
   );
+  const match = tag.match(pattern);
+  if (!match) {
+    return tag;
+  }
+
+  const quote = match[1];
+  const rawValue = match[2];
+  if (isSafe(decodeHtmlAttributeValue(rawValue))) {
+    return tag;
+  }
+
+  const replacement =
+    attribute === "href"
+      ? `href=${quote}#${quote} data-documint-blocked-url="true"`
+      : `src=${quote}${quote} data-documint-blocked-url="true"`;
+
+  return tag.replace(pattern, replacement);
 }
 
 export function isSafeMarkdownHref(value: string): boolean {
@@ -73,6 +102,20 @@ function normalizeUrlForPolicy(value: string): string {
 }
 
 function decodeHtmlAttributeValue(value: string): string {
+  let decoded = String(value);
+
+  for (let pass = 0; pass < 3; pass++) {
+    const next = decodeHtmlAttributeValueOnce(decoded);
+    if (next === decoded) {
+      break;
+    }
+    decoded = next;
+  }
+
+  return decoded;
+}
+
+function decodeHtmlAttributeValueOnce(value: string): string {
   return String(value)
     .replace(/&#x([0-9a-f]+);?/gi, (_match, hex: string) =>
       safeCodePoint(parseInt(hex, 16)),
