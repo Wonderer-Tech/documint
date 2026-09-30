@@ -221,6 +221,21 @@ test("Local code map owns deterministic onboarding facts and Ctrl/Cmd+K file sea
 });
 
 
+test("Local file search supports multi-token factual queries without semantic inference", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /var tokens = query\.split/);
+  assert.match(fragments.script, /function containsAllTokens/);
+  assert.match(fragments.script, /tokens\.every/);
+  assert.match(fragments.script, /containsAllTokens\(pathText\)/);
+  assert.match(fragments.script, /Matched across file facts/);
+  assert.doesNotMatch(
+    fragments.script,
+    /semantic similarity|embedding|fuzzy model|AI search/i,
+  );
+});
+
+
 test("Local file search indexes internal symbols and TODO evidence with match context", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
@@ -289,7 +304,7 @@ test("Local code map search and file card include verified environment reference
   const fragments = renderLocalCodeMapFragments(data);
 
   assert.match(fragments.script, /environmentVariables/);
-  assert.match(fragments.script, /environmentText\.includes\(query\)/);
+  assert.match(fragments.script, /containsAllTokens\(environmentName\)/);
   assert.match(fragments.script, /Environment references:/);
   assert.match(fragments.script, /API_TOKEN/);
 });
