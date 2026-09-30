@@ -103,3 +103,5 @@ import "./localSelfAudit.test";
 import "./markdownEscaping.test";
 
 import "./htmlMarkdownSafety.test";
+
+import "./sourceLink.test";
