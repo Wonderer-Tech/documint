@@ -169,6 +169,14 @@ export function buildLocalSelfAuditReport(
         !/<h3[^>]*>Module Relationships<\/h3>/i.test(document.html),
     },
     {
+      name: "Local project map has accessible section navigation",
+      passed:
+        document.html.includes('id="localMapNav"') &&
+        document.html.includes('aria-label="Project map sections"') &&
+        document.html.includes("aria-current") &&
+        document.html.includes("IntersectionObserver"),
+    },
+    {
       name: "Local HTML has no cdnjs dependency",
       passed: !/cdnjs\.cloudflare\.com/i.test(document.html),
     },
