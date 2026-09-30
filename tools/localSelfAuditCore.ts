@@ -155,6 +155,13 @@ export function buildLocalSelfAuditReport(
         !/<h2[^>]*>Source Tree<\/h2>/i.test(document.html),
     },
     {
+      name: "Local HTML documentation coverage is code-map owned",
+      passed:
+        document.html.includes("Documentation coverage") &&
+        document.html.includes("without a trusted module-level description") &&
+        !/<h2[^>]*>Undocumented files<\/h2>/i.test(document.html),
+    },
+    {
       name: "Local HTML has no cdnjs dependency",
       passed: !/cdnjs\.cloudflare\.com/i.test(document.html),
     },
