@@ -402,12 +402,12 @@
     "lockfile:bootstrap": "node tools/trigger-lockfile-bootstrap.mjs"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
+    "@types/node": "^26.6.3",
     "@types/vscode": "^1.110.0",
-    "@vscode/vsce": "^3.8.0",
+    "@vscode/vsce": "^4.0.0",
     "axios": "^1.16.1",
     "esbuild": "^0.28.0",
-    "marked": "^17.0.5",
-    "typescript": "^5.3.3"
+    "marked": "^18.0.14",
+    "typescript": "^7.0.2"
   }
 }
