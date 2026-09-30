@@ -244,3 +244,19 @@ test("Local code map labels run commands with the detected package manager", () 
   assert.match(fragments.script, /data\.gettingStarted\.packageManager/);
   assert.match(fragments.script, /npm run compile/);
 });
+
+test("Local code map can nonce both executable and JSON script elements", () => {
+  const fragments = renderLocalCodeMapFragments(
+    data,
+    'nonce"<unsafe>',
+  );
+
+  assert.match(
+    fragments.markup,
+    /<script nonce="nonce&quot;&lt;unsafe&gt;" type="application\/json"/,
+  );
+  assert.match(
+    fragments.script,
+    /^\s*<script nonce="nonce&quot;&lt;unsafe&gt;">/,
+  );
+});
