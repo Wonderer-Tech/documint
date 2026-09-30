@@ -185,6 +185,7 @@ test("Local Markdown keeps orientation sections while HTML avoids duplicating co
   assert.match(document.markdown, /## Where is what/);
   assert.match(document.markdown, /## Suggested reading path/);
   assert.match(document.markdown, /## Core files/);
+  assert.match(document.markdown, /## Undocumented files/);
 
   assert.doesNotMatch(document.html, /<h2[^>]*>Where is what<\/h2>/);
   assert.doesNotMatch(document.html, /<h2[^>]*>Suggested reading path<\/h2>/);
@@ -195,7 +196,9 @@ test("Local Markdown keeps orientation sections while HTML avoids duplicating co
   assert.doesNotMatch(document.html, /<h2[^>]*>Entry Points<\/h2>/);
   assert.doesNotMatch(document.html, /<h2[^>]*>External Dependencies<\/h2>/);
   assert.doesNotMatch(document.html, /<h2[^>]*>Source Tree<\/h2>/);
+  assert.doesNotMatch(document.html, /<h2[^>]*>Undocumented files<\/h2>/);
   assert.match(document.html, /At a glance/);
+  assert.match(document.html, /Documentation coverage/);
   assert.match(document.html, /What is this project made of\?/);
   assert.match(document.html, /data-documint-local-code-map/);
 });
