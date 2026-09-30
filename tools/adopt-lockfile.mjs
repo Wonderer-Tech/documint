@@ -42,6 +42,25 @@ const candidateText = readFileSync(candidatePath, "utf8");
 const candidateLock = JSON.parse(candidateText);
 const validation = validateLockfileData(packageJson, candidateLock);
 const candidateHash = createHash("sha256").update(candidateText).digest("hex");
+const artifactHashPath = resolve(dirname(candidatePath), "package-lock.sha256");
+let artifactHashVerified = false;
+if (existsSync(artifactHashPath)) {
+  const expectedHash = readFileSync(artifactHashPath, "utf8")
+    .trim()
+    .split(/\s+/)[0]
+    ?.toLowerCase();
+  if (!/^[a-f0-9]{64}$/.test(expectedHash || "")) {
+    throw new Error(
+      `Invalid package-lock.sha256 metadata: ${artifactHashPath}`,
+    );
+  }
+  if (expectedHash !== candidateHash) {
+    throw new Error(
+      `Lockfile artifact SHA-256 mismatch: expected ${expectedHash}, got ${candidateHash}`,
+    );
+  }
+  artifactHashVerified = true;
+}
 
 const existingText = existsSync(targetPath)
   ? readFileSync(targetPath, "utf8")
@@ -59,6 +78,7 @@ if (existingHash === candidateHash) {
         source: candidatePath,
         target: targetPath,
         sha256: candidateHash,
+        artifactSha256Verified: artifactHashVerified,
         validation,
       },
       null,
@@ -96,6 +116,7 @@ console.log(
       target: targetPath,
       previousSha256: existingHash,
       sha256: adoptedHash,
+      artifactSha256Verified: artifactHashVerified,
       validation,
     },
     null,
