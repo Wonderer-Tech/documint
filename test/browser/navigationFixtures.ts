@@ -97,6 +97,18 @@ const codeMapFiles: WorkspaceFile[] = [
     }),
   },
 ];
+
+for (let index = 0; index < 13; index++) {
+  codeMapFiles.push({
+    path: `src/consumers/use-provider-${index}.ts`,
+    language: "typescript",
+    content: [
+      'import { ProviderFactory } from "../providers/factory";',
+      `export const provider${index} = new ProviderFactory();`,
+    ].join("\n"),
+  });
+}
+
 const codeMapProject = analyzer.analyzeProject(codeMapFiles);
 const codeMapReadme = [
   "```text",
