@@ -51,6 +51,8 @@ export async function discoverLocalProviderModels(
     definition.modelsEndpoint,
     {
       timeout: LOCAL_MODEL_DISCOVERY_TIMEOUT_MS,
+      maxRedirects: 0,
+      maxContentLength: 1_000_000,
       headers: {
         Accept: "application/json",
       },
