@@ -116,16 +116,42 @@ test("release workflow publishes VSIX reproducibly as a tag asset without mutati
   assert.match(workflow, /test -f package-lock\.json/);
   assert.match(workflow, /npm ci --no-audit --no-fund/);
   assert.doesNotMatch(workflow, /npm install --no-audit --no-fund/);
-  assert.match(workflow, /npm run verify/);
   assert.match(workflow, /python -m playwright install --with-deps chromium/);
-  assert.match(workflow, /npm run test:browser/);
-  assert.match(workflow, /documint-release-browser-acceptance/);
-  assert.match(workflow, /npx @vscode\/vsce package --out/);
+  assert.match(workflow, /npm run release:readiness/);
+  assert.match(workflow, /documint-release-readiness/);
+  assert.match(workflow, /release-artifacts\/readiness/);
+  assert.match(workflow, /release-artifacts\/\*\.vsix/);
   assert.match(workflow, /gh release upload/);
   assert.match(workflow, /gh release create/);
   assert.doesNotMatch(workflow, /git\s+push/);
   assert.doesNotMatch(workflow, /git\s+add\s+-f/);
   assert.doesNotMatch(workflow, /HEAD:main/);
+});
+
+
+test("release readiness command runs strict verification and writes measurable evidence", () => {
+  const readiness = readFileSync(
+    join(process.cwd(), "tools/release-readiness.mjs"),
+    "utf8",
+  );
+
+  assert.equal(
+    manifest.scripts["release:readiness"],
+    "node tools/release-readiness.mjs",
+  );
+  assert.match(readiness, /package-lock\.json is required/);
+  assert.match(readiness, /\["run", "verify"\]/);
+  assert.match(readiness, /\["run", "test:browser"\]/);
+  assert.match(readiness, /--no-install/);
+  assert.match(readiness, /@vscode\/vsce/);
+  assert.match(readiness, /readiness\.json/);
+  assert.match(readiness, /DOCUMINT_SELF_AUDIT_OUTPUT/);
+  assert.match(readiness, /createHash\("sha256"\)/);
+  assert.match(readiness, /DOCUMINT_BASELINE_VSIX/);
+  assert.match(readiness, /deltaPercent/);
+  assert.match(readiness, /reader-results\.json/);
+  assert.match(readiness, /results\.json/);
+  assert.match(readiness, /VSIX does not have a ZIP signature/);
 });
 
 
