@@ -391,7 +391,11 @@
     "test:unit": "esbuild test/all.test.ts --bundle --platform=node --format=cjs --outfile=node_modules/documint-regression.test.cjs && node --test node_modules/documint-regression.test.cjs",
     "audit:self": "esbuild tools/local-self-audit.ts --bundle --platform=node --format=cjs --outfile=node_modules/documint-self-audit.cjs && node node_modules/documint-self-audit.cjs",
     "verify": "npm test && npm run audit:self",
-    "lockfile:generate": "npm install --package-lock-only --ignore-scripts --no-audit --no-fund"
+    "lockfile:generate": "npm install --package-lock-only --ignore-scripts --no-audit --no-fund",
+    "test:browser:fixtures": "esbuild test/browser/navigationFixtures.ts --bundle --platform=node --format=cjs --external:vscode --outfile=node_modules/documint-navigation-fixtures.cjs && node node_modules/documint-navigation-fixtures.cjs",
+    "test:browser:navigation": "python test/browser/navigationAcceptance.py",
+    "test:browser:reader": "python test/browser/readerAcceptance.py",
+    "test:browser": "npm run test:browser:fixtures && npm run test:browser:navigation && npm run test:browser:reader"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
