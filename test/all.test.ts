@@ -97,3 +97,5 @@ import "./localProviderRuntime.test";
 import "./localProviderDiscovery.test";
 
 import "./localBuildFacts.test";
+
+import "./localSelfAudit.test";
