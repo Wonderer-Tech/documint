@@ -16,7 +16,7 @@ _Last updated: 2026-09-30_
 - ✅ Retired obsolete source-repair workflows/scripts and the old VSIX self-commit workflow.
 - ✅ Added a tag-only GitHub Release workflow for future VSIX assets; current source tree no longer carries committed VSIX binaries.
 - ✅ Pull requests now run CI automatically. Main-branch push CI remains intentionally trigger-file gated so the current implementation work does not auto-run CI.
-- ⏳ `package-lock.json` is now allowed by `.gitignore`, but lockfile generation is still pending because this environment cannot reach the npm registry. CI/release workflows stay on `npm install` until the lockfile is committed.
+- ⏳ `package-lock.json` is now allowed by `.gitignore`, but lockfile generation is still pending. An offline `npm install --package-lock-only --offline` attempt failed immediately with `ENOTCACHED` for `@types/node`; this environment also cannot reach the npm registry. CI/release workflows stay on `npm install` until a network-enabled checkout commits the lockfile.
 - ✅ Added AST-backed JS/TS-family analysis using the TypeScript compiler API.
 - ✅ Multiline imports/declarations, `export abstract class`, class methods, explicit exports, module scope, static environment references, and comment-safe TODO extraction are structurally analyzed.
 - ✅ Function-local temporary variables no longer pollute the JS/TS module symbol list.
