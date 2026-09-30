@@ -398,6 +398,19 @@ test("release readiness runner is valid Node ESM syntax", () => {
 });
 
 
+test("Python launcher prefers the DocuMint browser venv and reuses local Chromium", () => {
+  const runner = readFileSync(
+    join(process.cwd(), "tools/run-python.mjs"),
+    "utf8",
+  );
+
+  assert.match(runner, /documint-browser/);
+  assert.match(runner, /DOCUMINT_PYTHON/);
+  assert.match(runner, /CHROMIUM_EXECUTABLE/);
+  assert.match(runner, /chromium-browser/);
+  assert.match(runner, /brave-browser/);
+});
+
 test("Python launcher is valid Node ESM syntax", () => {
   execFileSync(
     process.execPath,
