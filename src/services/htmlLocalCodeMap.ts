@@ -547,6 +547,35 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     text-align: left;
   }
   .local-map-exports th { color: var(--text-muted); }
+  .local-map-symbol-heading {
+    margin: 14px 0 5px;
+    color: var(--text-secondary);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .local-map-source-notes {
+    margin-top: 12px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+  }
+  .local-map-source-notes strong {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-secondary);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .local-map-source-note {
+    color: var(--text-secondary);
+    font-size: 10.5px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+  .local-map-source-note + .local-map-source-note { margin-top: 4px; }
   @media (max-width: 820px) {
     .local-code-map { padding: 17px; border-radius: 16px; }
     .local-map-hero { align-items: flex-start; flex-direction: column; }
@@ -1513,12 +1542,19 @@ function buildLocalCodeMapScript(
     relations.appendChild(relationColumn('Used by', file.usedBy));
     card.appendChild(relations);
 
-    if (file.exports.length) {
+    function appendSymbolTable(title, items) {
+      if (!items.length) return;
+
+      var heading = document.createElement('h5');
+      heading.className = 'local-map-symbol-heading';
+      heading.textContent = title;
+      card.appendChild(heading);
+
       var table = document.createElement('table');
       table.className = 'local-map-exports';
       var thead = document.createElement('thead');
       var headRow = document.createElement('tr');
-      ['Export', 'Kind', 'Line'].forEach(function (label) {
+      ['Symbol', 'Kind', 'Line'].forEach(function (label) {
         var th = document.createElement('th');
         th.textContent = label;
         headRow.appendChild(th);
@@ -1527,16 +1563,16 @@ function buildLocalCodeMapScript(
       table.appendChild(thead);
 
       var tbody = document.createElement('tbody');
-      file.exports.forEach(function (item) {
+      items.forEach(function (item) {
         var row = document.createElement('tr');
         var nameCell = document.createElement('td');
-        var exportLink = document.createElement('a');
-        exportLink.className = 'local-map-source-link';
-        exportLink.href = relativeSourceHref(file.path, item.line);
-        exportLink.target = '_blank';
-        exportLink.rel = 'noopener';
-        exportLink.textContent = item.name;
-        nameCell.appendChild(exportLink);
+        var symbolLink = document.createElement('a');
+        symbolLink.className = 'local-map-source-link';
+        symbolLink.href = relativeSourceHref(file.path, item.line);
+        symbolLink.target = '_blank';
+        symbolLink.rel = 'noopener';
+        symbolLink.textContent = item.name;
+        nameCell.appendChild(symbolLink);
         row.appendChild(nameCell);
 
         var kindCell = document.createElement('td');
@@ -1556,6 +1592,46 @@ function buildLocalCodeMapScript(
       });
       table.appendChild(tbody);
       card.appendChild(table);
+    }
+
+    var exportedSymbols = Array.isArray(file.exports) ? file.exports : [];
+    appendSymbolTable('Exported API', exportedSymbols);
+
+    var internalSymbols = Array.isArray(file.internalSymbols)
+      ? file.internalSymbols
+      : [];
+    appendSymbolTable('Internal symbols', internalSymbols);
+
+    var todos = Array.isArray(file.todos) ? file.todos : [];
+    if (todos.length) {
+      var notes = document.createElement('div');
+      notes.className = 'local-map-source-notes';
+      var notesHeading = document.createElement('strong');
+      notesHeading.textContent = 'Source notes';
+      notes.appendChild(notesHeading);
+
+      todos.slice(0, 12).forEach(function (todo) {
+        var note = document.createElement('div');
+        note.className = 'local-map-source-note';
+        var noteLink = document.createElement('a');
+        noteLink.className = 'local-map-source-link';
+        noteLink.href = relativeSourceHref(file.path, todo.line);
+        noteLink.target = '_blank';
+        noteLink.rel = 'noopener';
+        noteLink.textContent = 'L' + todo.line;
+        note.appendChild(noteLink);
+        note.appendChild(document.createTextNode(' ' + todo.text));
+        notes.appendChild(note);
+      });
+
+      if (todos.length > 12) {
+        var moreNotes = document.createElement('div');
+        moreNotes.className = 'local-map-source-note';
+        moreNotes.textContent = '+ ' + (todos.length - 12) + ' more source notes';
+        notes.appendChild(moreNotes);
+      }
+
+      card.appendChild(notes);
     }
   }
 
