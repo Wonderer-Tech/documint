@@ -371,6 +371,35 @@ test("Python launcher is valid Node ESM syntax", () => {
 });
 
 
+test("lockfile bootstrap dispatcher pins the manual workflow and readiness input", () => {
+  const dispatcher = readFileSync(
+    join(process.cwd(), "tools/trigger-lockfile-bootstrap.mjs"),
+    "utf8",
+  );
+
+  assert.equal(
+    manifest.scripts["lockfile:bootstrap"],
+    "node tools/trigger-lockfile-bootstrap.mjs",
+  );
+  assert.match(dispatcher, /lockfile-bootstrap\.yml/);
+  assert.match(dispatcher, /run_readiness=true/);
+  assert.match(dispatcher, /gh auth login/);
+  assert.match(dispatcher, /DOCUMINT_BOOTSTRAP_REF/);
+  assert.match(dispatcher, /DOCUMINT_BOOTSTRAP_REPO/);
+  assert.match(dispatcher, /workflow/);
+  assert.match(dispatcher, /--ref/);
+});
+
+
+test("lockfile bootstrap dispatcher is valid Node ESM syntax", () => {
+  execFileSync(
+    process.execPath,
+    ["--check", join(process.cwd(), "tools/trigger-lockfile-bootstrap.mjs")],
+    { stdio: "pipe" },
+  );
+});
+
+
 test("CI prefers npm ci once a package lock exists and warns on the temporary fallback", () => {
   const workflow = readFileSync(
     join(process.cwd(), ".github/workflows/ci.yml"),
