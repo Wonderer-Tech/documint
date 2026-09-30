@@ -124,6 +124,13 @@ export function buildLocalSelfAuditReport(
         document.html.includes("Matched across file facts"),
     },
     {
+      name: "Local HTML ranked search can expand beyond the compact top results",
+      passed:
+        document.html.includes("Show all ") &&
+        document.html.includes("rankedHits.slice(0, 9)") &&
+        document.html.includes("searchExpanded = true"),
+    },
+    {
       name: "Local HTML retains module start/provenance facts",
       passed:
         document.html.includes("Suggested start:") &&
