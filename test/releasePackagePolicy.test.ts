@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -178,6 +179,18 @@ test("release readiness command runs strict verification and writes measurable e
 });
 
 
+test("lockfile adopter verifies Bootstrap SHA metadata when present", () => {
+  const adopter = readFileSync(
+    join(process.cwd(), "tools/adopt-lockfile.mjs"),
+    "utf8",
+  );
+
+  assert.match(adopter, /package-lock\.sha256/);
+  assert.match(adopter, /Lockfile artifact SHA-256 mismatch/);
+  assert.match(adopter, /artifactSha256Verified/);
+});
+
+
 test("lockfile validator reuses the shared package-identity policy", () => {
   const validator = readFileSync(
     join(process.cwd(), "tools/validate-lockfile.mjs"),
@@ -242,10 +255,19 @@ test("lockfile artifact adoption validates before replacing the root lockfile", 
     join(sandbox, "package.json"),
     JSON.stringify(packageJson, null, 2),
   );
-  writeFileSync(
-    join(artifact, "package-lock.json"),
-    JSON.stringify(validLock, null, 2) + "\n",
-  );
+  const writeArtifact = (lockfile: unknown, hashOverride?: string) => {
+    const text = JSON.stringify(lockfile, null, 2) + "\n";
+    writeFileSync(join(artifact, "package-lock.json"), text);
+    const hash =
+      hashOverride ??
+      createHash("sha256").update(text).digest("hex");
+    writeFileSync(
+      join(artifact, "package-lock.sha256"),
+      `${hash}  package-lock.json\n`,
+    );
+  };
+
+  writeArtifact(validLock);
 
   try {
     const adopter = join(process.cwd(), "tools/adopt-lockfile.mjs");
@@ -263,6 +285,23 @@ test("lockfile artifact adoption validates before replacing the root lockfile", 
     assert.match(second, /"reason": "already-current"/);
 
     const original = readFileSync(join(sandbox, "package-lock.json"), "utf8");
+
+    writeArtifact(validLock, "0".repeat(64));
+    const badHash = spawnSync(process.execPath, [adopter, artifact], {
+      cwd: sandbox,
+      encoding: "utf8",
+    });
+    assert.notEqual(badHash.status, 0);
+    assert.match(
+      badHash.stderr,
+      /Lockfile artifact SHA-256 mismatch/,
+    );
+    assert.equal(
+      readFileSync(join(sandbox, "package-lock.json"), "utf8"),
+      original,
+      "checksum-mismatched artifact must not replace the root lockfile",
+    );
+
     const stale = {
       ...validLock,
       version: "9.9.9",
@@ -273,10 +312,7 @@ test("lockfile artifact adoption validates before replacing the root lockfile", 
         },
       },
     };
-    writeFileSync(
-      join(artifact, "package-lock.json"),
-      JSON.stringify(stale, null, 2) + "\n",
-    );
+    writeArtifact(stale);
 
     const rejected = spawnSync(process.execPath, [adopter, artifact], {
       cwd: sandbox,
@@ -286,7 +322,7 @@ test("lockfile artifact adoption validates before replacing the root lockfile", 
     assert.equal(
       readFileSync(join(sandbox, "package-lock.json"), "utf8"),
       original,
-      "invalid artifact must not replace the existing root lockfile",
+      "identity-mismatched artifact must not replace the existing root lockfile",
     );
   } finally {
     rmSync(sandbox, { recursive: true, force: true });
