@@ -62,6 +62,9 @@ _Last updated: 2026-09-30_
 - ✅ Added a manual-only browser acceptance workflow plus canonical `npm run test:browser` scripts; it runs provider-free fixtures through Chromium and uploads screenshots/results without auto-running on push/PR.
 - ✅ Browser acceptance encodes the 30-second newcomer discovery test: API-key storage, provider integration, and build/test commands must be discoverable through the Local project-map search/onboarding surfaces.
 - ✅ Added strict one-command release-readiness tooling: `npm run release:readiness` requires `package-lock.json`, runs `npm run verify` plus full browser acceptance, packages with the installed local VSCE binary, validates the VSIX archive, and records machine-readable timings, Local self-audit evidence, bundle/VSIX sizes, SHA-256, browser results, and optional baseline-size deltas.
+- ✅ Split normal development from release validation: `npm run check` is the lightweight edit-loop gate (typecheck + fast unit/regression suite only), while browser acceptance, self-audit, VSIX packaging, archive validation, and readiness evidence remain release-candidate concerns.
+- ✅ Regression policy now prefers observable behavior/data contracts over brittle exact helper names, CSS/runtime source inventories, or generated-source substrings; harmless implementation refactors should not fail tests when user-visible behavior is unchanged.
+- ✅ Legacy human-readable generated timestamps are parsed explicitly before native `Date` parsing so Node/runtime differences cannot silently reinterpret a missing year as 2001.
 - ✅ Release-readiness browser probing now honors `CHROMIUM_EXECUTABLE`, matching the Python browser acceptance scripts; local validation can reuse an already-installed Chrome/Chromium binary without downloading Playwright-managed Chromium, while the managed-browser path remains supported.
 - ✅ Tag releases reuse the same readiness command and upload readiness/browser evidence; VSIX packaging excludes `tools/**`, `audit/**`, and `release-artifacts/**` so tooling/reference/evidence files cannot inflate the release package.
 - ✅ Added a manual-only **Release Readiness** workflow for on-demand execution after the lockfile exists; it does not enable automatic main-push CI.
@@ -77,7 +80,7 @@ _Last updated: 2026-09-30_
 All currently identified **network-independent Local redesign/hardening implementation and release-readiness automation is complete in source**. Remaining work requires execution access or an explicit workflow-policy decision:
 
 1. Trigger **Lockfile Bootstrap** with `npm run lockfile:bootstrap` (after `gh auth login`), the Actions UI, or generate locally with `npm run lockfile:generate`. Keep `run_readiness=true`, review the uploaded evidence, download/extract the lockfile artifact, run `npm run lockfile:adopt -- /path/to/artifact`, then commit the validated `package-lock.json`.
-2. Run `npm ci --no-audit --no-fund`, install Python Playwright + Chromium, then execute **one command**: `npm run release:readiness` (or trigger the manual **Release Readiness** workflow on that branch).
+2. During ordinary development, use `npm run check`. For a release candidate only, run `npm ci --no-audit --no-fund`, ensure Python Playwright plus a usable local Chromium/Brave runtime, then execute **one command**: `npm run release:readiness`.
 3. Review `release-artifacts/readiness/readiness.json`; when a previous VSIX is available, rerun with `DOCUMINT_BASELINE_VSIX=/path/to/previous.vsix` to record the package-size delta automatically.
 4. When explicitly allowed to run normal push CI, remove the `.github/ci-trigger` path gate and enable every `main` push.
 5. Compress/replace the README demo GIF if desired; it remains excluded from VSIX packaging.
