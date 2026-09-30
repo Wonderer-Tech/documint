@@ -7,6 +7,7 @@ import {
 import type { LocalCodeMapData } from "./localCodeMapData";
 import {
   formatGeneratedTimestamp,
+  resolveHtmlContentSecurityPolicy,
   resolveHtmlExternalAssets,
   resolveHtmlLocalSurfaceChrome,
 } from "./htmlTemplatePolicy";
@@ -47,12 +48,16 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
     ? `<img class="footer-logo-img" src="${safeLogoSrc}" alt="DocuMint logo">`
     : "";
   const localCodeMap = renderLocalCodeMapFragments(options.localCodeMap);
+  const externalAssetsEnabled = options.externalAssets !== false;
   const {
     highlightThemeLink,
     externalScriptTags,
     highlightThemeDark,
     highlightThemeLight,
-  } = resolveHtmlExternalAssets(options.externalAssets !== false);
+  } = resolveHtmlExternalAssets(externalAssetsEnabled);
+  const contentSecurityPolicy = resolveHtmlContentSecurityPolicy(
+    externalAssetsEnabled,
+  );
   const {
     tocHtml: localCodeMapToc,
     keyboardHints,
@@ -86,6 +91,7 @@ export function generateHtmlTemplate(options: HtmlTemplateOptions): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="Documentation Generator">
+  ${contentSecurityPolicy}
   <title>${safeTitle}</title>
   ${highlightThemeLink}
   <style>
