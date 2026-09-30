@@ -30,6 +30,7 @@ All notable changes to DocuMint are documented here.
 - Local file lookup now searches internal symbols and TODO/FIXME/HACK source-note text in addition to paths, trusted descriptions, exports, and environment references, and labels why each result matched.
 - Big Picture module nodes now retain trusted description provenance and canonical suggested start files from the shared model instead of dropping those facts at the HTML data boundary.
 - Uses / Used by cards keep the first 12 relations compact while placing every remaining project relation in an expandable, navigable list instead of replacing them with an inaccessible count.
+- Browser acceptance now encodes the roadmap's 30-second newcomer discovery checks for API-key storage, provider integration, and build/test commands using the actual Local project-map search/onboarding UI.
 - Added entry-point-driven layered layout, module hover/focus isolation, factual handwritten-style module notes, and cross-view navigation in the Local project map.
 - Local `Ctrl/Cmd+K` now focuses project-file search while `/` continues to search documentation headings.
 - Local HTML is generated with external assets disabled; the Local project-map experience does not require CDN scripts/styles.
