@@ -99,3 +99,5 @@ import "./localProviderDiscovery.test";
 import "./localBuildFacts.test";
 
 import "./localSelfAudit.test";
+
+import "./markdownEscaping.test";
