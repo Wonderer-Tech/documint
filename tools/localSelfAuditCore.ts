@@ -111,6 +111,24 @@ export function buildLocalSelfAuditReport(
         document.html.includes(testCommand!),
     },
     {
+      name: "Local HTML search indexes complete file evidence",
+      passed:
+        document.html.includes("Internal symbol: ") &&
+        document.html.includes("Source note: "),
+    },
+    {
+      name: "Local HTML retains module start/provenance facts",
+      passed:
+        document.html.includes("Suggested start:") &&
+        document.html.includes("primaryFilePaths"),
+    },
+    {
+      name: "Local HTML keeps full dependency relations accessible",
+      passed:
+        document.html.includes("local-map-relation-more") &&
+        document.html.includes("paths.slice(12)"),
+    },
+    {
       name: "Local HTML has no cdnjs dependency",
       passed: !/cdnjs\.cloudflare\.com/i.test(document.html),
     },
