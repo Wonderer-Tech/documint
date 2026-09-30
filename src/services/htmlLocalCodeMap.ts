@@ -123,6 +123,83 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     font-size: 12px;
     line-height: 1.5;
   }
+  .local-map-overview {
+    display: grid;
+    gap: 12px;
+  }
+  .local-map-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+    gap: 8px;
+  }
+  .local-map-stat {
+    min-width: 0;
+    padding: 11px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--bg-primary) 90%, transparent);
+  }
+  .local-map-stat strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 16px;
+    line-height: 1.1;
+  }
+  .local-map-stat span {
+    display: block;
+    margin-top: 3px;
+    color: var(--text-muted);
+    font-size: 9.5px;
+  }
+  .local-map-overview-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .local-map-overview-card {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-primary);
+  }
+  .local-map-overview-card h4 {
+    margin: 0 0 7px;
+    font-size: 11px;
+  }
+  .local-map-overview-card p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 10px;
+    line-height: 1.45;
+  }
+  .local-map-overview-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .local-map-overview-list code,
+  .local-map-overview-list button {
+    max-width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 7px;
+    overflow: hidden;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 9.5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .local-map-overview-list button {
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .local-map-overview-list button:hover,
+  .local-map-overview-list button:focus {
+    border-color: var(--accent);
+    outline: none;
+  }
   .local-map-panel {
     overflow: hidden;
     border: 1px solid var(--border);
@@ -669,6 +746,17 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <span class="local-map-badge" id="localMapFacts"></span>
   </div>
 
+  <section class="local-map-section" aria-labelledby="localMapOverviewTitle">
+    <div class="local-map-section-head">
+      <div>
+        <h3 id="localMapOverviewTitle">At a glance</h3>
+        <p class="local-map-question">What is this project made of?</p>
+      </div>
+      <p class="local-map-hint">Counts, languages, entry points, and external dependencies come directly from the canonical Local analysis model.</p>
+    </div>
+    <div class="local-map-overview" id="localMapOverview"></div>
+  </section>
+
   <section class="local-map-section" aria-labelledby="localMapBigTitle">
     <div class="local-map-section-head">
       <div>
@@ -856,15 +944,135 @@ function buildLocalCodeMapScript(
     if (clear) clear.hidden = !moduleFilter;
   }
 
+  function renderOverview() {
+    var root = document.getElementById('localMapOverview');
+    if (!root) return;
+    root.innerHTML = '';
+
+    var summary = data.summary || {};
+    var stats = document.createElement('div');
+    stats.className = 'local-map-stats';
+
+    [
+      ['Files', summary.files],
+      ['Lines', summary.lines],
+      ['Described', summary.describedFiles],
+      ['Undocumented', summary.undocumentedFiles],
+      ['Symbols', summary.symbols],
+      ['Exports', summary.exports],
+      ['Internal links', summary.internalDependencies],
+      ['External deps', summary.externalDependencies],
+      ['TODO/FIXME/HACK', summary.todos]
+    ].forEach(function (item) {
+      if (item[1] === undefined || item[1] === null) return;
+      var box = document.createElement('div');
+      box.className = 'local-map-stat';
+      var value = document.createElement('strong');
+      value.textContent = formatNumber(item[1]);
+      box.appendChild(value);
+      var label = document.createElement('span');
+      label.textContent = item[0];
+      box.appendChild(label);
+      stats.appendChild(box);
+    });
+    root.appendChild(stats);
+
+    var details = document.createElement('div');
+    details.className = 'local-map-overview-details';
+
+    var languages = Array.isArray(summary.languages) ? summary.languages : [];
+    if (languages.length) {
+      var languageCard = document.createElement('section');
+      languageCard.className = 'local-map-overview-card';
+      var languageTitle = document.createElement('h4');
+      languageTitle.textContent = 'Languages';
+      languageCard.appendChild(languageTitle);
+      var languageList = document.createElement('div');
+      languageList.className = 'local-map-overview-list';
+      languages.forEach(function (language) {
+        var code = document.createElement('code');
+        code.textContent =
+          language.name +
+          ' · ' +
+          language.files +
+          ' file' +
+          (language.files === 1 ? '' : 's') +
+          ' · ' +
+          formatNumber(language.lines) +
+          ' lines';
+        languageList.appendChild(code);
+      });
+      languageCard.appendChild(languageList);
+      details.appendChild(languageCard);
+    }
+
+    var entryPoints = Array.isArray(summary.entryPoints)
+      ? summary.entryPoints
+      : [];
+    if (entryPoints.length) {
+      var entryCard = document.createElement('section');
+      entryCard.className = 'local-map-overview-card';
+      var entryTitle = document.createElement('h4');
+      entryTitle.textContent = 'Detected entry points';
+      entryCard.appendChild(entryTitle);
+      var entryList = document.createElement('div');
+      entryList.className = 'local-map-overview-list';
+      entryPoints.forEach(function (path) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = path;
+        button.title = path;
+        button.addEventListener('click', function () {
+          openFileAndReveal(path);
+        });
+        entryList.appendChild(button);
+      });
+      entryCard.appendChild(entryList);
+      details.appendChild(entryCard);
+    }
+
+    var external = Array.isArray(summary.externalDependencyNames)
+      ? summary.externalDependencyNames
+      : [];
+    if (external.length) {
+      var dependencyCard = document.createElement('section');
+      dependencyCard.className = 'local-map-overview-card';
+      var dependencyTitle = document.createElement('h4');
+      dependencyTitle.textContent = 'External dependencies';
+      dependencyCard.appendChild(dependencyTitle);
+      var dependencyList = document.createElement('div');
+      dependencyList.className = 'local-map-overview-list';
+      external.forEach(function (name) {
+        var code = document.createElement('code');
+        code.textContent = name;
+        dependencyList.appendChild(code);
+      });
+      dependencyCard.appendChild(dependencyList);
+      details.appendChild(dependencyCard);
+    }
+
+    if (details.childNodes.length) {
+      root.appendChild(details);
+    }
+  }
+
   function renderFacts() {
     var facts = document.getElementById('localMapFacts');
     if (facts) {
-      var lines = data.files.reduce(function (sum, file) { return sum + Number(file.lines || 0); }, 0);
-      var described = data.files.filter(function (file) {
-        return Boolean(file.description);
-      }).length;
+      var summary = data.summary || {};
+      var files = summary.files === undefined ? data.files.length : summary.files;
+      var lines = summary.lines === undefined
+        ? data.files.reduce(function (sum, file) {
+            return sum + Number(file.lines || 0);
+          }, 0)
+        : summary.lines;
+      var described = summary.describedFiles === undefined
+        ? data.files.filter(function (file) {
+            return Boolean(file.description);
+          }).length
+        : summary.describedFiles;
       facts.textContent =
-        formatNumber(data.files.length) +
+        formatNumber(files) +
         ' files · ' +
         formatNumber(lines) +
         ' lines · ' +
@@ -1975,6 +2183,7 @@ function buildLocalCodeMapScript(
   }
 
   renderFacts();
+  renderOverview();
   renderOnboarding();
   renderModules();
   renderTreemap();
