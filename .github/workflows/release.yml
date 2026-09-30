@@ -51,6 +51,19 @@ jobs:
       - name: Verify DocuMint
         run: npm run verify
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Playwright
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Run browser acceptance
+        run: npm run test:browser
+
       - name: Package VSIX
         shell: bash
         run: |
