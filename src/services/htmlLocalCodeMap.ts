@@ -200,6 +200,21 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     border-color: var(--accent);
     outline: none;
   }
+  .local-map-overview-more {
+    margin-top: 7px;
+    border-top: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
+    padding-top: 6px;
+  }
+  .local-map-overview-more summary {
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 700;
+    user-select: none;
+  }
+  .local-map-overview-more .local-map-overview-list {
+    margin-top: 6px;
+  }
   .local-map-panel {
     overflow: hidden;
     border: 1px solid var(--border);
@@ -1060,6 +1075,59 @@ function buildLocalCodeMapScript(
       });
       dependencyCard.appendChild(dependencyList);
       details.appendChild(dependencyCard);
+    }
+
+    var undocumentedFiles = data.files.filter(function (file) {
+      return !file.description;
+    });
+    if (undocumentedFiles.length) {
+      var coverageCard = document.createElement('section');
+      coverageCard.className = 'local-map-overview-card';
+      var coverageTitle = document.createElement('h4');
+      coverageTitle.textContent = 'Documentation coverage';
+      coverageCard.appendChild(coverageTitle);
+
+      var coverageNote = document.createElement('p');
+      coverageNote.textContent =
+        undocumentedFiles.length +
+        ' file' +
+        (undocumentedFiles.length === 1 ? '' : 's') +
+        ' without a trusted module-level description.';
+      coverageCard.appendChild(coverageNote);
+
+      function appendUndocumentedButtons(container, files) {
+        files.forEach(function (file) {
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = file.path;
+          button.title = file.path;
+          button.addEventListener('click', function () {
+            openFileAndReveal(file.path);
+          });
+          container.appendChild(button);
+        });
+      }
+
+      var coverageList = document.createElement('div');
+      coverageList.className = 'local-map-overview-list';
+      appendUndocumentedButtons(coverageList, undocumentedFiles.slice(0, 8));
+      coverageCard.appendChild(coverageList);
+
+      if (undocumentedFiles.length > 8) {
+        var coverageMore = document.createElement('details');
+        coverageMore.className = 'local-map-overview-more';
+        var coverageSummary = document.createElement('summary');
+        coverageSummary.textContent =
+          'Show ' + (undocumentedFiles.length - 8) + ' more';
+        coverageMore.appendChild(coverageSummary);
+        var remainingList = document.createElement('div');
+        remainingList.className = 'local-map-overview-list';
+        appendUndocumentedButtons(remainingList, undocumentedFiles.slice(8));
+        coverageMore.appendChild(remainingList);
+        coverageCard.appendChild(coverageMore);
+      }
+
+      details.appendChild(coverageCard);
     }
 
     if (details.childNodes.length) {
