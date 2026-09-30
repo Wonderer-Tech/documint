@@ -581,6 +581,16 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .local-map-result-more {
+    padding: 4px;
+    border-top: 1px solid var(--border);
+  }
+  .local-map-result-more button {
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+  }
   .local-map-card {
     min-height: 220px;
     padding: 16px;
@@ -874,6 +884,7 @@ function buildLocalCodeMapScript(
   var currentPath = (data.readingPath && data.readingPath[0] && data.readingPath[0].path) || data.files[0].path;
   var searchHits = [];
   var searchIndex = -1;
+  var searchExpanded = false;
 
   function makeSvg(tag, attrs, parent) {
     var node = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -1871,6 +1882,7 @@ function buildLocalCodeMapScript(
     if (!query) {
       searchHits = [];
       searchIndex = -1;
+      searchExpanded = false;
       closeResults();
       return;
     }
@@ -1883,7 +1895,7 @@ function buildLocalCodeMapScript(
       });
     }
 
-    searchHits = data.files.map(function (file) {
+    var rankedHits = data.files.map(function (file) {
       var name = fileName(file.path).toLowerCase();
       var pathText = file.path.toLowerCase();
       var descriptionRaw = String(file.description || '');
@@ -1959,9 +1971,9 @@ function buildLocalCodeMapScript(
     }).filter(function (item) { return item.score > 0; })
       .sort(function (a, b) {
         return b.score - a.score || b.file.usedBy.length - a.file.usedBy.length || a.file.path.localeCompare(b.file.path);
-      })
-      .slice(0, 9);
+      });
 
+    searchHits = searchExpanded ? rankedHits : rankedHits.slice(0, 9);
     searchIndex = searchHits.length ? 0 : -1;
     results.innerHTML = '';
 
@@ -1991,6 +2003,21 @@ function buildLocalCodeMapScript(
         li.appendChild(button);
         results.appendChild(li);
       });
+
+      if (!searchExpanded && rankedHits.length > searchHits.length) {
+        var moreItem = document.createElement('li');
+        moreItem.className = 'local-map-result-more';
+        var moreButton = document.createElement('button');
+        moreButton.type = 'button';
+        moreButton.textContent =
+          'Show all ' + rankedHits.length + ' matches';
+        moreButton.addEventListener('click', function () {
+          searchExpanded = true;
+          renderSearch();
+        });
+        moreItem.appendChild(moreButton);
+        results.appendChild(moreItem);
+      }
     }
 
     results.classList.add('open');
@@ -2240,14 +2267,17 @@ function buildLocalCodeMapScript(
   }, true);
 
   if (input && results) {
-    input.addEventListener('input', renderSearch);
+    input.addEventListener('input', function () {
+      searchExpanded = false;
+      renderSearch();
+    });
     input.addEventListener('keydown', function (event) {
       if (!results.classList.contains('open')) return;
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault();
         if (!searchHits.length) return;
         searchIndex = (searchIndex + (event.key === 'ArrowDown' ? 1 : -1) + searchHits.length) % searchHits.length;
-        results.querySelectorAll('button').forEach(function (button, index) {
+        results.querySelectorAll('button[role="option"]').forEach(function (button, index) {
           var selected = index === searchIndex;
           button.setAttribute('aria-selected', selected ? 'true' : 'false');
           if (selected) {
