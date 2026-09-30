@@ -91,7 +91,7 @@ Public AI-generation facade: `src/services/docGenerator.ts`. Local runtime orche
 Local HTML now starts with a question-first project map built from the same deterministic model used by Local Markdown:
 
 - **At a glance** — canonical project totals, description coverage, languages, detected entry points, external dependencies, and an actionable undocumented-file list that stays compact but can expand to every missing description.
-- **Big picture** — structural modules, resolved cross-module import counts, trusted module descriptions/provenance, and suggested start files.
+- **Big picture** — the single Local HTML architecture surface: structural modules, resolved cross-module import counts, trusted module descriptions/provenance, and suggested start files. The older duplicate Architecture & Dependencies table remains only in Markdown.
 - **What's inside** — a file-size treemap grouped by structural module.
 - **Start here** — a suggested reading path derived from detected entry points and dependency reach.
 - **How to run** — package scripts/manager, VS Code commands/settings, concrete Makefile targets, and Dockerfile source facts when those files are present.
