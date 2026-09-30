@@ -19,6 +19,39 @@ test("browser acceptance workflow stays manual-only and runs the canonical verif
   assert.doesNotMatch(workflow, /git\s+push/);
 });
 
+test("manual release-readiness workflow stays manual-only and uploads evidence", () => {
+  const workflow = readFileSync(
+    join(process.cwd(), ".github/workflows/release-readiness.yml"),
+    "utf8",
+  );
+
+  assert.match(workflow, /on:\s*\n\s*workflow_dispatch:/);
+  assert.doesNotMatch(workflow, /pull_request:/);
+  assert.doesNotMatch(workflow, /push:/);
+  assert.match(workflow, /test -f package-lock\.json/);
+  assert.match(workflow, /npm ci --no-audit --no-fund/);
+  assert.match(workflow, /python -m playwright install --with-deps chromium/);
+  assert.match(workflow, /npm run release:readiness/);
+  assert.match(workflow, /actions\/upload-artifact@v4/);
+  assert.match(workflow, /release-artifacts\/readiness/);
+  assert.doesNotMatch(workflow, /git\s+push/);
+});
+
+
+test("browser acceptance uses a cross-platform Python 3 launcher", () => {
+  const launcher = readFileSync(
+    join(process.cwd(), "tools/run-python.mjs"),
+    "utf8",
+  );
+
+  assert.match(launcher, /DOCUMINT_PYTHON/);
+  assert.match(launcher, /python3/);
+  assert.match(launcher, /python/);
+  assert.match(launcher, /process\.platform === "win32"/);
+  assert.match(launcher, /Python 3 was not found/);
+});
+
+
 test("browser acceptance scripts abort external HTTP requests", () => {
   const navigation = readFileSync(
     join(process.cwd(), "test/browser/navigationAcceptance.py"),
@@ -43,13 +76,13 @@ test("package scripts keep browser fixture and acceptance commands canonical", (
     manifest.scripts["test:browser:fixtures"],
     /navigationFixtures\.ts/,
   );
-  assert.match(
+  assert.equal(
     manifest.scripts["test:browser:navigation"],
-    /navigationAcceptance\.py/,
+    "node tools/run-python.mjs test/browser/navigationAcceptance.py",
   );
-  assert.match(
+  assert.equal(
     manifest.scripts["test:browser:reader"],
-    /readerAcceptance\.py/,
+    "node tools/run-python.mjs test/browser/readerAcceptance.py",
   );
   assert.equal(
     manifest.scripts["test:browser"],
