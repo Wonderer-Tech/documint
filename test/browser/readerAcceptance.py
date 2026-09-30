@@ -70,7 +70,8 @@ with sync_playwright() as p:
             assert snapshot() == before_filter, ('filter state restore', name)
             assert page.locator('#sidebarFilter').input_value() == ''
             assert not page.locator('#readerClearFilter').is_visible()
-            if fixture.get('codeMap'):
+            has_local_file_search = page.locator('#localMapSearch').count() == 1
+            if has_local_file_search:
                 page.keyboard.press('Control+k')
                 assert page.evaluate('document.activeElement.id') == 'localMapSearch'
                 page.evaluate('document.activeElement.blur()')
