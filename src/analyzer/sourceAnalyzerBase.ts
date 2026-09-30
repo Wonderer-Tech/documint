@@ -10,6 +10,7 @@ export type SourceSymbolKind =
   | "enum"
   | "constant"
   | "variable"
+  | "export"
   | "struct"
   | "trait";
 
