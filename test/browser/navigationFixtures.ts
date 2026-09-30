@@ -205,7 +205,7 @@ emit("ai-format", ai, 2, 4, true);
 emit(
   "malformed-chart",
   ai.replace(
-    /(<code class="language-architecture-blueprint">)[\s\S]*?(<\\/code>)/,
+    /(<code class="language-architecture-blueprint">)[\s\S]*?(<\/code>)/,
     '$1{"modules":[null]}$2',
   ),
   2,
