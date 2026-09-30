@@ -83,3 +83,27 @@ export function resolveHtmlLocalSurfaceChrome(
         keyboardHints: '<kbd>/</kbd> Search &nbsp; <kbd>T</kbd> Theme',
       };
 }
+
+
+export function resolveHtmlContentSecurityPolicy(
+  externalAssetsEnabled: boolean,
+): string {
+  if (externalAssetsEnabled) {
+    return "";
+  }
+
+  return (
+    '<meta http-equiv="Content-Security-Policy" ' +
+    'content="default-src \'none\'; ' +
+    'script-src \'unsafe-inline\'; ' +
+    'style-src \'unsafe-inline\'; ' +
+    'img-src data: blob:; ' +
+    'font-src data:; ' +
+    'connect-src \'none\'; ' +
+    'media-src \'none\'; ' +
+    'object-src \'none\'; ' +
+    'worker-src \'none\'; ' +
+    'base-uri \'none\'; ' +
+    'form-action \'none\';">'
+  );
+}
