@@ -16,7 +16,9 @@ test("HTML template carries the soft Jelly UI shell and accessibility states", (
   );
 
   assert.match(styleSource, /DOCUMINT JELLY UI/);
-  assert.match(templateSource, /<body class="documint-jelly-ui">/);
+  assert.match(templateSource, /const bodyClassName = options\.localCodeMap/);
+  assert.match(templateSource, /documint-jelly-ui documint-local-report/);
+  assert.match(templateSource, /<body class="\$\{bodyClassName\}">/);
   assert.match(styleSource, /--jelly-surface:/);
   assert.match(styleSource, /backdrop-filter: blur\(18px\)/);
   assert.match(styleSource, /\.documint-jelly-ui \.topbar/);
@@ -51,7 +53,10 @@ test("Local generated HTML receives the Jelly UI and question-first code map", (
     project,
   );
 
-  assert.match(document.html, /class="documint-jelly-ui"/);
+  assert.match(
+    document.html,
+    /class="documint-jelly-ui documint-local-report"/,
+  );
   assert.match(document.html, /Jelly Example — Local Documentation/);
   assert.match(document.html, /src\/main\.ts/);
   assert.match(document.html, /data-documint-local-code-map/);
