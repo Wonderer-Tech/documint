@@ -96,3 +96,13 @@ test("custom provider request does not follow endpoint redirects", () => {
   assert.match(source, /maxRedirects:\s*0/);
   assert.match(source, /proxy:\s*this\.isLocal \? false : undefined/);
 });
+
+
+test("custom provider bypasses environment proxies only for local endpoints", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src/providers/customProvider.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /proxy:\s*this\.isLocal \? false : undefined/);
+});
