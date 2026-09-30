@@ -42,10 +42,17 @@ const data: LocalCodeMapData = {
     },
   ],
   modules: [
-    { name: "src", files: 1, lines: 12 },
+    {
+      name: "src",
+      primaryFilePaths: ["src/extension.ts"],
+      files: 1,
+      lines: 12,
+    },
     {
       name: "src/services",
       description: "Documentation services",
+      descriptionSource: "readme",
+      primaryFilePaths: ["src/services/run.ts"],
       files: 1,
       lines: 80,
     },
@@ -281,6 +288,28 @@ test("Local module-map handwritten notes stay metric-backed and conservative", (
     fragments.script,
     /everything passes through|only place that calls|will break|good to split/i,
   );
+});
+
+
+test("Local module map retains trusted provenance and suggested start files", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /module\.descriptionSource/);
+  assert.match(fragments.script, /primaryFilePaths/);
+  assert.match(fragments.script, /Suggested start:/);
+  assert.match(fragments.script, /start: /);
+  assert.match(fragments.script, /src\/services\/run\.ts/);
+  assert.match(fragments.script, /\[readme\]/);
+});
+
+
+test("Local relation cards keep every dependency accessible beyond the compact first twelve", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /function relationButton/);
+  assert.match(fragments.script, /local-map-relation-more/);
+  assert.match(fragments.script, /paths\.slice\(12\)/);
+  assert.match(fragments.script, /details\.appendChild\(relationButton\(path\)\)/);
 });
 
 
