@@ -59,3 +59,29 @@ test("configuration inspection chooses the most specific explicit scope", () => 
     "workspace-language",
   );
 });
+
+
+test("configuration precedence preserves explicit falsy values", () => {
+  assert.deepEqual(
+    resolveConfigurationValue(
+      { workspaceValue: 0 },
+      { workspaceValue: 15 },
+      5,
+    ),
+    { value: 0, source: "current-explicit" },
+  );
+
+  assert.deepEqual(
+    resolveConfigurationValue(
+      { workspaceValue: "" },
+      { workspaceValue: "legacy" },
+      "default",
+    ),
+    { value: "", source: "current-explicit" },
+  );
+
+  assert.equal(
+    getExplicitConfigurationValue({ globalValue: false }),
+    false,
+  );
+});
