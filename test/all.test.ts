@@ -101,3 +101,5 @@ import "./localBuildFacts.test";
 import "./localSelfAudit.test";
 
 import "./markdownEscaping.test";
+
+import "./htmlMarkdownSafety.test";
