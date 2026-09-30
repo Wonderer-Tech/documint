@@ -83,41 +83,41 @@ export function renderLocalProjectDocumentationFromModel(
     );
   }
 
-  sections.push(
-    "",
-    "## Project Facts",
-    "",
-    `- **Files:** ${model.files.length}`,
-    `- **Lines:** ${model.totalLines}`,
-    `- **Files with trusted descriptions:** ${model.files.filter((file) => Boolean(file.description)).length}`,
-    `- **Undocumented files:** ${model.files.filter((file) => !file.description).length}`,
-    `- **Detected symbols:** ${model.totalSymbols}`,
-    `- **Exported symbols:** ${model.totalExports}`,
-    `- **Internal dependency links:** ${model.internalDependencies.length}`,
-    `- **External dependencies:** ${model.externalDependencies.length}`,
-    `- **TODO/FIXME/HACK comments:** ${model.totalTodos}`,
-    "",
-    "## Language Summary",
-    "",
-    renderLanguageSummary(model),
-    "",
-    "## Module Summary",
-    "",
-    renderModuleSummary(model),
-    "",
-    "## Entry Points",
-    "",
-    renderPathList(model.entryPoints, "No entry points detected."),
-    "",
-    "## External Dependencies",
-    "",
-    renderCodeList(
-      model.externalDependencies,
-      "No external dependencies detected from source imports.",
-    ),
-  );
-
   if (surface === "markdown") {
+    sections.push(
+      "",
+      "## Project Facts",
+      "",
+      `- **Files:** ${model.files.length}`,
+      `- **Lines:** ${model.totalLines}`,
+      `- **Files with trusted descriptions:** ${model.files.filter((file) => Boolean(file.description)).length}`,
+      `- **Undocumented files:** ${model.files.filter((file) => !file.description).length}`,
+      `- **Detected symbols:** ${model.totalSymbols}`,
+      `- **Exported symbols:** ${model.totalExports}`,
+      `- **Internal dependency links:** ${model.internalDependencies.length}`,
+      `- **External dependencies:** ${model.externalDependencies.length}`,
+      `- **TODO/FIXME/HACK comments:** ${model.totalTodos}`,
+      "",
+      "## Language Summary",
+      "",
+      renderLanguageSummary(model),
+      "",
+      "## Module Summary",
+      "",
+      renderModuleSummary(model),
+      "",
+      "## Entry Points",
+      "",
+      renderPathList(model.entryPoints, "No entry points detected."),
+      "",
+      "## External Dependencies",
+      "",
+      renderCodeList(
+        model.externalDependencies,
+        "No external dependencies detected from source imports.",
+      ),
+    );
+
     sections.push(
       "",
       "## Core files",
@@ -131,14 +131,16 @@ export function renderLocalProjectDocumentationFromModel(
     sections.push("", "## Undocumented files", "", undocumented);
   }
 
-  sections.push(
-    "",
-    "## Source Tree",
-    "",
-    "```text",
-    renderSourceTree(model.projectName, model.files.map((file) => file.path)),
-    "```",
-  );
+  if (surface === "markdown") {
+    sections.push(
+      "",
+      "## Source Tree",
+      "",
+      "```text",
+      renderSourceTree(model.projectName, model.files.map((file) => file.path)),
+      "```",
+    );
+  }
 
   return sections.join("\n");
 }
