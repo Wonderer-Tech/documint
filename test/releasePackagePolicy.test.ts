@@ -142,6 +142,15 @@ test("release workflow publishes VSIX reproducibly as a tag asset without mutati
 });
 
 
+test("daily development check stays browser- and packaging-free", () => {
+  assert.equal(
+    manifest.scripts.check,
+    "npm run typecheck && npm run test:unit",
+  );
+  assert.doesNotMatch(manifest.scripts.check, /test:browser|release:readiness|vsce|audit:self/);
+});
+
+
 test("unit test bundle runs outside node_modules", () => {
   const script = manifest.scripts["test:unit"];
 
