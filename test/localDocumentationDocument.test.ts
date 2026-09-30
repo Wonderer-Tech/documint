@@ -158,3 +158,22 @@ test("Local generated HTML embeds a no-network Content Security Policy", () => {
   );
   assert.doesNotMatch(document.html, /cdnjs\.cloudflare\.com/i);
 });
+
+test("Local generated HTML uses a CSP nonce instead of unsafe inline scripts", () => {
+  const analyzer = new SourceAnalyzer();
+  const project = analyzer.analyzeProject(files);
+  const document = buildLocalDocumentationDocument("Example Project", files, project);
+
+  const nonce = document.html.match(/script-src 'nonce-([^']+)'/)?.[1];
+  assert.ok(nonce);
+
+  const executableTag = `<script nonce="${nonce}">`;
+  assert.ok(document.html.split(executableTag).length - 1 >= 2);
+  assert.ok(
+    document.html.includes(
+      `<script nonce="${nonce}" type="application/json" id="documintLocalCodeMapData">`,
+    ),
+  );
+  assert.doesNotMatch(document.html, /onclick=/i);
+  assert.doesNotMatch(document.html, /script-src 'unsafe-inline'/);
+});
