@@ -487,6 +487,14 @@ When dependency registry access is available, `npm run lockfile:generate` create
 
 If the local machine cannot reach the npm registry, run the manual **Lockfile Bootstrap** GitHub Actions workflow. It generates and validates `package-lock.json` on a network-enabled runner and uploads the lockfile plus SHA-256/metadata as an artifact without committing or pushing to the repository. Its default `run_readiness=true` input also runs the complete verify → browser acceptance → VSIX packaging/evidence gate against that transient lockfile, so the branch can be fully tested before the lockfile is committed.
 
+After downloading and extracting the lockfile artifact, adopt it safely from the repository root:
+
+```bash
+npm run lockfile:adopt -- /path/to/extracted/documint-package-lock-artifact
+```
+
+The adopter uses the same shared lockfile policy as `lockfile:validate`; it validates the candidate before touching the root lockfile, replaces via a temporary file, and re-verifies the adopted SHA-256. Passing the artifact directory or its `package-lock.json` file is supported.
+
 ### Release readiness
 
 After the lockfile is committed and Python Playwright/Chromium are installed, run the complete release gate with one command:
