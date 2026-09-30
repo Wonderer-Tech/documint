@@ -15,6 +15,10 @@ All notable changes to DocuMint are documented here.
 
 ### Changed
 
+- Added a manual-only **Release Readiness** workflow that runs the same strict local readiness gate and uploads evidence/VSIX artifacts without enabling normal main-push CI.
+- Browser acceptance scripts now use a cross-platform Python 3 launcher (`python3`, `python`, or Windows `py -3`) with an optional `DOCUMINT_PYTHON` override.
+- Release readiness now preflights the actual Python Playwright/Chromium runtime before spending time on verification/package phases.
+
 - Added a one-command `npm run release:readiness` gate that requires the lockfile, reuses normal verification and full browser acceptance, packages with the installed local VSCE binary, validates the VSIX archive, and emits machine-readable timing/size/hash/self-audit/browser evidence.
 - Release packaging now excludes `tools/**`, `audit/**`, and `release-artifacts/**` so readiness evidence and audit/reference material cannot inflate or recursively contaminate the VSIX.
 - Tag releases now reuse the same release-readiness command and upload its evidence alongside browser artifacts before publishing the VSIX.
