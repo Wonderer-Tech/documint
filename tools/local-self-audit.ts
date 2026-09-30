@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { SourceAnalyzer } from "../src/analyzer/sourceAnalyzer";
 import { getLanguageFromPath } from "../src/scanner/scannerPolicy";
@@ -46,14 +46,20 @@ files.push({
   content: readFileSync(packageJson, "utf8"),
 });
 
-const readmePath = join(root, "README.md");
-const readme = readFileSync(readmePath, "utf8");
+const readOptional = (name: string): string | undefined => {
+  const filePath = join(root, name);
+  return existsSync(filePath) ? readFileSync(filePath, "utf8") : undefined;
+};
+
+const readme = readOptional("README.md");
+const makefile = readOptional("Makefile") ?? readOptional("makefile");
+const dockerfile = readOptional("Dockerfile") ?? readOptional("dockerfile");
 const project = new SourceAnalyzer().analyzeProject(files);
 const document = buildLocalDocumentationDocument(
   "DocuMint",
   files,
   project,
-  { readme },
+  { readme, makefile, dockerfile },
 );
 const report = buildLocalSelfAuditReport(document);
 
