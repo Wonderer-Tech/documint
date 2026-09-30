@@ -11,25 +11,17 @@ export interface LocalArchitectureDocumentationInput {
   project: ProjectAnalysis;
 }
 
-export interface LocalArchitectureRenderOptions {
-  surface?: "markdown" | "summary";
-}
-
 export function renderLocalArchitectureDocumentation(
   input: LocalArchitectureDocumentationInput,
-  options: LocalArchitectureRenderOptions = {},
 ): string {
   return renderLocalArchitectureDocumentationFromModel(
     buildLocalDocumentationModel(input.projectName, input.files, input.project),
-    options,
   );
 }
 
 export function renderLocalArchitectureDocumentationFromModel(
   model: LocalDocumentationModel,
-  options: LocalArchitectureRenderOptions = {},
 ): string {
-  const surface = options.surface ?? "markdown";
   const sections = [
     "## Architecture & Dependencies",
     "",
@@ -39,10 +31,6 @@ export function renderLocalArchitectureDocumentationFromModel(
     "",
     renderModuleRelationshipTable(model),
   ];
-
-  if (surface === "summary") {
-    return sections.join("\n");
-  }
 
   if (model.modules.length <= 15) {
     sections.push(
