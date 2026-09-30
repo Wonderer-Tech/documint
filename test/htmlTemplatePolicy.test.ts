@@ -59,7 +59,7 @@ test("generated timestamp formatting is deterministic for valid and legacy value
 
 
 test("Local HTML CSP blocks network-capable resource types", () => {
-  const local = resolveHtmlContentSecurityPolicy(false);
+  const local = resolveHtmlContentSecurityPolicy(false, "testNonce123");
 
   assert.match(local, /Content-Security-Policy/);
   assert.match(local, /default-src 'none'/);
@@ -68,8 +68,14 @@ test("Local HTML CSP blocks network-capable resource types", () => {
   assert.match(local, /worker-src 'none'/);
   assert.match(local, /base-uri 'none'/);
   assert.match(local, /form-action 'none'/);
-  assert.match(local, /script-src 'unsafe-inline'/);
+  assert.match(local, /script-src 'nonce-testNonce123'/);
+  assert.doesNotMatch(local, /script-src 'unsafe-inline'/);
   assert.match(local, /style-src 'unsafe-inline'/);
 
   assert.equal(resolveHtmlContentSecurityPolicy(true), "");
+});
+
+test("Local HTML CSP falls back to blocking all scripts without a nonce", () => {
+  const local = resolveHtmlContentSecurityPolicy(false);
+  assert.match(local, /script-src 'none'/);
 });
