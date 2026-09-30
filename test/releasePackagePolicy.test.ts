@@ -182,6 +182,14 @@ test("release readiness command runs strict verification and writes measurable e
   );
   assert.match(readiness, /Python Playwright\/browser runtime is unavailable/);
   assert.match(readiness, /CHROMIUM_EXECUTABLE/);
+  assert.match(readiness, /DOCUMINT_PYTHON/);
+  assert.match(readiness, /\.venvs/);
+  assert.match(readiness, /documint-browser/);
+  assert.match(readiness, /brave-browser/);
+  assert.match(readiness, /chromium-browser/);
+  assert.match(readiness, /discoverPythonExecutable/);
+  assert.match(readiness, /discoverBrowserExecutable/);
+  assert.match(readiness, /browserEnv/);
   assert.match(readiness, /executable_path/);
   assert.match(readiness, /system-executable/);
   assert.match(readiness, /playwright-managed/);
