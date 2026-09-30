@@ -29,6 +29,254 @@ export function renderLocalCodeMapFragments(
 }
 
 const LOCAL_CODE_MAP_STYLES = String.raw`
+  body.documint-local-report {
+    --bg-primary: #F6F8F7;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #E8EFEC;
+    --bg-code: #EEF3F1;
+    --border: #C9D4CF;
+    --text-primary: #24303A;
+    --text-secondary: #5E6B74;
+    --text-muted: #78858C;
+    --accent: #1E8C6E;
+    --accent-subtle: #D3EEE4;
+    --heading-1: #24303A;
+    --heading-2: #24303A;
+    --heading-3: #3F6394;
+    --code-inline: #B8475A;
+    --jelly-surface: color-mix(in srgb, #F6F8F7 88%, transparent);
+    --jelly-surface-strong: #FFFFFF;
+    --jelly-surface-soft: color-mix(in srgb, #1E8C6E 4%, transparent);
+    --jelly-surface-hover: color-mix(in srgb, #1E8C6E 7%, transparent);
+    --jelly-border: #C9D4CF;
+    --jelly-border-accent: color-mix(in srgb, #1E8C6E 45%, #C9D4CF);
+    --jelly-shadow: none;
+    --jelly-shadow-soft: none;
+    --jelly-highlight: none;
+    --jelly-glow: transparent;
+    --jelly-table-row: color-mix(in srgb, #1E8C6E 2%, transparent);
+    color: #24303A;
+    background-color: #F6F8F7;
+    background-image:
+      linear-gradient(#E2EAE6 1px, transparent 1px),
+      linear-gradient(90deg, #E2EAE6 1px, transparent 1px);
+    background-size: 28px 28px;
+    font-family: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: 0;
+  }
+  :root[data-theme="dark"] body.documint-local-report {
+    --bg-primary: #131B20;
+    --bg-secondary: #18232A;
+    --bg-tertiary: #223038;
+    --bg-code: #18232A;
+    --border: #34454C;
+    --text-primary: #DCE5E2;
+    --text-secondary: #A9B7BC;
+    --text-muted: #93A2A9;
+    --accent: #4CC9A0;
+    --accent-subtle: #163A30;
+    --heading-1: #DCE5E2;
+    --heading-2: #DCE5E2;
+    --heading-3: #8DB0E6;
+    --code-inline: #E48597;
+    --jelly-surface: color-mix(in srgb, #131B20 90%, transparent);
+    --jelly-surface-strong: #18232A;
+    --jelly-surface-soft: color-mix(in srgb, #4CC9A0 5%, transparent);
+    --jelly-surface-hover: color-mix(in srgb, #4CC9A0 8%, transparent);
+    --jelly-border: #34454C;
+    --jelly-border-accent: color-mix(in srgb, #4CC9A0 45%, #34454C);
+    --jelly-shadow: none;
+    --jelly-shadow-soft: none;
+    --jelly-highlight: none;
+    --jelly-glow: transparent;
+    --jelly-table-row: color-mix(in srgb, #4CC9A0 2%, transparent);
+    color: #DCE5E2;
+    background-color: #131B20;
+    background-image:
+      linear-gradient(#1C282E 1px, transparent 1px),
+      linear-gradient(90deg, #1C282E 1px, transparent 1px);
+  }
+  .documint-local-report::before { display: none; }
+
+  .documint-local-report .topbar {
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--topbar-h);
+    padding: 0 20px;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
+    box-shadow: none;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .documint-local-report .topbar-client {
+    padding: 4px 0;
+    border-radius: 0;
+    color: var(--text-primary);
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .documint-local-report .topbar-client:hover {
+    background: transparent;
+    color: var(--accent);
+    transform: none;
+  }
+  .documint-local-report .topbar-client::before {
+    width: 9px;
+    height: 9px;
+    background: var(--accent);
+    box-shadow: none;
+  }
+  .documint-local-report .search-input,
+  .documint-local-report .sidebar-filter,
+  .documint-local-report .theme-btn {
+    border-color: var(--border);
+    border-radius: 9px;
+    background: var(--bg-secondary);
+    box-shadow: none;
+  }
+  .documint-local-report .search-input:focus,
+  .documint-local-report .sidebar-filter:focus {
+    border-color: var(--accent);
+    box-shadow: none;
+  }
+  .documint-local-report .theme-btn:hover {
+    border-color: var(--accent);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    box-shadow: none;
+    transform: none;
+  }
+
+  .documint-local-report .sidebar {
+    top: var(--topbar-h);
+    bottom: 0;
+    padding: 14px 0 20px;
+    border: 0;
+    border-right: 1px solid var(--border);
+    border-radius: 0;
+    background: color-mix(in srgb, var(--bg-primary) 94%, var(--bg-secondary));
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .documint-local-report .sidebar-head {
+    border-color: var(--border);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    box-shadow: none;
+  }
+  .documint-local-report .sidebar-project-name { color: var(--text-primary); }
+  .documint-local-report .smart-toc-group {
+    border-color: transparent;
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none;
+  }
+  .documint-local-report .smart-toc-group:hover {
+    border-color: transparent;
+    background: var(--jelly-surface-hover);
+  }
+  .documint-local-report .smart-toc-group[open] {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .documint-local-report .smart-toc-count {
+    border-color: var(--border);
+    background: var(--bg-secondary);
+  }
+  .documint-local-report .smart-toc-items .toc-link.active,
+  .documint-local-report .toc-link.active {
+    background: var(--accent-subtle);
+    border-left-color: var(--accent) !important;
+  }
+
+  .documint-local-report .main {
+    margin-top: var(--topbar-h);
+    padding: 34px clamp(24px, 4vw, 48px) 100px;
+    background: transparent;
+  }
+  .documint-local-report .client-heading {
+    max-width: 1120px;
+    margin: 0 auto 10px;
+  }
+  .documint-local-report .client-name-highlight {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .documint-local-report .stats-banner {
+    max-width: 1120px;
+    margin: 0 auto 18px;
+    padding: 10px 14px;
+    border-color: var(--border);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    box-shadow: none;
+  }
+  .documint-local-report .stat-item {
+    padding: 2px 6px;
+    border-radius: 0;
+  }
+  .documint-local-report .calendar-chip,
+  .documint-local-report .digital-clock {
+    border-color: var(--border);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    box-shadow: none;
+  }
+
+  .documint-local-report .main > h1 {
+    max-width: 1120px;
+    margin: 46px auto 18px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-left: 0;
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 18px;
+    font-weight: 500;
+  }
+  .documint-local-report .main > h1::before { display: none; }
+  .documint-local-report .main > h2 {
+    color: var(--text-primary);
+    border-left-color: var(--accent);
+  }
+  .documint-local-report .main > h3 { color: var(--heading-3); }
+  .documint-local-report .main code {
+    border-color: var(--border);
+    background: var(--bg-secondary);
+    font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  .documint-local-report .main pre,
+  .documint-local-report .main table,
+  .documint-local-report .main blockquote {
+    border-color: var(--border);
+    box-shadow: none;
+  }
+  .documint-local-report .main th { background: var(--bg-tertiary); }
+  .documint-local-report .main tr:nth-child(even) td { background: var(--jelly-table-row); }
+  .documint-local-report .btt {
+    border-color: var(--border);
+    background: var(--bg-secondary);
+    box-shadow: none;
+  }
+  .documint-local-report .doc-footer {
+    border-top-color: var(--border);
+    background: color-mix(in srgb, var(--bg-primary) 94%, transparent);
+  }
+
   .local-code-map {
     --map-paper: #F6F8F7;
     --map-grid: #E2EAE6;
@@ -57,16 +305,13 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     --map-sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --map-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-    margin: 20px 0 42px;
-    padding: 0 26px 64px;
-    overflow: hidden;
-    border: 1px solid var(--map-line);
-    border-radius: 16px;
-    background-color: var(--map-paper);
-    background-image:
-      linear-gradient(var(--map-grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--map-grid) 1px, transparent 1px);
-    background-size: 28px 28px;
+    max-width: 1120px;
+    margin: 0 auto 42px;
+    padding: 0 0 64px;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     color: var(--map-ink);
     box-shadow: none;
     font-family: var(--map-sans);
@@ -1044,9 +1289,9 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     .local-code-map {
       margin-right: 0;
       margin-left: 0;
-      padding-right: 16px;
-      padding-left: 16px;
-      border-radius: 12px;
+      padding-right: 0;
+      padding-left: 0;
+      border-radius: 0;
     }
     .local-map-hero {
       align-items: flex-start;
@@ -1065,10 +1310,24 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     .local-map-treemap { height: 620px; }
     .local-map-card { padding: 16px; }
   }
+  @media (max-width: 768px) {
+    .documint-local-report .sidebar {
+      top: 66px;
+      left: 8px;
+      bottom: 8px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-secondary);
+    }
+    .documint-local-report .main {
+      padding: 24px 16px 72px;
+    }
+    .documint-local-report .stats-banner {
+      margin-bottom: 14px;
+    }
+  }
   @media (max-width: 620px) {
     .local-code-map {
-      background-size: 24px 24px;
-    }
     .local-map-hero h2 { font-size: 34px; }
     .local-map-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .local-map-overview-details,
