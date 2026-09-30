@@ -58,7 +58,9 @@ const data: LocalCodeMapData = {
       reason: "Imported by src/extension.ts.",
     },
   ],
+  referencedEnvironmentVariables: ["API_TOKEN", "LOG_LEVEL"],
   gettingStarted: {
+    packageJsonPath: "package.json",
     packageManager: "npm",
     extensionEntry: "./dist/extension.js",
     scripts: [
@@ -73,6 +75,23 @@ const data: LocalCodeMapData = {
         command: "node --test",
       },
     ],
+    vscodeCommands: [
+      { id: "documint.generate", title: "Generate Documentation" },
+    ],
+    vscodeSettings: [
+      { key: "documint.generationMode", defaultValue: "local" },
+    ],
+    makefile: {
+      path: "Makefile",
+      targets: [{ name: "verify" }],
+    },
+    dockerfile: {
+      path: "Dockerfile",
+      baseImages: ["node:22-alpine"],
+      stages: ["runtime"],
+      exposedPorts: ["3000"],
+      command: '["node","dist/server.js"]',
+    },
   },
 };
 
@@ -81,6 +100,8 @@ test("Local code map exposes question-first interactive surfaces without externa
 
   assert.match(fragments.markup, /Big picture/);
   assert.match(fragments.markup, /How do the parts fit together\?/);
+  assert.match(fragments.markup, /How to run/);
+  assert.match(fragments.markup, /How do I build, test, or start this project\?/);
   assert.match(fragments.markup, /What's inside/);
   assert.match(fragments.markup, /Start here/);
   assert.match(fragments.markup, /Dependency reach/);
@@ -138,13 +159,22 @@ test("Local code map connects module focus and file-card navigation", () => {
 });
 
 
-test("Local code map surfaces detected run commands and owns Ctrl/Cmd+K file search", () => {
+test("Local code map owns deterministic onboarding facts and Ctrl/Cmd+K file search", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
-  assert.match(fragments.markup, /localMapRun/);
+  assert.match(fragments.markup, /localMapRunSection/);
+  assert.match(fragments.markup, /localMapOnboarding/);
   assert.match(fragments.markup, /Ctrl\/⌘ K/);
+  assert.match(fragments.script, /renderOnboarding/);
   assert.match(fragments.script, /npm run compile/);
   assert.match(fragments.script, /npm run test/);
+  assert.match(fragments.script, /documint\.generate/);
+  assert.match(fragments.script, /documint\.generationMode/);
+  assert.match(fragments.script, /make verify/);
+  assert.match(fragments.script, /node:22-alpine/);
+  assert.match(fragments.script, /API_TOKEN/);
+  assert.match(fragments.script, /LOG_LEVEL/);
+  assert.match(fragments.script, /Referenced in source; static analysis does not claim these are required in every run/);
   assert.match(fragments.script, /event\.stopImmediatePropagation\(\)/);
   assert.match(fragments.script, /event\.key\.toLowerCase\(\) === 'k'/);
   assert.match(fragments.script, /input\.focus\(\)/);
