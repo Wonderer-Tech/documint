@@ -79,7 +79,7 @@ Do not commit generated `documint/` output as source changes.
 
 Do not force-add new VSIX binaries to normal source commits. Release packaging should remain separate from application-source review.
 
-For a release candidate, first generate/refresh and commit `package-lock.json` from a registry-enabled checkout, install locked dependencies with `npm ci`, and install Python Playwright + Chromium. Then run:
+For a release candidate, first generate/refresh `package-lock.json` from a registry-enabled checkout (or use the manual **Lockfile Bootstrap** workflow), run `npm run lockfile:validate`, then commit the validated lockfile. Install locked dependencies with `npm ci` and install Python Playwright + Chromium. Then run:
 
 ```bash
 npm run release:readiness
@@ -89,7 +89,7 @@ The readiness command is intentionally strict: it runs unit/regression verificat
 
 Set `DOCUMINT_BASELINE_VSIX` to an earlier VSIX path when a before/after package-size delta is required. Browser scripts automatically select Python 3 through `tools/run-python.mjs`; set `DOCUMINT_PYTHON` when a specific interpreter is required.
 
-Once `package-lock.json` exists on the branch, the manual **Release Readiness** GitHub Actions workflow runs the same gate and uploads the evidence/VSIX without changing the automatic-main CI policy.
+The Lockfile Bootstrap workflow is artifact-only: it has read-only repository permissions and never commits or pushes. Once the validated `package-lock.json` exists on the branch, the manual **Release Readiness** GitHub Actions workflow runs the same gate and uploads the evidence/VSIX without changing the automatic-main CI policy.
 
 ## Pull requests
 
