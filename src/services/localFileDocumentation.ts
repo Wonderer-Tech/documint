@@ -7,6 +7,7 @@ import type {
 import type { WorkspaceFile } from "../types";
 import type { LocalDocumentationFile } from "./localDocumentationModel";
 import { structuralModuleName } from "./structuralModule";
+import { relativeSourceHref } from "./sourceLink";
 import { escapeMarkdownPlainText, escapeMarkdownTableText } from "./markdownEscaping";
 
 export interface LocalFileDocumentationInput {
@@ -194,15 +195,6 @@ function uniqueSorted(values: string[]): string[] {
 
 function markdownFileLink(filePath: string): string {
   return `[${inlineCode(filePath)}](${relativeSourceHref(filePath)})`;
-}
-
-function relativeSourceHref(filePath: string, line?: number): string {
-  const encoded = String(filePath)
-    .replace(/\\/g, "/")
-    .split("/")
-    .map((segment) => encodeURIComponent(segment))
-    .join("/");
-  return `../${encoded}${line ? `#L${line}` : ""}`;
 }
 
 function descriptionSourceLabel(source: string): string {
