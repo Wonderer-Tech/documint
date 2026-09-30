@@ -133,9 +133,14 @@ test("Local code map exposes question-first interactive surfaces without externa
   assert.match(fragments.markup, /Look up a file/);
   assert.match(fragments.styles, /local-map-treemap/);
   assert.match(fragments.script, /src\\u002fextension|src\/extension\.ts/);
+  const executableMarkup = fragments.markup + fragments.script;
   assert.doesNotMatch(
-    fragments.styles + fragments.markup + fragments.script,
-    /https?:\/\//i,
+    executableMarkup,
+    /<(?:script|link|img)[^>]+(?:src|href)=["']https?:\/\//i,
+  );
+  assert.doesNotMatch(
+    fragments.script,
+    /\b(?:fetch|XMLHttpRequest)\b[\s\S]{0,120}https?:\/\//i,
   );
 });
 
@@ -415,7 +420,10 @@ test("Local module map retains trusted provenance and suggested start files", ()
   assert.match(fragments.script, /Suggested start:/);
   assert.match(fragments.script, /start: /);
   assert.match(fragments.script, /src\/services\/run\.ts/);
-  assert.match(fragments.script, /\[readme\]/);
+  assert.match(
+    fragments.script,
+    /module\.descriptionSource[\s\S]*' \[' \+ module\.descriptionSource \+ '\]'/,
+  );
 });
 
 
