@@ -90,3 +90,5 @@ test("aggregate regression entry imports every sibling test module", () => {
     );
   }
 });
+
+import "./browserWorkflowPolicy.test";
