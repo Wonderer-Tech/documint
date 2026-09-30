@@ -40,10 +40,11 @@ _Last updated: 2026-09-30_
 - ✅ Big Picture module nodes retain trusted description provenance and canonical suggested start files from the shared model.
 - ✅ Uses / Used by stays compact for the first 12 links while every remaining relation remains expandable and navigable; no dependency links are hidden behind a count-only placeholder.
 - ✅ Local HTML has one source-grounded **How to run** surface owned by the code map: package scripts/manager, extension entry, VS Code commands/settings, Makefile targets, Dockerfile facts, and referenced environment variables come from the canonical model; duplicate HTML overview onboarding headings are suppressed while Markdown keeps them.
-- ✅ Local code map supports cross-view navigation, module focus isolation, entry-point-driven layered layout, accessible search/listbox behavior, `Ctrl/Cmd+K` file search, trusted module-description tooltips, and an accessible in-map section navigator with `aria-current` state plus scroll tracking.
+- ✅ Local code map supports cross-view navigation, module focus isolation, entry-point-driven layered layout, accessible search/listbox behavior, `Ctrl/Cmd+K` file search, trusted module-description tooltips, and an accessible in-map section navigator with `aria-current` state, scroll tracking, valid deep-link restoration, hash-change synchronization, and safe stale-hash fallback.
+- ✅ Removed the now-unused Local architecture `summary` rendering branch after **Big picture** became the sole HTML architecture surface; the architecture renderer is Markdown-only again.
 - ✅ Local HTML disables required external CDN assets; the Local project-map experience is self-contained.
 - ✅ Hardened Markdown→HTML rendering in both Local and AI modes: source/provider raw HTML is neutralized outside code, source-derived prose is escaped as plain Markdown text, and unsafe rendered link/image URLs are blocked.
-- ✅ Local cache compatibility is now `local-documentation-cache-v18`.
+- ✅ Local cache compatibility is now `local-documentation-cache-v19`.
 - ✅ Added nonce-based CSP to the sidebar webview.
 - ✅ Hardened local-provider network boundaries: Ollama, LM Studio, local model discovery, and custom OpenAI-compatible requests do not follow HTTP redirects; loopback requests bypass environment HTTP proxies, and local model discovery also caps response size.
 - ✅ New installs default to Local mode; malformed/legacy programmatic mode values still fall back to AI.
@@ -65,10 +66,15 @@ _Last updated: 2026-09-30_
 
 ### Current next step
 
+All currently identified **network-independent Local redesign/hardening implementation is complete in source**. Remaining work requires execution access, binary handling, or an explicit workflow-policy decision:
+
 1. Generate and commit `package-lock.json` from a network-enabled/local checkout.
-2. When explicitly allowed to run normal push CI, remove the `.github/ci-trigger` path gate and enable every `main` push.
-3. Run the full unit/browser regression suite and package a VSIX to measure bundle/package-size impact.
-4. Continue optional architecture cleanup only after the current behavior is verified green.
+2. Run `npm run verify` and the full Chromium browser acceptance suite on a materialized checkout.
+3. Package a VSIX and record bundle/package-size impact plus a representative Local self-scan measurement.
+4. When explicitly allowed to run normal push CI, remove the `.github/ci-trigger` path gate and enable every `main` push.
+5. Compress/replace the README demo GIF if desired; it remains excluded from VSIX packaging.
+
+Do not add more redesign features before these execution gates are green unless a new concrete defect is found.
 
 
 ---
