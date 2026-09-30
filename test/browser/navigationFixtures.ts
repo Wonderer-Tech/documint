@@ -52,8 +52,9 @@ const codeMapFiles: WorkspaceFile[] = [
     content: [
       'import { ProviderFactory } from "../providers/factory";',
       'import { SecretStorage } from "../config/secretStorage";',
+      "export const token = process.env.API_TOKEN;",
       "export function run() {",
-      "  return [new ProviderFactory(), new SecretStorage()];",
+      "  return [new ProviderFactory(), new SecretStorage(), token];",
       "}",
     ].join("\n"),
   },
@@ -83,6 +84,11 @@ const codeMapFiles: WorkspaceFile[] = [
         commands: [
           { command: "documint.generate", title: "Generate Documentation" },
         ],
+        configuration: {
+          properties: {
+            "documint.generationMode": { default: "local" },
+          },
+        },
       },
     }),
   },
@@ -103,7 +109,15 @@ const codeMapDocument = buildLocalDocumentationDocument(
   "Code Map Fixture",
   codeMapFiles,
   codeMapProject,
-  { readme: codeMapReadme },
+  {
+    readme: codeMapReadme,
+    makefile: "verify:\n\tnpm test\n",
+    dockerfile: [
+      "FROM node:22-alpine AS runtime",
+      "EXPOSE 3000",
+      'CMD ["node", "dist/server.js"]',
+    ].join("\n"),
+  },
 );
 emit(
   "local-code-map",
