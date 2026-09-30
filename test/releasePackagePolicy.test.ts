@@ -1,7 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import manifest from "../package.json";
 
@@ -170,9 +178,13 @@ test("release readiness command runs strict verification and writes measurable e
 });
 
 
-test("lockfile validator enforces package identity and dependency-map parity", () => {
+test("lockfile validator reuses the shared package-identity policy", () => {
   const validator = readFileSync(
     join(process.cwd(), "tools/validate-lockfile.mjs"),
+    "utf8",
+  );
+  const policy = readFileSync(
+    join(process.cwd(), "tools/lockfile-policy.mjs"),
     "utf8",
   );
 
@@ -180,14 +192,101 @@ test("lockfile validator enforces package identity and dependency-map parity", (
     manifest.scripts["lockfile:validate"],
     "node tools/validate-lockfile.mjs",
   );
-  assert.match(validator, /lockfileVersion/);
-  assert.match(validator, /packages\?\.\[""\]/);
-  assert.match(validator, /package-lock name/);
-  assert.match(validator, /root package version/);
-  assert.match(validator, /assertDependencyMap/);
-  assert.match(validator, /devDependencies/);
-  assert.match(validator, /optionalDependencies/);
-  assert.match(validator, /peerDependencies/);
+  assert.match(validator, /validateLockfileData/);
+  assert.match(validator, /process\.argv\[2\]/);
+  assert.match(validator, /statSync\(requestedPath\)\.isDirectory/);
+  assert.match(policy, /lockfileVersion/);
+  assert.match(policy, /packages\?\.\[""\]/);
+  assert.match(policy, /package-lock name/);
+  assert.match(policy, /root package version/);
+  assert.match(policy, /assertDependencyMap/);
+  assert.match(policy, /devDependencies/);
+  assert.match(policy, /optionalDependencies/);
+  assert.match(policy, /peerDependencies/);
+});
+
+
+test("lockfile artifact adoption validates before replacing the root lockfile", () => {
+  const sandbox = mkdtempSync(join(tmpdir(), "documint-lockfile-adopt-"));
+  const artifact = join(sandbox, "artifact");
+  mkdirSync(artifact);
+
+  const packageJson = {
+    name: "documint-fixture",
+    version: "1.2.3",
+    devDependencies: {
+      typescript: "^5.3.3",
+    },
+  };
+  const validLock = {
+    name: packageJson.name,
+    version: packageJson.version,
+    lockfileVersion: 3,
+    requires: true,
+    packages: {
+      "": {
+        name: packageJson.name,
+        version: packageJson.version,
+        devDependencies: {
+          typescript: "^5.3.3",
+        },
+      },
+    },
+  };
+
+  writeFileSync(
+    join(sandbox, "package.json"),
+    JSON.stringify(packageJson, null, 2),
+  );
+  writeFileSync(
+    join(artifact, "package-lock.json"),
+    JSON.stringify(validLock, null, 2) + "\n",
+  );
+
+  try {
+    const adopter = join(process.cwd(), "tools/adopt-lockfile.mjs");
+    const first = execFileSync(process.execPath, [adopter, artifact], {
+      cwd: sandbox,
+      encoding: "utf8",
+    });
+    assert.match(first, /"adopted": true/);
+    assert.ok(existsSync(join(sandbox, "package-lock.json")));
+
+    const second = execFileSync(process.execPath, [adopter, artifact], {
+      cwd: sandbox,
+      encoding: "utf8",
+    });
+    assert.match(second, /"reason": "already-current"/);
+
+    const original = readFileSync(join(sandbox, "package-lock.json"), "utf8");
+    const stale = {
+      ...validLock,
+      version: "9.9.9",
+      packages: {
+        "": {
+          ...validLock.packages[""],
+          version: "9.9.9",
+        },
+      },
+    };
+    writeFileSync(
+      join(artifact, "package-lock.json"),
+      JSON.stringify(stale, null, 2) + "\n",
+    );
+
+    const rejected = spawnSync(process.execPath, [adopter, artifact], {
+      cwd: sandbox,
+      encoding: "utf8",
+    });
+    assert.notEqual(rejected.status, 0);
+    assert.equal(
+      readFileSync(join(sandbox, "package-lock.json"), "utf8"),
+      original,
+      "invalid artifact must not replace the existing root lockfile",
+    );
+  } finally {
+    rmSync(sandbox, { recursive: true, force: true });
+  }
 });
 
 
@@ -197,6 +296,20 @@ test("lockfile validator is valid Node ESM syntax", () => {
     ["--check", join(process.cwd(), "tools/validate-lockfile.mjs")],
     { stdio: "pipe" },
   );
+});
+
+
+test("shared lockfile policy and adopter are valid Node ESM syntax", () => {
+  for (const script of [
+    "tools/lockfile-policy.mjs",
+    "tools/adopt-lockfile.mjs",
+  ]) {
+    execFileSync(
+      process.execPath,
+      ["--check", join(process.cwd(), script)],
+      { stdio: "pipe" },
+    );
+  }
 });
 
 
