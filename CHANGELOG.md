@@ -15,6 +15,9 @@ All notable changes to DocuMint are documented here.
 
 ### Changed
 
+- Added `npm run lockfile:adopt -- <artifact-or-package-lock>`, backed by the same shared lockfile policy as validation, so Bootstrap artifacts are validated before replacing the root lockfile and the adopted SHA-256 is rechecked.
+- Lockfile validation policy now lives in one shared module consumed by both `lockfile:validate` and artifact adoption; the validator also accepts an explicit lockfile file/directory path.
+
 - Added a manual-only **Lockfile Bootstrap** workflow that generates `package-lock.json` on a network-enabled runner, validates clean locked installation/dependency resolution, records SHA-256 metadata, and uploads the lockfile as an artifact without repository write permission. Its default `run_readiness=true` input also runs full verify/browser/VSIX readiness against the transient lockfile so release behavior can be tested before committing it.
 - Added `npm run lockfile:validate` so readiness/bootstrap reject lockfiles whose root name/version or dependency maps drift from `package.json`.
 
