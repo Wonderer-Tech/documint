@@ -24,7 +24,6 @@ export function getDocuMintConfigurationValue<T>(
   ).value;
 }
 
-
 export interface DocuMintConfigurationAccessor {
   get<T>(key: string): T | undefined;
   update(
@@ -51,17 +50,6 @@ export function getDocuMintConfiguration(
         .update(key, value, target);
     },
   };
-}
-
-export async function updateDocuMintConfigurationValue(
-  key: string,
-  value: unknown,
-  target: vscode.ConfigurationTarget,
-  resource?: vscode.Uri,
-): Promise<void> {
-  await vscode.workspace
-    .getConfiguration(DOCUMINT_CONFIGURATION_SECTION, resource)
-    .update(key, value, target);
 }
 
 export function affectsDocuMintConfiguration(
