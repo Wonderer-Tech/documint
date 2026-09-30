@@ -34,3 +34,26 @@ test("local model discovery ignores malformed model-list entries", () => {
     ["valid-model"],
   );
 });
+
+
+test("local model discovery bounds identifiers and result count", () => {
+  const many = Array.from({ length: 520 }, (_, index) => ({
+    id: `model-${String(index).padStart(3, "0")}`,
+  }));
+
+  const parsed = parseLocalProviderModels({
+    data: [
+      { id: "valid-model" },
+      { id: "line\nbreak" },
+      { id: "null\u0000byte" },
+      { id: "x".repeat(257) },
+      ...many,
+    ],
+  });
+
+  assert.equal(parsed.includes("valid-model"), true);
+  assert.equal(parsed.includes("line\nbreak"), false);
+  assert.equal(parsed.includes("null\u0000byte"), false);
+  assert.equal(parsed.some((value) => value.length > 256), false);
+  assert.equal(parsed.length, 500);
+});
