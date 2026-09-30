@@ -462,6 +462,23 @@ Self-audit:
 
 `npm run verify` runs the regression suite and then the self-audit.
 
+### Browser acceptance
+
+Install Python Playwright once:
+
+```bash
+python -m pip install playwright
+python -m playwright install chromium
+```
+
+Then run the same provider-free generated-HTML acceptance command used by the manual GitHub workflow:
+
+```bash
+npm run test:browser
+```
+
+The suite verifies navigation, reader controls, Local code-map interactions, responsive behavior, offline/external-request isolation, and AI-format chart failure isolation.
+
 When dependency registry access is available, `npm run lockfile:generate` creates/refreshes `package-lock.json` without running package scripts.
 
 Package extension:
