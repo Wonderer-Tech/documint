@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { SourceAnalyzer } from "../src/analyzer/sourceAnalyzer";
 import { buildLocalDocumentationDocument } from "../src/services/localDocumentationDocument";
 import {
@@ -87,4 +89,17 @@ test("Local self-audit fails when a critical source landmark disappears", () => 
     )?.passed,
     false,
   );
+});
+
+test("Local self-audit CLI can export timed machine-readable evidence", () => {
+  const source = readFileSync(
+    join(process.cwd(), "tools/local-self-audit.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /DOCUMINT_SELF_AUDIT_OUTPUT/);
+  assert.match(source, /auditStartedAt/);
+  assert.match(source, /durationMs/);
+  assert.match(source, /writeFileSync/);
+  assert.match(source, /JSON\.stringify\(\{ durationMs, report \}/);
 });
