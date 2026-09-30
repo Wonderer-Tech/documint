@@ -393,8 +393,8 @@
     "verify": "npm test && npm run audit:self",
     "lockfile:generate": "npm install --package-lock-only --ignore-scripts --no-audit --no-fund",
     "test:browser:fixtures": "esbuild test/browser/navigationFixtures.ts --bundle --platform=node --format=cjs --external:vscode --outfile=node_modules/documint-navigation-fixtures.cjs && node node_modules/documint-navigation-fixtures.cjs",
-    "test:browser:navigation": "python test/browser/navigationAcceptance.py",
-    "test:browser:reader": "python test/browser/readerAcceptance.py",
+    "test:browser:navigation": "node tools/run-python.mjs test/browser/navigationAcceptance.py",
+    "test:browser:reader": "node tools/run-python.mjs test/browser/readerAcceptance.py",
     "test:browser": "npm run test:browser:fixtures && npm run test:browser:navigation && npm run test:browser:reader",
     "release:readiness": "node tools/release-readiness.mjs"
   },
