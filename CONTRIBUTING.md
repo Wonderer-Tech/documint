@@ -97,7 +97,7 @@ After downloading/extracting the artifact, do not manually overwrite the root lo
 npm run lockfile:adopt -- /path/to/extracted/artifact
 ```
 
-The command validates the artifact against the current `package.json` before replacement and verifies the adopted checksum. Once the validated `package-lock.json` exists on the branch, the manual **Release Readiness** workflow runs the same gate directly from the committed lockfile without changing the automatic-main CI policy.
+The command validates the artifact against the current `package.json` before replacement, verifies Bootstrap `package-lock.sha256` metadata when present, and verifies the adopted checksum after replacement. Once the validated `package-lock.json` exists on the branch, the manual **Release Readiness** workflow runs the same gate directly from the committed lockfile without changing the automatic-main CI policy.
 
 ## Pull requests
 
