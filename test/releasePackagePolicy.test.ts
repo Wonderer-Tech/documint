@@ -144,6 +144,8 @@ test("release readiness command runs strict verification and writes measurable e
     "node tools/release-readiness.mjs",
   );
   assert.match(readiness, /package-lock\.json is required/);
+  assert.match(readiness, /lockfile:validate/);
+  assert.match(readiness, /evidence\.checks\.lockfileIdentity/);
   assert.match(readiness, /\["run", "verify"\]/);
   assert.match(readiness, /\["run", "test:browser"\]/);
   assert.match(readiness, /node_modules/);
@@ -165,6 +167,36 @@ test("release readiness command runs strict verification and writes measurable e
   assert.match(readiness, /results\.json/);
   assert.match(readiness, /VSIX does not have a ZIP signature/);
   assert.match(readiness, /ZIP signature validation was used instead/);
+});
+
+
+test("lockfile validator enforces package identity and dependency-map parity", () => {
+  const validator = readFileSync(
+    join(process.cwd(), "tools/validate-lockfile.mjs"),
+    "utf8",
+  );
+
+  assert.equal(
+    manifest.scripts["lockfile:validate"],
+    "node tools/validate-lockfile.mjs",
+  );
+  assert.match(validator, /lockfileVersion/);
+  assert.match(validator, /packages\?\.\[""\]/);
+  assert.match(validator, /package-lock name/);
+  assert.match(validator, /root package version/);
+  assert.match(validator, /assertDependencyMap/);
+  assert.match(validator, /devDependencies/);
+  assert.match(validator, /optionalDependencies/);
+  assert.match(validator, /peerDependencies/);
+});
+
+
+test("lockfile validator is valid Node ESM syntax", () => {
+  execFileSync(
+    process.execPath,
+    ["--check", join(process.cwd(), "tools/validate-lockfile.mjs")],
+    { stdio: "pipe" },
+  );
 });
 
 
