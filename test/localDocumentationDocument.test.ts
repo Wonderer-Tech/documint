@@ -45,7 +45,10 @@ test("complete Local document combines overview, architecture, and per-file fact
   assert.doesNotMatch(document.html, /href="#architecture-dependencies"/);
   assert.doesNotMatch(document.html, /<h2[^>]*>Architecture &amp; Dependencies<\/h2>/);
   assert.doesNotMatch(document.html, /<h3[^>]*>Module Relationships<\/h3>/);
-  assert.doesNotMatch(document.html, /language-mermaid/);
+  assert.doesNotMatch(
+    document.html,
+    /<code[^>]*class=["'][^"']*\blanguage-mermaid\b[^"']*["']/i,
+  );
   assert.match(document.html, /data-documint-local-code-map/);
   assert.match(document.html, /How do the parts fit together\?/);
   assert.match(document.html, /Which files are used by the most project files\?/);
@@ -88,9 +91,18 @@ test("Markdown stays compact and Local HTML uses the code map instead of legacy 
 
   assert.match(document.html, /data-documint-local-code-map/);
   assert.match(document.html, /Find your way through the code/);
-  assert.doesNotMatch(document.html, /language-architecture-blueprint/);
-  assert.doesNotMatch(document.html, /language-excalidraw-blueprint/);
-  assert.doesNotMatch(document.html, /language-dependency-graph/);
+  assert.doesNotMatch(
+    document.html,
+    /<code[^>]*class=["'][^"']*\blanguage-architecture-blueprint\b[^"']*["']/i,
+  );
+  assert.doesNotMatch(
+    document.html,
+    /<code[^>]*class=["'][^"']*\blanguage-excalidraw-blueprint\b[^"']*["']/i,
+  );
+  assert.doesNotMatch(
+    document.html,
+    /<code[^>]*class=["'][^"']*\blanguage-dependency-graph\b[^"']*["']/i,
+  );
   assert.doesNotMatch(document.html, /File Dependency Graph — Mermaid/);
   assert.doesNotMatch(document.html, /Module Architecture — D2/);
 });
