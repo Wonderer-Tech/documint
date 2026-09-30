@@ -771,6 +771,10 @@ function propertyNameText(name: ts.PropertyName): string | undefined {
 function normalizeSignature(value: string): string {
   return value
     .replace(/\s+/g, " ")
+    .replace(/\(\s+/g, "(")
+    .replace(/\s+\)/g, ")")
+    .replace(/,\s*\)/g, ")")
+    .replace(/\s*,\s*/g, ", ")
     .replace(/\s*\{\s*$/, "")
     .replace(/;\s*$/, "")
     .trim()
