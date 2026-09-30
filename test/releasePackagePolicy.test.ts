@@ -116,6 +116,10 @@ test("release workflow publishes VSIX reproducibly as a tag asset without mutati
   assert.match(workflow, /test -f package-lock\.json/);
   assert.match(workflow, /npm ci --no-audit --no-fund/);
   assert.doesNotMatch(workflow, /npm install --no-audit --no-fund/);
+  assert.match(workflow, /npm run verify/);
+  assert.match(workflow, /python -m playwright install --with-deps chromium/);
+  assert.match(workflow, /npm run test:browser/);
+  assert.match(workflow, /documint-release-browser-acceptance/);
   assert.match(workflow, /npx @vscode\/vsce package --out/);
   assert.match(workflow, /gh release upload/);
   assert.match(workflow, /gh release create/);
