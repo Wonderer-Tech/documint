@@ -64,6 +64,7 @@ _Last updated: 2026-09-30_
 - ✅ Added strict one-command release-readiness tooling: `npm run release:readiness` requires `package-lock.json`, runs `npm run verify` plus full browser acceptance, packages with the installed local VSCE binary, validates the VSIX archive, and records machine-readable timings, Local self-audit evidence, bundle/VSIX sizes, SHA-256, browser results, and optional baseline-size deltas.
 - ✅ Tag releases reuse the same readiness command and upload readiness/browser evidence; VSIX packaging excludes `tools/**`, `audit/**`, and `release-artifacts/**` so tooling/reference/evidence files cannot inflate the release package.
 - ✅ Added a manual-only **Release Readiness** workflow for on-demand execution after the lockfile exists; it does not enable automatic main-push CI.
+- ✅ The manual **Lockfile Bootstrap** workflow defaults to running the complete readiness gate against its transient generated lockfile, so verify/browser/VSIX evidence can be produced before that lockfile is committed; repository permissions remain read-only.
 - ✅ Browser acceptance uses a cross-platform Python 3 launcher with `DOCUMINT_PYTHON` override support, and release readiness preflights Playwright/Chromium before verify/browser/package execution.
 - ⏳ Full execution still requires a registry-enabled/materialized checkout: generate `package-lock.json`, install locked dependencies and Playwright/Chromium, then run `npm run release:readiness`. No CI was manually triggered in this implementation pass.
 - ⏳ README demo GIF compression remains pending; the binary is still excluded from VSIX packaging.
@@ -72,7 +73,7 @@ _Last updated: 2026-09-30_
 
 All currently identified **network-independent Local redesign/hardening implementation and release-readiness automation is complete in source**. Remaining work requires execution access or an explicit workflow-policy decision:
 
-1. Generate `package-lock.json` either locally with `npm run lockfile:generate` or via the manual **Lockfile Bootstrap** workflow; run `npm run lockfile:validate`, then commit the validated lockfile.
+1. Trigger **Lockfile Bootstrap** with its default `run_readiness=true` (or generate locally with `npm run lockfile:generate`). Review the uploaded lockfile/readiness evidence, run `npm run lockfile:validate` after placing the artifact locally, then commit the validated `package-lock.json`.
 2. Run `npm ci --no-audit --no-fund`, install Python Playwright + Chromium, then execute **one command**: `npm run release:readiness` (or trigger the manual **Release Readiness** workflow on that branch).
 3. Review `release-artifacts/readiness/readiness.json`; when a previous VSIX is available, rerun with `DOCUMINT_BASELINE_VSIX=/path/to/previous.vsix` to record the package-size delta automatically.
 4. When explicitly allowed to run normal push CI, remove the `.github/ci-trigger` path gate and enable every `main` push.
