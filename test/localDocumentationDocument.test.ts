@@ -145,3 +145,16 @@ test("README module descriptions appear in Where is what without inference", () 
   assert.match(document.markdown, /\| `src` \| Application source \|/);
   assert.match(document.markdown, /\| `lib` \| Shared formatting helpers \|/);
 });
+
+
+test("Local generated HTML embeds a no-network Content Security Policy", () => {
+  const analyzer = new SourceAnalyzer();
+  const project = analyzer.analyzeProject(files);
+  const document = buildLocalDocumentationDocument("Example Project", files, project);
+
+  assert.match(
+    document.html,
+    /Content-Security-Policy[^>]+default-src 'none'[^>]+connect-src 'none'/,
+  );
+  assert.doesNotMatch(document.html, /cdnjs\.cloudflare\.com/i);
+});
