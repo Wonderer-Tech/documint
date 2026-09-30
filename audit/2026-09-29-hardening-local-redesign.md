@@ -14,6 +14,7 @@
 _Last updated: 2026-09-30_
 
 - ✅ Retired obsolete source-repair workflows/scripts and the old VSIX self-commit workflow.
+- ✅ Current tree sanity check confirms obsolete repair/VSIX workflow artifacts and committed VSIX binaries are absent.
 - ✅ Added a tag-only GitHub Release workflow for future VSIX assets; current source tree no longer carries committed VSIX binaries.
 - ✅ Tag releases require `package-lock.json`, install with `npm ci`, run `npm run verify`, run full Chromium browser acceptance, retain browser evidence, and only then package/publish the VSIX.
 - ✅ Pull requests now run CI automatically. Main-branch push CI remains intentionally trigger-file gated so the current implementation work does not auto-run CI.
@@ -47,7 +48,7 @@ _Last updated: 2026-09-30_
 - ✅ `sidebarProvider.ts` now focuses on host state/messages; CSP-aware markup, styles, and webview client runtime live in dedicated modules.
 - ✅ Added weekly Dependabot configuration for npm and GitHub Actions.
 - ✅ Retired the unused `localVisualBlueprint.ts` Local payload path and aligned Local browser/Jelly/architecture regressions with the code-map architecture.
-- ✅ Aggregate unit-test registration is currently consistent: every root `test/*.test.ts` module is imported by `test/all.test.ts`; aggregate test imports are normalized in one alphabetical block.
+- ✅ Aggregate unit-test registration is currently consistent: all 68 root `test/*.test.ts` modules are imported by `test/all.test.ts`; imports remain in one alphabetical block.
 - ✅ Added `npm run audit:self`, which documents DocuMint's own source and asserts key Local Documentation release invariants; PR CI and tag releases run it after the normal regression suite.
 - ✅ Added a manual-only browser acceptance workflow plus canonical `npm run test:browser` scripts; it runs provider-free fixtures through Chromium and uploads screenshots/results without auto-running on push/PR.
 - ⏳ Full local `npm test`, VSIX size comparison, and browser acceptance execution still require a network-enabled/materialized checkout. No CI was manually triggered in this implementation pass.
