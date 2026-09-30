@@ -107,6 +107,16 @@ with sync_playwright() as playwright:
                 relation.click()
                 assert page.locator("#localMapCard h4").inner_text() == "src/providers/factory.ts"
 
+                used_by = page.locator(".local-map-relation").nth(1)
+                more_relations = used_by.locator("details.local-map-relation-more")
+                assert more_relations.count() == 1
+                more_relations.locator("summary").click()
+                hidden_relation = more_relations.locator("button").first
+                hidden_path = hidden_relation.inner_text()
+                hidden_relation.click()
+                assert page.locator("#localMapCard h4").inner_text() == hidden_path
+                assert hidden_path.startswith("src/consumers/use-provider-")
+
                 page.set_viewport_size({"width": 390, "height": 844})
                 page.wait_for_timeout(100)
                 assert page.evaluate(
