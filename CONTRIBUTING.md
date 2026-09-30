@@ -79,7 +79,7 @@ Do not commit generated `documint/` output as source changes.
 
 Do not force-add new VSIX binaries to normal source commits. Release packaging should remain separate from application-source review.
 
-For a release candidate, first generate/refresh `package-lock.json` from a registry-enabled checkout (or use the manual **Lockfile Bootstrap** workflow), run `npm run lockfile:validate`, then commit the validated lockfile. Install locked dependencies with `npm ci` and install Python Playwright + Chromium. Then run:
+For a release candidate, first generate/refresh `package-lock.json` from a registry-enabled checkout (or use the manual **Lockfile Bootstrap** workflow), run `npm run lockfile:validate`, then commit the validated lockfile. Install locked dependencies with `npm ci`, install Python Playwright, and either set `CHROMIUM_EXECUTABLE` to an installed Chrome/Chromium binary or install Playwright Chromium. Then run:
 
 ```bash
 npm run release:readiness
@@ -87,7 +87,7 @@ npm run release:readiness
 
 The readiness command is intentionally strict: it runs unit/regression verification, the Local self-audit, full generated-HTML browser acceptance, local-only VSIX packaging, and archive validation. Evidence is written under `release-artifacts/readiness/`; the VSIX is written under `release-artifacts/`. Both directories are ignored by Git and excluded from the VSIX.
 
-Set `DOCUMINT_BASELINE_VSIX` to an earlier VSIX path when a before/after package-size delta is required. Browser scripts automatically select Python 3 through `tools/run-python.mjs`; set `DOCUMINT_PYTHON` when a specific interpreter is required.
+Set `DOCUMINT_BASELINE_VSIX` to an earlier VSIX path when a before/after package-size delta is required. Browser scripts automatically select Python 3 through `tools/run-python.mjs`; set `DOCUMINT_PYTHON` when a specific interpreter is required. Set `CHROMIUM_EXECUTABLE` to reuse an existing Chrome/Chromium binary and avoid a separate Playwright browser download.
 
 The Lockfile Bootstrap workflow has read-only repository permissions and never commits or pushes. By default it also runs the full readiness gate against the transient generated lockfile and uploads readiness/VSIX evidence; disable its `run_readiness` input only when you want the lockfile artifact by itself.
 
