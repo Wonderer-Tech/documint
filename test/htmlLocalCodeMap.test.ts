@@ -154,6 +154,21 @@ test("Local At a glance renders canonical project totals, languages, entry point
 });
 
 
+test("Local At a glance makes undocumented files actionable and expandable", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /Documentation coverage/);
+  assert.match(
+    fragments.script,
+    /without a trusted module-level description/,
+  );
+  assert.match(fragments.script, /undocumentedFiles\.slice\(0, 8\)/);
+  assert.match(fragments.script, /undocumentedFiles\.slice\(8\)/);
+  assert.match(fragments.script, /openFileAndReveal\(file\.path\)/);
+  assert.match(fragments.styles, /\.local-map-overview-more/);
+});
+
+
 test("Local code map browser script compiles as standalone JavaScript", () => {
   const fragments = renderLocalCodeMapFragments(data);
   const source = fragments.script
@@ -385,19 +400,20 @@ test("Local module map exposes only trusted module descriptions", () => {
 });
 
 
-test("Local code map hero reports trusted-description coverage", () => {
+test("Local code map hero reports canonical trusted-description coverage with a source fallback", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
-  assert.match(fragments.script, /var described = data\.files\.filter/);
+  assert.match(fragments.script, /summary\.describedFiles/);
+  assert.match(fragments.script, /data\.files\.filter/);
   assert.match(fragments.script, /' described'/);
 });
 
 
-test("Local code map labels run commands with the detected package manager", () => {
+test("Local onboarding shows the detected package manager and exact package scripts", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
-  assert.match(fragments.script, /Run with /);
-  assert.match(fragments.script, /data\.gettingStarted\.packageManager/);
+  assert.match(fragments.script, /Package manager/);
+  assert.match(fragments.script, /facts\.packageManager/);
   assert.match(fragments.script, /npm run compile/);
 });
 
