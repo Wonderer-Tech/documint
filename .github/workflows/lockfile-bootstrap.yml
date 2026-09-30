@@ -1,0 +1,51 @@
+name: Lockfile Bootstrap
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lockfile-bootstrap-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lockfile:
+    name: Generate and validate package-lock.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate package lock
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Validate clean locked install
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Validate dependency graph
+        run: npm ls --all
+
+      - name: Record lockfile metadata
+        shell: bash
+        run: |
+          mkdir -p lockfile-artifact
+          cp package-lock.json lockfile-artifact/package-lock.json
+          sha256sum package-lock.json | tee lockfile-artifact/package-lock.sha256
+          node -e "const p=require('./package.json'); console.log(JSON.stringify({name:p.name,version:p.version,node:process.version},null,2))" > lockfile-artifact/metadata.json
+
+      - name: Upload package lock artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: documint-package-lock-${{ github.sha }}
+          path: lockfile-artifact/
+          if-no-files-found: error
+          retention-days: 14
