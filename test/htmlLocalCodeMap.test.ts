@@ -16,6 +16,10 @@ const data: LocalCodeMapData = {
       description: "Extension entry point",
       descriptionSource: "readme",
       exports: [{ name: "activate", kind: "function", line: 3 }],
+      internalSymbols: [
+        { name: "normalizeActivation", kind: "function", line: 7 },
+      ],
+      todos: [{ line: 9, text: "TODO: add smoke coverage" }],
       environmentVariables: [],
       uses: ["src/services/run.ts"],
       usedBy: [],
@@ -29,6 +33,8 @@ const data: LocalCodeMapData = {
       description: "Runs the Local pipeline",
       descriptionSource: "declaration-comment",
       exports: [{ name: "run", kind: "function", line: 10 }],
+      internalSymbols: [],
+      todos: [],
       environmentVariables: ["API_TOKEN"],
       uses: [],
       usedBy: ["src/extension.ts"],
@@ -204,6 +210,19 @@ test("Local code map search and file card include verified environment reference
 });
 
 
+
+
+test("Local file cards retain canonical internal symbols and source-note evidence", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /internalSymbols/);
+  assert.match(fragments.script, /Internal symbols/);
+  assert.match(fragments.script, /normalizeActivation/);
+  assert.match(fragments.script, /file\.todos/);
+  assert.match(fragments.script, /Source notes/);
+  assert.match(fragments.script, /TODO: add smoke coverage/);
+  assert.match(fragments.script, /relativeSourceHref\(file\.path, todo\.line\)/);
+});
 
 
 test("Local module-map handwritten notes stay metric-backed and conservative", () => {
