@@ -97,6 +97,20 @@ export function buildLocalSelfAuditReport(
       passed: document.html.includes("data-documint-local-code-map"),
     },
     {
+      name: "Local HTML onboarding is code-map owned",
+      passed:
+        document.html.includes('<h3 id="localMapRunTitle">How to run</h3>') &&
+        !/<h2[^>]*>How to run<\/h2>/i.test(document.html),
+    },
+    {
+      name: "Local HTML exposes compile and test commands",
+      passed:
+        Boolean(buildCommand) &&
+        Boolean(testCommand) &&
+        document.html.includes(buildCommand!) &&
+        document.html.includes(testCommand!),
+    },
+    {
       name: "Local HTML has no cdnjs dependency",
       passed: !/cdnjs\.cloudflare\.com/i.test(document.html),
     },
