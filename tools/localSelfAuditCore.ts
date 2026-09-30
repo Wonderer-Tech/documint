@@ -117,6 +117,13 @@ export function buildLocalSelfAuditReport(
         document.html.includes("Source note: "),
     },
     {
+      name: "Local HTML search is token-aware and factual",
+      passed:
+        document.html.includes("var tokens = query.split") &&
+        document.html.includes("tokens.every") &&
+        document.html.includes("Matched across file facts"),
+    },
+    {
       name: "Local HTML retains module start/provenance facts",
       passed:
         document.html.includes("Suggested start:") &&
