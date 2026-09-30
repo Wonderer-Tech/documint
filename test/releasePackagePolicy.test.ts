@@ -150,7 +150,10 @@ test("release readiness command runs strict verification and writes measurable e
   assert.match(readiness, /\.bin/);
   assert.match(readiness, /vsceCommand/);
   assert.match(readiness, /Local @vscode\/vsce binary is missing/);
-  assert.match(readiness, /tools\/run-python\.mjs/);
+  assert.match(
+    readiness,
+    /pythonRunner = join\(root, "tools", "run-python\.mjs"\)/,
+  );
   assert.match(readiness, /Python Playwright\/Chromium is unavailable/);
   assert.match(readiness, /evidence\.checks\.browserRuntime/);
   assert.match(readiness, /readiness\.json/);
@@ -161,6 +164,7 @@ test("release readiness command runs strict verification and writes measurable e
   assert.match(readiness, /reader-results\.json/);
   assert.match(readiness, /results\.json/);
   assert.match(readiness, /VSIX does not have a ZIP signature/);
+  assert.match(readiness, /ZIP signature validation was used instead/);
 });
 
 
