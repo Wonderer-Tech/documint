@@ -90,12 +90,12 @@ Public AI-generation facade: `src/services/docGenerator.ts`. Local runtime orche
 
 Local HTML now starts with a question-first project map built from the same deterministic model used by Local Markdown:
 
-- **Big picture** — structural modules and resolved cross-module import counts.
+- **Big picture** — structural modules, resolved cross-module import counts, trusted module descriptions/provenance, and suggested start files.
 - **What's inside** — a file-size treemap grouped by structural module.
 - **Start here** — a suggested reading path derived from detected entry points and dependency reach.
 - **How to run** — package scripts/manager, VS Code commands/settings, concrete Makefile targets, and Dockerfile source facts when those files are present.
 - **Dependency reach** — file size versus incoming project dependents.
-- **Look up a file** — search by path, trusted description, exported symbol, or referenced environment variable, then inspect Uses / Used by relationships and exported API.
+- **Look up a file** — search by path, trusted description, exported or internal symbol, referenced environment variable, or TODO/FIXME/HACK source note. Results show why they matched; file cards expose complete Uses / Used by navigation, exported/internal symbols, and source-note evidence.
 
 For TypeScript/JavaScript-family files, DocuMint uses the TypeScript compiler AST for multiline imports/declarations, export modifiers, class methods, and module-vs-function scope. This prevents function-local temporary variables from flooding Local API documentation.
 
