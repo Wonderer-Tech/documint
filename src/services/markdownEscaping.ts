@@ -11,7 +11,7 @@ export function escapeMarkdownPlainText(value: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/\\/g, "\\\\")
-    .replace(/([`*_{}\[\]()#+\-.!|>])/g, "\\$1");
+    .replace(/([`*_{}\[\]()#+\-.!>])/g, "\\$1");
 }
 
 export function escapeMarkdownTableText(value: string): string {
