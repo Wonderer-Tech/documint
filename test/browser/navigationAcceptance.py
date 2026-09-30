@@ -64,6 +64,22 @@ with sync_playwright() as playwright:
                 entry_path = entry_buttons.first.inner_text()
                 entry_buttons.first.click()
                 assert page.locator("#localMapCard h4").inner_text() == entry_path
+                coverage_card = page.locator(
+                    "#localMapOverview .local-map-overview-card",
+                    has=page.locator("h4", has_text="Documentation coverage"),
+                )
+                assert coverage_card.count() == 1
+                coverage_buttons = coverage_card.locator(
+                    ":scope > .local-map-overview-list button"
+                )
+                assert coverage_buttons.count() > 0
+                coverage_path = coverage_buttons.first.inner_text()
+                coverage_buttons.first.click()
+                assert page.locator("#localMapCard h4").inner_text() == coverage_path
+                coverage_more = coverage_card.locator("details.local-map-overview-more")
+                assert coverage_more.count() == 1
+                coverage_more.locator("summary").click()
+                assert coverage_more.locator("button").count() > 0
                 for duplicate_heading in [
                     "Project Facts",
                     "Language Summary",
@@ -71,6 +87,7 @@ with sync_playwright() as playwright:
                     "Entry Points",
                     "External Dependencies",
                     "Source Tree",
+                    "Undocumented files",
                 ]:
                     assert page.locator("h2", has_text=duplicate_heading).count() == 0
                 assert page.locator("#localMapModules .local-map-module-node").count() >= 3, name
