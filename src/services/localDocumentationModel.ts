@@ -277,7 +277,7 @@ function buildModules(
   const rows = new Map<string, LocalDocumentationModule>();
 
   for (const file of files) {
-    const current = rows.get(file.module) ?? {
+    const current: LocalDocumentationModule = rows.get(file.module) ?? {
       name: file.module,
       description: descriptionsByModule.get(file.module),
       filePaths: [],
