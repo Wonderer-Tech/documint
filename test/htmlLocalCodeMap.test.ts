@@ -176,6 +176,8 @@ test("Local project map restores valid deep links and ignores stale section hash
   assert.match(fragments.script, /requestAnimationFrame/);
   assert.match(fragments.script, /behavior: 'auto'/);
   assert.match(fragments.script, /window\.addEventListener\('hashchange'/);
+  assert.match(fragments.script, /hashNavigationPending/);
+  assert.match(fragments.script, /if \(hashNavigationPending\) return/);
   assert.match(fragments.script, /if \(!link \|\| link\.hidden \|\| !target \|\| target\.hidden\) return null/);
 });
 
