@@ -16,7 +16,7 @@ _Last updated: 2026-09-30_
 - ✅ Retired obsolete source-repair workflows/scripts and the old VSIX self-commit workflow.
 - ✅ Added a tag-only GitHub Release workflow for future VSIX assets; current source tree no longer carries committed VSIX binaries.
 - ✅ Pull requests now run CI automatically. Main-branch push CI remains intentionally trigger-file gated so the current implementation work does not auto-run CI.
-- ⏳ `package-lock.json` is now allowed by `.gitignore`, but lockfile generation is still pending. An offline `npm install --package-lock-only --offline` attempt failed immediately with `ENOTCACHED` for `@types/node`; this environment also cannot reach the npm registry. CI/release workflows stay on `npm install` until a network-enabled checkout commits the lockfile.
+- ⏳ `package-lock.json` is now allowed by `.gitignore`, but lockfile generation is still pending. An offline `npm install --package-lock-only --offline` attempt failed immediately with `ENOTCACHED` for `@types/node`; this environment also cannot reach the npm registry. PR CI uses `npm ci` automatically once the lockfile exists and temporarily warns/falls back to `npm install` while it is absent. Tag releases now require `package-lock.json` and use `npm ci`, so an unreproducible release cannot be published.
 - ✅ Added AST-backed JS/TS-family analysis using the TypeScript compiler API.
 - ✅ Multiline imports/declarations, `export abstract class`, class methods, explicit export lists, named export aliases, namespace re-exports, destructured top-level bindings, module scope, static environment references, and comment-safe TODO extraction are structurally analyzed.
 - ✅ JS/TS multiline signatures are normalized into compact API signatures without body braces, continuation whitespace, or trailing parameter commas.
@@ -54,10 +54,9 @@ _Last updated: 2026-09-30_
 ### Current next step
 
 1. Generate and commit `package-lock.json` from a network-enabled/local checkout.
-2. Switch CI/release install steps from `npm install` to `npm ci`.
-3. When explicitly allowed to run normal push CI, remove the `.github/ci-trigger` path gate and enable every `main` push.
-4. Run the full unit/browser regression suite and package a VSIX to measure bundle/package-size impact.
-5. Continue optional architecture cleanup (further splitting `htmlTemplate.ts` / sidebar webview internals) only after the current behavior is verified green.
+2. When explicitly allowed to run normal push CI, remove the `.github/ci-trigger` path gate and enable every `main` push.
+3. Run the full unit/browser regression suite and package a VSIX to measure bundle/package-size impact.
+4. Continue optional architecture cleanup only after the current behavior is verified green.
 
 
 ---
