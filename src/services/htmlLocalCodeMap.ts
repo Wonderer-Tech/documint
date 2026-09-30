@@ -373,17 +373,35 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   }
   .local-map-module-edge {
     stroke: color-mix(in srgb, var(--text-muted) 58%, transparent);
-    stroke-width: 1.35;
+    stroke-width: 1.05;
     stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 5 6;
     fill: none;
+  }
+  .local-map-module-edge.mid {
+    stroke: color-mix(in srgb, var(--text-muted) 82%, transparent);
+    stroke-width: 1.55;
+    stroke-dasharray: none;
   }
   .local-map-module-edge.strong {
     stroke: color-mix(in srgb, var(--accent) 72%, var(--text-muted));
-    stroke-width: 2.2;
+    stroke-width: 2.3;
+    stroke-dasharray: none;
   }
   .local-map-edge-label {
-    fill: var(--text-muted);
-    font-size: 10px;
+    pointer-events: none;
+  }
+  .local-map-edge-badge {
+    fill: color-mix(in srgb, var(--bg-primary) 94%, transparent);
+    stroke: color-mix(in srgb, var(--border) 90%, var(--text-muted));
+    stroke-width: 1;
+  }
+  .local-map-edge-count {
+    fill: var(--text-primary);
+    font-family: "Segoe Print", "Bradley Hand", cursive;
+    font-size: 12px;
+    font-weight: 700;
   }
   .local-map-note {
     fill: var(--accent);
@@ -828,7 +846,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
         <h3 id="localMapBigTitle">Big picture</h3>
         <p class="local-map-question">How do the parts fit together?</p>
       </div>
-      <p class="local-map-hint">Boxes are structural modules. Arrows are resolved cross-module imports. Click a module to filter the size map.</p>
+      <p class="local-map-hint">Boxes are structural modules. Arrows point from the importing module to the module it imports; numbered badges show repeated cross-module imports. Click a module to filter the size map.</p>
     </div>
     <div class="local-map-panel local-map-scroll">
       <svg class="local-map-module-canvas" id="localMapModules" viewBox="0 0 960 360" role="img" aria-label="Project modules and resolved imports between them"></svg>
@@ -1612,6 +1630,49 @@ function buildLocalCodeMapScript(
     };
   }
 
+  function buildOpenArrowPath(start, end, control, arrowLength) {
+    var length = arrowLength || 11;
+    var angle;
+    var shaft;
+    if (control) {
+      shaft =
+        'M ' + start.x + ' ' + start.y +
+        ' Q ' + control.x + ' ' + control.y +
+        ' ' + end.x + ' ' + end.y;
+      angle = Math.atan2(end.y - control.y, end.x - control.x);
+    } else {
+      shaft =
+        'M ' + start.x + ' ' + start.y +
+        ' L ' + end.x + ' ' + end.y;
+      angle = Math.atan2(end.y - start.y, end.x - start.x);
+    }
+
+    var reverse = angle + Math.PI;
+    var spread = 0.42;
+    var left = {
+      x: end.x + Math.cos(reverse + spread) * length,
+      y: end.y + Math.sin(reverse + spread) * length
+    };
+    var right = {
+      x: end.x + Math.cos(reverse - spread) * length,
+      y: end.y + Math.sin(reverse - spread) * length
+    };
+
+    return (
+      shaft +
+      ' M ' + left.x + ' ' + left.y +
+      ' L ' + end.x + ' ' + end.y +
+      ' L ' + right.x + ' ' + right.y
+    );
+  }
+
+  function quadraticMidpoint(start, control, end) {
+    return {
+      x: start.x * 0.25 + control.x * 0.5 + end.x * 0.25,
+      y: start.y * 0.25 + control.y * 0.5 + end.y * 0.25
+    };
+  }
+
   function renderModules() {
     var svg = document.getElementById('localMapModules');
     if (!svg) return;
@@ -1649,46 +1710,85 @@ function buildLocalCodeMapScript(
       yChannelSelector: 'G'
     }, sketchFilter);
 
-    var marker = makeSvg('marker', {
-      id: 'localMapArrow',
-      markerWidth: 8,
-      markerHeight: 8,
-      refX: 7,
-      refY: 3,
-      orient: 'auto',
-      markerUnits: 'strokeWidth'
-    }, defs);
-    makeSvg('path', { d: 'M0,0 L0,6 L7,3 z', fill: 'currentColor' }, marker);
-
     edgeCounts.forEach(function (edge) {
       var a = positions.get(edge.from), b = positions.get(edge.to);
       if (!a || !b) return;
+
       var start = clipModuleEdge(a, b);
       var end = clipModuleEdge(b, a);
-      var line = makeSvg('line', {
-        x1: start.x,
-        y1: start.y,
-        x2: end.x,
-        y2: end.y,
-        class: 'local-map-module-edge' + (edge.count >= 3 ? ' strong' : ''),
+      var dx = b.x - a.x;
+      var dy = b.y - a.y;
+      var distance = Math.sqrt(dx * dx + dy * dy) || 1;
+      var nx = -dy / distance;
+      var ny = dx / distance;
+      var reciprocal = edgeCounts.some(function (candidate) {
+        return candidate.from === edge.to && candidate.to === edge.from;
+      });
+      var reciprocalOffset = reciprocal
+        ? (edge.from.localeCompare(edge.to) < 0 ? 8 : -8)
+        : 0;
+      var levelSpan = Math.abs((a.level || 0) - (b.level || 0));
+      var control = null;
+
+      if (levelSpan > 1 && !reciprocal) {
+        var curveDirection = edge.from.localeCompare(edge.to) < 0 ? -1 : 1;
+        var curveOffset = Math.min(34, 16 + levelSpan * 6) * curveDirection;
+        control = {
+          x: (a.x + b.x) / 2 + nx * curveOffset,
+          y: (a.y + b.y) / 2 + ny * curveOffset
+        };
+        start = clipModuleEdge(a, control);
+        end = clipModuleEdge(b, control);
+      }
+
+      if (reciprocalOffset) {
+        start.x += nx * reciprocalOffset;
+        start.y += ny * reciprocalOffset;
+        end.x += nx * reciprocalOffset;
+        end.y += ny * reciprocalOffset;
+      }
+
+      var strengthClass =
+        edge.count >= 5 ? ' strong' : edge.count >= 2 ? ' mid' : '';
+      var path = makeSvg('path', {
+        d: buildOpenArrowPath(start, end, control, edge.count >= 5 ? 12 : 10.5),
+        class: 'local-map-module-edge' + strengthClass,
         filter: 'url(#localMapSketch)',
         'data-from': edge.from,
-        'data-to': edge.to,
-        'marker-end': 'url(#localMapArrow)'
+        'data-to': edge.to
       }, svg);
-      line.style.color = 'var(--text-muted)';
+      var edgeTitle = makeSvg('title', {}, path);
+      edgeTitle.textContent =
+        edge.from + ' imports from ' + edge.to + ' · ' + edge.count +
+        (edge.count === 1 ? ' cross-module import' : ' cross-module imports');
 
-      var mx = (start.x + end.x) / 2;
-      var my = (start.y + end.y) / 2;
-      var label = makeSvg('text', {
-        x: mx,
-        y: my - 5,
-        class: 'local-map-edge-label',
-        'data-from': edge.from,
-        'data-to': edge.to,
-        'text-anchor': 'middle'
-      }, svg);
-      label.textContent = String(edge.count);
+      if (edge.count >= 2) {
+        var midpoint = control
+          ? quadraticMidpoint(start, control, end)
+          : {
+              x: (start.x + end.x) / 2,
+              y: (start.y + end.y) / 2
+            };
+        var label = makeSvg('g', {
+          class: 'local-map-edge-label',
+          'data-from': edge.from,
+          'data-to': edge.to
+        }, svg);
+        makeSvg('circle', {
+          cx: midpoint.x,
+          cy: midpoint.y,
+          r: edge.count >= 10 ? 12 : 10.5,
+          class: 'local-map-edge-badge'
+        }, label);
+        var count = makeSvg('text', {
+          x: midpoint.x,
+          y: midpoint.y + 0.5,
+          class: 'local-map-edge-count',
+          'text-anchor': 'middle',
+          'dominant-baseline': 'middle'
+        }, label);
+        count.textContent = String(edge.count);
+      }
     });
 
     var entryModules = Array.from(new Set(
@@ -1838,12 +1938,22 @@ function buildLocalCodeMapScript(
         'text-anchor': offsetX < 0 ? 'end' : 'start'
       }, svg);
       note.textContent = text;
-      makeSvg('line', {
-        x1: noteX + (offsetX < 0 ? 8 : -8),
-        y1: noteY + 4,
-        x2: pos.x + (offsetX < 0 ? -88 : 88),
-        y2: pos.y - 24,
-        class: 'local-map-note-line'
+      var noteStart = {
+        x: noteX + (offsetX < 0 ? 8 : -8),
+        y: noteY + 4
+      };
+      var noteEnd = {
+        x: pos.x + (offsetX < 0 ? -88 : 88),
+        y: pos.y - 24
+      };
+      var noteControl = {
+        x: (noteStart.x + noteEnd.x) / 2,
+        y: (noteStart.y + noteEnd.y) / 2 - 9
+      };
+      makeSvg('path', {
+        d: buildOpenArrowPath(noteStart, noteEnd, noteControl, 9),
+        class: 'local-map-note-line',
+        filter: 'url(#localMapSketch)'
       }, svg);
     }
 
