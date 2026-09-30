@@ -452,7 +452,12 @@ npm run compile
 npm run typecheck
 npm run watch
 npm test
+npm run audit:self
 ```
+
+Self-audit:
+
+`npm run audit:self` documents DocuMint's own `src/` plus `package.json` and checks release-critical Local Documentation invariants such as AST export detection, compact Markdown, Local code-map presence, run scripts, and Local HTML CDN independence.
 
 Package extension:
 
