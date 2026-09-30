@@ -422,8 +422,8 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     display: flex;
     gap: 18px;
     overflow-x: auto;
-    margin: 0 -26px;
-    padding: 9px 26px 10px;
+    margin: 0;
+    padding: 9px 0 10px;
     border-top: 1px solid color-mix(in srgb, var(--map-line) 80%, transparent);
     border-bottom: 1px solid var(--map-line);
     background: color-mix(in srgb, var(--map-paper) 88%, transparent);
@@ -1299,10 +1299,10 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
       padding-top: 32px;
     }
     .local-map-nav {
-      margin-right: -16px;
-      margin-left: -16px;
-      padding-right: 16px;
-      padding-left: 16px;
+      margin-right: 0;
+      margin-left: 0;
+      padding-right: 0;
+      padding-left: 0;
     }
     .local-map-section h3 { font-size: 25px; }
     .local-map-question { font-size: 18px; }
