@@ -18,7 +18,7 @@ test("extracted sidebar styles preserve Local/AI visibility states", () => {
 test("extracted sidebar client script remains syntactically valid", () => {
   assert.ok(SIDEBAR_CLIENT_SCRIPT.length > 12_000);
   assert.doesNotThrow(() => new Script(SIDEBAR_CLIENT_SCRIPT));
-  assert.match(SIDEBAR_CLIENT_SCRIPT, /syncGenerationModeUi/);
+  assert.match(SIDEBAR_CLIENT_SCRIPT, /updateGenerationModeVisibility/);
   assert.match(SIDEBAR_CLIENT_SCRIPT, /Generate Local Documentation/);
   assert.match(SIDEBAR_CLIENT_SCRIPT, /setApiKeyStatus/);
 });
@@ -32,7 +32,7 @@ test("sidebar template composes extracted styles and client runtime", () => {
   assert.match(html, /style-src 'nonce-test-nonce'/);
   assert.match(html, /script-src 'nonce-test-nonce'/);
   assert.match(html, /\.auth-status\.optional/);
-  assert.match(html, /syncGenerationModeUi/);
+  assert.match(html, /updateGenerationModeVisibility/);
   assert.match(html, /Local Documentation — No AI/);
 });
 
@@ -49,7 +49,7 @@ test("SidebarProvider delegates webview rendering to the extracted template", ()
   assert.match(source, /from "\.\/sidebarTemplate"/);
   assert.match(source, /return buildSidebarHtml\(/);
   assert.doesNotMatch(source, /\.auth-status\.optional/);
-  assert.doesNotMatch(source, /function syncGenerationModeUi/);
+  assert.doesNotMatch(source, /function updateGenerationModeVisibility/);
 
   assert.match(templateSource, /from "\.\/sidebarStyles"/);
   assert.match(templateSource, /from "\.\/sidebarClientScript"/);
