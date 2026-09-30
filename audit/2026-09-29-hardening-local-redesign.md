@@ -65,6 +65,7 @@ _Last updated: 2026-09-30_
 - ✅ Tag releases reuse the same readiness command and upload readiness/browser evidence; VSIX packaging excludes `tools/**`, `audit/**`, and `release-artifacts/**` so tooling/reference/evidence files cannot inflate the release package.
 - ✅ Added a manual-only **Release Readiness** workflow for on-demand execution after the lockfile exists; it does not enable automatic main-push CI.
 - ✅ The manual **Lockfile Bootstrap** workflow defaults to running the complete readiness gate against its transient generated lockfile, so verify/browser/VSIX evidence can be produced before that lockfile is committed; repository permissions remain read-only.
+- ✅ Added `npm run lockfile:bootstrap` for authenticated GitHub CLI dispatch of Lockfile Bootstrap on the current branch, with explicit `DOCUMINT_BOOTSTRAP_REF` / `DOCUMINT_BOOTSTRAP_REPO` overrides; this avoids manual Actions UI navigation without granting repository write behavior.
 - ✅ Added a shared lockfile policy plus `npm run lockfile:adopt -- <artifact>`: downloaded Bootstrap artifacts are validated against the current package identity/dependency maps before the root lockfile is replaced, Bootstrap `package-lock.sha256` metadata is verified when present, and the adopted SHA-256 is rechecked; checksum/identity rejection leaves the existing root lockfile unchanged, and the artifact itself carries the exact adoption command.
 - ✅ Browser acceptance uses a cross-platform Python 3 launcher with `DOCUMINT_PYTHON` override support, and release readiness preflights Playwright/Chromium before verify/browser/package execution.
 - ⏳ Full execution still requires a registry-enabled/materialized checkout: generate `package-lock.json`, install locked dependencies and Playwright/Chromium, then run `npm run release:readiness`. No CI was manually triggered in this implementation pass.
@@ -74,7 +75,7 @@ _Last updated: 2026-09-30_
 
 All currently identified **network-independent Local redesign/hardening implementation and release-readiness automation is complete in source**. Remaining work requires execution access or an explicit workflow-policy decision:
 
-1. Trigger **Lockfile Bootstrap** with its default `run_readiness=true` (or generate locally with `npm run lockfile:generate`). Review the uploaded lockfile/readiness evidence, download/extract the lockfile artifact, run `npm run lockfile:adopt -- /path/to/artifact`, then commit the validated `package-lock.json`.
+1. Trigger **Lockfile Bootstrap** with `npm run lockfile:bootstrap` (after `gh auth login`), the Actions UI, or generate locally with `npm run lockfile:generate`. Keep `run_readiness=true`, review the uploaded evidence, download/extract the lockfile artifact, run `npm run lockfile:adopt -- /path/to/artifact`, then commit the validated `package-lock.json`.
 2. Run `npm ci --no-audit --no-fund`, install Python Playwright + Chromium, then execute **one command**: `npm run release:readiness` (or trigger the manual **Release Readiness** workflow on that branch).
 3. Review `release-artifacts/readiness/readiness.json`; when a previous VSIX is available, rerun with `DOCUMINT_BASELINE_VSIX=/path/to/previous.vsix` to record the package-size delta automatically.
 4. When explicitly allowed to run normal push CI, remove the `.github/ci-trigger` path gate and enable every `main` push.
