@@ -80,27 +80,6 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     color: var(--text-secondary);
     font-size: 14px;
   }
-  .local-map-run {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 12px;
-  }
-  .local-map-run[hidden] { display: none; }
-  .local-map-run code {
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 4px 8px;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-size: 10.5px;
-  }
-  .local-map-run-label {
-    align-self: center;
-    color: var(--text-muted);
-    font-size: 10.5px;
-    font-weight: 700;
-  }
   .local-map-badge {
     flex: none;
     padding: 7px 11px;
@@ -149,6 +128,80 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     border: 1px solid var(--border);
     border-radius: 16px;
     background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
+  }
+  .local-map-onboarding {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .local-map-fact-card {
+    min-width: 0;
+    padding: 13px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--bg-primary) 90%, transparent);
+  }
+  .local-map-fact-card h4 {
+    margin: 0 0 8px;
+    font-size: 12px;
+  }
+  .local-map-fact-source {
+    margin: -3px 0 9px;
+    color: var(--text-muted);
+    font-size: 9.5px;
+    overflow-wrap: anywhere;
+  }
+  .local-map-fact-row {
+    display: grid;
+    grid-template-columns: minmax(78px, .42fr) minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    padding: 5px 0;
+    border-top: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
+    font-size: 10.5px;
+  }
+  .local-map-fact-row:first-of-type { border-top: 0; }
+  .local-map-fact-label {
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+  .local-map-fact-value,
+  .local-map-fact-row code {
+    min-width: 0;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+  }
+  .local-map-command-row {
+    padding: 6px 0;
+    border-top: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
+  }
+  .local-map-command-row:first-of-type { border-top: 0; }
+  .local-map-command-row code {
+    display: block;
+    color: var(--accent);
+    font-size: 10.5px;
+    overflow-wrap: anywhere;
+  }
+  .local-map-command-row small {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-size: 9.5px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+  .local-map-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .local-map-chip-list code {
+    padding: 3px 6px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 9.5px;
   }
   .local-map-module-canvas {
     display: block;
@@ -591,8 +644,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <div>
       <div class="local-map-kicker">Local project map</div>
       <h2>Find your way through the code</h2>
-      <p>Every view below is generated from the same source-analysis model: files, exports, resolved imports, descriptions, and entry points.</p>
-      <div class="local-map-run" id="localMapRun" hidden></div>
+      <p>Every view below is generated from the same source-analysis model: files, exports, resolved imports, descriptions, entry points, and detected build metadata.</p>
     </div>
     <span class="local-map-badge" id="localMapFacts"></span>
   </div>
@@ -608,6 +660,17 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <div class="local-map-panel local-map-scroll">
       <svg class="local-map-module-canvas" id="localMapModules" viewBox="0 0 960 360" role="img" aria-label="Project modules and resolved imports between them"></svg>
     </div>
+  </section>
+
+  <section class="local-map-section" id="localMapRunSection" aria-labelledby="localMapRunTitle" hidden>
+    <div class="local-map-section-head">
+      <div>
+        <h3 id="localMapRunTitle">How to run</h3>
+        <p class="local-map-question">How do I build, test, or start this project?</p>
+      </div>
+      <p class="local-map-hint">Only detected package, Makefile, Dockerfile, VS Code, and source environment-reference facts are shown. Referenced environment variables are not claimed to be required.</p>
+    </div>
+    <div class="local-map-onboarding" id="localMapOnboarding"></div>
   </section>
 
   <section class="local-map-section" aria-labelledby="localMapSizeTitle">
@@ -789,35 +852,215 @@ function buildLocalCodeMapScript(
         ' described';
     }
 
-    var run = document.getElementById('localMapRun');
-    var scripts = data.gettingStarted && Array.isArray(data.gettingStarted.scripts)
-      ? data.gettingStarted.scripts
-      : [];
-    if (run && scripts.length) {
-      var priority = ['compile', 'test', 'watch', 'start', 'dev'];
-      var sorted = scripts.slice().sort(function (a, b) {
-        var ai = priority.indexOf(a.name);
-        var bi = priority.indexOf(b.name);
-        ai = ai < 0 ? priority.length : ai;
-        bi = bi < 0 ? priority.length : bi;
-        return ai - bi || a.name.localeCompare(b.name);
-      }).slice(0, 5);
+  }
 
-      var label = document.createElement('span');
-      label.className = 'local-map-run-label';
-      label.textContent =
-        'Run with ' +
-        String(data.gettingStarted.packageManager || 'npm') +
-        ':';
-      run.appendChild(label);
-      sorted.forEach(function (script) {
-        var code = document.createElement('code');
-        code.textContent = script.run;
-        code.title = script.command;
-        run.appendChild(code);
-      });
-      run.hidden = false;
+  function formatDefaultValue(value) {
+    if (value === undefined) return 'No default declared';
+    try {
+      var json = JSON.stringify(value);
+      return json === undefined ? String(value) : json;
+    } catch (_) {
+      return String(value);
     }
+  }
+
+  function createFactCard(container, title, source) {
+    var card = document.createElement('section');
+    card.className = 'local-map-fact-card';
+
+    var heading = document.createElement('h4');
+    heading.textContent = title;
+    card.appendChild(heading);
+
+    if (source) {
+      var sourceLine = document.createElement('p');
+      sourceLine.className = 'local-map-fact-source';
+      sourceLine.textContent = 'Detected from ' + source;
+      card.appendChild(sourceLine);
+    }
+
+    container.appendChild(card);
+    return card;
+  }
+
+  function appendFactRow(card, label, value, asCode) {
+    if (value === undefined || value === null || value === '') return;
+
+    var row = document.createElement('div');
+    row.className = 'local-map-fact-row';
+
+    var labelNode = document.createElement('span');
+    labelNode.className = 'local-map-fact-label';
+    labelNode.textContent = label;
+    row.appendChild(labelNode);
+
+    var valueNode = document.createElement(asCode ? 'code' : 'span');
+    valueNode.className = 'local-map-fact-value';
+    valueNode.textContent = String(value);
+    row.appendChild(valueNode);
+
+    card.appendChild(row);
+  }
+
+  function appendCommandRow(card, primary, secondary) {
+    var row = document.createElement('div');
+    row.className = 'local-map-command-row';
+
+    var code = document.createElement('code');
+    code.textContent = String(primary);
+    row.appendChild(code);
+
+    if (secondary) {
+      var detail = document.createElement('small');
+      detail.textContent = String(secondary);
+      row.appendChild(detail);
+    }
+
+    card.appendChild(row);
+  }
+
+  function renderOnboarding() {
+    var section = document.getElementById('localMapRunSection');
+    var container = document.getElementById('localMapOnboarding');
+    if (!section || !container) return;
+
+    container.innerHTML = '';
+    var facts = data.gettingStarted || null;
+    var environments = Array.isArray(data.referencedEnvironmentVariables)
+      ? data.referencedEnvironmentVariables
+      : [];
+    var cards = 0;
+
+    if (facts) {
+      var scripts = Array.isArray(facts.scripts) ? facts.scripts : [];
+      if (
+        facts.packageJsonPath ||
+        facts.packageManager ||
+        facts.extensionEntry ||
+        scripts.length
+      ) {
+        var packageCard = createFactCard(
+          container,
+          'Package / extension',
+          facts.packageJsonPath || ''
+        );
+        cards++;
+        appendFactRow(packageCard, 'Package manager', facts.packageManager, true);
+        appendFactRow(packageCard, 'Extension entry', facts.extensionEntry, true);
+        scripts.forEach(function (script) {
+          appendCommandRow(
+            packageCard,
+            script.run,
+            script.name + ' · ' + script.command
+          );
+        });
+      }
+
+      if (facts.makefile) {
+        var makeCard = createFactCard(
+          container,
+          'Makefile',
+          facts.makefile.path
+        );
+        cards++;
+        var targets = Array.isArray(facts.makefile.targets)
+          ? facts.makefile.targets
+          : [];
+        if (!targets.length) {
+          appendFactRow(makeCard, 'Targets', 'No concrete targets detected', false);
+        } else {
+          targets.forEach(function (target) {
+            appendCommandRow(makeCard, 'make ' + target.name, target.name);
+          });
+        }
+      }
+
+      if (facts.dockerfile) {
+        var docker = facts.dockerfile;
+        var dockerCard = createFactCard(container, 'Dockerfile', docker.path);
+        cards++;
+        appendFactRow(
+          dockerCard,
+          'Base images',
+          (docker.baseImages || []).join(', '),
+          true
+        );
+        appendFactRow(
+          dockerCard,
+          'Stages',
+          (docker.stages || []).join(', '),
+          true
+        );
+        appendFactRow(
+          dockerCard,
+          'Exposed ports',
+          (docker.exposedPorts || []).join(', '),
+          true
+        );
+        appendFactRow(dockerCard, 'ENTRYPOINT', docker.entrypoint, true);
+        appendFactRow(dockerCard, 'CMD', docker.command, true);
+      }
+
+      var commands = Array.isArray(facts.vscodeCommands)
+        ? facts.vscodeCommands
+        : [];
+      if (commands.length) {
+        var commandCard = createFactCard(
+          container,
+          'VS Code commands',
+          facts.packageJsonPath || 'package metadata'
+        );
+        cards++;
+        commands.forEach(function (command) {
+          appendCommandRow(commandCard, command.id, command.title);
+        });
+      }
+
+      var settings = Array.isArray(facts.vscodeSettings)
+        ? facts.vscodeSettings
+        : [];
+      if (settings.length) {
+        var settingsCard = createFactCard(
+          container,
+          'VS Code settings',
+          facts.packageJsonPath || 'package metadata'
+        );
+        cards++;
+        settings.forEach(function (setting) {
+          appendCommandRow(
+            settingsCard,
+            setting.key,
+            'default: ' + formatDefaultValue(setting.defaultValue)
+          );
+        });
+      }
+    }
+
+    if (environments.length) {
+      var environmentCard = createFactCard(
+        container,
+        'Referenced environment variables',
+        'source references'
+      );
+      cards++;
+
+      var note = document.createElement('p');
+      note.className = 'local-map-fact-source';
+      note.textContent =
+        'Referenced in source; static analysis does not claim these are required in every run.';
+      environmentCard.appendChild(note);
+
+      var chips = document.createElement('div');
+      chips.className = 'local-map-chip-list';
+      environments.forEach(function (name) {
+        var code = document.createElement('code');
+        code.textContent = name;
+        chips.appendChild(code);
+      });
+      environmentCard.appendChild(chips);
+    }
+
+    section.hidden = cards === 0;
   }
 
   function layoutModules(modules, edges, width) {
@@ -1636,6 +1879,7 @@ function buildLocalCodeMapScript(
   }
 
   renderFacts();
+  renderOnboarding();
   renderModules();
   renderTreemap();
   renderReadingPath();
