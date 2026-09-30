@@ -31,7 +31,8 @@ test("lockfile bootstrap workflow stays manual-only and never mutates the reposi
   assert.match(workflow, /permissions:\s*\n\s*contents: read/);
   assert.match(workflow, /npm install --package-lock-only --ignore-scripts --no-audit --no-fund/);
   assert.match(workflow, /npm run lockfile:validate/);
-  assert.match(workflow, /npm ci --ignore-scripts --no-audit --no-fund/);
+  assert.match(workflow, /npm ci --no-audit --no-fund/);
+  assert.doesNotMatch(workflow, /npm ci --ignore-scripts/);
   assert.match(workflow, /npm ls --all/);
   assert.match(workflow, /package-lock\.sha256/);
   assert.match(workflow, /lockfile-artifact\/README\.txt/);
