@@ -87,7 +87,9 @@ npm run release:readiness
 
 The readiness command is intentionally strict: it runs unit/regression verification, the Local self-audit, full generated-HTML browser acceptance, local-only VSIX packaging, and archive validation. Evidence is written under `release-artifacts/readiness/`; the VSIX is written under `release-artifacts/`. Both directories are ignored by Git and excluded from the VSIX.
 
-Set `DOCUMINT_BASELINE_VSIX` to an earlier VSIX path when a before/after package-size delta is required.
+Set `DOCUMINT_BASELINE_VSIX` to an earlier VSIX path when a before/after package-size delta is required. Browser scripts automatically select Python 3 through `tools/run-python.mjs`; set `DOCUMINT_PYTHON` when a specific interpreter is required.
+
+Once `package-lock.json` exists on the branch, the manual **Release Readiness** GitHub Actions workflow runs the same gate and uploads the evidence/VSIX without changing the automatic-main CI policy.
 
 ## Pull requests
 
