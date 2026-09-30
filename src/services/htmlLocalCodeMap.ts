@@ -720,12 +720,12 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
         <h3 id="localMapLookupTitle">Look up a file</h3>
         <p class="local-map-question">What does this file do, and who uses it?</p>
       </div>
-      <p class="local-map-hint">Search matches file paths, trusted descriptions, and exported symbol names.</p>
+      <p class="local-map-hint">Search matches file paths, trusted descriptions, exported/internal symbols, referenced environment variables, and TODO/FIXME/HACK source notes.</p>
     </div>
     <div class="local-map-lookup">
       <div class="local-map-search-wrap">
-        <label class="sr-only" for="localMapSearch">Search project files, descriptions, and exports</label>
-        <input class="local-map-search" id="localMapSearch" type="search" autocomplete="off" placeholder="Search files, descriptions, exports…" role="combobox" aria-expanded="false" aria-controls="localMapResults" aria-autocomplete="list">
+        <label class="sr-only" for="localMapSearch">Search project files, descriptions, symbols, environment references, and source notes</label>
+        <input class="local-map-search" id="localMapSearch" type="search" autocomplete="off" placeholder="Search files, symbols, env refs, notes…" role="combobox" aria-expanded="false" aria-controls="localMapResults" aria-autocomplete="list">
         <span class="local-map-shortcut" aria-hidden="true">Ctrl/⌘ K</span>
         <ul class="local-map-results" id="localMapResults" role="listbox" aria-label="Project file search results"></ul>
       </div>
@@ -1623,18 +1623,59 @@ function buildLocalCodeMapScript(
 
     searchHits = data.files.map(function (file) {
       var name = fileName(file.path).toLowerCase();
+      var pathText = file.path.toLowerCase();
       var description = String(file.description || '').toLowerCase();
-      var exportText = file.exports.map(function (item) { return item.name; }).join(' ').toLowerCase();
-      var environmentText = (file.environmentVariables || []).join(' ').toLowerCase();
+      var exports = Array.isArray(file.exports) ? file.exports : [];
+      var internals = Array.isArray(file.internalSymbols)
+        ? file.internalSymbols
+        : [];
+      var environments = Array.isArray(file.environmentVariables)
+        ? file.environmentVariables
+        : [];
+      var todos = Array.isArray(file.todos) ? file.todos : [];
+      var exportMatch = exports.find(function (item) {
+        return String(item.name || '').toLowerCase().includes(query);
+      });
+      var internalMatch = internals.find(function (item) {
+        return String(item.name || '').toLowerCase().includes(query);
+      });
+      var environmentMatch = environments.find(function (name) {
+        return String(name || '').toLowerCase().includes(query);
+      });
+      var todoMatch = todos.find(function (todo) {
+        return String(todo.text || '').toLowerCase().includes(query);
+      });
       var score = 0;
-      if (name === query) score = 100;
-      else if (name.startsWith(query)) score = 80;
-      else if (name.includes(query)) score = 60;
-      else if (file.path.toLowerCase().includes(query)) score = 45;
-      else if (description.includes(query)) score = 30;
-      else if (environmentText.includes(query)) score = 25;
-      else if (exportText.includes(query)) score = 20;
-      return { file: file, score: score };
+      var match = '';
+      if (name === query) {
+        score = 100;
+        match = 'Filename';
+      } else if (name.startsWith(query)) {
+        score = 80;
+        match = 'Filename';
+      } else if (name.includes(query)) {
+        score = 60;
+        match = 'Filename';
+      } else if (pathText.includes(query)) {
+        score = 45;
+        match = 'Path';
+      } else if (description.includes(query)) {
+        score = 30;
+        match = file.description || 'Description';
+      } else if (environmentMatch) {
+        score = 25;
+        match = 'Environment: ' + environmentMatch;
+      } else if (exportMatch) {
+        score = 22;
+        match = 'Export: ' + exportMatch.name;
+      } else if (internalMatch) {
+        score = 20;
+        match = 'Internal symbol: ' + internalMatch.name;
+      } else if (todoMatch) {
+        score = 18;
+        match = 'Source note: ' + todoMatch.text;
+      }
+      return { file: file, score: score, match: match };
     }).filter(function (item) { return item.score > 0; })
       .sort(function (a, b) {
         return b.score - a.score || b.file.usedBy.length - a.file.usedBy.length || a.file.path.localeCompare(b.file.path);
@@ -1660,9 +1701,10 @@ function buildLocalCodeMapScript(
         var code = document.createElement('code');
         code.textContent = hit.file.path;
         button.appendChild(code);
-        if (hit.file.description) {
+        var detailText = hit.match || hit.file.description || '';
+        if (detailText) {
           var small = document.createElement('small');
-          small.textContent = hit.file.description;
+          small.textContent = detailText;
           button.appendChild(small);
         }
         button.addEventListener('click', function () { chooseSearch(index); });
