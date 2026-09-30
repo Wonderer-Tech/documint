@@ -453,11 +453,16 @@ npm run typecheck
 npm run watch
 npm test
 npm run audit:self
+npm run verify
 ```
 
 Self-audit:
 
 `npm run audit:self` documents DocuMint's own `src/` plus `package.json` and checks release-critical Local Documentation invariants such as AST export detection, compact Markdown, Local code-map presence, run scripts, and Local HTML CDN independence.
+
+`npm run verify` runs the regression suite and then the self-audit.
+
+When dependency registry access is available, `npm run lockfile:generate` creates/refreshes `package-lock.json` without running package scripts.
 
 Package extension:
 
