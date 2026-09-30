@@ -1,0 +1,74 @@
+name: Browser Acceptance
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-acceptance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser:
+    name: Generated HTML browser acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies from lockfile
+        if: ${{ hashFiles('package-lock.json') != '' }}
+        run: npm ci --no-audit --no-fund
+
+      - name: Install dependencies without lockfile
+        if: ${{ hashFiles('package-lock.json') == '' }}
+        run: |
+          echo "::warning::package-lock.json is missing; using npm install until the lockfile is committed."
+          npm install --no-audit --no-fund
+
+      - name: Verify DocuMint
+        run: npm run verify
+
+      - name: Build browser fixtures
+        run: |
+          npx esbuild test/browser/navigationFixtures.ts \
+            --bundle \
+            --platform=node \
+            --format=cjs \
+            --external:vscode \
+            --outfile=node_modules/documint-navigation-fixtures.cjs
+          node node_modules/documint-navigation-fixtures.cjs
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Playwright
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Run navigation acceptance
+        run: python test/browser/navigationAcceptance.py
+
+      - name: Run reader acceptance
+        run: python test/browser/readerAcceptance.py
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: documint-browser-acceptance
+          path: test-results/navigation-browser/
+          if-no-files-found: warn
+          retention-days: 14
