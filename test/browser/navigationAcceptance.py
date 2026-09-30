@@ -31,6 +31,8 @@ with sync_playwright() as playwright:
             else None,
         )
         try:
+            if fixture.get("codeMap"):
+                page.goto("about:blank#localMapReadSection")
             page.set_content((root / f"{name}.html").read_text(), wait_until="load")
             page.wait_for_timeout(300)
             assert page.locator("#tocNav .file-link").count() == fixture["files"], name
@@ -59,6 +61,13 @@ with sync_playwright() as playwright:
                 assert map_nav.count() == 1
                 assert map_nav.locator("a").count() == 7
                 assert map_nav.locator("#localMapRunNav").is_visible()
+                assert page.evaluate("location.hash") == "#localMapReadSection"
+                assert (
+                    map_nav.locator('a[href="#localMapReadSection"]').get_attribute(
+                        "aria-current"
+                    )
+                    == "location"
+                )
                 map_nav.locator('a[href="#localMapBigSection"]').click()
                 page.wait_for_timeout(120)
                 assert page.evaluate("location.hash") == "#localMapBigSection"
@@ -68,6 +77,18 @@ with sync_playwright() as playwright:
                     )
                     == "location"
                 )
+
+                page.evaluate("location.hash = '#localMapLookupSection'")
+                page.wait_for_timeout(120)
+                assert (
+                    map_nav.locator('a[href="#localMapLookupSection"]').get_attribute(
+                        "aria-current"
+                    )
+                    == "location"
+                )
+                page.evaluate("location.hash = '#localMapMissingSection'")
+                page.wait_for_timeout(80)
+                assert page.locator("[data-documint-local-code-map]").count() == 1
                 overview_text = page.locator("#localMapOverview").inner_text()
                 assert "Files" in overview_text
                 assert "Lines" in overview_text
