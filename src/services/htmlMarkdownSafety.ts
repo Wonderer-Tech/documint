@@ -32,6 +32,10 @@ export function isSafeMarkdownHref(value: string): boolean {
     return false;
   }
 
+  if (normalized.startsWith("//") || normalized.startsWith("\\\\")) {
+    return false;
+  }
+
   const scheme = getScheme(normalized);
   if (!scheme) {
     return true;
