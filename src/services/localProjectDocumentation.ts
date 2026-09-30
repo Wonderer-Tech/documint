@@ -5,6 +5,7 @@ import {
   type LocalDocumentationModel,
 } from "./localDocumentationModel";
 import { escapeMarkdownPlainText, escapeMarkdownTableText } from "./markdownEscaping";
+import { relativeSourceHref } from "./sourceLink";
 
 export interface LocalProjectDocumentationInput {
   projectName: string;
