@@ -54,6 +54,25 @@ with sync_playwright() as playwright:
             if fixture.get("codeMap"):
                 assert page.locator("[data-documint-local-code-map]").count() == 1, name
                 assert external_requests == [], (name, external_requests)
+                assert page.locator("#localMapOverview").is_visible(), name
+                overview_text = page.locator("#localMapOverview").inner_text()
+                assert "Files" in overview_text
+                assert "Lines" in overview_text
+                assert "Languages" in overview_text
+                entry_buttons = page.locator("#localMapOverview .local-map-overview-list button")
+                assert entry_buttons.count() >= 1
+                entry_path = entry_buttons.first.inner_text()
+                entry_buttons.first.click()
+                assert page.locator("#localMapCard h4").inner_text() == entry_path
+                for duplicate_heading in [
+                    "Project Facts",
+                    "Language Summary",
+                    "Module Summary",
+                    "Entry Points",
+                    "External Dependencies",
+                    "Source Tree",
+                ]:
+                    assert page.locator("h2", has_text=duplicate_heading).count() == 0
                 assert page.locator("#localMapModules .local-map-module-node").count() >= 3, name
                 assert page.locator("#localMapRunSection").is_visible(), name
                 onboarding_text = page.locator("#localMapRunSection").inner_text()
