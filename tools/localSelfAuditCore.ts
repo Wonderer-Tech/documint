@@ -162,6 +162,13 @@ export function buildLocalSelfAuditReport(
         !/<h2[^>]*>Undocumented files<\/h2>/i.test(document.html),
     },
     {
+      name: "Local HTML architecture is Big Picture owned",
+      passed:
+        document.html.includes("How do the parts fit together?") &&
+        !/<h2[^>]*>Architecture &amp; Dependencies<\/h2>/i.test(document.html) &&
+        !/<h3[^>]*>Module Relationships<\/h3>/i.test(document.html),
+    },
+    {
       name: "Local HTML has no cdnjs dependency",
       passed: !/cdnjs\.cloudflare\.com/i.test(document.html),
     },
