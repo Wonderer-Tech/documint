@@ -94,4 +94,5 @@ test("custom provider request does not follow endpoint redirects", () => {
   );
 
   assert.match(source, /maxRedirects:\s*0/);
+  assert.match(source, /proxy:\s*this\.isLocal \? false : undefined/);
 });
