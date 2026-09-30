@@ -85,6 +85,20 @@ with sync_playwright() as playwright:
                 page.locator("#localMapResults button").first.click()
                 assert "provider" in page.locator("#localMapCard h4").inner_text().lower()
 
+                local_search.fill("secretStorage")
+                assert page.locator("#localMapResults button").count() > 0
+                page.locator("#localMapResults button").first.click()
+                assert page.locator("#localMapCard h4").inner_text() == "src/config/secretStorage.ts"
+
+                local_search.fill("ProviderFactory")
+                assert page.locator("#localMapResults button").count() > 0
+                page.locator("#localMapResults button").first.click()
+                assert page.locator("#localMapCard h4").inner_text() == "src/providers/factory.ts"
+
+                onboarding_text = page.locator("#localMapRunSection").inner_text()
+                assert "npm run compile" in onboarding_text
+                assert "npm run test" in onboarding_text
+
                 local_search.fill("run.ts")
                 page.locator("#localMapResults button").first.click()
                 assert page.locator("#localMapCard h4").inner_text() == "src/services/run.ts"
