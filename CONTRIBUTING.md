@@ -79,6 +79,16 @@ Do not commit generated `documint/` output as source changes.
 
 Do not force-add new VSIX binaries to normal source commits. Release packaging should remain separate from application-source review.
 
+For a release candidate, first generate/refresh and commit `package-lock.json` from a registry-enabled checkout, install locked dependencies with `npm ci`, and install Python Playwright + Chromium. Then run:
+
+```bash
+npm run release:readiness
+```
+
+The readiness command is intentionally strict: it runs unit/regression verification, the Local self-audit, full generated-HTML browser acceptance, local-only VSIX packaging, and archive validation. Evidence is written under `release-artifacts/readiness/`; the VSIX is written under `release-artifacts/`. Both directories are ignored by Git and excluded from the VSIX.
+
+Set `DOCUMINT_BASELINE_VSIX` to an earlier VSIX path when a before/after package-size delta is required.
+
 ## Pull requests
 
 Keep changes focused and explain:
