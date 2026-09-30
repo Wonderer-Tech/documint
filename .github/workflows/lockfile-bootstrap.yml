@@ -50,6 +50,16 @@ jobs:
           cp package-lock.json lockfile-artifact/package-lock.json
           sha256sum package-lock.json | tee lockfile-artifact/package-lock.sha256
           node -e "const p=require('./package.json'); console.log(JSON.stringify({name:p.name,version:p.version,node:process.version},null,2))" > lockfile-artifact/metadata.json
+          cat > lockfile-artifact/README.txt <<'EOF'
+          DocuMint Lockfile Bootstrap Artifact
+
+          From the repository root, adopt this artifact safely with:
+
+            npm run lockfile:adopt -- /path/to/extracted/artifact
+
+          The command validates package identity and dependency maps before replacing
+          package-lock.json, then verifies the adopted SHA-256.
+          EOF
 
       - name: Upload package lock artifact
         uses: actions/upload-artifact@v4
