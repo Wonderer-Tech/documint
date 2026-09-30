@@ -5,6 +5,8 @@ import {
 } from "./localProviderPolicy";
 
 const LOCAL_MODEL_DISCOVERY_TIMEOUT_MS = 5_000;
+const MAX_LOCAL_MODEL_COUNT = 500;
+const MAX_LOCAL_MODEL_ID_LENGTH = 256;
 
 export interface LocalModelListResponse {
   data?: unknown;
@@ -32,8 +34,15 @@ export function parseLocalProviderModels(
       continue;
     }
     const normalized = id.trim();
-    if (normalized) {
+    if (
+      normalized &&
+      normalized.length <= MAX_LOCAL_MODEL_ID_LENGTH &&
+      !/[\u0000-\u001f\u007f]/.test(normalized)
+    ) {
       models.add(normalized);
+      if (models.size >= MAX_LOCAL_MODEL_COUNT) {
+        break;
+      }
     }
   }
 
