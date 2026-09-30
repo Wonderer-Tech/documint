@@ -1,59 +1,82 @@
-import "./htmlReaderNavigation.test";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import "./regression.test";
-import "./outputTokenLimit.test";
-import "./contextOutputBudget.test";
-import "./apiKeyValidation.test";
-import "./modelContextCatalog.test";
-import "./providerDefaults.test";
-import "./generationCacheIdentity.test";
-import "./outputSanitizer.test";
-import "./scannerPolicy.test";
-import "./openAICompatibleResponse.test";
-import "./documentationValidatorEvidence.test";
-import "./modelMetadataCacheKey.test";
-import "./customEndpointPolicy.test";
-import "./providerErrorPolicy.test";
-import "./providerRetry.test";
-import "./providerRequestPolicy.test";
-import "./chunkTokenBudget.test";
-import "./providerRequestStartScheduler.test";
 import "./anthropicResponse.test";
-import "./providerHttpError.test";
-import "./openRouterCapabilities.test";
-import "./providerNamePolicy.test";
-import "./manifestMetadata.test";
-import "./generationMode.test";
+import "./apiKeyValidation.test";
+import "./chunkDocumentationMerge.test";
+import "./chunkTokenBudget.test";
+import "./configurationNamespace.test";
+import "./configurationPreference.test";
+import "./contextOutputBudget.test";
+import "./contextWindowPolicy.test";
+import "./customEndpointPolicy.test";
+import "./documentationValidatorEvidence.test";
+import "./generationCacheIdentity.test";
 import "./generationDepth.test";
-import "./sidebarAuthState.test";
+import "./generationMode.test";
+import "./generationRunPipeline.test";
+import "./htmlBaseScript.test";
+import "./htmlBaseStyles.test";
+import "./htmlJellyUi.test";
+import "./htmlLocalCodeMap.test";
+import "./htmlMarkdownSafety.test";
+import "./htmlNavigationRuntime.test";
+import "./htmlOfflineHardening.test";
+import "./htmlReaderNavigation.test";
+import "./htmlTemplatePolicy.test";
+import "./localArchitectureDocumentation.test";
+import "./localBuildFacts.test";
+import "./localDocumentationCache.test";
+import "./localDocumentationDocument.test";
+import "./localDocumentationModel.test";
 import "./localFileDocumentation.test";
 import "./localProjectDocumentation.test";
-import "./localArchitectureDocumentation.test";
-import "./localDocumentationDocument.test";
-import "./localDocumentationCache.test";
-import "./sourceAnalyzer.test";
-import "./sourceAnalyzerTypedLanguages.test";
-import "./sourceAnalyzerDependencySemantics.test";
-import "./contextWindowPolicy.test";
+import "./localProviderDiscovery.test";
+import "./localProviderPolicy.test";
+import "./localProviderRuntime.test";
+import "./localReadmeFacts.test";
+import "./localSelfAudit.test";
+import "./manifestMetadata.test";
+import "./markdownEscaping.test";
+import "./modelContextCatalog.test";
 import "./modelMetadataCacheEpoch.test";
-import "./generationRunPipeline.test";
-import "./chunkDocumentationMerge.test";
-import "./providerSelectionRuntime.test";
+import "./modelMetadataCacheKey.test";
+import "./openAICompatibleResponse.test";
+import "./openRouterCapabilities.test";
+import "./outputSanitizer.test";
+import "./outputTokenLimit.test";
 import "./projectVisualPolicy.test";
-import "./scannerRunIsolation.test";
-import "./htmlOfflineHardening.test";
-import "./htmlJellyUi.test";
-import "./releasePackagePolicy.test";
+import "./providerDefaults.test";
+import "./providerErrorPolicy.test";
+import "./providerHttpError.test";
+import "./providerNamePolicy.test";
+import "./providerRequestPolicy.test";
+import "./providerRequestStartScheduler.test";
+import "./providerRetry.test";
 import "./providerRuntimeNormalization.test";
+import "./providerSelectionRuntime.test";
 import "./publicFacadeBoundary.test";
+import "./regression.test";
+import "./releasePackagePolicy.test";
+import "./scannerPolicy.test";
+import "./scannerRunIsolation.test";
+import "./sidebarAssets.test";
+import "./sidebarAuthState.test";
+import "./sidebarCsp.test";
+import "./sourceAnalyzer.test";
+import "./sourceAnalyzerDependencySemantics.test";
+import "./sourceAnalyzerTypedLanguages.test";
+import "./sourceAnalyzerTypeScriptAst.test";
+import "./sourceLink.test";
 
 test("aggregate regression entry imports every sibling test module", () => {
   const testDirectory = join(process.cwd(), "test");
-  const aggregateSource = readFileSync(join(testDirectory, "all.test.ts"), "utf8");
+  const aggregateSource = readFileSync(
+    join(testDirectory, "all.test.ts"),
+    "utf8",
+  );
   const siblingTests = readdirSync(testDirectory)
     .filter((name) => name.endsWith(".test.ts") && name !== "all.test.ts")
     .sort();
@@ -67,41 +90,3 @@ test("aggregate regression entry imports every sibling test module", () => {
     );
   }
 });
-import "./htmlNavigationRuntime.test";
-
-import "./sourceAnalyzerTypeScriptAst.test";
-
-import "./localReadmeFacts.test";
-import "./localDocumentationModel.test";
-
-import "./htmlLocalCodeMap.test";
-
-import "./sidebarCsp.test";
-
-import "./configurationPreference.test";
-
-import "./configurationNamespace.test";
-
-import "./htmlTemplatePolicy.test";
-
-import "./htmlBaseStyles.test";
-
-import "./htmlBaseScript.test";
-
-import "./sidebarAssets.test";
-
-import "./localProviderPolicy.test";
-
-import "./localProviderRuntime.test";
-
-import "./localProviderDiscovery.test";
-
-import "./localBuildFacts.test";
-
-import "./localSelfAudit.test";
-
-import "./markdownEscaping.test";
-
-import "./htmlMarkdownSafety.test";
-
-import "./sourceLink.test";
