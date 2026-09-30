@@ -76,8 +76,30 @@ export interface LocalCodeMapDockerfile {
   command?: string;
 }
 
+export interface LocalCodeMapLanguageSummary {
+  name: string;
+  files: number;
+  lines: number;
+}
+
+export interface LocalCodeMapProjectSummary {
+  files: number;
+  lines: number;
+  describedFiles: number;
+  undocumentedFiles: number;
+  symbols: number;
+  exports: number;
+  internalDependencies: number;
+  externalDependencies: number;
+  todos: number;
+  languages: LocalCodeMapLanguageSummary[];
+  entryPoints: string[];
+  externalDependencyNames: string[];
+}
+
 export interface LocalCodeMapData {
   projectName: string;
+  summary: LocalCodeMapProjectSummary;
   files: LocalCodeMapFile[];
   modules: LocalCodeMapModule[];
   edges: LocalCodeMapEdge[];
@@ -101,8 +123,48 @@ export interface LocalCodeMapData {
 export function buildLocalCodeMapData(
   model: LocalDocumentationModel,
 ): LocalCodeMapData {
+  const languageRows = new Map<
+    string,
+    { files: number; lines: number }
+  >();
+  for (const file of model.files) {
+    const row = languageRows.get(file.language) ?? { files: 0, lines: 0 };
+    row.files++;
+    row.lines += file.lineCount;
+    languageRows.set(file.language, row);
+  }
+
   return {
     projectName: model.projectName,
+    summary: {
+      files: model.files.length,
+      lines: model.totalLines,
+      describedFiles: model.files.filter(
+        (file) => Boolean(file.description),
+      ).length,
+      undocumentedFiles: model.files.filter(
+        (file) => !file.description,
+      ).length,
+      symbols: model.totalSymbols,
+      exports: model.totalExports,
+      internalDependencies: model.internalDependencies.length,
+      externalDependencies: model.externalDependencies.length,
+      todos: model.totalTodos,
+      languages: Array.from(languageRows.entries())
+        .map(([name, row]) => ({
+          name,
+          files: row.files,
+          lines: row.lines,
+        }))
+        .sort(
+          (a, b) =>
+            b.files - a.files ||
+            b.lines - a.lines ||
+            a.name.localeCompare(b.name),
+        ),
+      entryPoints: [...model.entryPoints],
+      externalDependencyNames: [...model.externalDependencies],
+    },
     files: model.files.map((file) => ({
       path: file.path,
       module: file.module,
