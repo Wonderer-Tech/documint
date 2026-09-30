@@ -473,6 +473,8 @@ python -m pip install playwright
 python -m playwright install chromium
 ```
 
+Browser scripts use `tools/run-python.mjs`, which selects an available Python 3 runtime (`python3`, `python`, or Windows `py -3`). Set `DOCUMINT_PYTHON=/custom/python` to force a specific interpreter.
+
 Then run the same provider-free generated-HTML acceptance command used by the manual GitHub workflow:
 
 ```bash
@@ -499,7 +501,7 @@ To record a size delta against an older VSIX:
 DOCUMINT_BASELINE_VSIX=/path/to/previous.vsix npm run release:readiness
 ```
 
-The tag-release workflow uses this same readiness command before publishing the GitHub Release asset.
+The tag-release workflow uses this same readiness command before publishing the GitHub Release asset. After `package-lock.json` is committed, the manual **Release Readiness** GitHub Actions workflow can run the same gate on demand without enabling automatic main-push CI.
 
 ## Known Limitations
 
