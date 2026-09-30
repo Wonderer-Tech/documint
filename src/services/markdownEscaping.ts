@@ -36,7 +36,7 @@ export function escapeRawHtmlOutsideMarkdownCode(markdown: string): string {
   return markdown
     .split(/\r?\n/)
     .map((line) => {
-      const fenceMatch = line.match(/^\s*([\`~]{3,})/);
+      const fenceMatch = line.match(/^\s*(\`{3,}|~{3,})/);
       if (fenceMatch) {
         const run = fenceMatch[1];
         const marker = run[0];
