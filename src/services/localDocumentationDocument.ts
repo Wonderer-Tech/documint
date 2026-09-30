@@ -61,10 +61,7 @@ export function buildLocalDocumentationDocument(
     model,
     { surface: "markdown" },
   );
-  const htmlArchitecture = renderLocalArchitectureDocumentationFromModel(
-    model,
-    { surface: "summary" },
-  );
+  const htmlArchitecture = "";
   const fileSections = model.files.map((file) =>
     renderLocalFileDocumentationFromModel(file),
   );
@@ -115,12 +112,12 @@ function assembleDocumentMarkdown(
 ): string {
   return [
     overview,
-    "",
-    "---",
-    "",
     architecture,
-    ...fileSections.flatMap((section) => ["", "---", "", section]),
-  ].join("\n");
+    ...fileSections,
+  ]
+    .map((section) => section.trim())
+    .filter(Boolean)
+    .join("\n\n---\n\n");
 }
 
 function renderMarkdownForTemplate(markdown: string, filePaths: string[]): {
