@@ -8,6 +8,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+import { homedir } from "node:os";
 import { join, relative, resolve } from "node:path";
 
 const root = resolve(process.cwd());
@@ -42,19 +43,69 @@ function run(label, command, args, extraEnv = {}) {
   return elapsedMs(startedAt);
 }
 
-function capture(command, args) {
+function capture(command, args, extraEnv = {}) {
   try {
     return String(
       execFileSync(command, args, {
         cwd: root,
         encoding: "utf8",
         stdio: ["ignore", "pipe", "ignore"],
+        env: { ...process.env, ...extraEnv },
         shell: process.platform === "win32",
       }),
     ).trim();
   } catch {
     return undefined;
   }
+}
+
+function discoverBrowserExecutable() {
+  const configured = process.env.CHROMIUM_EXECUTABLE?.trim();
+  if (configured) {
+    if (!existsSync(configured)) {
+      throw new Error(`CHROMIUM_EXECUTABLE does not exist: ${configured}`);
+    }
+    return configured;
+  }
+
+  if (process.platform === "win32") return undefined;
+
+  for (const command of [
+    "chromium",
+    "chromium-browser",
+    "brave-browser",
+    "brave",
+    "google-chrome",
+    "google-chrome-stable",
+  ]) {
+    const resolved = capture("sh", ["-lc", `command -v ${command}`]);
+    if (resolved && existsSync(resolved)) return resolved;
+  }
+
+  return undefined;
+}
+
+function discoverPythonExecutable() {
+  const configured = process.env.DOCUMINT_PYTHON?.trim();
+  if (configured) {
+    if (!existsSync(configured)) {
+      throw new Error(`DOCUMINT_PYTHON does not exist: ${configured}`);
+    }
+    return configured;
+  }
+
+  if (process.platform !== "win32") {
+    const preferred = join(
+      homedir(),
+      ".venvs",
+      "documint-browser",
+      "bin",
+      "python",
+    );
+    if (existsSync(preferred)) return preferred;
+  }
+
+  return undefined;
 }
 
 function readJson(path) {
@@ -148,38 +199,43 @@ try {
     throw new Error("Python launcher is missing: tools/run-python.mjs");
   }
 
-  const configuredChromium = process.env.CHROMIUM_EXECUTABLE?.trim();
-  if (configuredChromium && !existsSync(configuredChromium)) {
-    throw new Error(
-      `CHROMIUM_EXECUTABLE does not exist: ${configuredChromium}`,
-    );
-  }
+  const discoveredPython = discoverPythonExecutable();
+  const discoveredBrowser = discoverBrowserExecutable();
+  const browserEnv = {
+    ...(discoveredPython ? { DOCUMINT_PYTHON: discoveredPython } : {}),
+    ...(discoveredBrowser ? { CHROMIUM_EXECUTABLE: discoveredBrowser } : {}),
+  };
 
-  const browserProbe = capture(process.execPath, [
-    pythonRunner,
-    "-c",
+  const browserProbe = capture(
+    process.execPath,
     [
-      "import os",
-      "from playwright.sync_api import sync_playwright",
-      "p=sync_playwright().start()",
-      "launch={'headless':True,'args':['--no-sandbox']}",
-      "configured=os.environ.get('CHROMIUM_EXECUTABLE','').strip()",
-      "launch.update({'executable_path':configured} if configured else {})",
-      "b=p.chromium.launch(**launch)",
-      "b.close()",
-      "p.stop()",
-      "print('ok')",
-    ].join(";"),
-  ]);
+      pythonRunner,
+      "-c",
+      [
+        "import os",
+        "from playwright.sync_api import sync_playwright",
+        "p=sync_playwright().start()",
+        "launch={'headless':True,'args':['--no-sandbox']}",
+        "configured=os.environ.get('CHROMIUM_EXECUTABLE','').strip()",
+        "launch.update({'executable_path':configured} if configured else {})",
+        "b=p.chromium.launch(**launch)",
+        "b.close()",
+        "p.stop()",
+        "print('ok')",
+      ].join(";"),
+    ],
+    browserEnv,
+  );
   if (browserProbe !== "ok") {
     throw new Error(
-      "Python Playwright/browser runtime is unavailable. Install Playwright in the selected Python environment and either set CHROMIUM_EXECUTABLE to an installed Chrome/Chromium binary or install Playwright Chromium with: python -m playwright install chromium",
+      "Python Playwright/browser runtime is unavailable. DocuMint checks DOCUMINT_PYTHON, then ~/.venvs/documint-browser/bin/python, and reuses installed Chromium/Brave when available. Install Playwright in that Python environment or install Playwright Chromium.",
     );
   }
   evidence.checks.browserRuntime = {
     passed: true,
-    mode: configuredChromium ? "system-executable" : "playwright-managed",
-    chromiumExecutable: configuredChromium || undefined,
+    mode: discoveredBrowser ? "system-executable" : "playwright-managed",
+    pythonExecutable: discoveredPython || "launcher-default",
+    chromiumExecutable: discoveredBrowser || undefined,
   };
 
   phase = "verify";
@@ -193,7 +249,12 @@ try {
   phase = "browser";
   evidence.checks.browser = {
     passed: true,
-    durationMs: run("Run full generated-HTML browser acceptance", npmCommand, ["run", "test:browser"]),
+    durationMs: run(
+      "Run full generated-HTML browser acceptance",
+      npmCommand,
+      ["run", "test:browser"],
+      browserEnv,
+    ),
   };
 
   phase = "package";
