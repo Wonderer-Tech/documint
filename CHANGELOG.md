@@ -53,6 +53,7 @@ All notable changes to DocuMint are documented here.
 ### Security
 
 - Added a per-render nonce Content Security Policy to the VS Code sidebar webview.
+- Neutralized raw HTML and unsafe rendered Markdown URLs before generated HTML is assembled in both Local and AI modes. `javascript:`, active `data:` URLs, protocol-relative URLs, remote Markdown images, and unsafe image data types are blocked while normal web/source links and raster data images remain supported.
 - Blocked HTTP redirects for Ollama, LM Studio, and custom OpenAI-compatible provider requests so a loopback/no-consent endpoint cannot redirect source-bearing requests to another host.
 - Local model discovery also blocks redirects, bypasses environment HTTP proxies, and caps the model-list response size. Source-bearing Ollama/LM Studio requests bypass proxies as well; local custom endpoints disable proxy routing while remote custom endpoints retain normal proxy behavior.
 - Local generated HTML no longer needs third-party CDN assets for the Local project-map experience.
