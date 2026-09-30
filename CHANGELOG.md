@@ -27,10 +27,13 @@ All notable changes to DocuMint are documented here.
 - Added the question-first Local HTML project map: module overview, file-size treemap, suggested reading path, dependency-reach scatter, file/description/export/environment search, connected file cards, and source links.
 - Added one question-first Local HTML **How to run** surface backed by the canonical model: package scripts/manager, extension entry, VS Code commands/settings, Makefile targets, Dockerfile facts, and referenced environment variables. The HTML overview no longer duplicates those onboarding headings; Markdown keeps its standalone onboarding sections.
 - Local HTML file cards now retain canonical internal symbols plus TODO/FIXME/HACK source-note evidence instead of dropping those analyzer facts after model construction.
+- Local file lookup now searches internal symbols and TODO/FIXME/HACK source-note text in addition to paths, trusted descriptions, exports, and environment references, and labels why each result matched.
+- Big Picture module nodes now retain trusted description provenance and canonical suggested start files from the shared model instead of dropping those facts at the HTML data boundary.
+- Uses / Used by cards keep the first 12 relations compact while placing every remaining project relation in an expandable, navigable list instead of replacing them with an inaccessible count.
 - Added entry-point-driven layered layout, module hover/focus isolation, factual handwritten-style module notes, and cross-view navigation in the Local project map.
 - Local `Ctrl/Cmd+K` now focuses project-file search while `/` continues to search documentation headings.
 - Local HTML is generated with external assets disabled; the Local project-map experience does not require CDN scripts/styles.
-- Bumped Local cache compatibility to v10 so README-backed descriptions, complete file-card facts, and the consolidated Local HTML onboarding surface regenerate once.
+- Bumped Local cache compatibility to v12 so the complete Local search, onboarding, module-start/provenance, and relation-navigation surfaces regenerate once.
 - Retired the old source-repair and VSIX self-commit workflows; CI/release automation no longer rewrites application source or force-adds a VSIX through those workflows.
 - Removed obsolete VS Code activation-event declarations and the deprecated `@types/marked` stub dependency.
 - Split the generated HTML shell into dedicated base-style, runtime-script, and policy modules; `htmlTemplate.ts` is now a small composition shell.
