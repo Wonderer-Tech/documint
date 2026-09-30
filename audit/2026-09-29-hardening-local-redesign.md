@@ -19,6 +19,7 @@ _Last updated: 2026-09-30_
 - ⏳ `package-lock.json` is now allowed by `.gitignore`, but lockfile generation is still pending. An offline `npm install --package-lock-only --offline` attempt failed immediately with `ENOTCACHED` for `@types/node`; this environment also cannot reach the npm registry. CI/release workflows stay on `npm install` until a network-enabled checkout commits the lockfile.
 - ✅ Added AST-backed JS/TS-family analysis using the TypeScript compiler API.
 - ✅ Multiline imports/declarations, `export abstract class`, class methods, explicit export lists, named export aliases, namespace re-exports, destructured top-level bindings, module scope, static environment references, and comment-safe TODO extraction are structurally analyzed.
+- ✅ JS/TS multiline signatures are normalized into compact API signatures without body braces, continuation whitespace, or trailing parameter commas.
 - ✅ Function-local temporary variables no longer pollute the JS/TS module symbol list.
 - ✅ Added Python environment-reference detection that ignores comments and strings.
 - ✅ Added trusted description provenance from TS/JS file/module docs, safe declaration docs, Python module docstrings, Rust module docs, Go package comments, exact README file descriptions, and exact README structural-module descriptions.
@@ -26,6 +27,7 @@ _Last updated: 2026-09-30_
 - ✅ Structural modules use shared second-level grouping such as `src/providers`, `src/services`, and `src/scanner`.
 - ✅ Local project docs are question-first: **Where is what**, **How to run**, **Referenced environment variables**, **Suggested reading path**, **Core files**, **Undocumented files**, and description-coverage facts.
 - ✅ Local per-file docs are compact, omit empty routine sections, show trusted description provenance, show Uses / Used by, environment references, and portable source/line links.
+- ✅ Portable source links strictly encode Markdown-sensitive path characters such as spaces, route-group parentheses, brackets, and `#`, while preserving `#Lx` line anchors.
 - ✅ Local Markdown no longer carries raw architecture/whiteboard/dependency JSON, file-level graph payloads, or D2 duplication; it keeps one compact module Mermaid view.
 - ✅ Local HTML uses the question-first code map as its rich visual layer: module map, treemap, suggested reading path, dependency-reach scatter, file/description/export/environment search, connected file cards, source links, and factual handwritten notes.
 - ✅ Local code map supports cross-view navigation, module focus isolation, entry-point-driven layered layout, accessible search/listbox behavior, `Ctrl/Cmd+K` file search, and trusted module-description tooltips.
@@ -39,11 +41,12 @@ _Last updated: 2026-09-30_
 - ✅ Published canonical `documint.*` settings while preserving explicit `aiDocGenerator.*` values as deprecated compatibility aliases. Runtime reads/writes go through the shared namespace bridge; command IDs remain unchanged.
 - ✅ Removed obsolete activation events and deprecated `@types/marked`.
 - ✅ Added CONTRIBUTING, SECURITY, issue templates, PR checklist, and source-of-truth audit docs.
+- ✅ Added dependency-free repository hygiene with EditorConfig and Git attributes for LF normalization and binary artifact handling.
 - ✅ `htmlTemplate.ts` is now a small composition shell; static generated-HTML styles/runtime/policy moved to dedicated modules with focused regressions.
 - ✅ `sidebarProvider.ts` now focuses on host state/messages; CSP-aware markup, styles, and webview client runtime live in dedicated modules.
 - ✅ Added weekly Dependabot configuration for npm and GitHub Actions.
 - ✅ Retired the unused `localVisualBlueprint.ts` Local payload path and aligned Local browser/Jelly/architecture regressions with the code-map architecture.
-- ✅ Aggregate unit-test registration is currently consistent: every root `test/*.test.ts` module is imported by `test/all.test.ts`.
+- ✅ Aggregate unit-test registration is currently consistent: every root `test/*.test.ts` module is imported by `test/all.test.ts`; aggregate test imports are normalized in one alphabetical block.
 - ✅ Added `npm run audit:self`, which documents DocuMint's own source and asserts key Local Documentation release invariants; PR CI and tag releases run it after the normal regression suite.
 - ⏳ Full local `npm test`, VSIX size comparison, and browser acceptance execution still require a network-enabled/materialized checkout. No CI was manually triggered in this implementation pass.
 - ⏳ README demo GIF compression remains pending; the binary is still excluded from VSIX packaging.
