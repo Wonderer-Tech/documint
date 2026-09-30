@@ -19,6 +19,27 @@ test("browser acceptance workflow stays manual-only and runs the canonical verif
   assert.doesNotMatch(workflow, /git\s+push/);
 });
 
+test("lockfile bootstrap workflow stays manual-only and never mutates the repository", () => {
+  const workflow = readFileSync(
+    join(process.cwd(), ".github/workflows/lockfile-bootstrap.yml"),
+    "utf8",
+  );
+
+  assert.match(workflow, /on:\s*\n\s*workflow_dispatch:/);
+  assert.doesNotMatch(workflow, /pull_request:/);
+  assert.doesNotMatch(workflow, /push:/);
+  assert.match(workflow, /permissions:\s*\n\s*contents: read/);
+  assert.match(workflow, /npm install --package-lock-only --ignore-scripts --no-audit --no-fund/);
+  assert.match(workflow, /npm run lockfile:validate/);
+  assert.match(workflow, /npm ci --ignore-scripts --no-audit --no-fund/);
+  assert.match(workflow, /npm ls --all/);
+  assert.match(workflow, /package-lock\.sha256/);
+  assert.match(workflow, /actions\/upload-artifact@v4/);
+  assert.doesNotMatch(workflow, /git\s+push/);
+  assert.doesNotMatch(workflow, /git\s+commit/);
+});
+
+
 test("manual release-readiness workflow stays manual-only and uploads evidence", () => {
   const workflow = readFileSync(
     join(process.cwd(), ".github/workflows/release-readiness.yml"),
