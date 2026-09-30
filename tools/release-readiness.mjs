@@ -73,16 +73,15 @@ function ensureZipLike(path) {
     throw new Error(`VSIX does not have a ZIP signature: ${signature}`);
   }
 
-  try {
-    run("Verify VSIX archive integrity", "unzip", ["-t", path]);
-    return "unzip -t";
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
-      console.warn("unzip is unavailable; ZIP signature validation was used instead.");
-      return "zip-signature";
-    }
-    throw error;
+  const unzipAvailable =
+    process.platform !== "win32" && Boolean(capture("unzip", ["-v"]));
+  if (!unzipAvailable) {
+    console.warn("unzip is unavailable; ZIP signature validation was used instead.");
+    return "zip-signature";
   }
+
+  run("Verify VSIX archive integrity", "unzip", ["-t", path]);
+  return "unzip -t";
 }
 
 function relativePath(path) {
