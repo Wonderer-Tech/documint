@@ -27,9 +27,16 @@ jobs:
         with:
           node-version: 20
 
-      # Switch this to npm ci as soon as package-lock.json is committed.
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      - name: Require package lock
+        shell: bash
+        run: |
+          test -f package-lock.json || {
+            echo "package-lock.json is required for a reproducible release."
+            exit 1
+          }
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
 
       - name: Verify tag matches package version
         shell: bash
