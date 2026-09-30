@@ -70,8 +70,15 @@ with sync_playwright() as p:
             assert snapshot() == before_filter, ('filter state restore', name)
             assert page.locator('#sidebarFilter').input_value() == ''
             assert not page.locator('#readerClearFilter').is_visible()
-            page.keyboard.press('Control+k')
-            assert page.evaluate('document.activeElement.id') == 'searchInput'
+            if fixture.get('codeMap'):
+                page.keyboard.press('Control+k')
+                assert page.evaluate('document.activeElement.id') == 'localMapSearch'
+                page.evaluate('document.activeElement.blur()')
+                page.keyboard.press('/')
+                assert page.evaluate('document.activeElement.id') == 'searchInput'
+            else:
+                page.keyboard.press('Control+k')
+                assert page.evaluate('document.activeElement.id') == 'searchInput'
             keyword = os.environ.get('READER_REPORT_QUERY', 'index.ts') if report else 'index.ts'
             page.locator('#searchInput').fill(keyword)
             assert page.locator('.search-item').count() > 0
