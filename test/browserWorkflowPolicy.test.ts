@@ -13,9 +13,7 @@ test("browser acceptance workflow stays manual-only and runs the canonical verif
   assert.doesNotMatch(workflow, /pull_request:/);
   assert.doesNotMatch(workflow, /push:/);
   assert.match(workflow, /npm run verify/);
-  assert.match(workflow, /navigationFixtures\.ts/);
-  assert.match(workflow, /navigationAcceptance\.py/);
-  assert.match(workflow, /readerAcceptance\.py/);
+  assert.match(workflow, /npm run test:browser/);
   assert.match(workflow, /python -m playwright install --with-deps chromium/);
   assert.match(workflow, /actions\/upload-artifact@v4/);
   assert.doesNotMatch(workflow, /git\s+push/);
@@ -33,4 +31,28 @@ test("browser acceptance scripts abort external HTTP requests", () => {
 
   assert.match(navigation, /page\.route\("https:\/\/\*\*\/\*"/);
   assert.match(reader, /context\.route\('https:\/\/\*\*\/\*'/);
+});
+
+
+test("package scripts keep browser fixture and acceptance commands canonical", () => {
+  const manifest = JSON.parse(
+    readFileSync(join(process.cwd(), "package.json"), "utf8"),
+  ) as { scripts: Record<string, string> };
+
+  assert.match(
+    manifest.scripts["test:browser:fixtures"],
+    /navigationFixtures\.ts/,
+  );
+  assert.match(
+    manifest.scripts["test:browser:navigation"],
+    /navigationAcceptance\.py/,
+  );
+  assert.match(
+    manifest.scripts["test:browser:reader"],
+    /readerAcceptance\.py/,
+  );
+  assert.equal(
+    manifest.scripts["test:browser"],
+    "npm run test:browser:fixtures && npm run test:browser:navigation && npm run test:browser:reader",
+  );
 });
