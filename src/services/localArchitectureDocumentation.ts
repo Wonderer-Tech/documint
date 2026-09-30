@@ -98,7 +98,10 @@ function renderModuleMermaid(model: LocalDocumentationModel): string {
 }
 
 function cleanText(value: string): string {
-  return String(value).replace(/[\r\n]+/g, " ").trim();
+  return String(value)
+    .replace(/[\r\n]+/g, " ")
+    .replace(/`/g, "'")
+    .trim();
 }
 
 function inlineCode(value: string): string {
