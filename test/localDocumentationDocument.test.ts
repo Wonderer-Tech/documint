@@ -42,7 +42,9 @@ test("complete Local document combines overview, architecture, and per-file fact
   assert.match(document.markdown, /lib\/format\.ts/);
   assert.match(document.markdown, /No AI inference, model, API key, or external provider is used/);
   assert.match(document.html, /Example Project — Local Documentation/);
-  assert.match(document.html, /href="#architecture-dependencies"/);
+  assert.doesNotMatch(document.html, /href="#architecture-dependencies"/);
+  assert.doesNotMatch(document.html, /<h2[^>]*>Architecture &amp; Dependencies<\/h2>/);
+  assert.doesNotMatch(document.html, /<h3[^>]*>Module Relationships<\/h3>/);
   assert.doesNotMatch(document.html, /language-mermaid/);
   assert.match(document.html, /data-documint-local-code-map/);
   assert.match(document.html, /How do the parts fit together\?/);
@@ -182,6 +184,8 @@ test("Local Markdown keeps orientation sections while HTML avoids duplicating co
   assert.match(document.markdown, /## Entry Points/);
   assert.match(document.markdown, /## External Dependencies/);
   assert.match(document.markdown, /## Source Tree/);
+  assert.match(document.markdown, /## Architecture & Dependencies/);
+  assert.match(document.markdown, /### Module Relationships/);
   assert.match(document.markdown, /## Where is what/);
   assert.match(document.markdown, /## Suggested reading path/);
   assert.match(document.markdown, /## Core files/);
@@ -196,6 +200,11 @@ test("Local Markdown keeps orientation sections while HTML avoids duplicating co
   assert.doesNotMatch(document.html, /<h2[^>]*>Entry Points<\/h2>/);
   assert.doesNotMatch(document.html, /<h2[^>]*>External Dependencies<\/h2>/);
   assert.doesNotMatch(document.html, /<h2[^>]*>Source Tree<\/h2>/);
+  assert.doesNotMatch(
+    document.html,
+    /<h2[^>]*>Architecture &amp; Dependencies<\/h2>/,
+  );
+  assert.doesNotMatch(document.html, /<h3[^>]*>Module Relationships<\/h3>/);
   assert.doesNotMatch(document.html, /<h2[^>]*>Undocumented files<\/h2>/);
   assert.match(document.html, /At a glance/);
   assert.match(document.html, /Documentation coverage/);
