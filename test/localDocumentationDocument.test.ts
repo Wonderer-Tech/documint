@@ -9,8 +9,12 @@ const files = [
     language: "typescript",
     content: [
       'import { formatValue } from "../lib/format";',
+      "function normalizeValue(value: string) {",
+      "  return value.trim();",
+      "}",
+      "// TODO: add command smoke test",
       "export function run(value: string) {",
-      "  return formatValue(value);",
+      "  return formatValue(normalizeValue(value));",
       "}",
     ].join("\n"),
   },
@@ -44,6 +48,19 @@ test("complete Local document combines overview, architecture, and per-file fact
   assert.match(document.html, /How do the parts fit together\?/);
   assert.match(document.html, /Which files are used by the most project files\?/);
 });
+
+test("Local HTML preserves internal symbols and TODO evidence in the file card", () => {
+  const analyzer = new SourceAnalyzer();
+  const project = analyzer.analyzeProject(files);
+  const document = buildLocalDocumentationDocument("Example Project", files, project);
+
+  assert.match(document.html, /internalSymbols/);
+  assert.match(document.html, /normalizeValue/);
+  assert.match(document.html, /Internal symbols/);
+  assert.match(document.html, /Source notes/);
+  assert.match(document.html, /TODO: add command smoke test/);
+});
+
 
 test("Local document assembly remains independent of provider/model inputs", () => {
   const analyzer = new SourceAnalyzer();
