@@ -165,7 +165,11 @@ test("release readiness command runs strict verification and writes measurable e
     readiness,
     /pythonRunner = join\(root, "tools", "run-python\.mjs"\)/,
   );
-  assert.match(readiness, /Python Playwright\/Chromium is unavailable/);
+  assert.match(readiness, /Python Playwright\/browser runtime is unavailable/);
+  assert.match(readiness, /CHROMIUM_EXECUTABLE/);
+  assert.match(readiness, /executable_path/);
+  assert.match(readiness, /system-executable/);
+  assert.match(readiness, /playwright-managed/);
   assert.match(readiness, /evidence\.checks\.browserRuntime/);
   assert.match(readiness, /readiness\.json/);
   assert.match(readiness, /DOCUMINT_SELF_AUDIT_OUTPUT/);
