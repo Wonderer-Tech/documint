@@ -398,7 +398,8 @@
     "test:browser": "npm run test:browser:fixtures && npm run test:browser:navigation && npm run test:browser:reader",
     "release:readiness": "node tools/release-readiness.mjs",
     "lockfile:validate": "node tools/validate-lockfile.mjs",
-    "lockfile:adopt": "node tools/adopt-lockfile.mjs"
+    "lockfile:adopt": "node tools/adopt-lockfile.mjs",
+    "lockfile:bootstrap": "node tools/trigger-lockfile-bootstrap.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
