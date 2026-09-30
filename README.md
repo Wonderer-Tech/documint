@@ -447,16 +447,26 @@ The `*Base.ts` modules are implementation details. Runtime AI code should import
 
 ### Commands
 
+Normal development loop:
+
 ```bash
 npm install
-npm run compile
-npm run typecheck
+npm run check
+```
+
+`npm run check` runs TypeScript type checking plus the fast unit/regression suite. It does not launch a browser, run the Local self-audit, package a VSIX, or require Python/Playwright.
+
+Use the heavier commands only when they are relevant:
+
+```bash
 npm run watch
-npm test
+npm run compile
 npm run audit:self
 npm run verify
 npm run release:readiness
 ```
+
+`npm run release:readiness` is a **release-candidate gate**, not a normal edit-loop command. It is the only canonical command that chains verification, browser acceptance, VSIX packaging, archive validation, and release evidence.
 
 Self-audit:
 
@@ -466,7 +476,9 @@ Self-audit:
 
 ### Browser acceptance
 
-Install Python Playwright once. A virtual environment is recommended:
+Browser acceptance is for Local HTML/browser changes and final release validation; it is not required for ordinary extension development or for end users installing the VSIX.
+
+Install Python Playwright once on a development/release machine when browser acceptance is needed. A virtual environment is recommended:
 
 ```bash
 python3 -m venv ~/.venvs/documint-browser
@@ -518,6 +530,8 @@ npm run lockfile:adopt -- /path/to/extracted/documint-package-lock-artifact
 The adopter uses the same shared lockfile policy as `lockfile:validate`; it validates the candidate before touching the root lockfile, verifies the Bootstrap artifact's `package-lock.sha256` when that metadata is present, replaces via a temporary file, and re-verifies the adopted SHA-256. Passing the artifact directory or its `package-lock.json` file is supported.
 
 ### Release readiness
+
+Run this only for a release candidate, not after every source edit.
 
 After the lockfile is committed, Python Playwright is installed, and either `CHROMIUM_EXECUTABLE` points to a local Chrome/Chromium binary or Playwright Chromium is installed, run the complete release gate with one command:
 
