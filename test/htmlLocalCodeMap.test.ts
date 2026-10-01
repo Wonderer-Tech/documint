@@ -339,6 +339,24 @@ test("Local Big Picture layout starts from entry modules and clips edges at modu
 });
 
 
+test("Local Big Picture organizes modules into readable dependency layers", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.script, /function barycenter/);
+  assert.match(fragments.script, /function reorderLevel/);
+  assert.match(fragments.script, /for \(var sweep = 0; sweep < 3; sweep\+\+\)/);
+  assert.match(fragments.script, /var columnSpacing = 228/);
+  assert.match(fragments.script, /var rowSpacing = 112/);
+  assert.match(fragments.script, /columns\.sort/);
+  assert.match(fragments.script, /entry layer/);
+  assert.match(fragments.script, /dependency layer /);
+  assert.match(fragments.script, /other modules/);
+  assert.match(fragments.styles, /\.local-map-layer-guide/);
+  assert.match(fragments.styles, /\.local-map-layer-label/);
+  assert.match(fragments.script, /if \(levelSpan === 0\)/);
+});
+
+
 test("Local code map source navigation stays relative and repository-agnostic", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
