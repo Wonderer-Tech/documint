@@ -76,6 +76,16 @@ const codeMapFiles: WorkspaceFile[] = [
     content: "export class SecretStorage {}\n",
   },
   {
+    path: "db/schema.sql",
+    language: "sql",
+    content: [
+      "CREATE TABLE jobs (",
+      "  id INTEGER PRIMARY KEY,",
+      "  status TEXT NOT NULL",
+      ");",
+    ].join("\n"),
+  },
+  {
     path: "package.json",
     language: "json",
     content: JSON.stringify({
