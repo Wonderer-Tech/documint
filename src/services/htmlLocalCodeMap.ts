@@ -292,6 +292,10 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     --map-note: #3F6394;
     --map-highlight: #FFE66D;
     --map-card: #FFFFFF;
+    --map-jelly-surface: color-mix(in srgb, #FFFFFF 88%, transparent);
+    --map-jelly-surface-soft: color-mix(in srgb, #FFFFFF 72%, #D3EEE4);
+    --map-jelly-edge: color-mix(in srgb, #FFFFFF 62%, #C9D4CF);
+    --map-jelly-shadow: 0 12px 34px rgba(36, 48, 58, .075), inset 0 1px 0 rgba(255,255,255,.8);
     --map-s0: #5B6770;
     --map-t0: #E3E8EB;
     --map-s1: #3F6394;
@@ -331,6 +335,10 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     --map-note: #8DB0E6;
     --map-highlight: #C9B43E;
     --map-card: #18232A;
+    --map-jelly-surface: color-mix(in srgb, #18232A 90%, transparent);
+    --map-jelly-surface-soft: color-mix(in srgb, #18232A 82%, #163A30);
+    --map-jelly-edge: color-mix(in srgb, #DCE5E2 16%, #34454C);
+    --map-jelly-shadow: 0 14px 38px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(220,229,226,.06);
     --map-s0: #9AA7B0;
     --map-t0: #29333A;
     --map-s1: #86A6D6;
@@ -356,6 +364,10 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     --map-note: #3F6394;
     --map-highlight: #FFE66D;
     --map-card: #FFFFFF;
+    --map-jelly-surface: color-mix(in srgb, #FFFFFF 88%, transparent);
+    --map-jelly-surface-soft: color-mix(in srgb, #FFFFFF 72%, #D3EEE4);
+    --map-jelly-edge: color-mix(in srgb, #FFFFFF 62%, #C9D4CF);
+    --map-jelly-shadow: 0 12px 34px rgba(36, 48, 58, .075), inset 0 1px 0 rgba(255,255,255,.8);
   }
   .local-code-map *,
   .local-code-map *::before,
@@ -508,11 +520,18 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   .local-map-fact-card,
   .local-map-card {
     min-width: 0;
-    border: 1px solid var(--map-line);
-    border-radius: 14px;
+    border: 1px solid var(--map-jelly-edge);
+    border-radius: 17px;
     overflow: hidden;
-    background: var(--map-card);
-    box-shadow: none;
+    background:
+      linear-gradient(145deg, var(--map-jelly-surface), var(--map-jelly-surface-soft));
+    box-shadow: var(--map-jelly-shadow);
+  }
+  .local-map-panel {
+    background:
+      linear-gradient(145deg,
+        color-mix(in srgb, var(--map-jelly-surface) 94%, transparent),
+        color-mix(in srgb, var(--map-jelly-surface-soft) 86%, transparent));
   }
   .local-map-card :where(h4, h5, p, a, button, code, small, span, td, th),
   .local-map-overview-card :where(h4, p, button, code, small, span),
@@ -536,9 +555,12 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   .local-map-stat {
     min-width: 0;
     padding: 12px 13px;
-    border: 1px solid var(--map-line);
-    border-radius: 9px;
-    background: var(--map-card);
+    border: 1px solid var(--map-jelly-edge);
+    border-radius: 12px;
+    background:
+      linear-gradient(145deg, var(--map-jelly-surface), var(--map-jelly-surface-soft));
+    box-shadow: 0 7px 20px color-mix(in srgb, var(--map-ink) 6%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--map-card) 76%, transparent);
   }
   .local-map-stat strong {
     display: block;
@@ -788,6 +810,95 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     overflow-wrap: anywhere;
   }
 
+  .local-map-data-model {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .local-map-schema-source {
+    min-width: 0;
+    border: 1px solid var(--map-jelly-edge);
+    border-radius: 16px;
+    padding: 14px;
+    background:
+      linear-gradient(145deg, var(--map-jelly-surface), var(--map-jelly-surface-soft));
+    box-shadow: var(--map-jelly-shadow);
+  }
+  .local-map-schema-head {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .local-map-schema-head strong {
+    min-width: 0;
+    color: var(--map-ink);
+    font-family: var(--map-mono);
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+  .local-map-schema-format {
+    flex: none;
+    border: 1px solid var(--map-jelly-edge);
+    border-radius: 999px;
+    padding: 3px 7px;
+    background: color-mix(in srgb, var(--map-mint) 8%, var(--map-card));
+    color: var(--map-mint);
+    font-size: 9px;
+    font-weight: 750;
+  }
+  .local-map-schema-entities {
+    display: grid;
+    gap: 7px;
+  }
+  .local-map-schema-entity {
+    min-width: 0;
+    border: 1px solid color-mix(in srgb, var(--map-line) 78%, transparent);
+    border-radius: 10px;
+    padding: 9px 10px;
+    background: color-mix(in srgb, var(--map-card) 70%, transparent);
+  }
+  .local-map-schema-entity-head {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .local-map-schema-entity-head b {
+    min-width: 0;
+    color: var(--map-ink);
+    font-size: 11.5px;
+    overflow-wrap: anywhere;
+  }
+  .local-map-schema-entity-head small {
+    flex: none;
+    color: var(--map-muted);
+    font-family: var(--map-mono);
+    font-size: 8.5px;
+  }
+  .local-map-schema-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 7px;
+  }
+  .local-map-schema-fields code {
+    max-width: 100%;
+    border: 1px solid color-mix(in srgb, var(--map-line) 78%, transparent);
+    border-radius: 999px;
+    padding: 3px 6px;
+    background: color-mix(in srgb, var(--map-paper) 72%, transparent);
+    color: var(--map-muted);
+    font-size: 8.8px;
+    overflow-wrap: anywhere;
+  }
+  .local-map-schema-more {
+    margin-top: 7px;
+    color: var(--map-muted);
+    font-size: 9.5px;
+  }
+
   .local-map-graph-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -796,9 +907,11 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     justify-content: space-between;
     margin-bottom: 8px;
     padding: 8px 10px;
-    border: 1px solid var(--map-line);
-    border-radius: 10px;
-    background: color-mix(in srgb, var(--map-card) 94%, transparent);
+    border: 1px solid var(--map-jelly-edge);
+    border-radius: 13px;
+    background:
+      linear-gradient(145deg, var(--map-jelly-surface), var(--map-jelly-surface-soft));
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--map-ink) 5%, transparent);
   }
   .local-map-graph-toolbar-group {
     display: inline-flex;
@@ -1646,6 +1759,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <a href="#localMapRuntimeSection" id="localMapRuntimeNav" hidden>Runtime flow</a>
     <a href="#localMapRunSection" id="localMapRunNav" hidden>How to run</a>
     <a href="#localMapInterfacesSection" id="localMapInterfacesNav" hidden>Project interfaces</a>
+    <a href="#localMapDataSection" id="localMapDataNav" hidden>Data model</a>
     <a href="#localMapSizeSection">What's inside</a>
     <a href="#localMapReadSection">Start here</a>
     <a href="#localMapReachSection">Dependency reach</a>
@@ -1725,6 +1839,17 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
       <p class="local-map-hint">Only detected commands, settings, entry-point exports, environment references, extension entry metadata, and exposed ports are shown.</p>
     </div>
     <div class="local-map-interface-grid" id="localMapInterfaces"></div>
+  </section>
+
+  <section class="local-map-section" id="localMapDataSection" aria-labelledby="localMapDataTitle" hidden>
+    <div class="local-map-section-head">
+      <div>
+        <h3 id="localMapDataTitle">Data model</h3>
+        <p class="local-map-question">What structured data shapes does this project declare?</p>
+      </div>
+      <p class="local-map-hint">Shown only when DocuMint detects direct schema/model declarations in Prisma, SQL, GraphQL, OpenAPI, Mongoose, or Drizzle source. Field lists are source-derived and may be partial when a declaration is dynamic.</p>
+    </div>
+    <div class="local-map-data-model" id="localMapDataModel"></div>
   </section>
 
   <section class="local-map-section" id="localMapSizeSection" aria-labelledby="localMapSizeTitle">
