@@ -1,27 +1,26 @@
-# DocuMint - Code Documentation Generator for VS Code
+# DocuMint — Code Documentation Generator for VS Code
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
-![Version](https://img.shields.io/badge/version-1.0.7-green)
+![Version](https://img.shields.io/badge/version-1.0.8-green)
+![Marketplace installs](https://img.shields.io/visual-studio-marketplace/i/WondererTech.documint?label=Marketplace%20installs&color=brightgreen)
 
-DocuMint is a VS Code extension that generates code documentation for an entire workspace, a selected folder, or a selected file. Generate deterministic documentation entirely on your machine with **Local Documentation — No AI**, or use AI providers such as OpenAI, Anthropic, OpenRouter, DeepSeek, **Ollama**, **LM Studio**, or a custom OpenAI-compatible endpoint for enhanced explanations.
+**Understand a codebase without reading every file first.**
 
-![DocuMint Demo](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/demo.gif)
+DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and HTML documentation. Use **Local Documentation — No AI** for deterministic, source-grounded docs that stay on your machine, or switch to AI mode when you want provider-enhanced explanations.
 
-![DocuMint Screenshot](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/screenshot1.png)
+**🎉 400+ downloads and counting.** Thank you to everyone who has tried DocuMint and helped shape it.
 
-Generated documentation preview:
-
-![DocuMint Generated Documentation](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/s2.png)
-
-It produces:
+DocuMint writes generated documentation to:
 
 - `documint/documentation.md`
 - `documint/documentation.html`
 
 ## Table of Contents
 
-- [What It Does](#what-it-does)
+- [What's New in 1.0.8](#whats-new-in-108)
+- [1.0.7 vs 1.0.8](#107-vs-108)
+- [See 1.0.8 in Action](#see-108-in-action)
 - [How It Works](#how-it-works)
 - [Local Project Map](#local-project-map)
 - [Supported Providers](#supported-providers)
@@ -38,77 +37,125 @@ It produces:
 - [Contributing](#contributing)
 - [License](#license)
 
-## What It Does
+## What's New in 1.0.8
 
-DocuMint scans and analyzes source files first, then follows one of two generation paths:
+1.0.8 is the biggest Local Documentation upgrade so far. Instead of giving you a long generated document and asking you to figure out where to begin, DocuMint now answers the questions developers usually ask when they open an unfamiliar repository.
 
-- **Local Documentation — No AI:** generates deterministic documentation from detected source facts only. No API key, internet connection, AI model, or external provider is required.
-- **AI Documentation:** sends selected source/code context to the configured provider after consent and generates richer semantic explanations.
+### The highlights
 
-Both paths support workspace, folder, and file scope and can produce:
+- **Question-first Local Project Map** — jump between *At a glance*, *Big picture*, *Runtime flow*, *How to run*, *Project interfaces*, *Data model*, *Security boundaries*, *Failure paths*, *What's inside*, *Start here*, *Dependency reach*, *Verification*, and file lookup.
+- **A much clearer Big Picture** — structural modules are laid out as a dependency map with Major/All link modes, zoom, pan, semantic detail levels, connection counts, and suggested starting files.
+- **Better source analysis** — TypeScript/JavaScript-family files use the TypeScript compiler AST for multiline imports/declarations, exports, methods, module scope, environment references, and more reliable dependency evidence.
+- **Data model discovery** — direct Prisma, SQL, GraphQL, OpenAPI, Mongoose, and Drizzle declarations can appear automatically when they exist.
+- **Security boundaries** — DocuMint can surface direct evidence such as secret-storage usage, credential-like environment references, security policy/header names, and imported authentication libraries without exposing values.
+- **Failure paths** — explicit static throw/error-report messages and recovery-related symbols are easier to find without pretending static analysis knows the full runtime path.
+- **Runtime, interfaces, and verification** — entry-point dependency flow, exposed project interfaces, package/Make checks, Docker facts, VS Code commands/settings, and environment references are brought together where they are useful.
+- **A softer generated UI** — the paper-grid visual system now has restrained Jelly-style depth, light/dark support, smoother interactions, and reduced-motion-aware transitions.
+- **Local AI runtimes** — Ollama and LM Studio are first-class presets with local model discovery and no API key requirement.
+- **Cleaner privacy boundaries** — Local Documentation remains provider-independent and self-contained; generated Local HTML does not require CDN assets.
+- **Review & feedback flow** — after meaningful use, DocuMint can ask for a Marketplace review or open a GitHub feedback issue, with a seven-day cooldown when postponed and an explicit opt-out.
+- **Release hardening** — locked installs, browser acceptance, self-audit, CSP/network hardening, and reproducible release-readiness checks are now part of the release path.
 
-- Project overview and stats
-- Per-file documentation sections
-- Detected imports, exports, symbols, TODO/FIXME/HACK comments, and project links
-- Source-derived architecture and dependency information
-- Markdown and/or HTML output
-- HTML table of contents with navigation and search
-- Question-first Local project map plus source-derived architecture/dependency views
-- Mermaid rendering for AI-format/source blocks when the optional renderer is available
+## 1.0.7 vs 1.0.8
 
-Local mode also maintains its own source/output fingerprint cache so unchanged Local documentation can be reused without touching AI-generation cache state.
+| Area | 1.0.7 | 1.0.8 |
+| --- | --- | --- |
+| Main focus | Folder-first reader navigation | Codebase understanding + reader navigation |
+| Local HTML | Navigable generated documentation | Question-first interactive project map |
+| Architecture | Reader-oriented navigation around generated docs | Canonical **Big Picture** module map with Major/All links, zoom and pan |
+| Source analysis | Existing cross-language static analysis | Stronger AST-backed TS/JS analysis and cleaner source facts |
+| Data model | No dedicated project-level surface | Conditional Prisma / SQL / GraphQL / OpenAPI / Mongoose / Drizzle view |
+| Security | General documentation/security hardening | Conditional **Security boundaries** orientation surface |
+| Errors & recovery | Mainly available inside file documentation | Project-level **Failure paths** with source locations |
+| Onboarding | Reader tree + search | **At a glance**, **Start here**, **How to run**, runtime flow, interfaces and verification |
+| Project scale | File navigation and existing charts | Treemap + dependency-reach scatter + architecture insights |
+| Local AI providers | Cloud/custom provider flow | Adds first-class **Ollama** and **LM Studio** presets |
+| Generated UI | Reader navigation polish | Paper-grid + restrained Jelly softness + soft transitions |
+| Feedback | No dedicated cadence | Marketplace review / GitHub improvement feedback with cooldown and opt-out |
 
-The extension runs directly inside VS Code through a sidebar webview.
+## See 1.0.8 in Action
+
+These screenshots are generated from DocuMint's own source tree, so the views below show the product documenting itself.
+
+### At a glance — understand the repository before opening files
+
+Counts, languages, entry points, dependencies, documentation coverage, symbols, exports, and more are grouped into one readable starting point.
+
+![DocuMint 1.0.8 At a glance](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-18-49.png)
+
+### Big picture — see how modules connect
+
+The module graph shows structural relationships without turning the page into an unreadable arrow wall. You can switch connection density and zoom into more detail in the generated report.
+
+![DocuMint 1.0.8 Big picture](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-19-21.png)
+
+### What's inside — spot where the code actually lives
+
+The treemap makes repository size and module/file distribution visual, so large files and dense areas stand out immediately.
+
+![DocuMint 1.0.8 What's inside](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-05.png)
+
+### Start here — get a practical reading order
+
+DocuMint uses detected entry points and resolved dependencies to suggest a source-backed place to begin reading. It is guidance, not an invented claim about the only correct order.
+
+![DocuMint 1.0.8 Start here](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-27.png)
+
+### Dependency reach — find widely used files
+
+The dependency-reach view helps you see which files are depended on by more of the project and how that relates to source size.
+
+![DocuMint 1.0.8 Dependency reach](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-38.png)
 
 ## How It Works
 
-Common first steps:
+DocuMint always starts by scanning the selected Workspace, Folder, or File and extracting source facts such as imports, exports, symbols, entry points, TODO/FIXME/HACK comments, environment references, and resolved project dependencies.
 
-1. Select Workspace, Folder, or File scope.
-2. Scan source files through `WorkspaceScanner` using the exact selected target paths when applicable.
-3. Analyze source files for imports, exports, symbols, TODOs, entry points, and resolved internal dependencies.
+From there you choose one of two paths:
 
-**Local Documentation — No AI** then:
+### Local Documentation — No AI
 
-4. Builds deterministic project, architecture, dependency, and per-file sections from source-analysis facts.
-5. Renders Markdown and/or HTML without resolving a provider or model.
-6. Sanitizes the generated output and records a separate Local cache fingerprint plus sanitized-output hashes.
-7. Reuses the Local output only when the source fingerprint and requested output-file hashes still match.
+Use this when privacy, determinism, or zero-provider setup matters.
 
-**AI Documentation** instead:
+- No API key required.
+- No AI provider is called.
+- No source code is sent anywhere.
+- Project/file documentation is built from scanner and analyzer evidence.
+- Markdown and HTML use the same canonical Local model.
+- A separate source/output fingerprint cache safely reuses unchanged Local output.
+- Local HTML is self-contained and does not require external CDN assets.
 
-4. Resolves provider/model and verifies external-provider consent when required.
-5. Verifies compatible AI-generation cache identity and resets stale AI cache when material generation settings change.
-6. Builds prompt context from verified source facts and generates detailed file documentation through the selected provider.
-7. Validates and sanitizes generated documentation before writing output.
+### AI Documentation
 
-Both modes save normal DocuMint output into `documint/`.
+Use this when you want source-grounded explanations beyond what deterministic static analysis can establish.
 
-Public AI-generation facade: `src/services/docGenerator.ts`. Local runtime orchestration lives in `src/services/localDocumentationGenerator.ts` and uses deterministic renderers under `src/services/local*Documentation.ts`.
+- Choose OpenAI, Anthropic, OpenRouter, DeepSeek, Ollama, LM Studio, or a custom OpenAI-compatible endpoint.
+- Cloud source transfer requires confirmation.
+- Ollama and LM Studio stay on loopback and require no API key.
+- Provider/model/settings-aware caching avoids unnecessary regeneration.
+- Generated output is validated and sanitized before it is written.
+
+Both modes save their rendered documentation under `documint/`.
 
 ## Local Project Map
 
-Local HTML now starts with a question-first project map built from the same deterministic model used by Local Markdown. A compact in-map section bar jumps directly between the major questions, tracks the current section while scrolling, and restores valid `#localMap…` deep links when a generated report is reopened or its hash changes:
+The Local Project Map is designed around real developer questions rather than a fixed list of generic documentation sections:
 
-- **At a glance** — canonical project totals, description coverage, languages, detected entry points, external dependencies, and an actionable undocumented-file list that stays compact but can expand to every missing description.
-- **Big picture** — the single Local HTML architecture surface: structural modules, resolved cross-module import counts, trusted module descriptions/provenance, and suggested start files. The older duplicate Architecture & Dependencies table remains only in Markdown.
-- **What's inside** — a file-size treemap grouped by structural module.
-- **Start here** — a suggested reading path derived from detected entry points and dependency reach.
-- **Runtime flow** — a conservative entry-point-to-resolved-import orientation path; it explicitly does not claim exact call order.
-- **How to run** — package scripts/manager, VS Code commands/settings, concrete Makefile targets, and Dockerfile source facts when those files are present.
-- **Project interfaces** — detected commands/settings, host/package entry metadata, environment references, exposed ports, and entry-point exports.
-- **Data model** — conditional source-grounded schema/model declarations from Prisma, SQL, GraphQL, OpenAPI, Mongoose, and Drizzle; absent when no supported declaration is detected.
-- **Security boundaries** — conditional direct evidence for secret-storage APIs, credential-like environment-variable names, explicit security policy/header names, and imported authentication libraries. Values are never included, and the section is orientation rather than a security audit.
-- **Failure paths** — conditional static literal throw/error-report messages plus declared symbol names containing retry, recovery, fallback, backoff, or resume. It is a source-orientation map rather than exhaustive runtime control-flow analysis.
-- **Dependency reach** — file size versus incoming project dependents.
-- **Verification** — existing package scripts and Makefile targets classified as typecheck/lint/test/build/integration/verification/release checks without inventing commands.
-- **Look up a file** — token-aware factual search across path, trusted description, exported/internal symbols, referenced environment variables, and TODO/FIXME/HACK source notes. Multi-word queries can match one factual field or multiple file facts; results show why they matched. The first nine ranked hits stay compact, with an explicit **Show all** control when more files match. File cards expose complete Uses / Used by navigation, exported/internal symbols, and source-note evidence.
+- **At a glance** — What is this project made of?
+- **Big picture** — How do the parts fit together?
+- **Runtime flow** — From an entry point, what project code comes next?
+- **How to run** — How do I build, test, or start this project?
+- **Project interfaces** — Where can people or external systems interact with it?
+- **Data model** — What structured data shapes are directly declared?
+- **Security boundaries** — Where does the source handle security-sensitive inputs or policies?
+- **Failure paths** — What failures does the source explicitly signal?
+- **What's inside** — Where does the code live, and which files are large?
+- **Start here** — I'm new. What should I read first?
+- **Dependency reach** — Which files are used by the most project files?
+- **Verification** — What checks does the project already provide?
+- **Look up a file** — What does this file do, and who uses it?
 
-For TypeScript/JavaScript-family files, DocuMint uses the TypeScript compiler AST for multiline imports/declarations, export modifiers, class methods, and module-vs-function scope. This prevents function-local temporary variables from flooding Local API documentation.
-
-Local descriptions are source-backed only: explicit file/module docs, safe declaration comments, supported language module/package docs, or exact README path descriptions. When no trusted description exists, DocuMint says so instead of inventing one.
-
-Local Markdown is intentionally compact and keeps its standalone project-fact tables/source tree for direct GitHub reading. Local HTML moves those orientation facts into the question-first project map instead of repeating legacy Project Facts, language/module/entry-point/external-dependency tables or a second source tree. The Local project-map experience does not require CDN assets.
+The project map stays conservative: when a fact is not supported by source evidence, DocuMint does not invent one.
 
 ## Supported Providers
 
@@ -193,7 +240,7 @@ code --install-extension /path/to/documint-<version>.vsix
 ```bash
 git clone https://github.com/Wonderer-Tech/documint.git
 cd documint
-npm install
+npm ci --no-audit --no-fund
 npm run compile
 ```
 
@@ -462,7 +509,7 @@ The `*Base.ts` modules are implementation details. Runtime AI code should import
 Normal development loop:
 
 ```bash
-npm install
+npm ci --no-audit --no-fund
 npm run check
 ```
 
