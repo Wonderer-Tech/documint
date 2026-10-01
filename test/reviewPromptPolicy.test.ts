@@ -5,6 +5,7 @@ import {
   REVIEW_PROMPT_COOLDOWN_MS,
   completeReviewPrompt,
   disableReviewPrompt,
+  isReviewPromptDue,
   normalizeReviewPromptState,
   recordSuccessfulGenerationForReview,
 } from "../src/services/reviewPromptPolicy";
@@ -43,6 +44,24 @@ test("review prompt repeats only after the seven-day cooldown", () => {
   );
   assert.equal(dueAgain.shouldPrompt, true);
 });
+
+test("review prompt becomes due on activation after seven days", () => {
+  const lastPromptAt = 20_000;
+  const state = {
+    successfulGenerations: 3,
+    lastPromptAt,
+  };
+
+  assert.equal(
+    isReviewPromptDue(state, lastPromptAt + REVIEW_PROMPT_COOLDOWN_MS - 1),
+    false,
+  );
+  assert.equal(
+    isReviewPromptDue(state, lastPromptAt + REVIEW_PROMPT_COOLDOWN_MS),
+    true,
+  );
+});
+
 
 test("review completion and opt-out permanently suppress future prompts", () => {
   const due = recordSuccessfulGenerationForReview(
@@ -96,6 +115,10 @@ test("extension records Local and AI successes and review UI stays explicit", ()
       ) ?? []
     ).length,
     2,
+  );
+  assert.match(
+    extensionSource,
+    /reviewPromptService\.scheduleDuePromptOnActivation\(\)/,
   );
   assert.match(
     serviceSource,
