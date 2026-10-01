@@ -455,6 +455,7 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     .local-map-schema-source,
     .local-map-schema-entity,
     .local-map-security-card,
+    .local-map-failure-card,
     .local-map-module-box,
     .local-map-file-tile,
     .local-map-module-legend li
@@ -1073,6 +1074,108 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     color: var(--map-note);
     font-family: var(--map-mono);
     font-size: 9.5px;
+    overflow-wrap: anywhere;
+  }
+
+  .local-map-failure-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px;
+  }
+  .local-map-failure-card {
+    min-width: 0;
+    border: 1px solid var(--map-jelly-edge);
+    border-radius: 15px;
+    padding: 13px 14px;
+    background:
+      linear-gradient(145deg, var(--map-jelly-surface), var(--map-jelly-surface-soft));
+    box-shadow: var(--map-jelly-shadow);
+  }
+  .local-map-failure-card[role="button"] {
+    cursor: pointer;
+  }
+  .local-map-failure-card[role="button"]:hover,
+  .local-map-failure-card[role="button"]:focus {
+    border-color: color-mix(in srgb, var(--map-s4) 56%, var(--map-jelly-edge));
+    box-shadow:
+      0 15px 34px color-mix(in srgb, var(--map-ink) 8%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--map-card) 78%, transparent);
+    outline: none;
+    transform: translateY(-1px);
+  }
+  .local-map-failure-card[role="button"]:active {
+    transform: translateY(0) scale(.995);
+  }
+  .local-map-failure-head {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 7px;
+  }
+  .local-map-failure-head b {
+    min-width: 0;
+    color: var(--map-ink);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+  .local-map-failure-kind {
+    flex: none;
+    border: 1px solid color-mix(in srgb, var(--map-s4) 28%, var(--map-line));
+    border-radius: 999px;
+    padding: 3px 7px;
+    background: color-mix(in srgb, var(--map-s4) 6%, var(--map-card));
+    color: var(--map-s4);
+    font-size: 8.5px;
+    font-weight: 750;
+    letter-spacing: .03em;
+  }
+  .local-map-failure-message {
+    margin: 0;
+    color: var(--map-ink);
+    font-family: var(--map-mono);
+    font-size: 10.5px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+  .local-map-failure-detail {
+    margin: 6px 0 0;
+    color: var(--map-muted);
+    font-size: 10px;
+    line-height: 1.4;
+  }
+  .local-map-failure-source {
+    margin-top: 8px;
+    color: var(--map-note);
+    font-family: var(--map-mono);
+    font-size: 9.5px;
+    overflow-wrap: anywhere;
+  }
+  .local-map-recovery-list {
+    display: grid;
+    gap: 7px;
+    margin-top: 12px;
+  }
+  .local-map-recovery-row {
+    display: grid;
+    grid-template-columns: minmax(120px, .38fr) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    border: 1px solid color-mix(in srgb, var(--map-line) 78%, transparent);
+    border-radius: 10px;
+    padding: 8px 10px;
+    background: color-mix(in srgb, var(--map-card) 72%, transparent);
+  }
+  .local-map-recovery-row code {
+    min-width: 0;
+    color: var(--map-note);
+    font-size: 10px;
+    overflow-wrap: anywhere;
+  }
+  .local-map-recovery-row small {
+    color: var(--map-muted);
+    font-size: 9.5px;
+    line-height: 1.4;
     overflow-wrap: anywhere;
   }
 
@@ -1977,6 +2080,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <a href="#localMapInterfacesSection" id="localMapInterfacesNav" hidden>Project interfaces</a>
     <a href="#localMapDataSection" id="localMapDataNav" hidden>Data model</a>
     <a href="#localMapSecuritySection" id="localMapSecurityNav" hidden>Security boundaries</a>
+    <a href="#localMapFailureSection" id="localMapFailureNav" hidden>Failure paths</a>
     <a href="#localMapSizeSection">What's inside</a>
     <a href="#localMapReadSection">Start here</a>
     <a href="#localMapReachSection">Dependency reach</a>
@@ -2078,6 +2182,18 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
       <p class="local-map-hint">Only direct evidence is shown: secret-storage APIs, credential-like environment-variable names, explicit security policy/header names, and imported authentication libraries. Values are never included. This is orientation, not a security audit.</p>
     </div>
     <div class="local-map-security-grid" id="localMapSecurity"></div>
+  </section>
+
+  <section class="local-map-section" id="localMapFailureSection" aria-labelledby="localMapFailureTitle" hidden>
+    <div class="local-map-section-head">
+      <div>
+        <h3 id="localMapFailureTitle">Failure paths</h3>
+        <p class="local-map-question">What failures does the source explicitly signal?</p>
+      </div>
+      <p class="local-map-hint">Static literal throw/error-report messages are shown with source locations. Recovery helpers are listed only from declared symbol names containing retry, recovery, fallback, backoff, or resume. This is a source map, not exhaustive runtime control-flow analysis.</p>
+    </div>
+    <div class="local-map-failure-grid" id="localMapFailurePaths"></div>
+    <div class="local-map-recovery-list" id="localMapRecoveryHelpers"></div>
   </section>
 
   <section class="local-map-section" id="localMapSizeSection" aria-labelledby="localMapSizeTitle">
@@ -3096,6 +3212,126 @@ function buildLocalCodeMapScript(
     setOptionalSectionVisibility(
       'localMapSecuritySection',
       'localMapSecurityNav',
+      true
+    );
+  }
+
+  function renderFailurePaths() {
+    var failureRoot = document.getElementById('localMapFailurePaths');
+    var recoveryRoot = document.getElementById('localMapRecoveryHelpers');
+    if (!failureRoot || !recoveryRoot) return;
+    failureRoot.innerHTML = '';
+    recoveryRoot.innerHTML = '';
+
+    var facts = data.failureFacts || null;
+    var failures = facts && Array.isArray(facts.failures)
+      ? facts.failures
+      : [];
+    var helpers = facts && Array.isArray(facts.recoveryHelpers)
+      ? facts.recoveryHelpers
+      : [];
+
+    if (!failures.length && !helpers.length) {
+      setOptionalSectionVisibility(
+        'localMapFailureSection',
+        'localMapFailureNav',
+        false
+      );
+      return;
+    }
+
+    failures.slice(0, 24).forEach(function (item) {
+      var card = document.createElement('article');
+      card.className = 'local-map-failure-card';
+
+      var head = document.createElement('div');
+      head.className = 'local-map-failure-head';
+
+      var title = document.createElement('b');
+      title.textContent = item.errorType || 'Reported error';
+      head.appendChild(title);
+
+      var kind = document.createElement('span');
+      kind.className = 'local-map-failure-kind';
+      kind.textContent =
+        item.kind === 'error-report' ? 'Error report' : 'Throw';
+      head.appendChild(kind);
+      card.appendChild(head);
+
+      var message = document.createElement('p');
+      message.className = 'local-map-failure-message';
+      message.textContent = item.message;
+      card.appendChild(message);
+
+      var source = document.createElement('div');
+      source.className = 'local-map-failure-source';
+      source.textContent = item.path + ' · L' + item.line;
+      card.appendChild(source);
+
+      if (byPath.has(item.path)) {
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', 'Inspect ' + item.path);
+        card.addEventListener('click', function () {
+          openFileAndReveal(item.path);
+        });
+        card.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openFileAndReveal(item.path);
+          }
+        });
+      }
+
+      failureRoot.appendChild(card);
+    });
+
+    if (failures.length > 24) {
+      var more = document.createElement('p');
+      more.className = 'local-map-failure-detail';
+      more.textContent =
+        '+ ' + (failures.length - 24) +
+        ' more explicit failure signals; use file lookup for complete source navigation.';
+      failureRoot.appendChild(more);
+    }
+
+    helpers.slice(0, 18).forEach(function (item) {
+      var row = document.createElement('div');
+      row.className = 'local-map-recovery-row';
+
+      var name = document.createElement('code');
+      name.textContent = item.name;
+      row.appendChild(name);
+
+      var detail = document.createElement('small');
+      detail.textContent =
+        item.kind +
+        (item.exported ? ' · exported' : '') +
+        ' · ' + item.path + ' · L' + item.line +
+        ' · recovery-related name only; behavior is not inferred from the name.';
+      row.appendChild(detail);
+
+      if (byPath.has(item.path)) {
+        row.setAttribute('role', 'button');
+        row.setAttribute('tabindex', '0');
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', function () {
+          openFileAndReveal(item.path);
+        });
+        row.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openFileAndReveal(item.path);
+          }
+        });
+      }
+
+      recoveryRoot.appendChild(row);
+    });
+
+    setOptionalSectionVisibility(
+      'localMapFailureSection',
+      'localMapFailureNav',
       true
     );
   }
@@ -4904,6 +5140,7 @@ function buildLocalCodeMapScript(
   renderProjectInterfaces();
   renderDataModel();
   renderSecurityBoundaries();
+  renderFailurePaths();
   renderModules();
   renderModuleLegend();
   renderTreemap();
