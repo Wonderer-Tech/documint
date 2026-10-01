@@ -35,6 +35,10 @@ export function renderLocalProjectDocumentationFromModel(
   options: LocalProjectDocumentationRenderOptions = {},
 ): string {
   const surface = options.surface ?? "markdown";
+  if (surface === "html") {
+    return "";
+  }
+
   const sections: string[] = [
     `# ${escapeHeading(model.projectName)} — Local Documentation`,
     "",
