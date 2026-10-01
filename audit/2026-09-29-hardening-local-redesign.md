@@ -11,14 +11,14 @@
 
 ## Implementation status
 
-_Last updated: 2026-09-30_
+_Last updated: 2026-10-01_
 
 - ✅ Retired obsolete source-repair workflows/scripts and the old VSIX self-commit workflow.
 - ✅ Current tree sanity check confirms obsolete repair/VSIX workflow artifacts and committed VSIX binaries are absent.
 - ✅ Added a tag-only GitHub Release workflow for future VSIX assets; current source tree no longer carries committed VSIX binaries.
 - ✅ Tag releases require `package-lock.json`, install with `npm ci`, run `npm run verify`, run full Chromium browser acceptance, retain browser evidence, and only then package/publish the VSIX.
 - ✅ Pull requests now run CI automatically. Main-branch push CI remains intentionally trigger-file gated so the current implementation work does not auto-run CI.
-- ⏳ `package-lock.json` is not committed yet. Local offline generation previously failed with `ENOTCACHED` for `@types/node`; to unblock that environment, a manual-only **Lockfile Bootstrap** workflow now generates/validates the lockfile on a network-enabled runner and uploads it as an artifact without repository write permission. `npm run lockfile:validate` verifies package identity and root dependency-map parity before readiness. PR CI uses `npm ci` automatically once the lockfile exists and temporarily warns/falls back to `npm install` while it is absent. Tag releases require `package-lock.json` and use `npm ci`, so an unreproducible release cannot be published.
+- ✅ `package-lock.json` is committed and validated. Normal CI and release paths install strictly with `npm ci --no-audit --no-fund`; the temporary `npm install` fallback has been removed. Lockfile bootstrap/adoption tooling remains available only for future intentional lockfile regeneration.
 - ✅ Added AST-backed JS/TS-family analysis using the TypeScript compiler API.
 - ✅ Multiline imports/declarations, `export abstract class`, class methods, explicit export lists, named export aliases, namespace re-exports, destructured top-level bindings, module scope, static environment references, and comment-safe TODO extraction are structurally analyzed.
 - ✅ JS/TS multiline signatures are normalized into compact API signatures without body braces, continuation whitespace, or trailing parameter commas.
@@ -83,18 +83,19 @@ _Last updated: 2026-09-30_
 - ✅ Added `npm run lockfile:bootstrap` for authenticated GitHub CLI dispatch of Lockfile Bootstrap on the current branch, with explicit `DOCUMINT_BOOTSTRAP_REF` / `DOCUMINT_BOOTSTRAP_REPO` overrides; this avoids manual Actions UI navigation without granting repository write behavior.
 - ✅ Added a shared lockfile policy plus `npm run lockfile:adopt -- <artifact>`: downloaded Bootstrap artifacts are validated against the current package identity/dependency maps before the root lockfile is replaced, Bootstrap `package-lock.sha256` metadata is verified when present, and the adopted SHA-256 is rechecked; checksum/identity rejection leaves the existing root lockfile unchanged, and the artifact itself carries the exact adoption command.
 - ✅ Browser acceptance uses a cross-platform Python 3 launcher with `DOCUMINT_PYTHON` override support, and release readiness preflights Playwright/Chromium before verify/browser/package execution.
-- ⏳ Full execution still requires a registry-enabled/materialized checkout: generate `package-lock.json`, install locked dependencies and Playwright/Chromium, then run `npm run release:readiness`. No CI was manually triggered in this implementation pass.
-- ⏳ README demo GIF compression remains pending; the binary is still excluded from VSIX packaging.
+- ✅ Local validation is green through unit/regression tests, TypeScript compile/bundle, full Chromium browser navigation/reader acceptance, and `npm run audit:self`.
+- ⏳ Final release-candidate evidence still requires `npm run release:readiness`; this is now the only release gate not yet recorded in the audit.
+- ⏳ README demo GIF compression remains optional polish; the binary remains excluded from VSIX packaging.
 
 ### Current next step
 
-All currently identified **network-independent Local redesign/hardening implementation and release-readiness automation is complete in source**. Remaining work requires execution access or an explicit workflow-policy decision:
+The implementation is feature-frozen for the 1.0.7 release candidate. Source analysis, Local redesign, unit/regression coverage, browser acceptance, compile/bundle, and self-audit are green.
 
-1. Trigger **Lockfile Bootstrap** with `npm run lockfile:bootstrap` (after `gh auth login`), the Actions UI, or generate locally with `npm run lockfile:generate`. Keep `run_readiness=true`, review the uploaded evidence, download/extract the lockfile artifact, run `npm run lockfile:adopt -- /path/to/artifact`, then commit the validated `package-lock.json`.
-2. During ordinary development, use `npm run check`. For a release candidate only, run `npm ci --no-audit --no-fund`, ensure Python Playwright plus a usable local Chromium/Brave runtime, then execute **one command**: `npm run release:readiness`.
-3. Review `release-artifacts/readiness/readiness.json`; when a previous VSIX is available, rerun with `DOCUMINT_BASELINE_VSIX=/path/to/previous.vsix` to record the package-size delta automatically.
-4. When explicitly allowed to run normal push CI, remove the `.github/ci-trigger` path gate and enable every `main` push.
-5. Compress/replace the README demo GIF if desired; it remains excluded from VSIX packaging.
+1. Run **one final release gate**: `npm run release:readiness`.
+2. Review `release-artifacts/readiness/readiness.json`, the browser evidence, and the produced VSIX/hash.
+3. Keep main-push CI path-gated unless/until the workflow policy is intentionally changed; pull requests already run CI.
+4. Optionally compress/replace the README demo GIF after release evidence is green; it remains excluded from the VSIX.
+
 
 Do not add more redesign features before the readiness evidence is green unless a new concrete defect is found.
 
@@ -132,41 +133,20 @@ Do the work in this order. Do not jump directly to the prototype UI.
 
 ### 0.1 Fix normal CI
 
-Current problem:
+Current status:
 
-- `.github/workflows/ci.yml` runs only when `.github/ci-trigger` changes.
-- Pull requests are not automatically tested.
-
-Required change:
-
-```yaml
-on:
-  workflow_dispatch:
-  pull_request:
-  push:
-    branches:
-      - main
-```
-
-Required checks:
-
-- TypeScript typecheck;
-- esbuild bundle;
-- regression tests;
-- later, targeted browser acceptance for the generated HTML.
+- ✅ Pull requests run the canonical CI verification gate automatically.
+- ✅ CI performs TypeScript typecheck, bundle, and regression verification through `npm run verify`.
+- ✅ Browser acceptance is covered by the dedicated manual/release readiness gate.
+- ⏳ Main-branch push CI remains intentionally path-gated through `.github/ci-trigger`; changing that is a workflow-policy decision, not an implementation gap.
 
 ### 0.2 Commit `package-lock.json` and use `npm ci`
 
-Current problem:
+Current status:
 
-- `package-lock.json` is ignored;
-- workflows use `npm install`.
-
-Required change:
-
-- remove `package-lock.json` from `.gitignore`;
-- generate and commit the lockfile;
-- use `npm ci --no-audit --no-fund` in CI/release workflows.
+- ✅ `package-lock.json` is tracked and validated.
+- ✅ `.gitignore` explicitly documents that the lockfile is intentionally tracked.
+- ✅ CI/release workflows use `npm ci --no-audit --no-fund` with no temporary `npm install` fallback.
 
 ### 0.3 Retire self-modifying repair/release workflows
 
