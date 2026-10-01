@@ -454,6 +454,7 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     .local-map-verification-row,
     .local-map-schema-source,
     .local-map-schema-entity,
+    .local-map-security-card,
     .local-map-module-box,
     .local-map-file-tile,
     .local-map-module-legend li
@@ -1006,6 +1007,73 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     margin-top: 7px;
     color: var(--map-muted);
     font-size: 9.5px;
+  }
+
+  .local-map-security-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px;
+  }
+  .local-map-security-card {
+    min-width: 0;
+    border: 1px solid var(--map-jelly-edge);
+    border-radius: 15px;
+    padding: 13px 14px;
+    background:
+      linear-gradient(145deg, var(--map-jelly-surface), var(--map-jelly-surface-soft));
+    box-shadow: var(--map-jelly-shadow);
+  }
+  .local-map-security-card[role="button"] {
+    cursor: pointer;
+  }
+  .local-map-security-card[role="button"]:hover,
+  .local-map-security-card[role="button"]:focus {
+    border-color: color-mix(in srgb, var(--map-note) 55%, var(--map-jelly-edge));
+    box-shadow:
+      0 15px 34px color-mix(in srgb, var(--map-ink) 8%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--map-card) 78%, transparent);
+    outline: none;
+    transform: translateY(-1px);
+  }
+  .local-map-security-card[role="button"]:active {
+    transform: translateY(0) scale(.995);
+  }
+  .local-map-security-head {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 7px;
+  }
+  .local-map-security-head b {
+    min-width: 0;
+    color: var(--map-ink);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+  .local-map-security-kind {
+    flex: none;
+    border: 1px solid color-mix(in srgb, var(--map-note) 28%, var(--map-line));
+    border-radius: 999px;
+    padding: 3px 7px;
+    background: color-mix(in srgb, var(--map-note) 6%, var(--map-card));
+    color: var(--map-note);
+    font-size: 8.5px;
+    font-weight: 750;
+    letter-spacing: .03em;
+  }
+  .local-map-security-card p {
+    margin: 0;
+    color: var(--map-muted);
+    font-size: 10.5px;
+    line-height: 1.45;
+  }
+  .local-map-security-source {
+    margin-top: 8px;
+    color: var(--map-note);
+    font-family: var(--map-mono);
+    font-size: 9.5px;
+    overflow-wrap: anywhere;
   }
 
   .local-map-graph-toolbar {
@@ -1908,6 +1976,7 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <a href="#localMapRunSection" id="localMapRunNav" hidden>How to run</a>
     <a href="#localMapInterfacesSection" id="localMapInterfacesNav" hidden>Project interfaces</a>
     <a href="#localMapDataSection" id="localMapDataNav" hidden>Data model</a>
+    <a href="#localMapSecuritySection" id="localMapSecurityNav" hidden>Security boundaries</a>
     <a href="#localMapSizeSection">What's inside</a>
     <a href="#localMapReadSection">Start here</a>
     <a href="#localMapReachSection">Dependency reach</a>
@@ -1998,6 +2067,17 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
       <p class="local-map-hint">Shown only when DocuMint detects direct schema/model declarations in Prisma, SQL, GraphQL, OpenAPI, Mongoose, or Drizzle source. Field lists are source-derived and may be partial when a declaration is dynamic.</p>
     </div>
     <div class="local-map-data-model" id="localMapDataModel"></div>
+  </section>
+
+  <section class="local-map-section" id="localMapSecuritySection" aria-labelledby="localMapSecurityTitle" hidden>
+    <div class="local-map-section-head">
+      <div>
+        <h3 id="localMapSecurityTitle">Security boundaries</h3>
+        <p class="local-map-question">Where does this project handle security-sensitive inputs or policies?</p>
+      </div>
+      <p class="local-map-hint">Only direct evidence is shown: secret-storage APIs, credential-like environment-variable names, explicit security policy/header names, and imported authentication libraries. Values are never included. This is orientation, not a security audit.</p>
+    </div>
+    <div class="local-map-security-grid" id="localMapSecurity"></div>
   </section>
 
   <section class="local-map-section" id="localMapSizeSection" aria-labelledby="localMapSizeTitle">
@@ -2936,6 +3016,86 @@ function buildLocalCodeMapScript(
     setOptionalSectionVisibility(
       'localMapDataSection',
       'localMapDataNav',
+      true
+    );
+  }
+
+  function renderSecurityBoundaries() {
+    var root = document.getElementById('localMapSecurity');
+    if (!root) return;
+    root.innerHTML = '';
+
+    var facts = data.security || null;
+    var evidence = facts && Array.isArray(facts.evidence)
+      ? facts.evidence
+      : [];
+
+    if (!evidence.length) {
+      setOptionalSectionVisibility(
+        'localMapSecuritySection',
+        'localMapSecurityNav',
+        false
+      );
+      return;
+    }
+
+    var labels = {
+      'secret-storage': 'Secret storage',
+      'credential-environment': 'Credential environment',
+      'security-policy': 'Security policy',
+      'auth-dependency': 'Auth dependency'
+    };
+
+    evidence.forEach(function (item) {
+      var card = document.createElement('article');
+      card.className = 'local-map-security-card';
+
+      var head = document.createElement('div');
+      head.className = 'local-map-security-head';
+
+      var title = document.createElement('b');
+      title.textContent = item.label;
+      head.appendChild(title);
+
+      var kind = document.createElement('span');
+      kind.className = 'local-map-security-kind';
+      kind.textContent = labels[item.kind] || item.kind;
+      head.appendChild(kind);
+      card.appendChild(head);
+
+      var detail = document.createElement('p');
+      detail.textContent = item.detail;
+      card.appendChild(detail);
+
+      if (item.path) {
+        var source = document.createElement('div');
+        source.className = 'local-map-security-source';
+        source.textContent =
+          item.path + (item.line ? ' · L' + item.line : '');
+        card.appendChild(source);
+      }
+
+      if (item.path && byPath.has(item.path)) {
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', 'Inspect ' + item.path);
+        card.addEventListener('click', function () {
+          openFileAndReveal(item.path);
+        });
+        card.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openFileAndReveal(item.path);
+          }
+        });
+      }
+
+      root.appendChild(card);
+    });
+
+    setOptionalSectionVisibility(
+      'localMapSecuritySection',
+      'localMapSecurityNav',
       true
     );
   }
@@ -4743,6 +4903,7 @@ function buildLocalCodeMapScript(
   renderOnboarding();
   renderProjectInterfaces();
   renderDataModel();
+  renderSecurityBoundaries();
   renderModules();
   renderModuleLegend();
   renderTreemap();
