@@ -1225,6 +1225,12 @@ export class SourceAnalyzer {
     if (language === "sql") {
       return ["--"];
     }
+    if (language === "prisma") {
+      return ["//"];
+    }
+    if (language === "graphql") {
+      return ["#"];
+    }
     if (language === "html" || language === "xml") {
       return ["<!--"];
     }
