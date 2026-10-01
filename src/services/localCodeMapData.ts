@@ -105,6 +105,28 @@ export interface LocalCodeMapSecurityFacts {
   evidence: LocalCodeMapSecurityEvidence[];
 }
 
+export interface LocalCodeMapFailureSignal {
+  kind: string;
+  path: string;
+  line: number;
+  errorType?: string;
+  message: string;
+}
+
+export interface LocalCodeMapRecoveryHelper {
+  path: string;
+  line: number;
+  name: string;
+  kind: string;
+  exported: boolean;
+}
+
+export interface LocalCodeMapFailureFacts {
+  failures: LocalCodeMapFailureSignal[];
+  recoveryHelpers: LocalCodeMapRecoveryHelper[];
+}
+
+
 
 
 export interface LocalCodeMapLanguageSummary {
@@ -138,6 +160,7 @@ export interface LocalCodeMapData {
   referencedEnvironmentVariables: string[];
   dataModel?: LocalCodeMapDataModel;
   security?: LocalCodeMapSecurityFacts;
+  failureFacts?: LocalCodeMapFailureFacts;
   gettingStarted?: {
     packageJsonPath?: string;
     packageManager?: "npm" | "pnpm" | "yarn" | "bun";
@@ -257,6 +280,14 @@ export function buildLocalCodeMapData(
     security: model.security
       ? {
           evidence: model.security.evidence.map((item) => ({ ...item })),
+        }
+      : undefined,
+    failureFacts: model.failureFacts
+      ? {
+          failures: model.failureFacts.failures.map((item) => ({ ...item })),
+          recoveryHelpers: model.failureFacts.recoveryHelpers.map((item) => ({
+            ...item,
+          })),
         }
       : undefined,
     gettingStarted: model.gettingStarted
