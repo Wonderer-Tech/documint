@@ -113,6 +113,26 @@ const data: LocalCodeMapData = {
       },
     ],
   },
+  failureFacts: {
+    failures: [
+      {
+        kind: "throw",
+        path: "src/services/run.ts",
+        line: 24,
+        errorType: "Error",
+        message: "Provider unavailable",
+      },
+    ],
+    recoveryHelpers: [
+      {
+        path: "src/services/run.ts",
+        line: 31,
+        name: "retryProvider",
+        kind: "function",
+        exported: true,
+      },
+    ],
+  },
   gettingStarted: {
     packageJsonPath: "package.json",
     packageManager: "npm",
@@ -160,6 +180,8 @@ test("Local code map exposes question-first interactive surfaces without externa
   assert.match(fragments.markup, /How do I build, test, or start this project\?/);
   assert.match(fragments.markup, /Data model/);
   assert.match(fragments.markup, /What structured data shapes does this project declare\?/);
+  assert.match(fragments.markup, /Failure paths/);
+  assert.match(fragments.markup, /What failures does the source explicitly signal\?/);
   assert.match(fragments.markup, /What's inside/);
   assert.match(fragments.markup, /Start here/);
   assert.match(fragments.markup, /Dependency reach/);
@@ -189,6 +211,7 @@ test("Local project map exposes accessible in-map section navigation and current
   assert.match(fragments.markup, /href="#localMapInterfacesSection"/);
   assert.match(fragments.markup, /href="#localMapDataSection"/);
   assert.match(fragments.markup, /href="#localMapSecuritySection"/);
+  assert.match(fragments.markup, /href="#localMapFailureSection"/);
   assert.match(fragments.markup, /href="#localMapSizeSection"/);
   assert.match(fragments.markup, /href="#localMapReadSection"/);
   assert.match(fragments.markup, /href="#localMapReachSection"/);
@@ -306,6 +329,20 @@ test("Local Jelly UI uses soft transitions with reduced-motion fallback", () => 
   assert.match(fragments.styles, /\.documint-local-report \.reader-context \.reader-button/);
   assert.match(fragments.styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.doesNotMatch(fragments.styles, /transition:\s*all\b/);
+});
+
+
+test("Local Failure paths show only explicit signals and recovery-related symbol names", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.markup, /id="localMapFailureSection"/);
+  assert.match(fragments.markup, /Static literal throw\/error-report messages/);
+  assert.match(fragments.script, /function renderFailurePaths/);
+  assert.match(fragments.script, /Provider unavailable/);
+  assert.match(fragments.script, /retryProvider/);
+  assert.match(fragments.script, /behavior is not inferred from the name/);
+  assert.match(fragments.styles, /\.local-map-failure-card/);
+  assert.match(fragments.styles, /\.local-map-recovery-row/);
 });
 
 
