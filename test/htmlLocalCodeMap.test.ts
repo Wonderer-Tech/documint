@@ -276,6 +276,20 @@ test("Local code map connects module focus and file-card navigation", () => {
 });
 
 
+test("Local Jelly UI uses soft transitions with reduced-motion fallback", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.styles, /--map-motion-soft: 240ms/);
+  assert.match(fragments.styles, /--map-ease-soft: cubic-bezier\(\.22, \.61, \.36, 1\)/);
+  assert.match(fragments.styles, /\.local-map-nav a::after[\s\S]*transform: scaleX\(\.25\)/);
+  assert.match(fragments.styles, /\.local-map-nav a\.active::after[\s\S]*transform: scaleX\(1\)/);
+  assert.match(fragments.styles, /\.local-map-file-tile:hover[\s\S]*translateY\(-1px\)/);
+  assert.match(fragments.styles, /\.documint-local-report \.reader-context \.reader-button/);
+  assert.match(fragments.styles, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.doesNotMatch(fragments.styles, /transition:\s*all\b/);
+});
+
+
 test("Local Data model is conditional, source-grounded and uses soft Jelly cards", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
