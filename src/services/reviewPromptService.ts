@@ -2,6 +2,8 @@ import * as vscode from "vscode";
 import {
   completeReviewPrompt,
   disableReviewPrompt,
+  isReviewPromptDue,
+  markReviewPromptShown,
   recordSuccessfulGenerationForReview,
   type ReviewPromptState,
 } from "./reviewPromptPolicy";
@@ -21,6 +23,19 @@ const PROMPT_DELAY_MS = 1400;
 export class ReviewPromptService {
   constructor(private readonly context: vscode.ExtensionContext) {}
 
+  public async scheduleDuePromptOnActivation(): Promise<void> {
+    const current = this.context.globalState.get<ReviewPromptState>(
+      REVIEW_STATE_KEY,
+    );
+    if (!isReviewPromptDue(current)) {
+      return;
+    }
+
+    const shown = markReviewPromptShown(current);
+    await this.context.globalState.update(REVIEW_STATE_KEY, shown);
+    this.schedulePrompt(shown);
+  }
+
   public async recordSuccessfulGeneration(): Promise<void> {
     const current = this.context.globalState.get<ReviewPromptState>(
       REVIEW_STATE_KEY,
@@ -32,8 +47,12 @@ export class ReviewPromptService {
       return;
     }
 
+    this.schedulePrompt(decision.state);
+  }
+
+  private schedulePrompt(state: ReviewPromptState): void {
     setTimeout(() => {
-      void this.showPrompt(decision.state).catch((error) => {
+      void this.showPrompt(state).catch((error) => {
         console.error("[Documint] review prompt error:", error);
       });
     }, PROMPT_DELAY_MS);
