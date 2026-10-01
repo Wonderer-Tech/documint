@@ -2060,7 +2060,11 @@ export function buildHtmlBaseScript(
 
       var smartNav = document.createDocumentFragment();
       smartNav.appendChild(makeGroup('project', 'P', 'Project', projectLinks, true));
-      smartNav.appendChild(makeGroup('visuals', 'V', 'Visual Blueprints', visualLinks, false));
+      if (visualLinks.length) {
+        smartNav.appendChild(
+          makeGroup('visuals', 'V', 'Visual Blueprints', visualLinks, false)
+        );
+      }
 
       var fileItems = [renderFileTreeNode(fileRoot, 0)];
       smartNav.appendChild(makeGroup('project-tree', 'T', 'Project Tree', fileItems, true, fileCount + ' files'));
