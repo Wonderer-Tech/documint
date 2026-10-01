@@ -73,6 +73,7 @@ export function extractLocalSecurityFacts(
       lines,
       (line) =>
         !isCommentOnlyLine(line) &&
+        !/^\s*(?:import|export\s+\{)/.test(line) &&
         (
           /\b(?:SecretStorage|SecretStorageManager|keytar|keyring|SecretsManager|SecretClient)\b/.test(
             line,
