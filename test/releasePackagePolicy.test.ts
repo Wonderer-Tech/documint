@@ -449,14 +449,14 @@ test("lockfile bootstrap dispatcher is valid Node ESM syntax", () => {
 });
 
 
-test("CI prefers npm ci once a package lock exists and warns on the temporary fallback", () => {
+test("CI requires the committed lockfile and installs with npm ci only", () => {
   const workflow = readFileSync(
     join(process.cwd(), ".github/workflows/ci.yml"),
     "utf8",
   );
 
-  assert.match(workflow, /hashFiles\('package-lock\.json'\) != ''/);
   assert.match(workflow, /npm ci --no-audit --no-fund/);
-  assert.match(workflow, /hashFiles\('package-lock\.json'\) == ''/);
-  assert.match(workflow, /package-lock\.json is missing/);
+  assert.doesNotMatch(workflow, /npm install --no-audit --no-fund/);
+  assert.doesNotMatch(workflow, /hashFiles\('package-lock\.json'\)/);
+  assert.doesNotMatch(workflow, /package-lock\.json is missing/);
 });
