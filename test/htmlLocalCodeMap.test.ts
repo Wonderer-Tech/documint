@@ -151,10 +151,13 @@ test("Local project map exposes accessible in-map section navigation and current
   assert.match(fragments.markup, /aria-label="Project map sections"/);
   assert.match(fragments.markup, /href="#localMapOverviewSection"/);
   assert.match(fragments.markup, /href="#localMapBigSection"/);
+  assert.match(fragments.markup, /href="#localMapRuntimeSection"/);
   assert.match(fragments.markup, /href="#localMapRunSection"/);
+  assert.match(fragments.markup, /href="#localMapInterfacesSection"/);
   assert.match(fragments.markup, /href="#localMapSizeSection"/);
   assert.match(fragments.markup, /href="#localMapReadSection"/);
   assert.match(fragments.markup, /href="#localMapReachSection"/);
+  assert.match(fragments.markup, /href="#localMapVerificationSection"/);
   assert.match(fragments.markup, /href="#localMapLookupSection"/);
   assert.match(fragments.script, /function initSectionNav/);
   assert.match(fragments.script, /aria-current/);
@@ -254,6 +257,40 @@ test("Local code map connects module focus and file-card navigation", () => {
   assert.match(fragments.script, /revealFullDocumentation/);
   assert.match(fragments.script, /Open full file documentation/);
   assert.match(fragments.script, /data-documint-file-path/);
+});
+
+
+test("Local code map adds source-grounded runtime, interfaces and verification surfaces", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.markup, /id="localMapRuntimeSection"/);
+  assert.match(fragments.markup, /id="localMapInterfacesSection"/);
+  assert.match(fragments.markup, /id="localMapVerificationSection"/);
+  assert.match(fragments.markup, /From an entry point, what project code comes next\?/);
+  assert.match(fragments.markup, /Where can people or external systems interact with this project\?/);
+  assert.match(fragments.markup, /What checks does this project already provide\?/);
+
+  assert.match(fragments.script, /function renderRuntimeFlow/);
+  assert.match(fragments.script, /Direct project imports/);
+  assert.match(fragments.script, /Next project imports/);
+  assert.match(fragments.script, /execution orientation, not a claim about exact runtime call order/i);
+
+  assert.match(fragments.script, /function renderProjectInterfaces/);
+  assert.match(fragments.script, /Entry-point exports/);
+  assert.match(fragments.script, /VS Code commands/);
+  assert.match(fragments.script, /VS Code settings/);
+  assert.match(fragments.script, /Exposed ports/);
+  assert.match(fragments.script, /API_TOKEN/);
+
+  assert.match(fragments.script, /function verificationKind/);
+  assert.match(fragments.script, /function renderVerification/);
+  assert.match(fragments.script, /npm run compile/);
+  assert.match(fragments.script, /npm run test/);
+  assert.match(fragments.script, /make verify/);
+  assert.match(fragments.script, /No check is invented or claimed to be mandatory/);
+  assert.match(fragments.styles, /\.local-map-runtime-flow/);
+  assert.match(fragments.styles, /\.local-map-interface-grid/);
+  assert.match(fragments.styles, /\.local-map-verification-row/);
 });
 
 
