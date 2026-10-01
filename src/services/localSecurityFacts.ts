@@ -69,11 +69,16 @@ export function extractLocalSecurityFacts(
     const path = normalizeProjectPath(file.path);
     const lines = file.content.split(/\r?\n/);
 
-    const secretLine = findLine(lines, (line) =>
-      /\b(?:SecretStorage|SecretStorageManager|keytar|keyring|SecretsManager|SecretClient)\b/.test(
-        line,
-      ) ||
-      /\b(?:context|extensionContext)\.secrets\b/.test(line),
+    const secretLine = findLine(
+      lines,
+      (line) =>
+        !isCommentOnlyLine(line) &&
+        (
+          /\b(?:SecretStorage|SecretStorageManager|keytar|keyring|SecretsManager|SecretClient)\b/.test(
+            line,
+          ) ||
+          /\b(?:context|extensionContext)\.secrets\b/.test(line)
+        ),
     );
     if (secretLine) {
       evidence.push({
@@ -86,7 +91,10 @@ export function extractLocalSecurityFacts(
     }
 
     for (const policy of SECURITY_POLICY_PATTERNS) {
-      const match = findLine(lines, (line) => policy.pattern.test(line));
+      const match = findLine(
+        lines,
+        (line) => !isCommentOnlyLine(line) && policy.pattern.test(line),
+      );
       if (!match) continue;
       evidence.push({
         kind: "security-policy",
@@ -123,6 +131,18 @@ export function extractLocalSecurityFacts(
 
   const unique = dedupeEvidence(evidence);
   return unique.length ? { evidence: unique } : undefined;
+}
+
+function isCommentOnlyLine(line: string): boolean {
+  const trimmed = line.trim();
+  return (
+    trimmed.startsWith("//") ||
+    trimmed.startsWith("#") ||
+    trimmed.startsWith("--") ||
+    trimmed.startsWith("/*") ||
+    trimmed.startsWith("*") ||
+    trimmed.startsWith("<!--")
+  );
 }
 
 function findLine(
