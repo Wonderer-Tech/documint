@@ -132,7 +132,8 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     background: var(--accent);
     box-shadow: none;
   }
-  .documint-local-report .topbar-project { display: none; }
+  .documint-local-report .topbar-project,
+  .documint-local-report .topbar-sep { display: none; }
   .documint-local-report .search-wrap { width: min(240px, 24vw); }
   .documint-local-report .search-input,
   .documint-local-report .sidebar-filter,
