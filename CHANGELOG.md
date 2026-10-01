@@ -2,6 +2,15 @@
 
 All notable changes to DocuMint are documented here.
 
+## 1.0.9 — Marketplace hotfix
+
+1.0.9 republishes the 1.0.8 feature set with the final browser-navigation acceptance fix included. The Marketplace had already received 1.0.8 before that fix landed, so 1.0.9 is the corrected Marketplace build.
+
+### Fixed
+
+- Replaced a timing-sensitive Local Project Map hash-navigation browser assertion with a state-based wait so release validation is stable in CI as well as locally.
+- Kept the 1.0.8 Local Project Map, source-analysis, UI, review/feedback, privacy, and release-hardening feature set unchanged.
+
 ## 1.0.8 — Local Project Map & source-grounded insights
 
 DocuMint 1.0.8 turns Local Documentation into a much more useful codebase-reading experience. The generated HTML now answers practical developer questions directly, while keeping Local mode deterministic, provider-independent, and source-grounded.
