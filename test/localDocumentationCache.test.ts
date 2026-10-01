@@ -69,7 +69,7 @@ test("Local cache manifest preserves verified output hashes", () => {
 
   assert.deepEqual(parsed, manifest);
   assert.equal(LOCAL_DOCUMENTATION_CACHE_FILE, ".documint-local-cache.json");
-  assert.equal(LOCAL_DOCUMENTATION_CACHE_VERSION, "local-documentation-cache-v25");
+  assert.equal(LOCAL_DOCUMENTATION_CACHE_VERSION, "local-documentation-cache-v26");
 });
 
 test("Local cache parser rejects stale or malformed manifests", () => {
