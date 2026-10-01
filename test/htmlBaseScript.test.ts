@@ -14,6 +14,7 @@ test("extracted generated HTML runtime script remains syntactically valid", () =
   assert.ok(source.length > 80_000);
   assert.doesNotThrow(() => new Script(source));
   assert.match(source, /enhanceSidebarNavigation/);
+  assert.match(source, /if \(visualLinks\.length\)/);
   assert.match(source, /initializeReaderNavigation/);
   assert.match(source, /buildIndex/);
   assert.match(source, /Diagram syntax error — showing source/);
