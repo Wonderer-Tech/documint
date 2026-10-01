@@ -80,6 +80,14 @@ export class ReviewPromptService {
     }
 
     if (selection === FEEDBACK_ACTION) {
+      const latest =
+        this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
+        state;
+      await this.context.globalState.update(
+        REVIEW_STATE_KEY,
+        completeReviewPrompt(latest),
+      );
+
       const issue = new URL(FEEDBACK_ISSUE_URL);
       issue.searchParams.set("title", "DocuMint feedback");
       issue.searchParams.set(
