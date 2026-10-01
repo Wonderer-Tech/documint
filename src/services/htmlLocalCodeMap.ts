@@ -681,6 +681,113 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     gap: 6px;
   }
 
+  .local-map-runtime-flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 22px;
+    align-items: stretch;
+  }
+  .local-map-runtime-stage {
+    position: relative;
+    min-width: 0;
+    padding: 15px;
+    border: 1px solid var(--map-line);
+    border-radius: 12px;
+    background: var(--map-card);
+  }
+  .local-map-runtime-stage:not(:last-child)::after {
+    content: "→";
+    position: absolute;
+    top: 50%;
+    right: -17px;
+    z-index: 2;
+    color: var(--map-note);
+    font-family: var(--map-hand);
+    font-size: 22px;
+    line-height: 1;
+    transform: translateY(-50%);
+  }
+  .local-map-runtime-stage h4 {
+    margin: 0 0 8px;
+    color: var(--map-ink);
+    font-size: 12px;
+  }
+  .local-map-runtime-stage p {
+    margin: 7px 0 0;
+    color: var(--map-muted);
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+  .local-map-runtime-files {
+    display: grid;
+    gap: 5px;
+  }
+  .local-map-runtime-files button {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--map-line);
+    border-radius: 7px;
+    padding: 5px 7px;
+    background: var(--map-paper);
+    color: var(--map-note);
+    cursor: pointer;
+    font-family: var(--map-mono);
+    font-size: 9.5px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+    text-align: left;
+    word-break: break-word;
+  }
+  .local-map-runtime-files button:hover,
+  .local-map-runtime-files button:focus {
+    border-color: var(--map-mint);
+    outline: none;
+  }
+  .local-map-interface-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+    gap: 10px;
+  }
+  .local-map-verification {
+    display: grid;
+    gap: 8px;
+  }
+  .local-map-verification-row {
+    display: grid;
+    grid-template-columns: minmax(110px, .28fr) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    padding: 10px 12px;
+    border: 1px solid var(--map-line);
+    border-radius: 10px;
+    background: var(--map-card);
+  }
+  .local-map-verification-kind {
+    color: var(--map-muted);
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+  .local-map-verification-command {
+    min-width: 0;
+  }
+  .local-map-verification-command code {
+    display: block;
+    color: var(--map-note);
+    font-size: 10.5px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .local-map-verification-command small {
+    display: block;
+    margin-top: 3px;
+    color: var(--map-muted);
+    font-size: 9.5px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
   .local-map-graph-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -1457,6 +1564,14 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     .local-map-section h3 { font-size: 25px; }
     .local-map-question { font-size: 18px; }
     .local-map-relations { grid-template-columns: 1fr; }
+    .local-map-runtime-flow { grid-template-columns: 1fr; }
+    .local-map-runtime-stage:not(:last-child)::after {
+      top: auto;
+      right: 50%;
+      bottom: -20px;
+      transform: translateX(50%) rotate(90deg);
+    }
+    .local-map-verification-row { grid-template-columns: 1fr; gap: 4px; }
     .local-map-treemap { height: 620px; }
     .local-map-card { padding: 16px; }
   }
@@ -1498,10 +1613,13 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
   <nav class="local-map-nav" id="localMapNav" aria-label="Project map sections">
     <a href="#localMapOverviewSection">At a glance</a>
     <a href="#localMapBigSection">Big picture</a>
+    <a href="#localMapRuntimeSection" id="localMapRuntimeNav" hidden>Runtime flow</a>
     <a href="#localMapRunSection" id="localMapRunNav" hidden>How to run</a>
+    <a href="#localMapInterfacesSection" id="localMapInterfacesNav" hidden>Project interfaces</a>
     <a href="#localMapSizeSection">What's inside</a>
     <a href="#localMapReadSection">Start here</a>
     <a href="#localMapReachSection">Dependency reach</a>
+    <a href="#localMapVerificationSection" id="localMapVerificationNav" hidden>Verification</a>
     <a href="#localMapLookupSection">Look up a file</a>
   </nav>
 
@@ -1546,6 +1664,17 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <div class="local-map-module-tooltip" id="localMapModuleTooltip" role="tooltip" aria-hidden="true"></div>
   </section>
 
+  <section class="local-map-section" id="localMapRuntimeSection" aria-labelledby="localMapRuntimeTitle" hidden>
+    <div class="local-map-section-head">
+      <div>
+        <h3 id="localMapRuntimeTitle">Runtime flow</h3>
+        <p class="local-map-question">From an entry point, what project code comes next?</p>
+      </div>
+      <p class="local-map-hint">A static entry-point import path from resolved project dependencies. This is execution orientation, not a claim about exact runtime call order.</p>
+    </div>
+    <div class="local-map-runtime-flow" id="localMapRuntimeFlow"></div>
+  </section>
+
   <section class="local-map-section" id="localMapRunSection" aria-labelledby="localMapRunTitle" hidden>
     <div class="local-map-section-head">
       <div>
@@ -1555,6 +1684,17 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
       <p class="local-map-hint">Only detected package, Makefile, Dockerfile, VS Code, and source environment-reference facts are shown. Referenced environment variables are not claimed to be required.</p>
     </div>
     <div class="local-map-onboarding" id="localMapOnboarding"></div>
+  </section>
+
+  <section class="local-map-section" id="localMapInterfacesSection" aria-labelledby="localMapInterfacesTitle" hidden>
+    <div class="local-map-section-head">
+      <div>
+        <h3 id="localMapInterfacesTitle">Project interfaces</h3>
+        <p class="local-map-question">Where can people or external systems interact with this project?</p>
+      </div>
+      <p class="local-map-hint">Only detected commands, settings, entry-point exports, environment references, extension entry metadata, and exposed ports are shown.</p>
+    </div>
+    <div class="local-map-interface-grid" id="localMapInterfaces"></div>
   </section>
 
   <section class="local-map-section" id="localMapSizeSection" aria-labelledby="localMapSizeTitle">
@@ -1596,6 +1736,17 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
     <div class="local-map-panel local-map-scroll">
       <svg class="local-map-scatter" id="localMapScatter" viewBox="0 0 960 390" role="img" aria-label="File size versus incoming project dependents"></svg>
     </div>
+  </section>
+
+  <section class="local-map-section" id="localMapVerificationSection" aria-labelledby="localMapVerificationTitle" hidden>
+    <div class="local-map-section-head">
+      <div>
+        <h3 id="localMapVerificationTitle">Verification</h3>
+        <p class="local-map-question">What checks does this project already provide?</p>
+      </div>
+      <p class="local-map-hint">Detected package scripts and Makefile targets are grouped by their declared names/commands. No check is invented or claimed to be mandatory.</p>
+    </div>
+    <div class="local-map-verification" id="localMapVerification"></div>
   </section>
 
   <section class="local-map-section" id="localMapLookupSection" aria-labelledby="localMapLookupTitle">
