@@ -40,7 +40,7 @@ test("failure facts detect static throws, error reports and recovery-related sym
   );
   assert.deepEqual(
     facts?.recoveryHelpers.map((item) => item.name),
-    ["fallbackToLocal", "retryRequest"],
+    ["retryRequest", "fallbackToLocal"],
   );
 });
 
