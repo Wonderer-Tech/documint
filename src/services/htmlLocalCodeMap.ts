@@ -2676,6 +2676,122 @@ function buildLocalCodeMapScript(
     );
   }
 
+  function renderDataModel() {
+    var root = document.getElementById('localMapDataModel');
+    if (!root) return;
+    root.innerHTML = '';
+
+    var model = data.dataModel || null;
+    var sources = model && Array.isArray(model.sources)
+      ? model.sources
+      : [];
+
+    if (!sources.length) {
+      setOptionalSectionVisibility(
+        'localMapDataSection',
+        'localMapDataNav',
+        false
+      );
+      return;
+    }
+
+    sources.forEach(function (source) {
+      var card = document.createElement('section');
+      card.className = 'local-map-schema-source';
+
+      var head = document.createElement('div');
+      head.className = 'local-map-schema-head';
+
+      var path = document.createElement('strong');
+      path.textContent = source.path;
+      path.title = source.path;
+      head.appendChild(path);
+
+      var format = document.createElement('span');
+      format.className = 'local-map-schema-format';
+      format.textContent = source.format;
+      head.appendChild(format);
+      card.appendChild(head);
+
+      var entities = document.createElement('div');
+      entities.className = 'local-map-schema-entities';
+      var rows = Array.isArray(source.entities) ? source.entities : [];
+
+      rows.slice(0, 12).forEach(function (entity) {
+        var item = document.createElement('article');
+        item.className = 'local-map-schema-entity';
+
+        var entityHead = document.createElement('div');
+        entityHead.className = 'local-map-schema-entity-head';
+        var name = document.createElement('b');
+        name.textContent = entity.name;
+        entityHead.appendChild(name);
+
+        var kind = document.createElement('small');
+        kind.textContent = entity.kind;
+        entityHead.appendChild(kind);
+        item.appendChild(entityHead);
+
+        var fields = Array.isArray(entity.fields) ? entity.fields : [];
+        if (fields.length) {
+          var fieldList = document.createElement('div');
+          fieldList.className = 'local-map-schema-fields';
+          fields.slice(0, 14).forEach(function (field) {
+            var code = document.createElement('code');
+            code.textContent = field;
+            fieldList.appendChild(code);
+          });
+          item.appendChild(fieldList);
+
+          if (fields.length > 14) {
+            var moreFields = document.createElement('div');
+            moreFields.className = 'local-map-schema-more';
+            moreFields.textContent = '+ ' + (fields.length - 14) + ' more fields';
+            item.appendChild(moreFields);
+          }
+        }
+
+        entities.appendChild(item);
+      });
+
+      card.appendChild(entities);
+
+      if (rows.length > 12) {
+        var moreEntities = document.createElement('div');
+        moreEntities.className = 'local-map-schema-more';
+        moreEntities.textContent =
+          '+ ' + (rows.length - 12) + ' more declarations in this source';
+        card.appendChild(moreEntities);
+      }
+
+      if (byPath.has(source.path)) {
+        card.addEventListener('click', function (event) {
+          if (event.target.closest && event.target.closest('button, a, input, select')) {
+            return;
+          }
+          openFileAndReveal(source.path);
+        });
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', 'Inspect ' + source.path);
+        card.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openFileAndReveal(source.path);
+          }
+        });
+      }
+
+      root.appendChild(card);
+    });
+
+    setOptionalSectionVisibility(
+      'localMapDataSection',
+      'localMapDataNav',
+      true
+    );
+  }
+
   function verificationKind(name, command) {
     var text = (String(name || '') + ' ' + String(command || '')).toLowerCase();
     if (/browser|e2e|integration|acceptance|playwright|cypress/.test(text)) {
@@ -4478,6 +4594,7 @@ function buildLocalCodeMapScript(
   renderRuntimeFlow();
   renderOnboarding();
   renderProjectInterfaces();
+  renderDataModel();
   renderModules();
   renderModuleLegend();
   renderTreemap();
