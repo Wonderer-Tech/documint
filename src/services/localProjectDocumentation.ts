@@ -88,6 +88,15 @@ export function renderLocalProjectDocumentationFromModel(
     );
   }
 
+  if (surface === "markdown" && model.security) {
+    sections.push(
+      "",
+      "## Security Boundaries",
+      "",
+      renderSecurityBoundaries(model),
+    );
+  }
+
   if (surface === "markdown") {
     sections.push(
       "",
@@ -335,6 +344,37 @@ function renderDataModel(model: LocalDocumentationModel): string {
   }
 
   return rows.join("\n");
+}
+
+function renderSecurityBoundaries(
+  model: LocalDocumentationModel,
+): string {
+  const security = model.security;
+  if (!security || security.evidence.length === 0) {
+    return "";
+  }
+
+  const kindLabels: Record<string, string> = {
+    "secret-storage": "Secret storage",
+    "credential-environment": "Credential environment",
+    "security-policy": "Security policy/header",
+    "auth-dependency": "Authentication dependency",
+  };
+
+  return [
+    "Only direct source evidence is listed. Environment-variable values are never included, and this section is orientation rather than a security audit.",
+    "",
+    "| Boundary | Evidence | Source |",
+    "| --- | --- | --- |",
+    ...security.evidence.map((item) => {
+      const source = item.path
+        ? item.line
+          ? `${markdownDocumentationFileLink(item.path)} L${item.line}`
+          : markdownDocumentationFileLink(item.path)
+        : "—";
+      return `| ${escapeMarkdownTableText(kindLabels[item.kind] ?? item.kind)} | ${inlineCode(item.label)} — ${escapeMarkdownTableText(item.detail)} | ${source} |`;
+    }),
+  ].join("\n");
 }
 
 function renderSuggestedReadingPath(
