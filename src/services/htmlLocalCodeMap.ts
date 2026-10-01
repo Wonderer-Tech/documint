@@ -1006,6 +1006,15 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     opacity: 1;
     visibility: visible;
   }
+  .local-map-module-canvas.compact-links.zoom-detail .local-map-edge-label.secondary {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .local-map-module-canvas.compact-links.focused.zoom-detail
+    .local-map-edge-label.secondary.on {
+    opacity: 1;
+    visibility: visible;
+  }
   .local-map-edge-label { pointer-events: none; }
   .local-map-edge-badge {
     fill: var(--map-card);
