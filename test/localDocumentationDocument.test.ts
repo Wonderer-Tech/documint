@@ -41,7 +41,8 @@ test("complete Local document combines overview, architecture, and per-file fact
   assert.match(document.markdown, /src\/main\.ts/);
   assert.match(document.markdown, /lib\/format\.ts/);
   assert.match(document.markdown, /No AI inference, model, API key, or external provider is used/);
-  assert.match(document.html, /Example Project — Local Documentation/);
+  assert.match(document.html, /Example Project — Documentation/);
+  assert.doesNotMatch(document.html, /Example Project — Local Documentation/);
   assert.doesNotMatch(document.html, /href="#architecture-dependencies"/);
   assert.doesNotMatch(document.html, /<h2[^>]*>Architecture &amp; Dependencies<\/h2>/);
   assert.doesNotMatch(document.html, /<h3[^>]*>Module Relationships<\/h3>/);
