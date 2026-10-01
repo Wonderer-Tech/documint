@@ -666,14 +666,96 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     gap: 6px;
   }
 
+  .local-map-graph-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--map-line);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--map-card) 94%, transparent);
+  }
+  .local-map-graph-toolbar-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .local-map-graph-toolbar-label {
+    margin-right: 2px;
+    color: var(--map-muted);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .local-map-graph-toolbar button {
+    min-width: 30px;
+    height: 28px;
+    border: 1px solid var(--map-line);
+    border-radius: 7px;
+    padding: 0 8px;
+    background: var(--map-paper);
+    color: var(--map-ink);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .local-map-graph-toolbar button:hover,
+  .local-map-graph-toolbar button:focus {
+    border-color: var(--map-mint);
+    outline: none;
+  }
+  .local-map-graph-toolbar button[aria-pressed="true"] {
+    border-color: var(--map-mint);
+    background: color-mix(in srgb, var(--map-mint) 12%, var(--map-card));
+    color: var(--map-mint);
+  }
+  .local-map-zoom-value {
+    min-width: 43px;
+    color: var(--map-muted);
+    font-family: var(--map-mono);
+    font-size: 10px;
+    text-align: center;
+  }
+  .local-map-graph-help {
+    color: var(--map-muted);
+    font-size: 10px;
+  }
+  .local-map-graph-insights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 8px 2px 10px;
+  }
+  .local-map-graph-insight {
+    border: 1px solid color-mix(in srgb, var(--map-note) 28%, var(--map-line));
+    border-radius: 999px;
+    padding: 4px 8px 3px;
+    background: color-mix(in srgb, var(--map-note) 5%, var(--map-card));
+    color: var(--map-note);
+    font-family: var(--map-hand);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+  .local-map-graph-panel {
+    position: relative;
+    overflow: hidden;
+  }
   .local-map-module-canvas {
     display: block;
     width: 100%;
-    min-width: 760px;
-    min-height: 360px;
-    height: auto;
+    min-width: 0;
+    min-height: 390px;
+    height: min(62vh, 620px);
     background: var(--map-card);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
   }
+  .local-map-module-canvas.panning { cursor: grabbing; }
   .local-map-layer-guide {
     stroke: color-mix(in srgb, var(--map-line) 58%, transparent);
     stroke-width: 1;
@@ -705,7 +787,7 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   .local-map-module-node text {
     fill: var(--map-ink);
     font-family: var(--map-sans);
-    font-size: 12px;
+    font-size: 10.5px;
     font-weight: 700;
     pointer-events: none;
   }
@@ -724,13 +806,13 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   .local-map-module-node .local-map-module-meta {
     fill: var(--map-muted);
     font-family: var(--map-mono);
-    font-size: 9.5px;
+    font-size: 8.3px;
     font-weight: 500;
   }
   .local-map-module-node .local-map-module-start {
     fill: var(--module-stroke, var(--map-note));
     font-family: var(--map-mono);
-    font-size: 8.5px;
+    font-size: 7.4px;
     font-weight: 600;
   }
   .local-map-module-edge {
@@ -750,6 +832,16 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     stroke: color-mix(in srgb, var(--map-note) 74%, var(--map-muted));
     stroke-width: 2.3;
     stroke-dasharray: none;
+  }
+  .local-map-module-canvas.compact-links .local-map-module-edge.secondary,
+  .local-map-module-canvas.compact-links .local-map-edge-label.secondary {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .local-map-module-canvas.compact-links.focused .local-map-module-edge.secondary.on,
+  .local-map-module-canvas.compact-links.focused .local-map-edge-label.secondary.on {
+    opacity: 1;
+    visibility: visible;
   }
   .local-map-edge-label { pointer-events: none; }
   .local-map-edge-badge {
@@ -1391,7 +1483,22 @@ const LOCAL_CODE_MAP_MARKUP = String.raw`
       </div>
       <p class="local-map-hint">Boxes are structural modules. Arrows point from the importing module to the module it imports; numbered badges show repeated cross-module imports. Click a module to filter the size map.</p>
     </div>
-    <div class="local-map-panel local-map-scroll">
+    <div class="local-map-graph-toolbar" aria-label="Big picture controls">
+      <div class="local-map-graph-toolbar-group" role="group" aria-label="Connection visibility">
+        <span class="local-map-graph-toolbar-label">Links</span>
+        <button id="localMapMajorLinks" type="button" aria-pressed="false">Major</button>
+        <button id="localMapAllLinks" type="button" aria-pressed="true">All</button>
+      </div>
+      <div class="local-map-graph-toolbar-group" role="group" aria-label="Diagram zoom">
+        <button id="localMapZoomOut" type="button" aria-label="Zoom out">−</button>
+        <span class="local-map-zoom-value" id="localMapZoomValue" aria-live="polite">100%</span>
+        <button id="localMapZoomIn" type="button" aria-label="Zoom in">+</button>
+        <button id="localMapZoomFit" type="button">Fit</button>
+      </div>
+      <span class="local-map-graph-help">Wheel to zoom · drag empty space to pan</span>
+    </div>
+    <div class="local-map-graph-insights" id="localMapGraphInsights" aria-label="Big picture facts"></div>
+    <div class="local-map-panel local-map-graph-panel">
       <svg class="local-map-module-canvas" id="localMapModules" viewBox="0 0 960 360" role="img" aria-label="Project modules and resolved imports between them"></svg>
     </div>
     <ul class="local-map-module-legend" id="localMapModuleLegend" aria-label="Project module legend"></ul>
