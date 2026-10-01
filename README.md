@@ -94,8 +94,12 @@ Local HTML now starts with a question-first project map built from the same dete
 - **Big picture** — the single Local HTML architecture surface: structural modules, resolved cross-module import counts, trusted module descriptions/provenance, and suggested start files. The older duplicate Architecture & Dependencies table remains only in Markdown.
 - **What's inside** — a file-size treemap grouped by structural module.
 - **Start here** — a suggested reading path derived from detected entry points and dependency reach.
+- **Runtime flow** — a conservative entry-point-to-resolved-import orientation path; it explicitly does not claim exact call order.
 - **How to run** — package scripts/manager, VS Code commands/settings, concrete Makefile targets, and Dockerfile source facts when those files are present.
+- **Project interfaces** — detected commands/settings, host/package entry metadata, environment references, exposed ports, and entry-point exports.
+- **Data model** — conditional source-grounded schema/model declarations from Prisma, SQL, GraphQL, OpenAPI, Mongoose, and Drizzle; absent when no supported declaration is detected.
 - **Dependency reach** — file size versus incoming project dependents.
+- **Verification** — existing package scripts and Makefile targets classified as typecheck/lint/test/build/integration/verification/release checks without inventing commands.
 - **Look up a file** — token-aware factual search across path, trusted description, exported/internal symbols, referenced environment variables, and TODO/FIXME/HACK source notes. Multi-word queries can match one factual field or multiple file facts; results show why they matched. The first nine ranked hits stay compact, with an explicit **Show all** control when more files match. File cards expose complete Uses / Used by navigation, exported/internal symbols, and source-note evidence.
 
 For TypeScript/JavaScript-family files, DocuMint uses the TypeScript compiler AST for multiline imports/declarations, export modifiers, class methods, and module-vs-function scope. This prevents function-local temporary variables from flooding Local API documentation.
@@ -147,6 +151,8 @@ The following scanner languages are enabled by default on new installs:
 - HTML (`.html`)
 - CSS / SCSS (`.css`, `.scss`)
 - SQL (`.sql`)
+- Prisma schema (`.prisma`)
+- GraphQL schema (`.graphql`, `.gql`)
 
 Notes:
 
