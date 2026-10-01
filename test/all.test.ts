@@ -32,6 +32,7 @@ import "./localBuildFacts.test";
 import "./localDataModelFacts.test";
 import "./localDocumentationCache.test";
 import "./localDocumentationDocument.test";
+import "./localFailureFacts.test";
 import "./localDocumentationModel.test";
 import "./localFileDocumentation.test";
 import "./localProjectDocumentation.test";
