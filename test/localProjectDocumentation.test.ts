@@ -207,6 +207,38 @@ test("local project Markdown adds Security Boundaries only from direct evidence"
 });
 
 
+test("local project Markdown adds Failure Paths only from direct source evidence", () => {
+  const failureFiles: WorkspaceFile[] = [
+    {
+      path: "src/retry.ts",
+      language: "typescript",
+      content: [
+        "export function retryRequest() {",
+        '  throw new Error("Provider unavailable");',
+        "}",
+      ].join("\n"),
+    },
+  ];
+  const failureProject = analyzer.analyzeProject(failureFiles);
+  const output = renderLocalProjectDocumentation({
+    projectName: "Failure Project",
+    files: failureFiles,
+    project: failureProject,
+  });
+
+  assert.match(output, /## Failure Paths/);
+  assert.match(output, /Provider unavailable/);
+  assert.match(output, /retryRequest/);
+  assert.match(output, /not exhaustive runtime control-flow analysis/i);
+
+  const plain = renderLocalProjectDocumentation({
+    projectName: "Example Project",
+    files,
+    project,
+  });
+  assert.doesNotMatch(plain, /## Failure Paths/);
+});
+
 test("Local overview uses portable relative source links", () => {
   const output = renderLocalProjectDocumentation({
     projectName: "Example Project",
