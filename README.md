@@ -11,6 +11,16 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 
 **🎉 400+ downloads and counting.** Thank you to everyone who has tried DocuMint and helped shape it.
 
+### Quick look
+
+The extension lives inside VS Code, with Local and AI generation available from the DocuMint sidebar.
+
+![DocuMint VS Code sidebar](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/screenshot1.png)
+
+A short demo of the workflow:
+
+![DocuMint Demo](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/demo.gif)
+
 DocuMint writes generated documentation to:
 
 - `documint/documentation.md`
