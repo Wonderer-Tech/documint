@@ -5,6 +5,7 @@ import type {
   TodoComment,
 } from "../analyzer/sourceAnalyzer";
 import type { WorkspaceFile } from "../types";
+import { extractLocalDataModelFacts, type LocalDataModelFacts } from "./localDataModelFacts";
 import { extractLocalReadmeFacts } from "./localReadmeFacts";
 import {
   parseDockerfileFacts,
@@ -120,6 +121,7 @@ export interface LocalDocumentationModel {
   gettingStarted?: LocalGettingStartedFacts;
   referencedEnvironmentVariables: string[];
   suggestedReadingPath: LocalReadingPathItem[];
+  dataModel?: LocalDataModelFacts;
 }
 
 export interface BuildLocalDocumentationModelOptions {
@@ -207,6 +209,7 @@ export function buildLocalDocumentationModel(
     fileModels.flatMap((file) => file.referencedEnvironmentVariables),
   );
   const suggestedReadingPath = buildSuggestedReadingPath(fileModels);
+  const dataModel = extractLocalDataModelFacts(sortedFiles);
 
   return {
     projectName: cleanText(projectName) || "Project",
@@ -241,6 +244,7 @@ export function buildLocalDocumentationModel(
     gettingStarted,
     referencedEnvironmentVariables,
     suggestedReadingPath,
+    dataModel,
   };
 }
 
