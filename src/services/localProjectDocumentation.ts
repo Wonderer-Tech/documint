@@ -97,6 +97,15 @@ export function renderLocalProjectDocumentationFromModel(
     );
   }
 
+  if (surface === "markdown" && model.failureFacts) {
+    sections.push(
+      "",
+      "## Failure Paths",
+      "",
+      renderFailurePaths(model),
+    );
+  }
+
   if (surface === "markdown") {
     sections.push(
       "",
@@ -375,6 +384,57 @@ function renderSecurityBoundaries(
       return `| ${escapeMarkdownTableText(kindLabels[item.kind] ?? item.kind)} | ${inlineCode(item.label)} — ${escapeMarkdownTableText(item.detail)} | ${source} |`;
     }),
   ].join("\n");
+}
+
+function renderFailurePaths(model: LocalDocumentationModel): string {
+  const facts = model.failureFacts;
+  if (!facts) {
+    return "";
+  }
+
+  const rows: string[] = [
+    "Only static literal throw/error-report messages and recovery-related declared symbol names are listed. This is not exhaustive runtime control-flow analysis.",
+  ];
+
+  if (facts.failures.length > 0) {
+    rows.push(
+      "",
+      "### Explicit failure signals",
+      "",
+      "| Kind | Message | Source |",
+      "| --- | --- | --- |",
+      ...facts.failures.map((item) => {
+        const kind =
+          item.kind === "error-report"
+            ? "Error report"
+            : item.errorType
+              ? `Throw ${item.errorType}`
+              : "Throw";
+        const source =
+          `${markdownDocumentationFileLink(item.path)} L${item.line}`;
+        return `| ${escapeMarkdownTableText(kind)} | ${inlineCode(item.message)} | ${source} |`;
+      }),
+    );
+  }
+
+  if (facts.recoveryHelpers.length > 0) {
+    rows.push(
+      "",
+      "### Recovery-related symbols",
+      "",
+      "Names are shown because they directly contain retry, recovery, fallback, backoff, or resume; behavior is not inferred from the name.",
+      "",
+      "| Symbol | Kind | Source |",
+      "| --- | --- | --- |",
+      ...facts.recoveryHelpers.map((item) => {
+        const source =
+          `${markdownDocumentationFileLink(item.path)} L${item.line}`;
+        return `| ${inlineCode(item.name)} | ${escapeMarkdownTableText(item.kind)}${item.exported ? " · exported" : ""} | ${source} |`;
+      }),
+    );
+  }
+
+  return rows.join("\n");
 }
 
 function renderSuggestedReadingPath(
