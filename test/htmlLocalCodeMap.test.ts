@@ -409,7 +409,7 @@ test("Local Big Picture uses prototype-style open arrows and uncluttered edge co
   assert.match(fragments.markup, /Arrows point from the importing module to the module it imports/);
   assert.match(fragments.script, /function buildOpenArrowPath/);
   assert.match(fragments.script, /var reciprocalOffset = reciprocal/);
-  assert.match(fragments.script, /levelSpan > 1 && !reciprocal/);
+  assert.match(fragments.script, /var horizontalDirection = end\.x >= start\.x \? 1 : -1/);
   assert.match(fragments.script, /quadraticMidpoint/);
   assert.match(fragments.script, /cubicMidpoint/);
   assert.match(fragments.script, /buildCubicOpenArrowPath/);
