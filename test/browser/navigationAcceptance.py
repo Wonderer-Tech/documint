@@ -154,6 +154,12 @@ with sync_playwright() as playwright:
                 assert "npm run test" in verification_text
                 assert "make verify" in verification_text
 
+                assert page.locator("#localMapDataSection").is_visible(), name
+                data_model_text = page.locator("#localMapDataSection").inner_text()
+                assert "db/schema.sql" in data_model_text
+                assert "jobs" in data_model_text
+                assert "status" in data_model_text
+
                 assert page.locator("h2", has_text="How to run").count() == 0
                 assert page.locator("h2", has_text="Referenced environment variables").count() == 0
                 page.locator("#localMapModules .local-map-module-node").first.click()
