@@ -167,6 +167,46 @@ test("local project Markdown adds Data Model only when direct schema evidence ex
 });
 
 
+test("local project Markdown adds Security Boundaries only from direct evidence", () => {
+  const securityFiles: WorkspaceFile[] = [
+    {
+      path: "src/secrets.ts",
+      language: "typescript",
+      content: [
+        "export function read(context: vscode.ExtensionContext) {",
+        "  return context.secrets.get('api-key');",
+        "}",
+      ].join("\n"),
+    },
+    {
+      path: "src/provider.ts",
+      language: "typescript",
+      content: "export const token = process.env.API_TOKEN;\n",
+    },
+  ];
+  const securityProject = analyzer.analyzeProject(securityFiles);
+  const output = renderLocalProjectDocumentation({
+    projectName: "Security Project",
+    files: securityFiles,
+    project: securityProject,
+  });
+
+  assert.match(output, /## Security Boundaries/);
+  assert.match(output, /Secret storage/);
+  assert.match(output, /API_TOKEN/);
+  assert.match(output, /Values are never included|values are never included/i);
+  assert.match(output, /orientation rather than a security audit/i);
+  assert.doesNotMatch(output, /api-key-value/);
+
+  const plain = renderLocalProjectDocumentation({
+    projectName: "Example Project",
+    files,
+    project,
+  });
+  assert.doesNotMatch(plain, /## Security Boundaries/);
+});
+
+
 test("Local overview uses portable relative source links", () => {
   const output = renderLocalProjectDocumentation({
     projectName: "Example Project",
