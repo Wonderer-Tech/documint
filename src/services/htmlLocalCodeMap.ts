@@ -120,6 +120,28 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     transition: color var(--map-motion-soft, 240ms) var(--map-ease-soft, ease);
   }
 
+  .documint-local-report .reader-context .reader-button,
+  .documint-local-report .reader-outline,
+  .documint-local-report .reader-location-text,
+  .documint-local-report .reader-location-label,
+  .documint-local-report .reader-filter-clear {
+    transition:
+      color 240ms cubic-bezier(.22, .61, .36, 1),
+      background-color 240ms cubic-bezier(.22, .61, .36, 1),
+      border-color 240ms cubic-bezier(.22, .61, .36, 1),
+      box-shadow 240ms cubic-bezier(.22, .61, .36, 1),
+      opacity 240ms cubic-bezier(.22, .61, .36, 1),
+      transform 240ms cubic-bezier(.22, .61, .36, 1);
+  }
+  .documint-local-report .reader-context .reader-button:hover,
+  .documint-local-report .reader-outline:hover,
+  .documint-local-report .reader-outline:focus {
+    transform: translateY(-1px);
+  }
+  .documint-local-report .reader-context .reader-button:active {
+    transform: translateY(0) scale(.98);
+  }
+
   .documint-local-report .topbar {
     top: 0;
     left: 0;
