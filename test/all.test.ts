@@ -64,6 +64,7 @@ import "./providerSelectionRuntime.test";
 import "./publicFacadeBoundary.test";
 import "./regression.test";
 import "./releasePackagePolicy.test";
+import "./reviewPromptPolicy.test";
 import "./scannerPolicy.test";
 import "./scannerRunIsolation.test";
 import "./sidebarAssets.test";
