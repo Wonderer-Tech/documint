@@ -64,6 +64,9 @@ export function activate(context: vscode.ExtensionContext) {
   const docGenerator = new DocGeneratorService(context, secretManager);
   const localDocGenerator = new LocalDocumentationGenerator();
   const reviewPromptService = new ReviewPromptService(context);
+  void reviewPromptService.scheduleDuePromptOnActivation().catch((error) => {
+    console.error("[Documint] review prompt activation error:", error);
+  });
   let activeCancellationSource: vscode.CancellationTokenSource | undefined;
 
   function resolveRunProvider(provider?: string): string {
