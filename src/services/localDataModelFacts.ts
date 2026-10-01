@@ -265,7 +265,7 @@ function parseBlockFields(body: string, enumMode = false): string[] {
       if (value) fields.push(value[1]);
       continue;
     }
-    const field = line.match(/^([A-Za-z_]\w*)\s+/);
+    const field = line.match(/^([A-Za-z_]\w*)\s*(?::|\s+)/);
     if (field) fields.push(field[1]);
   }
   return unique(fields);
