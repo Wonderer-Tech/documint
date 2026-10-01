@@ -93,6 +93,19 @@ export interface LocalCodeMapDataModel {
   sources: LocalCodeMapDataSource[];
 }
 
+export interface LocalCodeMapSecurityEvidence {
+  kind: string;
+  label: string;
+  path?: string;
+  line?: number;
+  detail: string;
+}
+
+export interface LocalCodeMapSecurityFacts {
+  evidence: LocalCodeMapSecurityEvidence[];
+}
+
+
 
 export interface LocalCodeMapLanguageSummary {
   name: string;
@@ -124,6 +137,7 @@ export interface LocalCodeMapData {
   readingPath: LocalCodeMapReadingItem[];
   referencedEnvironmentVariables: string[];
   dataModel?: LocalCodeMapDataModel;
+  security?: LocalCodeMapSecurityFacts;
   gettingStarted?: {
     packageJsonPath?: string;
     packageManager?: "npm" | "pnpm" | "yarn" | "bun";
@@ -238,6 +252,11 @@ export function buildLocalCodeMapData(
               fields: [...entity.fields],
             })),
           })),
+        }
+      : undefined,
+    security: model.security
+      ? {
+          evidence: model.security.evidence.map((item) => ({ ...item })),
         }
       : undefined,
     gettingStarted: model.gettingStarted
