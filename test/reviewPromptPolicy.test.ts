@@ -122,10 +122,12 @@ test("extension records Local and AI successes and review UI stays explicit", ()
   );
   assert.match(
     serviceSource,
-    /Enjoying DocuMint\? Please review us — what should we improve\?/,
+    /If you love DocuMint and it genuinely helps your work, please review us on the Marketplace\./,
   );
-  assert.match(serviceSource, /Rate & Review/);
+  assert.match(serviceSource, /Review on Marketplace/);
   assert.match(serviceSource, /Tell us what to improve/);
+  assert.doesNotMatch(serviceSource, /showInputBox/);
+  assert.match(serviceSource, /What should we improve\?/);
   assert.match(serviceSource, /Later/);
   assert.match(serviceSource, /Don't ask again/);
   assert.match(
