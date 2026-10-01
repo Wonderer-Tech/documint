@@ -76,6 +76,24 @@ export interface LocalCodeMapDockerfile {
   command?: string;
 }
 
+export interface LocalCodeMapDataEntity {
+  name: string;
+  kind: string;
+  fields: string[];
+}
+
+export interface LocalCodeMapDataSource {
+  path: string;
+  format: string;
+  entities: LocalCodeMapDataEntity[];
+}
+
+export interface LocalCodeMapDataModel {
+  entityCount: number;
+  sources: LocalCodeMapDataSource[];
+}
+
+
 export interface LocalCodeMapLanguageSummary {
   name: string;
   files: number;
@@ -105,6 +123,7 @@ export interface LocalCodeMapData {
   edges: LocalCodeMapEdge[];
   readingPath: LocalCodeMapReadingItem[];
   referencedEnvironmentVariables: string[];
+  dataModel?: LocalCodeMapDataModel;
   gettingStarted?: {
     packageJsonPath?: string;
     packageManager?: "npm" | "pnpm" | "yarn" | "bun";
@@ -207,6 +226,20 @@ export function buildLocalCodeMapData(
     referencedEnvironmentVariables: [
       ...model.referencedEnvironmentVariables,
     ],
+    dataModel: model.dataModel
+      ? {
+          entityCount: model.dataModel.entityCount,
+          sources: model.dataModel.sources.map((source) => ({
+            path: source.path,
+            format: source.format,
+            entities: source.entities.map((entity) => ({
+              name: entity.name,
+              kind: entity.kind,
+              fields: [...entity.fields],
+            })),
+          })),
+        }
+      : undefined,
     gettingStarted: model.gettingStarted
       ? {
           packageJsonPath: model.gettingStarted.packageJsonPath,
