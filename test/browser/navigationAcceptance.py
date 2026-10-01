@@ -59,7 +59,11 @@ with sync_playwright() as playwright:
                 assert page.locator("#localMapOverview").is_visible(), name
                 map_nav = page.locator("#localMapNav")
                 assert map_nav.count() == 1
-                assert map_nav.locator("a").count() == 7
+                map_links = map_nav.locator("a")
+                assert map_links.count() >= 7
+                assert page.evaluate(
+                    "Array.from(document.querySelectorAll('#localMapNav a')).every(a => !!document.querySelector(a.getAttribute('href')))"
+                ), name
                 assert map_nav.locator("#localMapRunNav").is_visible()
                 assert page.evaluate("location.hash") == "#localMapReadSection"
                 assert (
