@@ -79,6 +79,15 @@ export function renderLocalProjectDocumentationFromModel(
     );
   }
 
+  if (surface === "markdown" && model.dataModel) {
+    sections.push(
+      "",
+      "## Data Model",
+      "",
+      renderDataModel(model),
+    );
+  }
+
   if (surface === "markdown") {
     sections.push(
       "",
@@ -302,6 +311,30 @@ function renderGettingStarted(model: LocalDocumentationModel): string {
   return sections.length > 0
     ? sections.join("\n")
     : "No supported project manifest facts detected.";
+}
+
+function renderDataModel(model: LocalDocumentationModel): string {
+  const dataModel = model.dataModel;
+  if (!dataModel || dataModel.sources.length === 0) {
+    return "";
+  }
+
+  const rows: string[] = [
+    "Only direct schema/model declarations detected in source are listed. Dynamic declarations may expose only partial field names.",
+    "",
+    "| Source | Format | Entity | Kind | Fields |",
+    "| --- | --- | --- | --- | --- |",
+  ];
+
+  for (const source of dataModel.sources) {
+    for (const entity of source.entities) {
+      rows.push(
+        `| ${markdownDocumentationFileLink(source.path)} | ${inlineCode(source.format)} | ${inlineCode(entity.name)} | ${inlineCode(entity.kind)} | ${entity.fields.length ? entity.fields.map(inlineCode).join(", ") : "—"} |`,
+      );
+    }
+  }
+
+  return rows.join("\n");
 }
 
 function renderSuggestedReadingPath(
