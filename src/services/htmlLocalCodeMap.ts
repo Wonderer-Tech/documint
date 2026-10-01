@@ -132,6 +132,8 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     background: var(--accent);
     box-shadow: none;
   }
+  .documint-local-report .topbar-project { display: none; }
+  .documint-local-report .search-wrap { width: min(240px, 24vw); }
   .documint-local-report .search-input,
   .documint-local-report .sidebar-filter,
   .documint-local-report .theme-btn {
@@ -504,12 +506,22 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   .local-map-overview-card,
   .local-map-fact-card,
   .local-map-card {
+    min-width: 0;
     border: 1px solid var(--map-line);
     border-radius: 14px;
+    overflow: hidden;
     background: var(--map-card);
     box-shadow: none;
   }
-  .local-map-panel { overflow: hidden; }
+  .local-map-card :where(h4, h5, p, a, button, code, small, span, td, th),
+  .local-map-overview-card :where(h4, p, button, code, small, span),
+  .local-map-fact-card :where(h4, p, code, small, span),
+  .local-map-relation :where(strong, button, span) {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
 
   .local-map-overview {
     display: grid;
@@ -579,8 +591,10 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     color: var(--map-ink);
     font-family: var(--map-mono);
     font-size: 10.5px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   .local-map-overview-list button {
     color: var(--map-note);
@@ -784,12 +798,44 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     stroke: var(--module-stroke, var(--map-mint));
     stroke-width: 2.3;
   }
-  .local-map-module-node text {
-    fill: var(--map-ink);
+  .local-map-module-card-content {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-content: center;
+    gap: 1px;
+    padding: 2px 4px;
+    color: var(--map-ink);
     font-family: var(--map-sans);
-    font-size: 10.5px;
-    font-weight: 700;
+    line-height: 1.05;
+    text-align: center;
     pointer-events: none;
+  }
+  .local-map-module-card-title {
+    display: -webkit-box;
+    max-height: 22px;
+    overflow: hidden;
+    font-size: 9.6px;
+    font-weight: 750;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .local-map-module-card-meta,
+  .local-map-module-card-start {
+    display: block;
+    overflow: hidden;
+    font-family: var(--map-mono);
+    font-size: 7.4px;
+    line-height: 1.05;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .local-map-module-card-meta { color: var(--map-muted); }
+  .local-map-module-card-start {
+    color: var(--module-stroke, var(--map-note));
+    font-size: 6.8px;
   }
   .local-map-module-node,
   .local-map-module-edge,
@@ -802,18 +848,6 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   }
   .local-map-module-canvas.focused .local-map-module-node:not(.on) {
     opacity: .35;
-  }
-  .local-map-module-node .local-map-module-meta {
-    fill: var(--map-muted);
-    font-family: var(--map-mono);
-    font-size: 8.3px;
-    font-weight: 500;
-  }
-  .local-map-module-node .local-map-module-start {
-    fill: var(--module-stroke, var(--map-note));
-    font-family: var(--map-mono);
-    font-size: 7.4px;
-    font-weight: 600;
   }
   .local-map-module-edge {
     stroke: color-mix(in srgb, var(--map-muted) 58%, transparent);
@@ -900,8 +934,10 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     color: var(--map-muted);
     font-family: var(--map-mono);
     font-size: 9.5px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
   }
 
   .local-map-module-tooltip {
@@ -1323,14 +1359,18 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     max-width: 100%;
     border: 0;
     padding: 2px 0;
-    overflow: hidden;
+    overflow: visible;
     background: none;
     color: var(--map-note);
     cursor: pointer;
     font-family: var(--map-mono);
     font-size: 10.5px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.35;
+    text-align: left;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   .local-map-relation-more {
     margin-top: 5px;
