@@ -345,8 +345,8 @@ test("Local Big Picture organizes modules into readable dependency layers", () =
   assert.match(fragments.script, /function barycenter/);
   assert.match(fragments.script, /function reorderLevel/);
   assert.match(fragments.script, /for \(var sweep = 0; sweep < 3; sweep\+\+\)/);
-  assert.match(fragments.script, /var columnSpacing = 228/);
-  assert.match(fragments.script, /var rowSpacing = 112/);
+  assert.match(fragments.script, /var columnSpacing = 224/);
+  assert.match(fragments.script, /var rowSpacing = 96/);
   assert.match(fragments.script, /columns\.sort/);
   assert.match(fragments.script, /entry layer/);
   assert.match(fragments.script, /dependency layer /);
@@ -411,13 +411,15 @@ test("Local Big Picture uses prototype-style open arrows and uncluttered edge co
   assert.match(fragments.script, /var reciprocalOffset = reciprocal/);
   assert.match(fragments.script, /levelSpan > 1 && !reciprocal/);
   assert.match(fragments.script, /quadraticMidpoint/);
+  assert.match(fragments.script, /cubicMidpoint/);
+  assert.match(fragments.script, /buildCubicOpenArrowPath/);
   assert.match(fragments.styles, /stroke-dasharray: 5 6/);
   assert.match(fragments.styles, /\.local-map-module-edge\.mid/);
   assert.match(fragments.styles, /\.local-map-module-edge\.strong/);
   assert.match(fragments.styles, /\.local-map-edge-badge/);
   assert.match(fragments.styles, /\.local-map-edge-count/);
   assert.match(fragments.script, /if \(edge\.count >= 2\)/);
-  assert.match(fragments.script, /buildOpenArrowPath\(noteStart, noteEnd, noteControl, 9\)/);
+  assert.match(fragments.script, /var laneOffset = \(\(edgeIndex % 7\) - 3\) \* 5/);
   assert.doesNotMatch(fragments.script, /marker-end|localMapArrow/);
 });
 
@@ -459,13 +461,14 @@ test("Local file cards retain canonical internal symbols and source-note evidenc
 });
 
 
-test("Local module-map handwritten notes stay metric-backed and conservative", () => {
+test("Local module-map insight chips stay metric-backed and conservative", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
-  assert.match(fragments.styles, /\.local-map-note/);
-  assert.match(fragments.script, /detected entry module/);
-  assert.match(fragments.script, /cross-module links:/);
-  assert.match(fragments.script, /largest module:/);
+  assert.match(fragments.markup, /id="localMapGraphInsights"/);
+  assert.match(fragments.styles, /\.local-map-graph-insight/);
+  assert.match(fragments.script, /entry: /);
+  assert.match(fragments.script, /cross-module links: /);
+  assert.match(fragments.script, /largest: /);
   assert.doesNotMatch(
     fragments.script,
     /everything passes through|only place that calls|will break|good to split/i,
@@ -517,14 +520,22 @@ test("Local module map exposes only trusted module descriptions in bounded custo
 });
 
 
-test("Local Big Picture handwritten annotations stay inside the SVG viewport", () => {
+test("Local Big Picture supports fit, zoom, pan and compact connection mode", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
-  assert.match(fragments.script, /var noteMargin = 14/);
-  assert.match(fragments.script, /note\.getComputedTextLength\(\)/);
-  assert.match(fragments.script, /noteWidth = text\.length \* 7\.2/);
-  assert.match(fragments.script, /width - noteMargin - noteWidth/);
-  assert.match(fragments.script, /note\.setAttribute\('x', String\(noteX\)\)/);
+  assert.match(fragments.markup, /id="localMapZoomOut"/);
+  assert.match(fragments.markup, /id="localMapZoomIn"/);
+  assert.match(fragments.markup, /id="localMapZoomFit"/);
+  assert.match(fragments.markup, /id="localMapMajorLinks"/);
+  assert.match(fragments.markup, /id="localMapAllLinks"/);
+  assert.match(fragments.script, /function setModuleViewport/);
+  assert.match(fragments.script, /function zoomModuleGraph/);
+  assert.match(fragments.script, /function initModuleGraphControls/);
+  assert.match(fragments.script, /svg\.onwheel/);
+  assert.match(fragments.script, /svg\.onpointerdown/);
+  assert.match(fragments.script, /svg\.onpointermove/);
+  assert.match(fragments.script, /setModuleLinkMode\(edgeCount > 14 \? 'major' : 'all'\)/);
+  assert.match(fragments.styles, /compact-links/);
 });
 
 
