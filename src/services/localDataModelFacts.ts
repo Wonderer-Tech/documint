@@ -198,6 +198,15 @@ function parseOpenApi(
 }
 
 function parseMongoose(content: string): LocalDataModelEntity[] {
+  const mongooseEvidence =
+    /from\s+["']mongoose["']|require\(\s*["']mongoose["']\s*\)|\bmongoose\.(?:Schema|model)\b/.test(
+      content,
+    );
+  if (!mongooseEvidence) return [];
+
+  const allowsBareModel =
+    /import\s*\{[^}]*\bmodel\b[^}]*\}\s*from\s*["']mongoose["']/.test(content) ||
+    /\{[^}]*\bmodel\b[^}]*\}\s*=\s*require\(\s*["']mongoose["']\s*\)/.test(content);
   const schemas = new Map<string, string[]>();
   const declaration =
     /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*new\s+(?:mongoose\.)?Schema\s*\(\s*\{/g;
@@ -210,8 +219,9 @@ function parseMongoose(content: string): LocalDataModelEntity[] {
   }
 
   const entities: LocalDataModelEntity[] = [];
-  const modelPattern =
-    /(?:mongoose\.)?model\s*\(\s*["']([^"']+)["']\s*(?:,\s*([A-Za-z_$][\w$]*))?/g;
+  const modelPattern = allowsBareModel
+    ? /(?:mongoose\.)?model\s*\(\s*["']([^"']+)["']\s*(?:,\s*([A-Za-z_$][\w$]*))?/g
+    : /mongoose\.model\s*\(\s*["']([^"']+)["']\s*(?:,\s*([A-Za-z_$][\w$]*))?/g;
   for (const match of content.matchAll(modelPattern)) {
     entities.push({
       name: match[1],
