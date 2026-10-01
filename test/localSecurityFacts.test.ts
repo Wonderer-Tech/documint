@@ -79,6 +79,22 @@ test("security facts detect imported authentication dependencies conservatively"
   );
 });
 
+test("security facts ignore comment-only mentions", () => {
+  const facts = extractLocalSecurityFacts([
+    file(
+      "src/comments.ts",
+      "typescript",
+      [
+        "// SecretStorage should be considered later",
+        "// Content-Security-Policy example only",
+        "export const value = 1;",
+      ].join("\n"),
+    ),
+  ]);
+
+  assert.equal(facts, undefined);
+});
+
 test("security facts remain absent without direct supported evidence", () => {
   const facts = extractLocalSecurityFacts(
     [
