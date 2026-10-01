@@ -95,6 +95,24 @@ const data: LocalCodeMapData = {
       },
     ],
   },
+  security: {
+    evidence: [
+      {
+        kind: "credential-environment",
+        label: "API_TOKEN",
+        path: "src/services/run.ts",
+        detail:
+          "Credential-like environment variable name is referenced in source; no value is included.",
+      },
+      {
+        kind: "secret-storage",
+        label: "Secret storage",
+        path: "src/extension.ts",
+        line: 4,
+        detail: "Direct secret-storage API or wrapper reference detected in source.",
+      },
+    ],
+  },
   gettingStarted: {
     packageJsonPath: "package.json",
     packageManager: "npm",
@@ -170,6 +188,7 @@ test("Local project map exposes accessible in-map section navigation and current
   assert.match(fragments.markup, /href="#localMapRunSection"/);
   assert.match(fragments.markup, /href="#localMapInterfacesSection"/);
   assert.match(fragments.markup, /href="#localMapDataSection"/);
+  assert.match(fragments.markup, /href="#localMapSecuritySection"/);
   assert.match(fragments.markup, /href="#localMapSizeSection"/);
   assert.match(fragments.markup, /href="#localMapReadSection"/);
   assert.match(fragments.markup, /href="#localMapReachSection"/);
@@ -287,6 +306,22 @@ test("Local Jelly UI uses soft transitions with reduced-motion fallback", () => 
   assert.match(fragments.styles, /\.documint-local-report \.reader-context \.reader-button/);
   assert.match(fragments.styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.doesNotMatch(fragments.styles, /transition:\s*all\b/);
+});
+
+
+test("Local Security boundaries stay conditional and never expose secret values", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.markup, /id="localMapSecuritySection"/);
+  assert.match(fragments.markup, /Where does this project handle security-sensitive inputs or policies\?/);
+  assert.match(fragments.markup, /Values are never included/);
+  assert.match(fragments.script, /function renderSecurityBoundaries/);
+  assert.match(fragments.script, /Credential environment/);
+  assert.match(fragments.script, /Secret storage/);
+  assert.match(fragments.script, /API_TOKEN/);
+  assert.match(fragments.styles, /\.local-map-security-card/);
+  assert.match(fragments.styles, /\.local-map-security-grid/);
+  assert.doesNotMatch(fragments.script, /secret-value-for-test/);
 });
 
 
