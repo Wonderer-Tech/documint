@@ -2443,6 +2443,297 @@ function buildLocalCodeMapScript(
     };
   }
 
+  function cubicMidpoint(start, control1, control2, end) {
+    return {
+      x:
+        start.x * 0.125 +
+        control1.x * 0.375 +
+        control2.x * 0.375 +
+        end.x * 0.125,
+      y:
+        start.y * 0.125 +
+        control1.y * 0.375 +
+        control2.y * 0.375 +
+        end.y * 0.125
+    };
+  }
+
+  function buildCubicOpenArrowPath(
+    start,
+    end,
+    control1,
+    control2,
+    arrowLength
+  ) {
+    var length = arrowLength || 10;
+    var shaft =
+      'M ' + start.x + ' ' + start.y +
+      ' C ' + control1.x + ' ' + control1.y +
+      ' ' + control2.x + ' ' + control2.y +
+      ' ' + end.x + ' ' + end.y;
+    var angle = Math.atan2(end.y - control2.y, end.x - control2.x);
+    var reverse = angle + Math.PI;
+    var spread = 0.42;
+    var left = {
+      x: end.x + Math.cos(reverse + spread) * length,
+      y: end.y + Math.sin(reverse + spread) * length
+    };
+    var right = {
+      x: end.x + Math.cos(reverse - spread) * length,
+      y: end.y + Math.sin(reverse - spread) * length
+    };
+
+    return (
+      shaft +
+      ' M ' + left.x + ' ' + left.y +
+      ' L ' + end.x + ' ' + end.y +
+      ' L ' + right.x + ' ' + right.y
+    );
+  }
+
+  function updateModuleZoomLabel() {
+    var label = document.getElementById('localMapZoomValue');
+    if (!label || !moduleGraphState) return;
+    var zoom = Math.round(
+      moduleGraphState.full.width / moduleGraphState.view.width * 100
+    );
+    label.textContent = zoom + '%';
+  }
+
+  function setModuleViewport(nextView) {
+    var svg = document.getElementById('localMapModules');
+    if (!svg || !moduleGraphState) return;
+
+    var full = moduleGraphState.full;
+    var aspect = full.height / full.width;
+    var minWidth = full.width / 4;
+    var maxWidth = full.width / 0.7;
+    var width = Math.max(minWidth, Math.min(maxWidth, nextView.width));
+    var height = width * aspect;
+
+    var extraX = Math.max(0, width - full.width) / 2;
+    var extraY = Math.max(0, height - full.height) / 2;
+    var minX = full.x - extraX;
+    var maxX = full.x + full.width - width + extraX;
+    var minY = full.y - extraY;
+    var maxY = full.y + full.height - height + extraY;
+
+    if (maxX < minX) maxX = minX;
+    if (maxY < minY) maxY = minY;
+
+    var x = Math.max(minX, Math.min(maxX, nextView.x));
+    var y = Math.max(minY, Math.min(maxY, nextView.y));
+
+    moduleGraphState.view = {
+      x: x,
+      y: y,
+      width: width,
+      height: height
+    };
+    svg.setAttribute(
+      'viewBox',
+      x + ' ' + y + ' ' + width + ' ' + height
+    );
+    updateModuleZoomLabel();
+  }
+
+  function fitModuleGraph() {
+    if (!moduleGraphState) return;
+    setModuleViewport({
+      x: moduleGraphState.full.x,
+      y: moduleGraphState.full.y,
+      width: moduleGraphState.full.width,
+      height: moduleGraphState.full.height
+    });
+  }
+
+  function zoomModuleGraph(factor, clientX, clientY) {
+    var svg = document.getElementById('localMapModules');
+    if (!svg || !moduleGraphState || !Number.isFinite(factor) || factor <= 0) {
+      return;
+    }
+
+    var view = moduleGraphState.view;
+    var rect = svg.getBoundingClientRect();
+    var ratioX = 0.5;
+    var ratioY = 0.5;
+    if (
+      Number.isFinite(clientX) &&
+      Number.isFinite(clientY) &&
+      rect.width > 0 &&
+      rect.height > 0
+    ) {
+      ratioX = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      ratioY = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+    }
+
+    var anchorX = view.x + view.width * ratioX;
+    var anchorY = view.y + view.height * ratioY;
+    var nextWidth = view.width / factor;
+    var nextHeight = view.height / factor;
+
+    setModuleViewport({
+      x: anchorX - nextWidth * ratioX,
+      y: anchorY - nextHeight * ratioY,
+      width: nextWidth,
+      height: nextHeight
+    });
+  }
+
+  function setModuleLinkMode(mode) {
+    var svg = document.getElementById('localMapModules');
+    var major = document.getElementById('localMapMajorLinks');
+    var all = document.getElementById('localMapAllLinks');
+    if (!svg) return;
+
+    var compact = mode === 'major';
+    svg.classList.toggle('compact-links', compact);
+    if (major) major.setAttribute('aria-pressed', compact ? 'true' : 'false');
+    if (all) all.setAttribute('aria-pressed', compact ? 'false' : 'true');
+  }
+
+  function initModuleGraphControls(svg, width, height, edgeCount) {
+    moduleGraphState = {
+      full: { x: 0, y: 0, width: width, height: height },
+      view: { x: 0, y: 0, width: width, height: height }
+    };
+    moduleGraphPointer = null;
+    fitModuleGraph();
+
+    var zoomIn = document.getElementById('localMapZoomIn');
+    var zoomOut = document.getElementById('localMapZoomOut');
+    var zoomFit = document.getElementById('localMapZoomFit');
+    var major = document.getElementById('localMapMajorLinks');
+    var all = document.getElementById('localMapAllLinks');
+
+    if (zoomIn) zoomIn.onclick = function () { zoomModuleGraph(1.25); };
+    if (zoomOut) zoomOut.onclick = function () { zoomModuleGraph(0.8); };
+    if (zoomFit) zoomFit.onclick = fitModuleGraph;
+    if (major) major.onclick = function () { setModuleLinkMode('major'); };
+    if (all) all.onclick = function () { setModuleLinkMode('all'); };
+
+    setModuleLinkMode(edgeCount > 14 ? 'major' : 'all');
+
+    svg.onwheel = function (event) {
+      event.preventDefault();
+      zoomModuleGraph(
+        event.deltaY < 0 ? 1.16 : 0.86,
+        event.clientX,
+        event.clientY
+      );
+    };
+
+    svg.onpointerdown = function (event) {
+      if (
+        event.button !== 0 ||
+        (event.target.closest &&
+          event.target.closest('.local-map-module-node'))
+      ) {
+        return;
+      }
+      moduleGraphPointer = {
+        id: event.pointerId,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        view: { ...moduleGraphState.view }
+      };
+      svg.classList.add('panning');
+      try { svg.setPointerCapture(event.pointerId); } catch (_) {}
+      event.preventDefault();
+    };
+
+    svg.onpointermove = function (event) {
+      if (
+        !moduleGraphPointer ||
+        moduleGraphPointer.id !== event.pointerId ||
+        !moduleGraphState
+      ) {
+        return;
+      }
+      var rect = svg.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      var dx =
+        (event.clientX - moduleGraphPointer.clientX) /
+        rect.width *
+        moduleGraphPointer.view.width;
+      var dy =
+        (event.clientY - moduleGraphPointer.clientY) /
+        rect.height *
+        moduleGraphPointer.view.height;
+
+      setModuleViewport({
+        x: moduleGraphPointer.view.x - dx,
+        y: moduleGraphPointer.view.y - dy,
+        width: moduleGraphPointer.view.width,
+        height: moduleGraphPointer.view.height
+      });
+    };
+
+    function finishPan(event) {
+      if (
+        moduleGraphPointer &&
+        event &&
+        moduleGraphPointer.id === event.pointerId
+      ) {
+        try { svg.releasePointerCapture(event.pointerId); } catch (_) {}
+      }
+      moduleGraphPointer = null;
+      svg.classList.remove('panning');
+    }
+
+    svg.onpointerup = finishPan;
+    svg.onpointercancel = finishPan;
+    svg.onpointerleave = function (event) {
+      if (moduleGraphPointer) finishPan(event);
+    };
+  }
+
+  function renderModuleInsights(
+    entryModules,
+    mostConnected,
+    largestModule,
+    connectivity
+  ) {
+    var root = document.getElementById('localMapGraphInsights');
+    if (!root) return;
+    root.innerHTML = '';
+
+    function add(text) {
+      if (!text) return;
+      var item = document.createElement('span');
+      item.className = 'local-map-graph-insight';
+      item.textContent = text;
+      root.appendChild(item);
+    }
+
+    if (entryModules.length) {
+      add('entry: ' + entryModules[0]);
+    }
+    if (
+      mostConnected &&
+      (!entryModules.length || mostConnected.name !== entryModules[0])
+    ) {
+      add(
+        'cross-module links: ' +
+        (connectivity.get(mostConnected.name) || 0) +
+        ' · ' +
+        mostConnected.name
+      );
+    }
+    if (
+      largestModule &&
+      (!entryModules.length || largestModule.name !== entryModules[0]) &&
+      (!mostConnected || largestModule.name !== mostConnected.name)
+    ) {
+      add(
+        'largest: ' +
+        formatNumber(largestModule.lines) +
+        ' lines · ' +
+        largestModule.name
+      );
+    }
+  }
+
   function positionModuleTooltip(clientX, clientY) {
     var tooltip = document.getElementById('localMapModuleTooltip');
     if (!tooltip || !tooltip.classList.contains('show')) return;
