@@ -18,6 +18,9 @@ test("scanner target language expansion covers language aliases and extensions",
   assert.deepEqual(getTargetExtensions([".py"]), ["py"]);
   assert.equal(getLanguageFromPath("src/App.TSX"), "typescriptreact");
   assert.equal(getLanguageFromPath("schema.sql"), "sql");
+  assert.equal(getLanguageFromPath("prisma/schema.prisma"), "prisma");
+  assert.equal(getLanguageFromPath("schema.graphql"), "graphql");
+  assert.equal(getLanguageFromPath("schema.gql"), "graphql");
 });
 
 test("scanner includes modern Node and TypeScript module extensions", () => {
@@ -62,6 +65,8 @@ test("default scanner languages include the full supported matrix", () => {
     "html",
     "css",
     "sql",
+    "prisma",
+    "graphql",
   ]) {
     assert.ok(languages.includes(required), `missing default language ${required}`);
   }
