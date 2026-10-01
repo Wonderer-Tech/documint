@@ -52,6 +52,7 @@ _Last updated: 2026-10-01_
 - ✅ Added conditional **Failure paths** documentation backed by static literal throw/error-report messages plus source-declared retry/recovery/fallback/backoff/resume symbol names. The renderer keeps those two evidence classes distinct and explicitly avoids claiming exhaustive runtime control flow or inferred recovery semantics.
 - ✅ Reintroduced restrained Jelly softness into the Local prototype shell without abandoning the paper-grid design: major cards/panels use translucent gradients, softer borders/radii and low-amplitude depth; topbar/nav use bounded blur/saturation rather than applying expensive blur to every child card.
 - ✅ Added a bounded soft-motion layer: nav underline state, buttons, file tiles, Data-model cards, search focus, Big Picture focus/semantic states, tooltips, and reader-header controls transition with an ease-out curve; `prefers-reduced-motion` collapses motion and the stylesheet avoids blanket `transition: all`.
+- ✅ Added a native review/feedback prompt policy: first eligible after three successful generations, then at most once per seven days; due prompts can also surface on a later activation. Marketplace review, explicit user-entered GitHub feedback, **Later**, and **Don't ask again** are separate actions; no feedback is transmitted automatically.
 - ✅ Removed the now-unused Local architecture `summary` rendering branch after **Big picture** became the sole HTML architecture surface; the architecture renderer is Markdown-only again.
 - ✅ Local HTML disables required external CDN assets; the Local project-map experience is self-contained.
 - ✅ Hardened Markdown→HTML rendering in both Local and AI modes: source/provider raw HTML is neutralized outside code, source-derived prose is escaped as plain Markdown text, and unsafe rendered link/image URLs are blocked.
@@ -68,7 +69,7 @@ _Last updated: 2026-10-01_
 - ✅ `sidebarProvider.ts` now focuses on host state/messages; CSP-aware markup, styles, and webview client runtime live in dedicated modules.
 - ✅ Added weekly Dependabot configuration for npm and GitHub Actions.
 - ✅ Retired the unused `localVisualBlueprint.ts` Local payload path and aligned Local browser/Jelly/architecture regressions with the code-map architecture.
-- ✅ Aggregate unit-test registration is currently consistent: all 71 root `test/*.test.ts` modules are imported by `test/all.test.ts`; imports remain in one alphabetical block.
+- ✅ Aggregate unit-test registration is currently consistent: all 72 root `test/*.test.ts` modules are imported by `test/all.test.ts`; imports remain in one alphabetical block.
 - ✅ Added `npm run audit:self`, which documents DocuMint's own source and asserts key Local Documentation release invariants; PR CI and tag releases run it after the normal regression suite.
 - ✅ Added a manual-only browser acceptance workflow plus canonical `npm run test:browser` scripts; it runs provider-free fixtures through Chromium and uploads screenshots/results without auto-running on push/PR.
 - ✅ Browser acceptance encodes the 30-second newcomer discovery test: API-key storage, provider integration, and build/test commands must be discoverable through the Local project-map search/onboarding surfaces.
@@ -83,18 +84,22 @@ _Last updated: 2026-10-01_
 - ✅ Added `npm run lockfile:bootstrap` for authenticated GitHub CLI dispatch of Lockfile Bootstrap on the current branch, with explicit `DOCUMINT_BOOTSTRAP_REF` / `DOCUMINT_BOOTSTRAP_REPO` overrides; this avoids manual Actions UI navigation without granting repository write behavior.
 - ✅ Added a shared lockfile policy plus `npm run lockfile:adopt -- <artifact>`: downloaded Bootstrap artifacts are validated against the current package identity/dependency maps before the root lockfile is replaced, Bootstrap `package-lock.sha256` metadata is verified when present, and the adopted SHA-256 is rechecked; checksum/identity rejection leaves the existing root lockfile unchanged, and the artifact itself carries the exact adoption command.
 - ✅ Browser acceptance uses a cross-platform Python 3 launcher with `DOCUMINT_PYTHON` override support, and release readiness preflights Playwright/Chromium before verify/browser/package execution.
-- ✅ Local validation is green through unit/regression tests, TypeScript compile/bundle, full Chromium browser navigation/reader acceptance, and `npm run audit:self`.
-- ⏳ Final release-candidate evidence still requires `npm run release:readiness`; this is now the only release gate not yet recorded in the audit.
+- ⏳ Unit/regression, compile/bundle, browser acceptance, and self-audit were green before the review-prompt feature was added. Re-run the normal validation gates for the current head before release readiness.
+- ⏳ Final release-candidate evidence still requires `npm run release:readiness` after the current head is green.
 - ⏳ README demo GIF compression remains optional polish; the binary remains excluded from VSIX packaging.
 
 ### Current next step
 
-The implementation is feature-frozen for the 1.0.7 release candidate. Source analysis, Local redesign, unit/regression coverage, browser acceptance, compile/bundle, and self-audit are green.
+The review/feedback prompt was added after the previous green validation pass, so the current head must be revalidated before release freeze.
 
-1. Run **one final release gate**: `npm run release:readiness`.
-2. Review `release-artifacts/readiness/readiness.json`, the browser evidence, and the produced VSIX/hash.
-3. Keep main-push CI path-gated unless/until the workflow policy is intentionally changed; pull requests already run CI.
-4. Optionally compress/replace the README demo GIF after release evidence is green; it remains excluded from the VSIX.
+1. Run `npm run test:unit`.
+2. Run `npm run compile`.
+3. Run `npm run test:browser`.
+4. Run `npm run audit:self`.
+5. If all are green, run the final release gate: `npm run release:readiness`.
+6. Review `release-artifacts/readiness/readiness.json`, browser evidence, and the produced VSIX/hash.
+7. Keep main-push CI path-gated unless/until that workflow policy is intentionally changed.
+
 
 
 Do not add more redesign features before the readiness evidence is green unless a new concrete defect is found.
