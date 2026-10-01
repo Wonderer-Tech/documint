@@ -893,6 +893,13 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     text-transform: uppercase;
     pointer-events: none;
   }
+  .local-map-disconnected-band {
+    fill: color-mix(in srgb, var(--map-muted) 5%, transparent);
+    stroke: color-mix(in srgb, var(--map-line) 72%, transparent);
+    stroke-width: 1;
+    stroke-dasharray: 4 7;
+    pointer-events: none;
+  }
   .local-map-module-node { cursor: pointer; }
   .local-map-module-node rect {
     fill: var(--module-tint, var(--map-card));
@@ -932,7 +939,7 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   }
   .local-map-module-card-meta,
   .local-map-module-card-start {
-    display: block;
+    display: none;
     overflow: hidden;
     font-family: var(--map-mono);
     font-size: 7.4px;
@@ -944,6 +951,12 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   .local-map-module-card-start {
     color: var(--module-stroke, var(--map-note));
     font-size: 6.8px;
+  }
+  .local-map-module-canvas.zoom-detail .local-map-module-card-meta {
+    display: block;
+  }
+  .local-map-module-canvas.zoom-deep .local-map-module-card-start {
+    display: block;
   }
   .local-map-module-node,
   .local-map-module-edge,
@@ -982,6 +995,14 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   }
   .local-map-module-canvas.compact-links.focused .local-map-module-edge.secondary.on,
   .local-map-module-canvas.compact-links.focused .local-map-edge-label.secondary.on {
+    opacity: 1;
+    visibility: visible;
+  }
+  .local-map-module-canvas.zoom-overview .local-map-edge-label {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .local-map-module-canvas.zoom-detail .local-map-edge-label {
     opacity: 1;
     visibility: visible;
   }
@@ -3030,6 +3051,13 @@ function buildLocalCodeMapScript(
       moduleGraphState.full.width / moduleGraphState.view.width * 100
     );
     label.textContent = zoom + '%';
+
+    var svg = document.getElementById('localMapModules');
+    if (svg) {
+      svg.classList.toggle('zoom-overview', zoom < 125);
+      svg.classList.toggle('zoom-detail', zoom >= 125);
+      svg.classList.toggle('zoom-deep', zoom >= 165);
+    }
   }
 
   function setModuleViewport(nextView) {
@@ -3410,6 +3438,17 @@ function buildLocalCodeMapScript(
     }, sketchFilter);
 
     (layout.columns || []).forEach(function (column) {
+      if (column.disconnected) {
+        makeSvg('rect', {
+          x: column.x - 92,
+          y: 42,
+          width: 184,
+          height: Math.max(40, height - 66),
+          rx: 16,
+          class: 'local-map-disconnected-band'
+        }, svg);
+      }
+
       makeSvg('line', {
         x1: column.x,
         x2: column.x,
