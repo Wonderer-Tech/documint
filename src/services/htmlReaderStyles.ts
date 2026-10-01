@@ -27,6 +27,7 @@ export const READER_STYLES = String.raw`
 .reader-location-label { display: block; margin-bottom: 1px; font-size: 8px; font-weight: 750; letter-spacing: .08em; color: var(--text-muted); text-transform: uppercase; }
 .reader-location-text { display: -webkit-box; max-height: 28px; overflow: hidden; color: var(--text-primary); font-size: 11px; font-weight: 650; line-height: 1.2; overflow-wrap: anywhere; word-break: break-word; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .reader-context .reader-button { min-height: 30px; padding: 4px 8px; border-radius: 7px; background: transparent; box-shadow: none; }
+.reader-context .reader-button:disabled { display: none; }
 .reader-outline { width: min(250px, 38%); min-width: 150px; min-height: 30px; padding: 4px 28px 4px 8px; border: 1px solid var(--jelly-border); border-radius: 8px; font: inherit; font-size: 10.5px; color: var(--text-secondary); background: var(--bg-secondary); }
 .reader-outline:focus { border-color: var(--jelly-border-accent); outline: none; }
 .documint-jelly-ui .main [id] { scroll-margin-top: 92px; }
@@ -42,6 +43,13 @@ export const READER_STYLES = String.raw`
 .reader-menu, .reader-close, .reader-overlay { display: none; }
 .reader-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .documint-jelly-ui .doc-footer { margin-left: var(--sidebar-w); }
+@media (min-width: 769px) and (max-width: 1180px) {
+  .reader-context { flex-basis: 300px; min-width: 210px; max-width: 430px; gap: 6px; padding-left: 8px; }
+  .reader-location { max-width: 130px; }
+  .reader-location-label { display: none; }
+  .reader-outline { width: min(190px, 46%); min-width: 120px; }
+  .reader-context .reader-button { padding-right: 6px; padding-left: 6px; }
+}
 @media (max-width: 768px) {
   .documint-jelly-ui .reader-menu { display: inline-flex; flex: none; min-width: 34px; min-height: 36px; padding: 5px; font-size: 18px; }
   .documint-jelly-ui .reader-close { display: inline-flex; position: absolute; top: 8px; right: 8px; min-width: 32px; font-size: 16px; }
