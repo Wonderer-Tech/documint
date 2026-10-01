@@ -463,6 +463,10 @@ test("Local Big Picture uses semantic zoom and visually separates disconnected m
   assert.match(fragments.styles, /\.local-map-module-canvas\.zoom-detail \.local-map-module-card-meta/);
   assert.match(fragments.styles, /\.local-map-module-canvas\.zoom-deep \.local-map-module-card-start/);
   assert.match(fragments.styles, /\.local-map-module-canvas\.zoom-overview \.local-map-edge-label/);
+  assert.match(
+    fragments.styles,
+    /\.local-map-module-canvas\.compact-links\.zoom-detail \.local-map-edge-label\.secondary/,
+  );
   assert.match(fragments.styles, /\.local-map-disconnected-band/);
   assert.match(fragments.script, /svg\.classList\.toggle\('zoom-overview', zoom < 125\)/);
   assert.match(fragments.script, /svg\.classList\.toggle\('zoom-detail', zoom >= 125\)/);
