@@ -152,8 +152,13 @@ with sync_playwright() as p:
             visible.click(); page.wait_for_timeout(80)
             assert page.locator('#readerMenu').get_attribute('aria-expanded') == 'false'
             assert page.evaluate('document.activeElement.id') == target
-            page.locator('#readerRevealCurrent').click()
+            assert not page.locator('#readerRevealCurrent').is_visible()
+            page.locator('#readerMenu').click()
             assert page.locator('#readerMenu').get_attribute('aria-expanded') == 'true'
+            active = page.locator('#tocNav .file-link[aria-current="location"]')
+            assert active.count() == 1
+            assert active.get_attribute('href') == f'#{target}'
+            assert active.is_visible()
             page.screenshot(path=str(root / f'{name}-reader-mobile.png'))
             page.set_viewport_size({'width': 1440, 'height': 1000})
             page.wait_for_timeout(100)
