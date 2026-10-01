@@ -59,6 +59,11 @@ test("README-only media stays out of VSIX while runtime icons remain packageable
     "resources/s2.png",
     "resources/s3.png",
     "resources/s4.png",
+    "resources/Screenshot From 2026-10-01 12-18-49.png",
+    "resources/Screenshot From 2026-10-01 12-19-21.png",
+    "resources/Screenshot From 2026-10-01 12-20-05.png",
+    "resources/Screenshot From 2026-10-01 12-20-27.png",
+    "resources/Screenshot From 2026-10-01 12-20-38.png",
   ]) {
     assert.ok(ignored.has(media), `README-only media should be excluded: ${media}`);
   }
