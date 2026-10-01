@@ -37,6 +37,9 @@ export const EXTENSION_TO_LANGUAGE: Record<string, string> = {
   css: "css",
   scss: "scss",
   sql: "sql",
+  prisma: "prisma",
+  graphql: "graphql",
+  gql: "graphql",
 };
 
 export const LANGUAGE_TO_EXTENSIONS: Record<string, string[]> = {
@@ -64,6 +67,8 @@ export const LANGUAGE_TO_EXTENSIONS: Record<string, string[]> = {
   css: ["css"],
   scss: ["scss"],
   sql: ["sql"],
+  prisma: ["prisma"],
+  graphql: ["graphql", "gql"],
 };
 
 export const DEFAULT_EXCLUDE_PATTERNS = [
