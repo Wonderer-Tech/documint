@@ -166,6 +166,12 @@ with sync_playwright() as playwright:
                 assert "API_TOKEN" in security_text
                 assert "security audit" in security_text
 
+                assert page.locator("#localMapFailureSection").is_visible(), name
+                failure_text = page.locator("#localMapFailureSection").inner_text()
+                assert "Provider unavailable" in failure_text
+                assert "retryProvider" in failure_text
+                assert "not exhaustive runtime control-flow analysis" in failure_text
+
                 assert page.locator("h2", has_text="How to run").count() == 0
                 assert page.locator("h2", has_text="Referenced environment variables").count() == 0
                 page.locator("#localMapModules .local-map-module-node").first.click()
