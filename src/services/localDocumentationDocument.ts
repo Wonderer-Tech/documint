@@ -85,7 +85,7 @@ export function buildLocalDocumentationDocument(
   return {
     markdown,
     html: generateHtmlTemplate({
-      title: `${safeProjectName} — Local Documentation`,
+      title: `${safeProjectName} — Documentation`,
       tocHtml,
       contentHtml,
       projectName: safeProjectName,
