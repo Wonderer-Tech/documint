@@ -85,21 +85,20 @@ _Last updated: 2026-10-01_
 - ✅ Added `npm run lockfile:bootstrap` for authenticated GitHub CLI dispatch of Lockfile Bootstrap on the current branch, with explicit `DOCUMINT_BOOTSTRAP_REF` / `DOCUMINT_BOOTSTRAP_REPO` overrides; this avoids manual Actions UI navigation without granting repository write behavior.
 - ✅ Added a shared lockfile policy plus `npm run lockfile:adopt -- <artifact>`: downloaded Bootstrap artifacts are validated against the current package identity/dependency maps before the root lockfile is replaced, Bootstrap `package-lock.sha256` metadata is verified when present, and the adopted SHA-256 is rechecked; checksum/identity rejection leaves the existing root lockfile unchanged, and the artifact itself carries the exact adoption command.
 - ✅ Browser acceptance uses a cross-platform Python 3 launcher with `DOCUMINT_PYTHON` override support, and release readiness preflights Playwright/Chromium before verify/browser/package execution.
-- ⏳ Unit/regression, compile/bundle, browser acceptance, and self-audit were green before the final 1.0.8 review-prompt/README/version pass. Re-run the normal validation gates for the current 1.0.8 head before release readiness.
-- ⏳ Final 1.0.8 release-candidate evidence still requires `npm run release:readiness` after the current head is green.
-- ⏳ README demo GIF compression remains optional polish; the binary remains excluded from VSIX packaging.
+- ✅ The corrected 1.0.8 head passed unit/regression, compile/bundle, Local self-audit, full browser acceptance, VSIX packaging, archive integrity validation, and `npm run release:readiness`.
+- ✅ The 1.0.8 GitHub tag/release workflow then completed successfully and published `documint-1.0.8.vsix`.
+- ⏳ Marketplace had already received 1.0.8 before the final browser-navigation fix, so the package version is now **1.0.9** for the corrected Marketplace republish.
+- ⏳ Re-run `npm run release:readiness` once for the 1.0.9 metadata/artifact before creating the v1.0.9 tag and Marketplace upload.
 
 ### Current next step
 
-The 1.0.8 review/feedback prompt, README refresh, screenshot set, packaging policy update, and version bump landed after the previous green validation pass, so the current head must be revalidated before release freeze.
+The implementation and final browser-navigation fix are already validated. 1.0.9 is a Marketplace hotfix version bump so the corrected build can be published after 1.0.8 was uploaded too early.
 
-1. Run `npm run test:unit`.
-2. Run `npm run compile`.
-3. Run `npm run test:browser`.
-4. Run `npm run audit:self`.
-5. If all are green, run the final release gate: `npm run release:readiness`.
-6. Review `release-artifacts/readiness/readiness.json`, browser evidence, and the produced VSIX/hash.
-7. Keep main-push CI path-gated unless/until that workflow policy is intentionally changed.
+1. Pull the 1.0.9 metadata changes.
+2. Run `npm run release:readiness` once to produce `release-artifacts/documint-1.0.9.vsix`.
+3. Create/push the `v1.0.9` tag so the GitHub Release workflow publishes the matching GitHub asset.
+4. Publish `documint-1.0.9.vsix` to the VS Code Marketplace.
+5. Keep main-push CI path-gated unless/until that workflow policy is intentionally changed.
 
 
 
