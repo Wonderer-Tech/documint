@@ -39,6 +39,7 @@ import "./localProviderDiscovery.test";
 import "./localProviderPolicy.test";
 import "./localProviderRuntime.test";
 import "./localReadmeFacts.test";
+import "./localSecurityFacts.test";
 import "./localSelfAudit.test";
 import "./manifestMetadata.test";
 import "./markdownEscaping.test";
