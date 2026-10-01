@@ -73,22 +73,25 @@ with sync_playwright() as playwright:
                     == "location"
                 )
                 map_nav.locator('a[href="#localMapBigSection"]').click()
-                page.wait_for_timeout(120)
-                assert page.evaluate("location.hash") == "#localMapBigSection"
-                assert (
-                    map_nav.locator('a[href="#localMapBigSection"]').get_attribute(
-                        "aria-current"
-                    )
-                    == "location"
+                page.wait_for_function(
+                    """() => {
+                        const link = document.querySelector(
+                            '#localMapNav a[href="#localMapBigSection"]'
+                        );
+                        return location.hash === '#localMapBigSection' &&
+                            link?.getAttribute('aria-current') === 'location';
+                    }"""
                 )
 
                 page.evaluate("location.hash = '#localMapLookupSection'")
-                page.wait_for_timeout(120)
-                assert (
-                    map_nav.locator('a[href="#localMapLookupSection"]').get_attribute(
-                        "aria-current"
-                    )
-                    == "location"
+                page.wait_for_function(
+                    """() => {
+                        const link = document.querySelector(
+                            '#localMapNav a[href="#localMapLookupSection"]'
+                        );
+                        return location.hash === '#localMapLookupSection' &&
+                            link?.getAttribute('aria-current') === 'location';
+                    }"""
                 )
                 page.evaluate("location.hash = '#localMapMissingSection'")
                 page.wait_for_timeout(80)
