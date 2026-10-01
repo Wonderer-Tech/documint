@@ -1610,6 +1610,8 @@ function buildLocalCodeMapScript(
   var searchHits = [];
   var searchIndex = -1;
   var searchExpanded = false;
+  var moduleGraphState = null;
+  var moduleGraphPointer = null;
 
   function makeSvg(tag, attrs, parent) {
     var node = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -2325,16 +2327,16 @@ function buildLocalCodeMapScript(
       }
     }
 
-    var nodeWidth = 184;
-    var columnSpacing = 228;
-    var sidePadding = 116;
+    var nodeWidth = 144;
+    var columnSpacing = 224;
+    var sidePadding = 96;
     var width = Math.max(
       minimumWidth || 960,
       sidePadding * 2 + Math.max(0, maxLevel) * columnSpacing
     );
-    var rowSpacing = 112;
-    var topPadding = 96;
-    var bottomPadding = 76;
+    var rowSpacing = 96;
+    var topPadding = 84;
+    var bottomPadding = 64;
     var maxRows = Math.max.apply(
       null,
       Array.from(groups.values()).map(function (group) { return group.length; }).concat([1])
@@ -2387,8 +2389,8 @@ function buildLocalCodeMapScript(
     var length = Math.sqrt(dx * dx + dy * dy) || 1;
     var ux = dx / length;
     var uy = dy / length;
-    var halfW = 96;
-    var halfH = 41;
+    var halfW = 76;
+    var halfH = 31;
     var tx = Math.abs(ux) > 0.0001 ? halfW / Math.abs(ux) : Infinity;
     var ty = Math.abs(uy) > 0.0001 ? halfH / Math.abs(uy) : Infinity;
     var distance = Math.min(tx, ty);
@@ -2737,22 +2739,22 @@ function buildLocalCodeMapScript(
       }, svg);
       applyModulePalette(g, modules.indexOf(module));
       makeSvg('rect', {
-        x: pos.x - 92,
-        y: pos.y - 37,
-        width: 184,
-        height: 74,
-        rx: 12,
+        x: pos.x - 72,
+        y: pos.y - 28,
+        width: 144,
+        height: 56,
+        rx: 10,
         filter: 'url(#localMapSketch)'
       }, g);
       var title = makeSvg('text', {
         x: pos.x,
-        y: pos.y - 10,
+        y: pos.y - 7,
         'text-anchor': 'middle'
       }, g);
       title.textContent = module.name;
       var meta = makeSvg('text', {
         x: pos.x,
-        y: pos.y + 7,
+        y: pos.y + 6,
         class: 'local-map-module-meta',
         'text-anchor': 'middle'
       }, g);
@@ -2760,7 +2762,7 @@ function buildLocalCodeMapScript(
       if (startFile) {
         var start = makeSvg('text', {
           x: pos.x,
-          y: pos.y + 23,
+          y: pos.y + 19,
           class: 'local-map-module-start',
           'text-anchor': 'middle'
         }, g);
