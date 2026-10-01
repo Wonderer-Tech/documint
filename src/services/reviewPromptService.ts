@@ -16,6 +16,7 @@ const REVIEW_ACTION = "Rate & Review";
 const FEEDBACK_ACTION = "Tell us what to improve";
 const LATER_ACTION = "Later";
 const DISABLE_ACTION = "Don't ask again";
+const PROMPT_DELAY_MS = 1400;
 
 export class ReviewPromptService {
   constructor(private readonly context: vscode.ExtensionContext) {}
@@ -31,6 +32,14 @@ export class ReviewPromptService {
       return;
     }
 
+    setTimeout(() => {
+      void this.showPrompt(decision.state).catch((error) => {
+        console.error("[Documint] review prompt error:", error);
+      });
+    }, PROMPT_DELAY_MS);
+  }
+
+  private async showPrompt(state: ReviewPromptState): Promise<void> {
     const selection = await vscode.window.showInformationMessage(
       "Enjoying DocuMint? Please review us — what should we improve?",
       REVIEW_ACTION,
@@ -42,7 +51,7 @@ export class ReviewPromptService {
     if (selection === REVIEW_ACTION) {
       await this.context.globalState.update(
         REVIEW_STATE_KEY,
-        completeReviewPrompt(decision.state),
+        completeReviewPrompt(state),
       );
       await vscode.env.openExternal(vscode.Uri.parse(MARKETPLACE_REVIEW_URL));
       return;
@@ -62,7 +71,7 @@ export class ReviewPromptService {
 
       await this.context.globalState.update(
         REVIEW_STATE_KEY,
-        completeReviewPrompt(decision.state),
+        completeReviewPrompt(state),
       );
 
       const issue = new URL(FEEDBACK_ISSUE_URL);
@@ -85,7 +94,7 @@ export class ReviewPromptService {
     if (selection === DISABLE_ACTION) {
       await this.context.globalState.update(
         REVIEW_STATE_KEY,
-        disableReviewPrompt(decision.state),
+        disableReviewPrompt(state),
       );
     }
   }
