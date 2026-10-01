@@ -53,6 +53,7 @@ _Last updated: 2026-10-01_
 - ✅ Reintroduced restrained Jelly softness into the Local prototype shell without abandoning the paper-grid design: major cards/panels use translucent gradients, softer borders/radii and low-amplitude depth; topbar/nav use bounded blur/saturation rather than applying expensive blur to every child card.
 - ✅ Added a bounded soft-motion layer: nav underline state, buttons, file tiles, Data-model cards, search focus, Big Picture focus/semantic states, tooltips, and reader-header controls transition with an ease-out curve; `prefers-reduced-motion` collapses motion and the stylesheet avoids blanket `transition: all`.
 - ✅ Added a native review/feedback prompt policy: first eligible after three successful generations, then at most once per seven days; due prompts can also surface on a later activation. **Review on Marketplace** opens the Marketplace review section directly, **Tell us what to improve** opens a prefilled GitHub feedback issue directly, and **Later** / **Don't ask again** remain explicit choices; no feedback is transmitted automatically.
+- ✅ Bumped the release candidate to **1.0.8** and rebuilt the README around the new Local Project Map: new self-documenting screenshots replace the old README image links, 1.0.8 highlights and a 1.0.7-vs-1.0.8 comparison are explicit, and README-only media remains excluded from the VSIX.
 - ✅ Removed the now-unused Local architecture `summary` rendering branch after **Big picture** became the sole HTML architecture surface; the architecture renderer is Markdown-only again.
 - ✅ Local HTML disables required external CDN assets; the Local project-map experience is self-contained.
 - ✅ Hardened Markdown→HTML rendering in both Local and AI modes: source/provider raw HTML is neutralized outside code, source-derived prose is escaped as plain Markdown text, and unsafe rendered link/image URLs are blocked.
@@ -84,13 +85,13 @@ _Last updated: 2026-10-01_
 - ✅ Added `npm run lockfile:bootstrap` for authenticated GitHub CLI dispatch of Lockfile Bootstrap on the current branch, with explicit `DOCUMINT_BOOTSTRAP_REF` / `DOCUMINT_BOOTSTRAP_REPO` overrides; this avoids manual Actions UI navigation without granting repository write behavior.
 - ✅ Added a shared lockfile policy plus `npm run lockfile:adopt -- <artifact>`: downloaded Bootstrap artifacts are validated against the current package identity/dependency maps before the root lockfile is replaced, Bootstrap `package-lock.sha256` metadata is verified when present, and the adopted SHA-256 is rechecked; checksum/identity rejection leaves the existing root lockfile unchanged, and the artifact itself carries the exact adoption command.
 - ✅ Browser acceptance uses a cross-platform Python 3 launcher with `DOCUMINT_PYTHON` override support, and release readiness preflights Playwright/Chromium before verify/browser/package execution.
-- ⏳ Unit/regression, compile/bundle, browser acceptance, and self-audit were green before the review-prompt feature was added. Re-run the normal validation gates for the current head before release readiness.
-- ⏳ Final release-candidate evidence still requires `npm run release:readiness` after the current head is green.
+- ⏳ Unit/regression, compile/bundle, browser acceptance, and self-audit were green before the final 1.0.8 review-prompt/README/version pass. Re-run the normal validation gates for the current 1.0.8 head before release readiness.
+- ⏳ Final 1.0.8 release-candidate evidence still requires `npm run release:readiness` after the current head is green.
 - ⏳ README demo GIF compression remains optional polish; the binary remains excluded from VSIX packaging.
 
 ### Current next step
 
-The review/feedback prompt was added after the previous green validation pass, so the current head must be revalidated before release freeze.
+The 1.0.8 review/feedback prompt, README refresh, screenshot set, packaging policy update, and version bump landed after the previous green validation pass, so the current head must be revalidated before release freeze.
 
 1. Run `npm run test:unit`.
 2. Run `npm run compile`.
