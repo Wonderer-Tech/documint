@@ -82,6 +82,19 @@ const data: LocalCodeMapData = {
     },
   ],
   referencedEnvironmentVariables: ["API_TOKEN", "LOG_LEVEL"],
+  dataModel: {
+    entityCount: 2,
+    sources: [
+      {
+        path: "src/services/run.ts",
+        format: "Mongoose",
+        entities: [
+          { name: "Job", kind: "model", fields: ["id", "status"] },
+          { name: "RunOptions", kind: "schema", fields: ["mode", "token"] },
+        ],
+      },
+    ],
+  },
   gettingStarted: {
     packageJsonPath: "package.json",
     packageManager: "npm",
@@ -127,6 +140,8 @@ test("Local code map exposes question-first interactive surfaces without externa
   assert.match(fragments.markup, /How do the parts fit together\?/);
   assert.match(fragments.markup, /How to run/);
   assert.match(fragments.markup, /How do I build, test, or start this project\?/);
+  assert.match(fragments.markup, /Data model/);
+  assert.match(fragments.markup, /What structured data shapes does this project declare\?/);
   assert.match(fragments.markup, /What's inside/);
   assert.match(fragments.markup, /Start here/);
   assert.match(fragments.markup, /Dependency reach/);
@@ -154,6 +169,7 @@ test("Local project map exposes accessible in-map section navigation and current
   assert.match(fragments.markup, /href="#localMapRuntimeSection"/);
   assert.match(fragments.markup, /href="#localMapRunSection"/);
   assert.match(fragments.markup, /href="#localMapInterfacesSection"/);
+  assert.match(fragments.markup, /href="#localMapDataSection"/);
   assert.match(fragments.markup, /href="#localMapSizeSection"/);
   assert.match(fragments.markup, /href="#localMapReadSection"/);
   assert.match(fragments.markup, /href="#localMapReachSection"/);
@@ -257,6 +273,27 @@ test("Local code map connects module focus and file-card navigation", () => {
   assert.match(fragments.script, /revealFullDocumentation/);
   assert.match(fragments.script, /Open full file documentation/);
   assert.match(fragments.script, /data-documint-file-path/);
+});
+
+
+test("Local Data model is conditional, source-grounded and uses soft Jelly cards", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.markup, /id="localMapDataSection"/);
+  assert.match(fragments.markup, /id="localMapDataModel"/);
+  assert.match(fragments.markup, /Prisma, SQL, GraphQL, OpenAPI, Mongoose, or Drizzle/);
+  assert.match(fragments.script, /function renderDataModel/);
+  assert.match(fragments.script, /data\.dataModel/);
+  assert.match(fragments.script, /local-map-schema-source/);
+  assert.match(fragments.script, /Job/);
+  assert.match(fragments.script, /RunOptions/);
+  assert.match(fragments.script, /setOptionalSectionVisibility\([\s\S]*'localMapDataSection'/);
+
+  assert.match(fragments.styles, /--map-jelly-surface:/);
+  assert.match(fragments.styles, /--map-jelly-shadow:/);
+  assert.match(fragments.styles, /\.local-map-schema-source/);
+  assert.match(fragments.styles, /linear-gradient\(145deg, var\(--map-jelly-surface\), var\(--map-jelly-surface-soft\)\)/);
+  assert.match(fragments.styles, /box-shadow: var\(--map-jelly-shadow\)/);
 });
 
 
