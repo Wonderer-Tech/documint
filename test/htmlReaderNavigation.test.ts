@@ -62,6 +62,11 @@ test("reader styling and runtime retain keyboard, mobile, and storage boundaries
   assert.match(READER_SEARCH_SCRIPT, /aria-activedescendant/);
   assert.doesNotMatch(READER_SEARCH_SCRIPT, /\.innerHTML\s*=/);
   assert.match(READER_NAVIGATION_SCRIPT, /topbar\.insertBefore\(context, topbarSpacer\)/);
+  assert.match(READER_NAVIGATION_SCRIPT, /locationWrap\.classList\.toggle\('project-overview', projectOverview\)/);
+  assert.match(READER_NAVIGATION_SCRIPT, /item\.id === 'localMapProjectTitle'/);
+  assert.match(READER_NAVIGATION_SCRIPT, /\? 'Overview'/);
+  assert.match(READER_STYLES, /\.reader-location\.project-overview/);
+  assert.match(READER_STYLES, /\.reader-location\.project-overview \.reader-location-text \{ display: none/);
   assert.match(READER_STYLES, /\.reader-context \{ position: static/);
   assert.doesNotMatch(READER_STYLES, /\.reader-context \{ position: sticky/);
   assert.match(READER_STYLES, /reader-drawer-open/);
