@@ -31,14 +31,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies from lockfile
-        if: ${{ hashFiles('package-lock.json') != '' }}
         run: npm ci --no-audit --no-fund
-
-      - name: Install dependencies without lockfile
-        if: ${{ hashFiles('package-lock.json') == '' }}
-        run: |
-          echo "::warning::package-lock.json is missing; using npm install until the lockfile is committed."
-          npm install --no-audit --no-fund
 
       - name: Verify DocuMint
         run: npm run verify
