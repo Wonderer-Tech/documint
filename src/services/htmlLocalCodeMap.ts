@@ -2899,7 +2899,13 @@ function buildLocalCodeMapScript(
           : 'dependency layer ' + column.level;
     });
 
-    edgeCounts.forEach(function (edge) {
+    var entryModules = Array.from(new Set(
+      data.files
+        .filter(function (file) { return file.entryPoint; })
+        .map(function (file) { return file.module; })
+    ));
+
+    edgeCounts.forEach(function (edge, edgeIndex) {
       var a = positions.get(edge.from), b = positions.get(edge.to);
       if (!a || !b) return;
 
@@ -2918,26 +2924,8 @@ function buildLocalCodeMapScript(
         : 0;
       var levelSpan = Math.abs((a.level || 0) - (b.level || 0));
       var control = null;
-
-      if (levelSpan === 0) {
-        var sameLevelDirection = edge.from.localeCompare(edge.to) < 0 ? -1 : 1;
-        var sameLevelOffset = 118 * sameLevelDirection;
-        control = {
-          x: a.x + sameLevelOffset,
-          y: (a.y + b.y) / 2
-        };
-        start = clipModuleEdge(a, control);
-        end = clipModuleEdge(b, control);
-      } else if (levelSpan > 1 && !reciprocal) {
-        var curveDirection = edge.from.localeCompare(edge.to) < 0 ? -1 : 1;
-        var curveOffset = Math.min(44, 18 + levelSpan * 7) * curveDirection;
-        control = {
-          x: (a.x + b.x) / 2 + nx * curveOffset,
-          y: (a.y + b.y) / 2 + ny * curveOffset
-        };
-        start = clipModuleEdge(a, control);
-        end = clipModuleEdge(b, control);
-      }
+      var control1 = null;
+      var control2 = null;
 
       if (reciprocalOffset) {
         start.x += nx * reciprocalOffset;
@@ -2946,11 +2934,53 @@ function buildLocalCodeMapScript(
         end.y += ny * reciprocalOffset;
       }
 
+      if (levelSpan === 0) {
+        var sameLevelDirection = edge.from.localeCompare(edge.to) < 0 ? -1 : 1;
+        var sameLevelOffset = 92 * sameLevelDirection;
+        control = {
+          x: a.x + sameLevelOffset,
+          y: (a.y + b.y) / 2
+        };
+        start = clipModuleEdge(a, control);
+        end = clipModuleEdge(b, control);
+      } else {
+        var horizontalDirection = end.x >= start.x ? 1 : -1;
+        var horizontalDistance = Math.abs(end.x - start.x);
+        var bend = Math.max(30, Math.min(92, horizontalDistance * 0.38));
+        var laneOffset = ((edgeIndex % 7) - 3) * 5 + reciprocalOffset;
+        control1 = {
+          x: start.x + horizontalDirection * bend,
+          y: start.y + laneOffset
+        };
+        control2 = {
+          x: end.x - horizontalDirection * bend,
+          y: end.y + laneOffset
+        };
+      }
+
       var strengthClass =
         edge.count >= 5 ? ' strong' : edge.count >= 2 ? ' mid' : '';
+      var majorLink =
+        edge.count >= 2 ||
+        entryModules.includes(edge.from) ||
+        entryModules.includes(edge.to);
+      var secondaryClass = majorLink ? '' : ' secondary';
       var path = makeSvg('path', {
-        d: buildOpenArrowPath(start, end, control, edge.count >= 5 ? 12 : 10.5),
-        class: 'local-map-module-edge' + strengthClass,
+        d: control1 && control2
+          ? buildCubicOpenArrowPath(
+              start,
+              end,
+              control1,
+              control2,
+              edge.count >= 5 ? 11 : 9.5
+            )
+          : buildOpenArrowPath(
+              start,
+              end,
+              control,
+              edge.count >= 5 ? 11 : 9.5
+            ),
+        class: 'local-map-module-edge' + strengthClass + secondaryClass,
         filter: 'url(#localMapSketch)',
         'data-from': edge.from,
         'data-to': edge.to
@@ -2961,14 +2991,16 @@ function buildLocalCodeMapScript(
         (edge.count === 1 ? ' cross-module import' : ' cross-module imports');
 
       if (edge.count >= 2) {
-        var midpoint = control
-          ? quadraticMidpoint(start, control, end)
-          : {
-              x: (start.x + end.x) / 2,
-              y: (start.y + end.y) / 2
-            };
+        var midpoint = control1 && control2
+          ? cubicMidpoint(start, control1, control2, end)
+          : control
+            ? quadraticMidpoint(start, control, end)
+            : {
+                x: (start.x + end.x) / 2,
+                y: (start.y + end.y) / 2
+              };
         var label = makeSvg('g', {
-          class: 'local-map-edge-label',
+          class: 'local-map-edge-label' + secondaryClass,
           'data-from': edge.from,
           'data-to': edge.to
         }, svg);
@@ -2989,11 +3021,6 @@ function buildLocalCodeMapScript(
       }
     });
 
-    var entryModules = Array.from(new Set(
-      data.files
-        .filter(function (file) { return file.entryPoint; })
-        .map(function (file) { return file.module; })
-    ));
     var connectivity = new Map();
     modules.forEach(function (module) { connectivity.set(module.name, 0); });
     edgeCounts.forEach(function (edge) {
@@ -3132,77 +3159,14 @@ function buildLocalCodeMapScript(
       });
     });
 
-    function addNote(moduleName, text, offsetX, offsetY) {
-      var pos = positions.get(moduleName);
-      if (!pos || !text) return;
-      var noteMargin = 14;
-      var desiredX = pos.x + offsetX;
-      var noteX = desiredX;
-      var noteY = Math.max(20, Math.min(height - 16, pos.y + offsetY));
-      var note = makeSvg('text', {
-        x: noteX,
-        y: noteY,
-        class: 'local-map-note',
-        'text-anchor': offsetX < 0 ? 'end' : 'start'
-      }, svg);
-      note.textContent = text;
+    renderModuleInsights(
+      entryModules,
+      mostConnected,
+      largestModule,
+      connectivity
+    );
+    initModuleGraphControls(svg, width, height, edgeCounts.length);
 
-      var noteWidth = 0;
-      try { noteWidth = note.getComputedTextLength(); } catch (_) {}
-      if (!Number.isFinite(noteWidth) || noteWidth <= 0) {
-        noteWidth = text.length * 7.2;
-      }
-      noteWidth = Math.min(noteWidth, width - noteMargin * 2);
-      noteX = offsetX < 0
-        ? Math.max(noteMargin + noteWidth, Math.min(width - noteMargin, desiredX))
-        : Math.max(noteMargin, Math.min(width - noteMargin - noteWidth, desiredX));
-      note.setAttribute('x', String(noteX));
-
-      var noteStart = {
-        x: noteX + (offsetX < 0 ? 8 : -8),
-        y: noteY + 4
-      };
-      var noteEnd = {
-        x: pos.x + (offsetX < 0 ? -88 : 88),
-        y: pos.y - 24
-      };
-      var noteControl = {
-        x: (noteStart.x + noteEnd.x) / 2,
-        y: (noteStart.y + noteEnd.y) / 2 - 9
-      };
-      makeSvg('path', {
-        d: buildOpenArrowPath(noteStart, noteEnd, noteControl, 9),
-        class: 'local-map-note-line',
-        filter: 'url(#localMapSketch)'
-      }, svg);
-    }
-
-    if (entryModules.length) {
-      addNote(entryModules[0], 'detected entry module', -108, -52);
-    }
-    if (
-      mostConnected &&
-      (!entryModules.length || mostConnected.name !== entryModules[0])
-    ) {
-      addNote(
-        mostConnected.name,
-        'cross-module links: ' + (connectivity.get(mostConnected.name) || 0),
-        104,
-        -50
-      );
-    }
-    if (
-      largestModule &&
-      (!entryModules.length || largestModule.name !== entryModules[0]) &&
-      (!mostConnected || largestModule.name !== mostConnected.name)
-    ) {
-      addNote(
-        largestModule.name,
-        'largest module: ' + formatNumber(largestModule.lines) + ' lines',
-        105,
-        54
-      );
-    }
   }
 
   function splitLayout(items, x, y, w, h, vertical) {
