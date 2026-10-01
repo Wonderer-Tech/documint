@@ -29,6 +29,7 @@ import "./htmlReaderNavigation.test";
 import "./htmlTemplatePolicy.test";
 import "./localArchitectureDocumentation.test";
 import "./localBuildFacts.test";
+import "./localDataModelFacts.test";
 import "./localDocumentationCache.test";
 import "./localDocumentationDocument.test";
 import "./localDocumentationModel.test";
