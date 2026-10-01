@@ -26,6 +26,9 @@ export const READER_STYLES = String.raw`
 .reader-location { flex: 1 1 130px; min-width: 90px; max-width: 190px; line-height: 1.2; }
 .reader-location-label { display: block; margin-bottom: 1px; font-size: 8px; font-weight: 750; letter-spacing: .08em; color: var(--text-muted); text-transform: uppercase; }
 .reader-location-text { display: -webkit-box; max-height: 28px; overflow: hidden; color: var(--text-primary); font-size: 11px; font-weight: 650; line-height: 1.2; overflow-wrap: anywhere; word-break: break-word; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.reader-location.project-overview { flex: 0 0 auto; max-width: none; }
+.reader-location.project-overview .reader-location-label { margin: 0; font-size: 9px; white-space: nowrap; }
+.reader-location.project-overview .reader-location-text { display: none; }
 .reader-context .reader-button { min-height: 30px; padding: 4px 8px; border-radius: 7px; background: transparent; box-shadow: none; }
 .reader-context .reader-button:disabled { display: none; }
 .reader-outline { width: min(250px, 38%); min-width: 150px; min-height: 30px; padding: 4px 28px 4px 8px; border: 1px solid var(--jelly-border); border-radius: 8px; font: inherit; font-size: 10.5px; color: var(--text-secondary); background: var(--bg-secondary); }
