@@ -135,6 +135,25 @@ with sync_playwright() as playwright:
                 assert "make verify" in onboarding_text
                 assert "node:22-alpine" in onboarding_text
                 assert "API_TOKEN" in onboarding_text
+
+                assert page.locator("#localMapRuntimeSection").is_visible(), name
+                runtime_text = page.locator("#localMapRuntimeSection").inner_text()
+                assert "Entry points" in runtime_text
+                assert "Direct project imports" in runtime_text
+
+                assert page.locator("#localMapInterfacesSection").is_visible(), name
+                interfaces_text = page.locator("#localMapInterfacesSection").inner_text()
+                assert "documint.generate" in interfaces_text
+                assert "documint.generationMode" in interfaces_text
+                assert "API_TOKEN" in interfaces_text
+                assert "3000" in interfaces_text
+
+                assert page.locator("#localMapVerificationSection").is_visible(), name
+                verification_text = page.locator("#localMapVerificationSection").inner_text()
+                assert "npm run compile" in verification_text
+                assert "npm run test" in verification_text
+                assert "make verify" in verification_text
+
                 assert page.locator("h2", has_text="How to run").count() == 0
                 assert page.locator("h2", has_text="Referenced environment variables").count() == 0
                 page.locator("#localMapModules .local-map-module-node").first.click()
