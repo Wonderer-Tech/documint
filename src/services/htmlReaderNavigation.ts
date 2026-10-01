@@ -178,15 +178,22 @@ function initializeReaderNavigation() {
     nav.querySelectorAll('.toc-link.active, .toc-link[aria-current]').forEach(function (link) { link.classList.remove('active'); link.removeAttribute('aria-current'); });
     var active = file ? file.link : Array.from(nav.querySelectorAll('.toc-link')).find(function (link) { return link.getAttribute('href') === '#' + id; });
     if (active) { active.classList.add('active'); active.setAttribute('aria-current', 'location'); }
+    var projectOverview = !file;
     contextLabel.textContent = file ? 'Reading file' : 'Project overview';
-    contextText.textContent = file ? file.path : entry.text;
-    contextText.title = contextText.textContent;
+    locationWrap.classList.toggle('project-overview', projectOverview);
+    contextText.textContent = file ? file.path : '';
+    contextText.title = file ? file.path : '';
     reveal.disabled = !file;
     var ownerId = file ? file.id : '';
     if (currentOwner !== ownerId) {
       currentOwner = ownerId; outline.replaceChildren();
       readerEntries.filter(function (item) { return (item.file ? item.file.id : '') === ownerId; }).forEach(function (item) {
-        var option = document.createElement('option'); option.value = item.id; option.textContent = item.text;
+        var option = document.createElement('option');
+        option.value = item.id;
+        option.textContent =
+          projectOverview && item.id === 'localMapProjectTitle'
+            ? 'Overview'
+            : item.text;
         outline.appendChild(option);
       });
     }
