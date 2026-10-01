@@ -183,7 +183,9 @@
             "html",
             "css",
             "scss",
-            "sql"
+            "sql",
+            "prisma",
+            "graphql"
           ],
           "description": "Languages and source-file types included in workspace/folder scanning. Applies to both AI and Local modes."
         },
@@ -324,7 +326,9 @@
             "html",
             "css",
             "scss",
-            "sql"
+            "sql",
+            "prisma",
+            "graphql"
           ],
           "description": "Languages and source-file types included in workspace/folder scanning. Applies to both AI and Local modes.",
           "deprecationMessage": "Deprecated setting key. Use documint.targetLanguages instead."
