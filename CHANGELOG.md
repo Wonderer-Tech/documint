@@ -24,6 +24,7 @@ All notable changes to DocuMint are documented here.
 
 - Added a manual-only **Lockfile Bootstrap** workflow that generates `package-lock.json` on a network-enabled runner, validates clean locked installation/dependency resolution, records SHA-256 metadata, and uploads the lockfile as an artifact without repository write permission. Its default `run_readiness=true` input also runs full verify/browser/VSIX readiness against the transient lockfile so release behavior can be tested before committing it.
 - Added `npm run lockfile:validate` so readiness/bootstrap reject lockfiles whose root name/version or dependency maps drift from `package.json`.
+- CI now treats the committed `package-lock.json` as mandatory and installs only with `npm ci --no-audit --no-fund`; the temporary no-lockfile `npm install` fallback has been removed.
 
 - Added a manual-only **Release Readiness** workflow that runs the same strict local readiness gate and uploads evidence/VSIX artifacts without enabling normal main-push CI.
 - Browser acceptance scripts now use a cross-platform Python 3 launcher (`python3`, `python`, or Windows `py -3`) with an optional `DOCUMINT_PYTHON` override.
