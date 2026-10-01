@@ -107,12 +107,12 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     height: var(--topbar-h);
     padding: 0 20px;
     border: 0;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
     border-radius: 0;
-    background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
-    box-shadow: none;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: color-mix(in srgb, var(--bg-primary) 82%, transparent);
+    box-shadow: 0 8px 30px color-mix(in srgb, var(--text-primary) 6%, transparent);
+    backdrop-filter: blur(14px) saturate(1.06);
+    -webkit-backdrop-filter: blur(14px) saturate(1.06);
   }
   .documint-local-report .topbar-client {
     padding: 4px 0;
@@ -139,9 +139,11 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   .documint-local-report .sidebar-filter,
   .documint-local-report .theme-btn {
     border-color: var(--border);
-    border-radius: 9px;
-    background: var(--bg-secondary);
-    box-shadow: none;
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--bg-secondary) 88%, transparent);
+    box-shadow:
+      0 4px 14px color-mix(in srgb, var(--text-primary) 5%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--bg-primary) 78%, transparent);
   }
   .documint-local-report .search-input:focus,
   .documint-local-report .sidebar-filter:focus {
@@ -163,8 +165,10 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     border: 0;
     border-right: 1px solid var(--border);
     border-radius: 0;
-    background: color-mix(in srgb, var(--bg-primary) 94%, var(--bg-secondary));
-    box-shadow: none;
+    background: color-mix(in srgb, var(--bg-primary) 91%, var(--bg-secondary));
+    box-shadow:
+      inset -1px 0 0 color-mix(in srgb, var(--border) 72%, transparent),
+      8px 0 28px color-mix(in srgb, var(--text-primary) 3%, transparent);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
@@ -223,10 +227,14 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     max-width: 1120px;
     margin: 0 auto 18px;
     padding: 10px 14px;
-    border-color: var(--border);
-    border-radius: 10px;
-    background: var(--bg-secondary);
-    box-shadow: none;
+    border-color: color-mix(in srgb, var(--border) 82%, transparent);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--bg-secondary) 88%, transparent);
+    box-shadow:
+      0 10px 28px color-mix(in srgb, var(--text-primary) 5%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--bg-primary) 80%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   .documint-local-report .stat-item {
     padding: 2px 6px;
@@ -423,9 +431,10 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
   .local-map-badge {
     flex: none;
     padding: 6px 11px;
-    border: 1px solid var(--map-line);
+    border: 1px solid var(--map-jelly-edge);
     border-radius: 20px;
-    background: var(--map-card);
+    background: linear-gradient(145deg, var(--map-jelly-surface), var(--map-jelly-surface-soft));
+    box-shadow: 0 7px 18px color-mix(in srgb, var(--map-ink) 5%, transparent);
     color: var(--map-muted);
     font-family: var(--map-mono);
     font-size: 11px;
@@ -443,8 +452,10 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     padding: 9px 0 10px;
     border-top: 1px solid color-mix(in srgb, var(--map-line) 80%, transparent);
     border-bottom: 1px solid var(--map-line);
-    background: color-mix(in srgb, var(--map-paper) 88%, transparent);
-    backdrop-filter: blur(8px);
+    background: color-mix(in srgb, var(--map-paper) 84%, transparent);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--map-ink) 5%, transparent);
+    backdrop-filter: blur(12px) saturate(1.04);
+    -webkit-backdrop-filter: blur(12px) saturate(1.04);
     scrollbar-width: none;
   }
   .local-map-nav::-webkit-scrollbar { display: none; }
