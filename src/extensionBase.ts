@@ -16,6 +16,7 @@ import {
 import { generationRunContext } from "./services/generationRunContext";
 import { normalizeGenerationMode } from "./services/generationMode";
 import { normalizeDocumentationDepth } from "./services/generationDepth";
+import { ReviewPromptService } from "./services/reviewPromptService";
 import { ProviderFactory } from "./providers/providerFactory";
 import { resolveProviderSelection } from "./providers/providerSelection";
 import { evaluateCustomEndpoint } from "./providers/customEndpointPolicy";
@@ -62,6 +63,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   const docGenerator = new DocGeneratorService(context, secretManager);
   const localDocGenerator = new LocalDocumentationGenerator();
+  const reviewPromptService = new ReviewPromptService(context);
   let activeCancellationSource: vscode.CancellationTokenSource | undefined;
 
   function resolveRunProvider(provider?: string): string {
@@ -232,6 +234,9 @@ export function activate(context: vscode.ExtensionContext) {
           "Local Documentation generation completed!",
           "success",
         );
+        void reviewPromptService.recordSuccessfulGeneration().catch((error) => {
+          console.error("[Documint] review prompt state error:", error);
+        });
 
         const actions: string[] = [];
         if (outputPaths.html) actions.push("Open HTML");
@@ -413,6 +418,9 @@ export function activate(context: vscode.ExtensionContext) {
         "Documentation generation completed!",
         "success",
       );
+      void reviewPromptService.recordSuccessfulGeneration().catch((error) => {
+        console.error("[Documint] review prompt state error:", error);
+      });
 
       const actions: string[] = [];
       if (outputPaths.html) actions.push("Open HTML");
