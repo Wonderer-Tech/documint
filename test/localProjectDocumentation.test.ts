@@ -132,7 +132,42 @@ test("local project overview renders package scripts and VS Code manifest facts 
 });
 
 
-test("local project Markdown adds Data Model only when direct schema evidence exists", () => {\n  const schemaFiles: WorkspaceFile[] = [\n    {\n      path: "db/schema.sql",\n      language: "sql",\n      content: [\n        "CREATE TABLE users (",\n        "  id INTEGER PRIMARY KEY,",\n        "  email TEXT NOT NULL",\n        ");",\n      ].join("\\n"),\n    },\n  ];\n  const schemaProject = analyzer.analyzeProject(schemaFiles);\n  const output = renderLocalProjectDocumentation({\n    projectName: "Schema Project",\n    files: schemaFiles,\n    project: schemaProject,\n  });\n\n  assert.match(output, /## Data Model/);\n  assert.match(output, /db\\/schema\\.sql/);\n  assert.match(output, /`SQL`/);\n  assert.match(output, /`users`/);\n  assert.match(output, /`email`/);\n\n  const plain = renderLocalProjectDocumentation({\n    projectName: "Example Project",\n    files,\n    project,\n  });\n  assert.doesNotMatch(plain, /## Data Model/);\n});\n\ntest("Local overview uses portable relative source links", () => {
+test("local project Markdown adds Data Model only when direct schema evidence exists", () => {
+  const schemaFiles: WorkspaceFile[] = [
+    {
+      path: "db/schema.sql",
+      language: "sql",
+      content: [
+        "CREATE TABLE users (",
+        "  id INTEGER PRIMARY KEY,",
+        "  email TEXT NOT NULL",
+        ");",
+      ].join("\n"),
+    },
+  ];
+  const schemaProject = analyzer.analyzeProject(schemaFiles);
+  const output = renderLocalProjectDocumentation({
+    projectName: "Schema Project",
+    files: schemaFiles,
+    project: schemaProject,
+  });
+
+  assert.match(output, /## Data Model/);
+  assert.match(output, /db\/schema\.sql/);
+  assert.match(output, /`SQL`/);
+  assert.match(output, /`users`/);
+  assert.match(output, /`email`/);
+
+  const plain = renderLocalProjectDocumentation({
+    projectName: "Example Project",
+    files,
+    project,
+  });
+  assert.doesNotMatch(plain, /## Data Model/);
+});
+
+
+test("Local overview uses portable relative source links", () => {
   const output = renderLocalProjectDocumentation({
     projectName: "Example Project",
     files,
