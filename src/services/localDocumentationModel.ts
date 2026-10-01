@@ -6,6 +6,7 @@ import type {
 } from "../analyzer/sourceAnalyzer";
 import type { WorkspaceFile } from "../types";
 import { extractLocalDataModelFacts, type LocalDataModelFacts } from "./localDataModelFacts";
+import { extractLocalFailureFacts, type LocalFailureFacts } from "./localFailureFacts";
 import { extractLocalReadmeFacts } from "./localReadmeFacts";
 import { extractLocalSecurityFacts, type LocalSecurityFacts } from "./localSecurityFacts";
 import {
@@ -124,6 +125,7 @@ export interface LocalDocumentationModel {
   suggestedReadingPath: LocalReadingPathItem[];
   dataModel?: LocalDataModelFacts;
   security?: LocalSecurityFacts;
+  failureFacts?: LocalFailureFacts;
 }
 
 export interface BuildLocalDocumentationModelOptions {
@@ -219,6 +221,7 @@ export function buildLocalDocumentationModel(
     })),
     externalDependencies: project.externalDependencies,
   });
+  const failureFacts = extractLocalFailureFacts(sortedFiles, project);
 
   return {
     projectName: cleanText(projectName) || "Project",
@@ -255,6 +258,7 @@ export function buildLocalDocumentationModel(
     suggestedReadingPath,
     dataModel,
     security,
+    failureFacts,
   };
 }
 
