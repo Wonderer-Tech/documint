@@ -286,7 +286,8 @@ test("Local code map adds source-grounded runtime, interfaces and verification s
   assert.match(fragments.script, /function renderVerification/);
   assert.match(fragments.script, /npm run compile/);
   assert.match(fragments.script, /npm run test/);
-  assert.match(fragments.script, /make verify/);
+  assert.match(fragments.script, /'make ' \+ target\.name/);
+  assert.match(fragments.script, /\"name\":\"verify\"/);
   assert.match(fragments.markup, /No check is invented or claimed to be mandatory/);
   assert.match(fragments.styles, /\.local-map-runtime-flow/);
   assert.match(fragments.styles, /\.local-map-interface-grid/);
