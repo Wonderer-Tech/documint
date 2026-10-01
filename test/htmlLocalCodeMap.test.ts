@@ -403,6 +403,19 @@ test("Local HTML adopts the redesign prototype paper-grid visual system", () => 
 });
 
 
+test("Local cards wrap long text inside their visual bounds", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.styles, /overflow-wrap: anywhere/);
+  assert.match(fragments.styles, /word-break: break-word/);
+  assert.match(fragments.styles, /\.local-map-module-card-title/);
+  assert.match(fragments.styles, /-webkit-line-clamp: 2/);
+  assert.match(fragments.script, /makeSvg\('foreignObject'/);
+  assert.match(fragments.script, /local-map-module-card-content/);
+  assert.match(fragments.script, /local-map-module-card-title/);
+});
+
+
 test("Local Big Picture uses prototype-style open arrows and uncluttered edge counts", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
