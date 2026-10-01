@@ -14,7 +14,7 @@ const MARKETPLACE_REVIEW_URL =
 const FEEDBACK_ISSUE_URL =
   "https://github.com/Wonderer-Tech/documint/issues/new";
 
-const REVIEW_ACTION = "Rate & Review";
+const REVIEW_ACTION = "Review on Marketplace";
 const FEEDBACK_ACTION = "Tell us what to improve";
 const LATER_ACTION = "Later";
 const DISABLE_ACTION = "Don't ask again";
@@ -60,7 +60,7 @@ export class ReviewPromptService {
 
   private async showPrompt(state: ReviewPromptState): Promise<void> {
     const selection = await vscode.window.showInformationMessage(
-      "Enjoying DocuMint? Please review us — what should we improve?",
+      "If you love DocuMint and it genuinely helps your work, please review us on the Marketplace.",
       REVIEW_ACTION,
       FEEDBACK_ACTION,
       LATER_ACTION,
@@ -80,25 +80,6 @@ export class ReviewPromptService {
     }
 
     if (selection === FEEDBACK_ACTION) {
-      const feedback = await vscode.window.showInputBox({
-        prompt: "What should we improve in DocuMint?",
-        placeHolder:
-          "Tell us what felt confusing, slow, missing, or could be better…",
-        ignoreFocusOut: true,
-      });
-      const normalized = feedback?.trim();
-      if (!normalized) {
-        return;
-      }
-
-      const latest =
-        this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
-        state;
-      await this.context.globalState.update(
-        REVIEW_STATE_KEY,
-        completeReviewPrompt(latest),
-      );
-
       const issue = new URL(FEEDBACK_ISSUE_URL);
       issue.searchParams.set("title", "DocuMint feedback");
       issue.searchParams.set(
@@ -106,10 +87,11 @@ export class ReviewPromptService {
         [
           "## What should we improve?",
           "",
-          normalized,
+          "<!-- Tell us what felt confusing, slow, missing, or could be better. -->",
           "",
-          "---",
-          "Submitted from the DocuMint review prompt.",
+          "## What worked well?",
+          "",
+          "<!-- Optional: tell us what you liked so we do not break it. -->",
         ].join("\n"),
       );
       await vscode.env.openExternal(vscode.Uri.parse(issue.toString()));
