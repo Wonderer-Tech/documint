@@ -68,8 +68,35 @@ test("README-only media stays out of VSIX while runtime icons remain packageable
     assert.ok(ignored.has(media), `README-only media should be excluded: ${media}`);
   }
 
-  assert.match(readme, /raw\.githubusercontent\.com\/Wonderer-Tech\/documint\/main\/resources\/demo\.gif/);
-  assert.match(readme, /raw\.githubusercontent\.com\/Wonderer-Tech\/documint\/main\/resources\/screenshot1\.png/);
+  for (const screenshot of [
+    "Screenshot%20From%202026-10-01%2012-18-49.png",
+    "Screenshot%20From%202026-10-01%2012-19-21.png",
+    "Screenshot%20From%202026-10-01%2012-20-05.png",
+    "Screenshot%20From%202026-10-01%2012-20-27.png",
+    "Screenshot%20From%202026-10-01%2012-20-38.png",
+  ]) {
+    assert.ok(
+      readme.includes(
+        `https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/${screenshot}`,
+      ),
+      `README should use current 1.0.8 screenshot: ${screenshot}`,
+    );
+  }
+
+  for (const staleMedia of [
+    "resources/demo.gif",
+    "resources/screenshot1.png",
+    "resources/s2.png",
+    "resources/s3.png",
+    "resources/s4.png",
+  ]) {
+    assert.equal(
+      readme.includes(staleMedia),
+      false,
+      `README should not reference legacy media: ${staleMedia}`,
+    );
+  }
+
   assert.match(readme, /`documint\/documentation\.md`/);
   assert.match(readme, /`documint\/documentation\.html`/);
   assert.doesNotMatch(readme, /`docs\/documentation\.(?:md|html)`/);
