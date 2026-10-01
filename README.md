@@ -207,6 +207,10 @@ npm run compile
 6. Click **Generate Documentation** / **Generate Local Documentation** for workspace scope, or use **File** / **Folder** quick buttons.
 7. Open generated files from `documint/`.
 
+### Review & Feedback Prompt
+
+After the first three successful documentation generations, DocuMint may show a native VS Code prompt: **“Enjoying DocuMint? Please review us — what should we improve?”** If dismissed or postponed, it can appear again no more than once every 7 days. **Rate & Review** opens the VS Code Marketplace review page; **Tell us what to improve** opens a prefilled GitHub feedback issue after you enter feedback. Choosing **Don't ask again**, submitting feedback, or opening the review page stops future prompts. The cadence is stored in VS Code extension global state; DocuMint does not send feedback automatically.
+
 ## Commands
 
 Contributed commands:
