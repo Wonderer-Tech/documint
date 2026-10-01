@@ -674,6 +674,21 @@ const LOCAL_CODE_MAP_STYLES = String.raw`
     height: auto;
     background: var(--map-card);
   }
+  .local-map-layer-guide {
+    stroke: color-mix(in srgb, var(--map-line) 58%, transparent);
+    stroke-width: 1;
+    stroke-dasharray: 3 7;
+    pointer-events: none;
+  }
+  .local-map-layer-label {
+    fill: var(--map-muted);
+    font-family: var(--map-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
   .local-map-module-node { cursor: pointer; }
   .local-map-module-node rect {
     fill: var(--module-tint, var(--map-card));
@@ -2068,26 +2083,33 @@ function buildLocalCodeMapScript(
     }
   }
 
-  function layoutModules(modules, edges, width) {
+  function layoutModules(modules, edges, minimumWidth) {
     var names = new Set(modules.map(function (module) { return module.name; }));
     var outgoing = new Map();
+    var incoming = new Map();
     var incomingCount = new Map();
+
     modules.forEach(function (module) {
       outgoing.set(module.name, []);
+      incoming.set(module.name, []);
       incomingCount.set(module.name, 0);
     });
+
     edges.forEach(function (edge) {
       if (!names.has(edge.from) || !names.has(edge.to) || edge.from === edge.to) return;
-      outgoing.get(edge.from).push(edge.to);
+      outgoing.get(edge.from).push({ name: edge.to, weight: Math.max(1, edge.count || 1) });
+      incoming.get(edge.to).push({ name: edge.from, weight: Math.max(1, edge.count || 1) });
       incomingCount.set(edge.to, (incomingCount.get(edge.to) || 0) + 1);
     });
 
-    var roots = Array.from(new Set(
+    var entryRoots = Array.from(new Set(
       data.files
         .filter(function (file) { return file.entryPoint; })
         .map(function (file) { return file.module; })
         .filter(function (name) { return names.has(name); })
     ));
+    var roots = entryRoots.slice();
+
     if (!roots.length) {
       roots = modules
         .filter(function (module) { return (incomingCount.get(module.name) || 0) === 0; })
@@ -2099,16 +2121,33 @@ function buildLocalCodeMapScript(
     var queue = roots.map(function (name) { return { name: name, level: 0 }; });
     while (queue.length) {
       var current = queue.shift();
-      if (levels.has(current.name)) continue;
+      var knownLevel = levels.get(current.name);
+      if (knownLevel !== undefined && knownLevel <= current.level) continue;
       levels.set(current.name, current.level);
+
       (outgoing.get(current.name) || []).forEach(function (next) {
-        if (!levels.has(next)) queue.push({ name: next, level: current.level + 1 });
+        var nextLevel = current.level + 1;
+        var existing = levels.get(next.name);
+        if (existing === undefined || nextLevel < existing) {
+          queue.push({ name: next.name, level: nextLevel });
+        }
       });
     }
 
-    modules.forEach(function (module) {
-      if (!levels.has(module.name)) levels.set(module.name, 0);
+    var reachableMaxLevel = Math.max.apply(
+      null,
+      Array.from(levels.values()).concat([0])
+    );
+    var disconnectedLevel = null;
+    var disconnected = modules.filter(function (module) {
+      return !levels.has(module.name);
     });
+    if (disconnected.length) {
+      disconnectedLevel = reachableMaxLevel + 1;
+      disconnected.forEach(function (module) {
+        levels.set(module.name, disconnectedLevel);
+      });
+    }
 
     var maxLevel = Math.max.apply(null, Array.from(levels.values()).concat([0]));
     var groups = new Map();
@@ -2118,34 +2157,121 @@ function buildLocalCodeMapScript(
       group.push(module);
       groups.set(level, group);
     });
-    groups.forEach(function (group) {
-      group.sort(function (a, b) {
-        return b.files - a.files || a.name.localeCompare(b.name);
-      });
-    });
 
+    function stableModuleSort(a, b) {
+      return b.files - a.files ||
+        b.lines - a.lines ||
+        a.name.localeCompare(b.name);
+    }
+    groups.forEach(function (group) { group.sort(stableModuleSort); });
+
+    function orderIndex(level) {
+      var index = new Map();
+      (groups.get(level) || []).forEach(function (module, position) {
+        index.set(module.name, position);
+      });
+      return index;
+    }
+
+    function barycenter(moduleName, neighborLevel) {
+      var neighborOrder = orderIndex(neighborLevel);
+      var weighted = [];
+      (incoming.get(moduleName) || []).concat(outgoing.get(moduleName) || [])
+        .forEach(function (neighbor) {
+          if ((levels.get(neighbor.name) || 0) !== neighborLevel) return;
+          var position = neighborOrder.get(neighbor.name);
+          if (position === undefined) return;
+          weighted.push({
+            position: position,
+            weight: Math.max(1, neighbor.weight || 1)
+          });
+        });
+
+      if (!weighted.length) return null;
+      var totalWeight = weighted.reduce(function (sum, item) {
+        return sum + item.weight;
+      }, 0);
+      return weighted.reduce(function (sum, item) {
+        return sum + item.position * item.weight;
+      }, 0) / totalWeight;
+    }
+
+    function reorderLevel(level, neighborLevel) {
+      var group = groups.get(level);
+      if (!group || group.length < 2 || !groups.has(neighborLevel)) return;
+      group.sort(function (a, b) {
+        var aCenter = barycenter(a.name, neighborLevel);
+        var bCenter = barycenter(b.name, neighborLevel);
+        if (aCenter === null && bCenter === null) return stableModuleSort(a, b);
+        if (aCenter === null) return 1;
+        if (bCenter === null) return -1;
+        return aCenter - bCenter || stableModuleSort(a, b);
+      });
+    }
+
+    for (var sweep = 0; sweep < 3; sweep++) {
+      for (var forwardLevel = 1; forwardLevel <= maxLevel; forwardLevel++) {
+        reorderLevel(forwardLevel, forwardLevel - 1);
+      }
+      for (var backwardLevel = maxLevel - 1; backwardLevel >= 0; backwardLevel--) {
+        reorderLevel(backwardLevel, backwardLevel + 1);
+      }
+    }
+
+    var nodeWidth = 184;
+    var columnSpacing = 228;
+    var sidePadding = 116;
+    var width = Math.max(
+      minimumWidth || 960,
+      sidePadding * 2 + Math.max(0, maxLevel) * columnSpacing
+    );
+    var rowSpacing = 112;
+    var topPadding = 96;
+    var bottomPadding = 76;
     var maxRows = Math.max.apply(
       null,
       Array.from(groups.values()).map(function (group) { return group.length; }).concat([1])
     );
-    var height = Math.max(360, maxRows * 92 + 80);
+    var height = Math.max(
+      420,
+      topPadding + bottomPadding + Math.max(0, maxRows - 1) * rowSpacing
+    );
     var positions = new Map();
+    var columns = [];
 
     groups.forEach(function (group, level) {
       var x = maxLevel === 0
         ? width / 2
-        : 115 + level * ((width - 230) / maxLevel);
-      var gap = height / (group.length + 1);
+        : sidePadding + level * ((width - sidePadding * 2) / maxLevel);
+      var groupSpan = Math.max(0, group.length - 1) * rowSpacing;
+      var startY = Math.max(topPadding, (height - groupSpan) / 2);
+
       group.forEach(function (module, index) {
         positions.set(module.name, {
           x: x,
-          y: gap * (index + 1),
+          y: startY + index * rowSpacing,
           level: level
         });
       });
+
+      columns.push({
+        level: level,
+        x: x,
+        disconnected: disconnectedLevel !== null && level === disconnectedLevel
+      });
     });
 
-    return { positions: positions, height: height };
+    columns.sort(function (a, b) { return a.level - b.level; });
+
+    return {
+      positions: positions,
+      height: height,
+      width: width,
+      columns: columns,
+      maxLevel: maxLevel,
+      hasEntryRoots: entryRoots.length > 0,
+      nodeWidth: nodeWidth
+    };
   }
 
   function clipModuleEdge(from, to) {
@@ -2322,8 +2448,8 @@ function buildLocalCodeMapScript(
     var modules = data.modules || [];
     if (!modules.length) return;
     var edgeCounts = data.edges || [];
-    var width = 960;
-    var layout = layoutModules(modules, edgeCounts, width);
+    var layout = layoutModules(modules, edgeCounts, 960);
+    var width = layout.width;
     var height = layout.height;
     var positions = layout.positions;
     svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
@@ -2351,6 +2477,28 @@ function buildLocalCodeMapScript(
       yChannelSelector: 'G'
     }, sketchFilter);
 
+    (layout.columns || []).forEach(function (column) {
+      makeSvg('line', {
+        x1: column.x,
+        x2: column.x,
+        y1: 48,
+        y2: height - 34,
+        class: 'local-map-layer-guide'
+      }, svg);
+
+      var layerLabel = makeSvg('text', {
+        x: column.x,
+        y: 28,
+        class: 'local-map-layer-label',
+        'text-anchor': 'middle'
+      }, svg);
+      layerLabel.textContent = column.disconnected
+        ? 'other modules'
+        : column.level === 0
+          ? (layout.hasEntryRoots ? 'entry layer' : 'root layer')
+          : 'dependency layer ' + column.level;
+    });
+
     edgeCounts.forEach(function (edge) {
       var a = positions.get(edge.from), b = positions.get(edge.to);
       if (!a || !b) return;
@@ -2371,9 +2519,18 @@ function buildLocalCodeMapScript(
       var levelSpan = Math.abs((a.level || 0) - (b.level || 0));
       var control = null;
 
-      if (levelSpan > 1 && !reciprocal) {
+      if (levelSpan === 0) {
+        var sameLevelDirection = edge.from.localeCompare(edge.to) < 0 ? -1 : 1;
+        var sameLevelOffset = 118 * sameLevelDirection;
+        control = {
+          x: a.x + sameLevelOffset,
+          y: (a.y + b.y) / 2
+        };
+        start = clipModuleEdge(a, control);
+        end = clipModuleEdge(b, control);
+      } else if (levelSpan > 1 && !reciprocal) {
         var curveDirection = edge.from.localeCompare(edge.to) < 0 ? -1 : 1;
-        var curveOffset = Math.min(34, 16 + levelSpan * 6) * curveDirection;
+        var curveOffset = Math.min(44, 18 + levelSpan * 7) * curveDirection;
         control = {
           x: (a.x + b.x) / 2 + nx * curveOffset,
           y: (a.y + b.y) / 2 + ny * curveOffset
