@@ -22,12 +22,14 @@ export const READER_STYLES = String.raw`
 .documint-jelly-ui .file-tree-summary { min-height: 32px; font-weight: 600; }
 .documint-jelly-ui .file-tree-summary::before { content: ''; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); margin: 0 5px 3px 2px; }
 .documint-jelly-ui .file-tree-folder:not([open]) > .file-tree-summary::before { content: ''; transform: rotate(-45deg); margin-bottom: 0; }
-.reader-context { position: sticky; top: 78px; z-index: 800; display: flex; align-items: center; gap: 12px; min-height: 54px; padding: 9px 12px; margin-bottom: 22px; border: 1px solid var(--jelly-border); border-radius: 12px; background: var(--jelly-surface-strong); box-shadow: var(--jelly-shadow-soft); }
-.reader-location { flex: 1; min-width: 0; line-height: 1.45; }
-.reader-location-label { display: block; font-size: 9px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); text-transform: uppercase; }
-.reader-location-text { display: block; font-size: 12px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.reader-outline { width: min(230px, 32%); min-width: 0; min-height: 32px; padding: 5px 8px; border: 1px solid var(--jelly-border); border-radius: 8px; font: inherit; font-size: 11px; color: var(--text-secondary); background: var(--bg-secondary); }
-.documint-jelly-ui .main [id] { scroll-margin-top: 154px; }
+.reader-context { position: static; z-index: auto; display: flex; flex: 1 1 430px; max-width: 650px; min-width: 260px; align-items: center; gap: 8px; min-height: 38px; padding: 0 0 0 10px; margin: 0; border: 0; border-left: 1px solid var(--jelly-border); border-radius: 0; background: transparent; box-shadow: none; }
+.reader-location { flex: 1 1 130px; min-width: 90px; max-width: 190px; line-height: 1.2; }
+.reader-location-label { display: block; margin-bottom: 1px; font-size: 8px; font-weight: 750; letter-spacing: .08em; color: var(--text-muted); text-transform: uppercase; }
+.reader-location-text { display: -webkit-box; max-height: 28px; overflow: hidden; color: var(--text-primary); font-size: 11px; font-weight: 650; line-height: 1.2; overflow-wrap: anywhere; word-break: break-word; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.reader-context .reader-button { min-height: 30px; padding: 4px 8px; border-radius: 7px; background: transparent; box-shadow: none; }
+.reader-outline { width: min(250px, 38%); min-width: 150px; min-height: 30px; padding: 4px 28px 4px 8px; border: 1px solid var(--jelly-border); border-radius: 8px; font: inherit; font-size: 10.5px; color: var(--text-secondary); background: var(--bg-secondary); }
+.reader-outline:focus { border-color: var(--jelly-border-accent); outline: none; }
+.documint-jelly-ui .main [id] { scroll-margin-top: 92px; }
 .documint-jelly-ui .main { min-width: 0; }
 .reader-table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; border-radius: 14px; margin: 14px 0; }
 .documint-jelly-ui .main .reader-table-scroll table { display: table; margin: 0; width: 100%; max-width: none; }
@@ -56,10 +58,8 @@ export const READER_STYLES = String.raw`
   .documint-jelly-ui .search-input { min-height: 36px; font-size: 12px; padding-right: 8px; }
   .documint-jelly-ui .search-kbd { display: none; }
   .documint-jelly-ui .search-dropdown { position: fixed; top: 62px; left: 0; right: 0; max-height: 65vh; }
-  .reader-context { top: 76px; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
-  .reader-location { flex-basis: calc(100% - 100px); }
-  .reader-outline { width: 100%; }
-  .documint-jelly-ui .main [id] { scroll-margin-top: 192px; }
+  .reader-context { display: none; }
+  .documint-jelly-ui .main [id] { scroll-margin-top: 88px; }
   .documint-jelly-ui .main table { display: block; max-width: 100%; overflow-x: auto; }
   .documint-jelly-ui .main p, .documint-jelly-ui .main li, .documint-jelly-ui .main :not(pre) > code { overflow-wrap: anywhere; }
   .documint-jelly-ui .generated-stamp { flex-wrap: wrap; }
