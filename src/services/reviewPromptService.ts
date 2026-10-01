@@ -68,9 +68,12 @@ export class ReviewPromptService {
     );
 
     if (selection === REVIEW_ACTION) {
+      const latest =
+        this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
+        state;
       await this.context.globalState.update(
         REVIEW_STATE_KEY,
-        completeReviewPrompt(state),
+        completeReviewPrompt(latest),
       );
       await vscode.env.openExternal(vscode.Uri.parse(MARKETPLACE_REVIEW_URL));
       return;
@@ -88,9 +91,12 @@ export class ReviewPromptService {
         return;
       }
 
+      const latest =
+        this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
+        state;
       await this.context.globalState.update(
         REVIEW_STATE_KEY,
-        completeReviewPrompt(state),
+        completeReviewPrompt(latest),
       );
 
       const issue = new URL(FEEDBACK_ISSUE_URL);
@@ -111,9 +117,12 @@ export class ReviewPromptService {
     }
 
     if (selection === DISABLE_ACTION) {
+      const latest =
+        this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
+        state;
       await this.context.globalState.update(
         REVIEW_STATE_KEY,
-        disableReviewPrompt(state),
+        disableReviewPrompt(latest),
       );
     }
   }
