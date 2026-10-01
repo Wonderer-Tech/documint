@@ -110,6 +110,8 @@ test("default target language list includes the scanner's broad source types", (
     "css",
     "scss",
     "sql",
+    "prisma",
+    "graphql",
   ]) {
     assert.ok(languages.has(language), `missing default language: ${language}`);
   }
