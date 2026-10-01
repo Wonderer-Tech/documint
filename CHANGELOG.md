@@ -1,17 +1,22 @@
 # Changelog
 
-## 1.0.7 — Reader navigation
-
-Folder-first navigation now has persistent, report-scoped open/closed state, Expand all / Collapse all, file counts, clearable filtering, keyboard navigation, current-file context and a section selector. Ranked search supports Ctrl/Cmd+K, arrow selection, Enter and Escape; all results point to real document headings. Mobile uses the same folder tree in a focus-managed drawer. Wide tables scroll within the report; charts and documentation facts remain unchanged. Local cache v5 refreshes older generated HTML once.
-
-## 1.0.6 — Generated navigation repair
-
-Local and AI-format HTML now share working folder-wise collapsible navigation. Local TOCs emit the canonical link classes and explicit file identity, including route-group and spaced filenames. The chart function/map collision is fixed; optional chart failures cannot block navigation or search. Module chart totals include every emitted module. Local cache v4 regenerates older HTML once. Browser acceptance covers collapse, filtering, anchors, themes, charts, offline rendering and failure isolation.
-
-
 All notable changes to DocuMint are documented here.
 
-## Unreleased
+## 1.0.8 — Local Project Map & source-grounded insights
+
+DocuMint 1.0.8 turns Local Documentation into a much more useful codebase-reading experience. The generated HTML now answers practical developer questions directly, while keeping Local mode deterministic, provider-independent, and source-grounded.
+
+### 1.0.8 Highlights
+
+- **Question-first Local Project Map** with At a glance, Big picture, Runtime flow, How to run, Project interfaces, Data model, Security boundaries, Failure paths, What's inside, Start here, Dependency reach, Verification, and file lookup.
+- **Big Picture architecture map** with Major/All link modes, zoom, pan, semantic zoom, clearer module routing, relationship counts, and suggested start files.
+- **Stronger TypeScript/JavaScript analysis** using the TypeScript compiler AST for more reliable imports, declarations, exports, methods, module scope, and environment references.
+- **Source-grounded Data model, Security boundaries, and Failure paths** that appear only when direct evidence exists.
+- **Better onboarding** through runtime flow, project interfaces, build/run facts, verification commands, treemap sizing, dependency reach, and suggested reading order.
+- **Refined generated UI** with the paper-grid visual system, restrained Jelly softness, improved dark/light presentation, and reduced-motion-aware transitions.
+- **Ollama and LM Studio presets** with local model discovery, no API key requirement, and hardened loopback network behavior.
+- **Review & feedback prompt** after meaningful use, with direct Marketplace review, GitHub improvement feedback, seven-day cooldown, and opt-out.
+- **Release hardening** through lockfile-only installs, browser acceptance, Local self-audit, CSP/network protections, and one-command release readiness.
 
 ### Changed
 
@@ -95,6 +100,14 @@ All notable changes to DocuMint are documented here.
 - Blocked HTTP redirects for Ollama, LM Studio, and custom OpenAI-compatible provider requests so a loopback/no-consent endpoint cannot redirect source-bearing requests to another host.
 - Local model discovery also blocks redirects, bypasses environment HTTP proxies, and caps the model-list response size. Source-bearing Ollama/LM Studio requests bypass proxies as well; local custom endpoints disable proxy routing while remote custom endpoints retain normal proxy behavior.
 - Local generated HTML no longer needs third-party CDN assets for the Local project-map experience.
+
+## 1.0.7 — Reader navigation
+
+Folder-first navigation now has persistent, report-scoped open/closed state, Expand all / Collapse all, file counts, clearable filtering, keyboard navigation, current-file context and a section selector. Ranked search supports Ctrl/Cmd+K, arrow selection, Enter and Escape; all results point to real document headings. Mobile uses the same folder tree in a focus-managed drawer. Wide tables scroll within the report; charts and documentation facts remain unchanged. Local cache v5 refreshes older generated HTML once.
+
+## 1.0.6 — Generated navigation repair
+
+Local and AI-format HTML now share working folder-wise collapsible navigation. Local TOCs emit the canonical link classes and explicit file identity, including route-group and spaced filenames. The chart function/map collision is fixed; optional chart failures cannot block navigation or search. Module chart totals include every emitted module. Local cache v4 regenerates older HTML once. Browser acceptance covers collapse, filtering, anchors, themes, charts, offline rendering and failure isolation.
 
 ## 1.0.5 — 2026-09-18
 
