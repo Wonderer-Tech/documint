@@ -42,6 +42,39 @@ export function normalizeReviewPromptState(
   };
 }
 
+export function isReviewPromptDue(
+  value: unknown,
+  now = Date.now(),
+): boolean {
+  const state = normalizeReviewPromptState(value);
+  if (state.completed || state.disabled) {
+    return false;
+  }
+  if (state.successfulGenerations < REVIEW_PROMPT_FIRST_SUCCESS_COUNT) {
+    return false;
+  }
+
+  const safeNow =
+    Number.isFinite(now) && now >= 0 ? Math.floor(now) : Date.now();
+  return (
+    state.lastPromptAt === undefined ||
+    safeNow - state.lastPromptAt >= REVIEW_PROMPT_COOLDOWN_MS
+  );
+}
+
+export function markReviewPromptShown(
+  value: unknown,
+  now = Date.now(),
+): ReviewPromptState {
+  const state = normalizeReviewPromptState(value);
+  const safeNow =
+    Number.isFinite(now) && now >= 0 ? Math.floor(now) : Date.now();
+  return {
+    ...state,
+    lastPromptAt: safeNow,
+  };
+}
+
 export function recordSuccessfulGenerationForReview(
   value: unknown,
   now = Date.now(),
@@ -52,30 +85,12 @@ export function recordSuccessfulGenerationForReview(
     successfulGenerations: current.successfulGenerations + 1,
   };
 
-  if (state.completed || state.disabled) {
-    return { state, shouldPrompt: false };
-  }
-
-  if (state.successfulGenerations < REVIEW_PROMPT_FIRST_SUCCESS_COUNT) {
-    return { state, shouldPrompt: false };
-  }
-
-  const safeNow =
-    Number.isFinite(now) && now >= 0 ? Math.floor(now) : Date.now();
-  const lastPromptAt = state.lastPromptAt;
-  const due =
-    lastPromptAt === undefined ||
-    safeNow - lastPromptAt >= REVIEW_PROMPT_COOLDOWN_MS;
-
-  if (!due) {
+  if (!isReviewPromptDue(state, now)) {
     return { state, shouldPrompt: false };
   }
 
   return {
-    state: {
-      ...state,
-      lastPromptAt: safeNow,
-    },
+    state: markReviewPromptShown(state, now),
     shouldPrompt: true,
   };
 }
