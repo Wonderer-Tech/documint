@@ -2281,6 +2281,346 @@ function buildLocalCodeMapScript(
     if (runNav) runNav.hidden = cards === 0;
   }
 
+  function setOptionalSectionVisibility(sectionId, navId, visible) {
+    var section = document.getElementById(sectionId);
+    var nav = document.getElementById(navId);
+    if (section) section.hidden = !visible;
+    if (nav) nav.hidden = !visible;
+  }
+
+  function makeProjectFileButton(path) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = path;
+    button.title = path;
+    button.addEventListener('click', function () {
+      openFileAndReveal(path);
+    });
+    return button;
+  }
+
+  function renderRuntimeFlow() {
+    var root = document.getElementById('localMapRuntimeFlow');
+    if (!root) return;
+    root.innerHTML = '';
+
+    var entryPaths = Array.isArray(data.summary && data.summary.entryPoints)
+      ? data.summary.entryPoints.filter(function (path) { return byPath.has(path); })
+      : [];
+    if (!entryPaths.length) {
+      entryPaths = data.files
+        .filter(function (file) { return file.entryPoint; })
+        .map(function (file) { return file.path; });
+    }
+
+    if (!entryPaths.length) {
+      setOptionalSectionVisibility(
+        'localMapRuntimeSection',
+        'localMapRuntimeNav',
+        false
+      );
+      return;
+    }
+
+    var seen = new Set();
+    var frontier = Array.from(new Set(entryPaths)).sort();
+    var stages = [];
+
+    for (var depth = 0; depth < 3 && frontier.length; depth++) {
+      stages.push({
+        title: depth === 0
+          ? 'Entry points'
+          : depth === 1
+            ? 'Direct project imports'
+            : 'Next project imports',
+        paths: frontier.slice()
+      });
+
+      frontier.forEach(function (path) { seen.add(path); });
+      var next = [];
+      frontier.forEach(function (path) {
+        var file = byPath.get(path);
+        if (!file) return;
+        (file.uses || []).forEach(function (usedPath) {
+          if (byPath.has(usedPath) && !seen.has(usedPath)) {
+            next.push(usedPath);
+          }
+        });
+      });
+      frontier = Array.from(new Set(next)).sort(function (a, b) {
+        var aFile = byPath.get(a);
+        var bFile = byPath.get(b);
+        return (
+          ((bFile && bFile.usedBy.length) || 0) -
+            ((aFile && aFile.usedBy.length) || 0) ||
+          a.localeCompare(b)
+        );
+      });
+    }
+
+    stages.forEach(function (stage, index) {
+      var card = document.createElement('section');
+      card.className = 'local-map-runtime-stage';
+
+      var heading = document.createElement('h4');
+      heading.textContent = (index + 1) + '. ' + stage.title;
+      card.appendChild(heading);
+
+      var list = document.createElement('div');
+      list.className = 'local-map-runtime-files';
+      stage.paths.slice(0, 10).forEach(function (path) {
+        list.appendChild(makeProjectFileButton(path));
+      });
+      card.appendChild(list);
+
+      if (stage.paths.length > 10) {
+        var note = document.createElement('p');
+        note.textContent =
+          '+ ' + (stage.paths.length - 10) +
+          ' more files at this dependency layer; use Big picture or file lookup for the complete graph.';
+        card.appendChild(note);
+      }
+
+      root.appendChild(card);
+    });
+
+    setOptionalSectionVisibility(
+      'localMapRuntimeSection',
+      'localMapRuntimeNav',
+      stages.length > 0
+    );
+  }
+
+  function renderProjectInterfaces() {
+    var root = document.getElementById('localMapInterfaces');
+    if (!root) return;
+    root.innerHTML = '';
+
+    var facts = data.gettingStarted || null;
+    var cards = 0;
+
+    if (facts && facts.extensionEntry) {
+      var entryCard = createFactCard(
+        root,
+        'Host / package entry',
+        facts.packageJsonPath || 'package metadata'
+      );
+      appendFactRow(entryCard, 'Entry', facts.extensionEntry, true);
+      cards++;
+    }
+
+    var commands = facts && Array.isArray(facts.vscodeCommands)
+      ? facts.vscodeCommands
+      : [];
+    if (commands.length) {
+      var commandCard = createFactCard(
+        root,
+        'VS Code commands',
+        facts.packageJsonPath || 'package metadata'
+      );
+      commands.forEach(function (command) {
+        appendCommandRow(commandCard, command.id, command.title);
+      });
+      cards++;
+    }
+
+    var settings = facts && Array.isArray(facts.vscodeSettings)
+      ? facts.vscodeSettings
+      : [];
+    if (settings.length) {
+      var settingsCard = createFactCard(
+        root,
+        'VS Code settings',
+        facts.packageJsonPath || 'package metadata'
+      );
+      settings.forEach(function (setting) {
+        appendCommandRow(
+          settingsCard,
+          setting.key,
+          'default: ' + formatDefaultValue(setting.defaultValue)
+        );
+      });
+      cards++;
+    }
+
+    var environments = Array.isArray(data.referencedEnvironmentVariables)
+      ? data.referencedEnvironmentVariables
+      : [];
+    if (environments.length) {
+      var environmentCard = createFactCard(
+        root,
+        'Environment references',
+        'source references'
+      );
+      var environmentChips = document.createElement('div');
+      environmentChips.className = 'local-map-chip-list';
+      environments.forEach(function (name) {
+        var code = document.createElement('code');
+        code.textContent = name;
+        environmentChips.appendChild(code);
+      });
+      environmentCard.appendChild(environmentChips);
+      cards++;
+    }
+
+    var exposedPorts =
+      facts && facts.dockerfile && Array.isArray(facts.dockerfile.exposedPorts)
+        ? facts.dockerfile.exposedPorts
+        : [];
+    if (exposedPorts.length) {
+      var portCard = createFactCard(
+        root,
+        'Exposed ports',
+        facts.dockerfile.path || 'Dockerfile'
+      );
+      exposedPorts.forEach(function (port) {
+        appendFactRow(portCard, 'Port', port, true);
+      });
+      cards++;
+    }
+
+    var entryFiles = data.files.filter(function (file) {
+      return file.entryPoint && Array.isArray(file.exports) && file.exports.length;
+    });
+    if (entryFiles.length) {
+      var exportCard = createFactCard(
+        root,
+        'Entry-point exports',
+        'source exports'
+      );
+      var exportCount = 0;
+      entryFiles.forEach(function (file) {
+        file.exports.forEach(function (item) {
+          if (exportCount >= 24) return;
+          appendCommandRow(
+            exportCard,
+            item.name,
+            file.path + ' · ' + item.kind + ' · L' + item.line
+          );
+          exportCount++;
+        });
+      });
+      var totalExports = entryFiles.reduce(function (sum, file) {
+        return sum + file.exports.length;
+      }, 0);
+      if (totalExports > exportCount) {
+        var more = document.createElement('p');
+        more.className = 'local-map-fact-source';
+        more.textContent =
+          '+ ' + (totalExports - exportCount) +
+          ' more entry-point exports; inspect the file card for the complete API.';
+        exportCard.appendChild(more);
+      }
+      cards++;
+    }
+
+    setOptionalSectionVisibility(
+      'localMapInterfacesSection',
+      'localMapInterfacesNav',
+      cards > 0
+    );
+  }
+
+  function verificationKind(name, command) {
+    var text = (String(name || '') + ' ' + String(command || '')).toLowerCase();
+    if (/browser|e2e|integration|acceptance|playwright|cypress/.test(text)) {
+      return { label: 'Browser / integration', order: 5 };
+    }
+    if (/type[-:]?check|tsc\b.*--noemit|mypy|pyright/.test(text)) {
+      return { label: 'Type check', order: 1 };
+    }
+    if (/lint|eslint|biome|ruff|flake8|stylelint/.test(text)) {
+      return { label: 'Lint', order: 2 };
+    }
+    if (/test|vitest|jest|pytest|mocha|node\s+--test/.test(text)) {
+      return { label: 'Tests', order: 3 };
+    }
+    if (/build|compile|bundle/.test(text)) {
+      return { label: 'Build', order: 4 };
+    }
+    if (/verify|check|audit|readiness|\bci\b/.test(text)) {
+      return { label: 'Verification gate', order: 6 };
+    }
+    if (/release|publish|package/.test(text)) {
+      return { label: 'Release gate', order: 7 };
+    }
+    return null;
+  }
+
+  function renderVerification() {
+    var root = document.getElementById('localMapVerification');
+    if (!root) return;
+    root.innerHTML = '';
+
+    var facts = data.gettingStarted || null;
+    var checks = [];
+
+    if (facts && Array.isArray(facts.scripts)) {
+      facts.scripts.forEach(function (script) {
+        var kind = verificationKind(script.name, script.command);
+        if (!kind) return;
+        checks.push({
+          kind: kind.label,
+          order: kind.order,
+          command: script.run,
+          detail: script.name + ' · ' + script.command
+        });
+      });
+    }
+
+    if (facts && facts.makefile && Array.isArray(facts.makefile.targets)) {
+      facts.makefile.targets.forEach(function (target) {
+        var kind = verificationKind(target.name, target.name);
+        if (!kind) return;
+        checks.push({
+          kind: kind.label,
+          order: kind.order,
+          command: 'make ' + target.name,
+          detail: 'Makefile target · ' + target.name
+        });
+      });
+    }
+
+    var seenCommands = new Set();
+    checks = checks
+      .filter(function (check) {
+        if (seenCommands.has(check.command)) return false;
+        seenCommands.add(check.command);
+        return true;
+      })
+      .sort(function (a, b) {
+        return a.order - b.order || a.command.localeCompare(b.command);
+      });
+
+    checks.forEach(function (check) {
+      var row = document.createElement('div');
+      row.className = 'local-map-verification-row';
+
+      var kind = document.createElement('div');
+      kind.className = 'local-map-verification-kind';
+      kind.textContent = check.kind;
+      row.appendChild(kind);
+
+      var command = document.createElement('div');
+      command.className = 'local-map-verification-command';
+      var code = document.createElement('code');
+      code.textContent = check.command;
+      command.appendChild(code);
+      var detail = document.createElement('small');
+      detail.textContent = check.detail;
+      command.appendChild(detail);
+      row.appendChild(command);
+
+      root.appendChild(row);
+    });
+
+    setOptionalSectionVisibility(
+      'localMapVerificationSection',
+      'localMapVerificationNav',
+      checks.length > 0
+    );
+  }
+
   function initSectionNav() {
     var nav = document.getElementById('localMapNav');
     if (!nav) return;
@@ -3962,12 +4302,15 @@ function buildLocalCodeMapScript(
 
   renderFacts();
   renderOverview();
+  renderRuntimeFlow();
   renderOnboarding();
+  renderProjectInterfaces();
   renderModules();
   renderModuleLegend();
   renderTreemap();
   renderReadingPath();
   renderScatter();
+  renderVerification();
   renderCard();
   initSectionNav();
 
