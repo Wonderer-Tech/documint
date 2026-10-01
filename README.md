@@ -11,7 +11,7 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 
 **🎉 400+ downloads and counting.** Thank you to everyone who has tried DocuMint and helped shape it.
 
-> **1.0.9 hotfix:** same 1.0.8 feature set, republished with the final release/browser-navigation fix so Marketplace users receive the corrected build.
+> **Current Marketplace build: 1.0.9.** It includes the full 1.0.8 Local Project Map upgrade plus the final browser-navigation/release fix.
 
 DocuMint writes generated documentation to:
 
@@ -20,9 +20,9 @@ DocuMint writes generated documentation to:
 
 ## Table of Contents
 
-- [What's New in 1.0.8](#whats-new-in-108)
-- [1.0.7 vs 1.0.8](#107-vs-108)
-- [See 1.0.8 in Action](#see-108-in-action)
+- [What's New in 1.0.9](#whats-new-in-109)
+- [1.0.7 vs 1.0.9](#107-vs-109)
+- [See 1.0.9 in Action](#see-109-in-action)
 - [How It Works](#how-it-works)
 - [Local Project Map](#local-project-map)
 - [Supported Providers](#supported-providers)
@@ -39,9 +39,11 @@ DocuMint writes generated documentation to:
 - [Contributing](#contributing)
 - [License](#license)
 
-## What's New in 1.0.8
+## What's New in 1.0.9
 
-1.0.8 is the biggest Local Documentation upgrade so far. Instead of giving you a long generated document and asking you to figure out where to begin, DocuMint now answers the questions developers usually ask when they open an unfamiliar repository.
+1.0.9 is the corrected Marketplace build of the major Local Documentation upgrade introduced in 1.0.8. It keeps the same feature set, while including the final browser-navigation/release fix that landed after 1.0.8 had already been published to the Marketplace.
+
+Instead of giving you a long generated document and asking you to figure out where to begin, DocuMint now answers the questions developers usually ask when they open an unfamiliar repository.
 
 ### The highlights
 
@@ -58,9 +60,9 @@ DocuMint writes generated documentation to:
 - **Review & feedback flow** — after meaningful use, DocuMint can ask for a Marketplace review or open a GitHub feedback issue, with a seven-day cooldown when postponed and an explicit opt-out.
 - **Release hardening** — locked installs, browser acceptance, self-audit, CSP/network hardening, and reproducible release-readiness checks are now part of the release path.
 
-## 1.0.7 vs 1.0.8
+## 1.0.7 vs 1.0.9
 
-| Area | 1.0.7 | 1.0.8 |
+| Area | 1.0.7 | 1.0.9 |
 | --- | --- | --- |
 | Main focus | Folder-first reader navigation | Codebase understanding + reader navigation |
 | Local HTML | Navigable generated documentation | Question-first interactive project map |
@@ -75,7 +77,7 @@ DocuMint writes generated documentation to:
 | Generated UI | Reader navigation polish | Paper-grid + restrained Jelly softness + soft transitions |
 | Feedback | No dedicated cadence | Marketplace review / GitHub improvement feedback with cooldown and opt-out |
 
-## See 1.0.8 in Action
+## See 1.0.9 in Action
 
 These screenshots are generated from DocuMint's own source tree, so the views below show the product documenting itself.
 
@@ -83,31 +85,31 @@ These screenshots are generated from DocuMint's own source tree, so the views be
 
 Counts, languages, entry points, dependencies, documentation coverage, symbols, exports, and more are grouped into one readable starting point.
 
-![DocuMint 1.0.8 At a glance](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-18-49.png)
+![DocuMint 1.0.9 At a glance](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-18-49.png)
 
 ### Big picture — see how modules connect
 
 The module graph shows structural relationships without turning the page into an unreadable arrow wall. You can switch connection density and zoom into more detail in the generated report.
 
-![DocuMint 1.0.8 Big picture](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-19-21.png)
+![DocuMint 1.0.9 Big picture](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-19-21.png)
 
 ### What's inside — spot where the code actually lives
 
 The treemap makes repository size and module/file distribution visual, so large files and dense areas stand out immediately.
 
-![DocuMint 1.0.8 What's inside](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-05.png)
+![DocuMint 1.0.9 What's inside](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-05.png)
 
 ### Start here — get a practical reading order
 
 DocuMint uses detected entry points and resolved dependencies to suggest a source-backed place to begin reading. It is guidance, not an invented claim about the only correct order.
 
-![DocuMint 1.0.8 Start here](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-27.png)
+![DocuMint 1.0.9 Start here](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-27.png)
 
 ### Dependency reach — find widely used files
 
 The dependency-reach view helps you see which files are depended on by more of the project and how that relates to source size.
 
-![DocuMint 1.0.8 Dependency reach](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-38.png)
+![DocuMint 1.0.9 Dependency reach](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-38.png)
 
 ## How It Works
 
