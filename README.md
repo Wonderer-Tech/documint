@@ -3,22 +3,13 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
 ![Version](https://img.shields.io/badge/version-1.0.8-green)
+![Marketplace installs](https://img.shields.io/badge/Marketplace%20installs-400%2B-brightgreen)
 
 **Understand a codebase without reading every file first.**
 
 DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and HTML documentation. Use **Local Documentation — No AI** for deterministic, source-grounded docs that stay on your machine, or switch to AI mode when you want provider-enhanced explanations.
 
 **🎉 400+ downloads and counting.** Thank you to everyone who has tried DocuMint and helped shape it.
-
-### Quick look
-
-The extension lives inside VS Code, with Local and AI generation available from the DocuMint sidebar.
-
-![DocuMint VS Code sidebar](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/screenshot1.png)
-
-A short demo of the workflow:
-
-![DocuMint Demo](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/demo.gif)
 
 DocuMint writes generated documentation to:
 
