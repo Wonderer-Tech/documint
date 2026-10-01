@@ -83,9 +83,19 @@ test("README-only media stays out of VSIX while runtime icons remain packageable
     );
   }
 
-  for (const staleMedia of [
+  for (const retainedMedia of [
     "resources/demo.gif",
     "resources/screenshot1.png",
+  ]) {
+    assert.ok(
+      readme.includes(
+        `https://raw.githubusercontent.com/Wonderer-Tech/documint/main/${retainedMedia}`,
+      ),
+      `README should retain current media: ${retainedMedia}`,
+    );
+  }
+
+  for (const staleMedia of [
     "resources/s2.png",
     "resources/s3.png",
     "resources/s4.png",
