@@ -21,6 +21,7 @@ function initializeReaderNavigation() {
   var nav = document.getElementById('tocNav');
   var sidebar = document.querySelector('.sidebar');
   var main = document.getElementById('mainContent');
+  var topbar = document.querySelector('.topbar');
   var filter = document.getElementById('sidebarFilter');
   if (!nav || !sidebar || !main || !filter || nav.dataset.readerReady) return;
   nav.dataset.readerReady = 'true';
@@ -160,7 +161,15 @@ function initializeReaderNavigation() {
   var reveal = button('Show in tree', 'readerRevealCurrent');
   var outline = document.createElement('select'); outline.id = 'readerOutline'; outline.className = 'reader-outline';
   outline.setAttribute('aria-label', 'Jump to a section in the current file or project overview');
-  context.append(locationWrap, reveal, outline); main.prepend(context);
+  context.append(locationWrap, reveal, outline);
+  var topbarSpacer = topbar && topbar.querySelector('.topbar-spacer');
+  if (topbar && topbarSpacer) {
+    topbar.insertBefore(context, topbarSpacer);
+  } else if (topbar) {
+    topbar.appendChild(context);
+  } else {
+    main.prepend(context);
+  }
   var currentOwner, navigationTarget = null;
   function updateContext(entry) {
     if (!entry) return;
