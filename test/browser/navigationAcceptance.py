@@ -160,6 +160,12 @@ with sync_playwright() as playwright:
                 assert "jobs" in data_model_text
                 assert "status" in data_model_text
 
+                assert page.locator("#localMapSecuritySection").is_visible(), name
+                security_text = page.locator("#localMapSecuritySection").inner_text()
+                assert "Secret storage" in security_text
+                assert "API_TOKEN" in security_text
+                assert "security audit" in security_text
+
                 assert page.locator("h2", has_text="How to run").count() == 0
                 assert page.locator("h2", has_text="Referenced environment variables").count() == 0
                 page.locator("#localMapModules .local-map-module-node").first.click()
