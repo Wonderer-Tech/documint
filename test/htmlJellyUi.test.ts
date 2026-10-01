@@ -57,7 +57,8 @@ test("Local generated HTML receives the Jelly UI and question-first code map", (
     document.html,
     /class="documint-jelly-ui documint-local-report"/,
   );
-  assert.match(document.html, /Jelly Example — Local Documentation/);
+  assert.match(document.html, /Jelly Example — Documentation/);
+  assert.doesNotMatch(document.html, /Jelly Example — Local Documentation/);
   assert.match(document.html, /src\/main\.ts/);
   assert.match(document.html, /data-documint-local-code-map/);
   assert.match(document.html, /Find your way through the code/);
