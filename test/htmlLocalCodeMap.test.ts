@@ -457,6 +457,20 @@ test("Local cards wrap long text inside their visual bounds", () => {
 });
 
 
+test("Local Big Picture uses semantic zoom and visually separates disconnected modules", () => {
+  const fragments = renderLocalCodeMapFragments(data);
+
+  assert.match(fragments.styles, /\.local-map-module-canvas\.zoom-detail \.local-map-module-card-meta/);
+  assert.match(fragments.styles, /\.local-map-module-canvas\.zoom-deep \.local-map-module-card-start/);
+  assert.match(fragments.styles, /\.local-map-module-canvas\.zoom-overview \.local-map-edge-label/);
+  assert.match(fragments.styles, /\.local-map-disconnected-band/);
+  assert.match(fragments.script, /svg\.classList\.toggle\('zoom-overview', zoom < 125\)/);
+  assert.match(fragments.script, /svg\.classList\.toggle\('zoom-detail', zoom >= 125\)/);
+  assert.match(fragments.script, /svg\.classList\.toggle\('zoom-deep', zoom >= 165\)/);
+  assert.match(fragments.script, /class: 'local-map-disconnected-band'/);
+});
+
+
 test("Local Big Picture uses prototype-style open arrows and uncluttered edge counts", () => {
   const fragments = renderLocalCodeMapFragments(data);
 
