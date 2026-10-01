@@ -3104,28 +3104,46 @@ function buildLocalCodeMapScript(
         rx: 10,
         filter: 'url(#localMapSketch)'
       }, g);
-      var title = makeSvg('text', {
-        x: pos.x,
-        y: pos.y - 7,
-        'text-anchor': 'middle'
+      var card = makeSvg('foreignObject', {
+        x: pos.x - 68,
+        y: pos.y - 24,
+        width: 136,
+        height: 48
       }, g);
+      var cardBody = document.createElementNS(
+        'http://www.w3.org/1999/xhtml',
+        'div'
+      );
+      cardBody.className = 'local-map-module-card-content';
+
+      var title = document.createElementNS(
+        'http://www.w3.org/1999/xhtml',
+        'div'
+      );
+      title.className = 'local-map-module-card-title';
       title.textContent = module.name;
-      var meta = makeSvg('text', {
-        x: pos.x,
-        y: pos.y + 6,
-        class: 'local-map-module-meta',
-        'text-anchor': 'middle'
-      }, g);
-      meta.textContent = module.files + ' files · ' + formatNumber(module.lines) + ' lines';
+      cardBody.appendChild(title);
+
+      var meta = document.createElementNS(
+        'http://www.w3.org/1999/xhtml',
+        'span'
+      );
+      meta.className = 'local-map-module-card-meta';
+      meta.textContent =
+        module.files + ' files · ' + formatNumber(module.lines) + ' lines';
+      cardBody.appendChild(meta);
+
       if (startFile) {
-        var start = makeSvg('text', {
-          x: pos.x,
-          y: pos.y + 19,
-          class: 'local-map-module-start',
-          'text-anchor': 'middle'
-        }, g);
+        var start = document.createElementNS(
+          'http://www.w3.org/1999/xhtml',
+          'span'
+        );
+        start.className = 'local-map-module-card-start';
         start.textContent = 'start: ' + fileName(startFile);
+        cardBody.appendChild(start);
       }
+
+      card.appendChild(cardBody);
 
       function focusModule() {
         svg.classList.add('focused');
