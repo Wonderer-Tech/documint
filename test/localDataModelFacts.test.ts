@@ -160,6 +160,11 @@ test("data model facts detect Mongoose and Drizzle declarations", () => {
 test("data model facts stay absent without direct schema evidence", () => {
   const facts = extractLocalDataModelFacts([
     file("src/index.ts", "typescript", "export const value = 1;\n"),
+    file(
+      "src/not-mongoose.ts",
+      "typescript",
+      "const fake = model('NotMongoose');\nconst schema = new Schema({ value: String });\n",
+    ),
     file("config.json", "json", '{"feature":true}\n'),
   ]);
 
