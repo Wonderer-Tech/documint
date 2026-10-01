@@ -7,6 +7,7 @@ import type {
 import type { WorkspaceFile } from "../types";
 import { extractLocalDataModelFacts, type LocalDataModelFacts } from "./localDataModelFacts";
 import { extractLocalReadmeFacts } from "./localReadmeFacts";
+import { extractLocalSecurityFacts, type LocalSecurityFacts } from "./localSecurityFacts";
 import {
   parseDockerfileFacts,
   parseMakefileTargets,
@@ -122,6 +123,7 @@ export interface LocalDocumentationModel {
   referencedEnvironmentVariables: string[];
   suggestedReadingPath: LocalReadingPathItem[];
   dataModel?: LocalDataModelFacts;
+  security?: LocalSecurityFacts;
 }
 
 export interface BuildLocalDocumentationModelOptions {
@@ -210,6 +212,13 @@ export function buildLocalDocumentationModel(
   );
   const suggestedReadingPath = buildSuggestedReadingPath(fileModels);
   const dataModel = extractLocalDataModelFacts(sortedFiles);
+  const security = extractLocalSecurityFacts(sortedFiles, {
+    environmentFiles: fileModels.map((file) => ({
+      path: file.path,
+      referencedEnvironmentVariables: file.referencedEnvironmentVariables,
+    })),
+    externalDependencies: project.externalDependencies,
+  });
 
   return {
     projectName: cleanText(projectName) || "Project",
@@ -245,6 +254,7 @@ export function buildLocalDocumentationModel(
     referencedEnvironmentVariables,
     suggestedReadingPath,
     dataModel,
+    security,
   };
 }
 
