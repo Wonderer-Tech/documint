@@ -3,7 +3,6 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
 ![Version](https://img.shields.io/badge/version-1.0.8-green)
-![Marketplace installs](https://img.shields.io/visual-studio-marketplace/i/WondererTech.documint?label=Marketplace%20installs&color=brightgreen)
 
 **Understand a codebase without reading every file first.**
 
