@@ -10,78 +10,79 @@ import {
   recordSuccessfulGenerationForReview,
 } from "../src/services/reviewPromptPolicy";
 
-test("review prompt waits for three successful generations", () => {
-  const first = recordSuccessfulGenerationForReview(undefined, 1_000);
-  assert.equal(first.state.successfulGenerations, 1);
-  assert.equal(first.shouldPrompt, false);
-
-  const second = recordSuccessfulGenerationForReview(first.state, 2_000);
-  assert.equal(second.state.successfulGenerations, 2);
-  assert.equal(second.shouldPrompt, false);
-
-  const third = recordSuccessfulGenerationForReview(second.state, 3_000);
-  assert.equal(third.state.successfulGenerations, 3);
-  assert.equal(third.shouldPrompt, true);
-  assert.equal(third.state.lastPromptAt, 3_000);
+test("review prompt is due on first DocuMint activation", () => {
+  assert.equal(isReviewPromptDue(undefined, 1_000), true);
+  assert.equal(
+    isReviewPromptDue(
+      {
+        successfulGenerations: 0,
+        firstPromptShown: true,
+        lastPromptAt: 1_000,
+      },
+      1_001,
+    ),
+    false,
+  );
 });
 
 test("review prompt repeats only after the seven-day cooldown", () => {
-  const initial = recordSuccessfulGenerationForReview(
-    { successfulGenerations: 2 },
-    10_000,
-  );
-  assert.equal(initial.shouldPrompt, true);
-
-  const tooSoon = recordSuccessfulGenerationForReview(
-    initial.state,
-    10_000 + REVIEW_PROMPT_COOLDOWN_MS - 1,
-  );
-  assert.equal(tooSoon.shouldPrompt, false);
-
-  const dueAgain = recordSuccessfulGenerationForReview(
-    tooSoon.state,
-    10_000 + REVIEW_PROMPT_COOLDOWN_MS,
-  );
-  assert.equal(dueAgain.shouldPrompt, true);
-});
-
-test("review prompt becomes due on activation after seven days", () => {
-  const lastPromptAt = 20_000;
   const state = {
-    successfulGenerations: 3,
-    lastPromptAt,
+    successfulGenerations: 0,
+    firstPromptShown: true,
+    lastPromptAt: 10_000,
   };
 
   assert.equal(
-    isReviewPromptDue(state, lastPromptAt + REVIEW_PROMPT_COOLDOWN_MS - 1),
+    isReviewPromptDue(state, 10_000 + REVIEW_PROMPT_COOLDOWN_MS - 1),
     false,
   );
   assert.equal(
-    isReviewPromptDue(state, lastPromptAt + REVIEW_PROMPT_COOLDOWN_MS),
+    isReviewPromptDue(state, 10_000 + REVIEW_PROMPT_COOLDOWN_MS),
     true,
   );
 });
 
+test("successful generation can surface a due prompt without a generation threshold", () => {
+  const first = recordSuccessfulGenerationForReview(undefined, 5_000);
+  assert.equal(first.state.successfulGenerations, 1);
+  assert.equal(first.shouldPrompt, true);
+  assert.equal(first.state.firstPromptShown, true);
+  assert.equal(first.state.lastPromptAt, 5_000);
+
+  const second = recordSuccessfulGenerationForReview(first.state, 6_000);
+  assert.equal(second.state.successfulGenerations, 2);
+  assert.equal(second.shouldPrompt, false);
+});
+
+test("legacy prompt timestamps count as an already-shown first prompt", () => {
+  const normalized = normalizeReviewPromptState({
+    successfulGenerations: 3,
+    lastPromptAt: 20_000,
+  });
+
+  assert.equal(normalized.firstPromptShown, true);
+  assert.equal(isReviewPromptDue(normalized, 20_001), false);
+  assert.equal(
+    isReviewPromptDue(
+      normalized,
+      20_000 + REVIEW_PROMPT_COOLDOWN_MS,
+    ),
+    true,
+  );
+});
 
 test("review completion and opt-out permanently suppress future prompts", () => {
-  const due = recordSuccessfulGenerationForReview(
-    { successfulGenerations: 2 },
-    5_000,
+  const completed = isReviewPromptDue(
+    completeReviewPrompt({ successfulGenerations: 0 }),
+    50_000,
   );
+  assert.equal(completed, false);
 
-  const completed = recordSuccessfulGenerationForReview(
-    completeReviewPrompt(due.state),
-    5_000 + REVIEW_PROMPT_COOLDOWN_MS * 2,
+  const disabled = isReviewPromptDue(
+    disableReviewPrompt({ successfulGenerations: 0 }),
+    50_000,
   );
-  assert.equal(completed.shouldPrompt, false);
-  assert.equal(completed.state.completed, true);
-
-  const disabled = recordSuccessfulGenerationForReview(
-    disableReviewPrompt(due.state),
-    5_000 + REVIEW_PROMPT_COOLDOWN_MS * 2,
-  );
-  assert.equal(disabled.shouldPrompt, false);
-  assert.equal(disabled.state.disabled, true);
+  assert.equal(disabled, false);
 });
 
 test("review prompt state normalization rejects malformed counters and timestamps", () => {
@@ -89,11 +90,13 @@ test("review prompt state normalization rejects malformed counters and timestamp
     normalizeReviewPromptState({
       successfulGenerations: -8.7,
       lastPromptAt: -50,
+      firstPromptShown: "yes",
       completed: "yes",
       disabled: 1,
     }),
     {
       successfulGenerations: 0,
+      firstPromptShown: false,
       lastPromptAt: undefined,
       completed: false,
       disabled: false,
@@ -101,7 +104,7 @@ test("review prompt state normalization rejects malformed counters and timestamp
   );
 });
 
-test("extension records Local and AI successes and review UI stays explicit", () => {
+test("extension schedules activation prompt and records Local and AI successes", () => {
   const extensionSource = readFileSync("src/extensionBase.ts", "utf8");
   const serviceSource = readFileSync(
     "src/services/reviewPromptService.ts",
@@ -118,7 +121,7 @@ test("extension records Local and AI successes and review UI stays explicit", ()
   );
   assert.match(
     extensionSource,
-    /reviewPromptService\.scheduleDuePromptOnActivation\(\)/,
+    /reviewPromptService\.schedulePromptOnActivation\(\)/,
   );
   assert.match(
     serviceSource,
