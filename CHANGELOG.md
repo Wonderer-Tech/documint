@@ -4,7 +4,7 @@ All notable changes to DocuMint are documented here.
 
 ## 1.0.9 — Marketplace hotfix
 
-1.0.9 republishes the 1.0.8 feature set with the final browser-navigation acceptance fix included. The Marketplace had already received 1.0.8 before that fix landed, so 1.0.9 is the corrected Marketplace build.
+1.0.9 republishes the 1.0.8 feature set with the final browser-navigation acceptance fix and the revised first-activation review prompt. The Marketplace had already received 1.0.8 before those final changes landed, so 1.0.9 is the corrected Marketplace build.
 
 ### Fixed
 
