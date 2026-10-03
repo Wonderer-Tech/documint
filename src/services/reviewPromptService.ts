@@ -23,7 +23,7 @@ const PROMPT_DELAY_MS = 1400;
 export class ReviewPromptService {
   constructor(private readonly context: vscode.ExtensionContext) {}
 
-  public async scheduleDuePromptOnActivation(): Promise<void> {
+  public async schedulePromptOnActivation(): Promise<void> {
     const current = this.context.globalState.get<ReviewPromptState>(
       REVIEW_STATE_KEY,
     );
