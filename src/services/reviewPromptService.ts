@@ -21,6 +21,8 @@ const DISABLE_ACTION = "Don't ask again";
 const PROMPT_DELAY_MS = 1400;
 
 export class ReviewPromptService {
+  private promptScheduledOrVisible = false;
+
   constructor(private readonly context: vscode.ExtensionContext) {}
 
   public async schedulePromptOnActivation(): Promise<void> {
@@ -51,10 +53,19 @@ export class ReviewPromptService {
   }
 
   private schedulePrompt(state: ReviewPromptState): void {
+    if (this.promptScheduledOrVisible) {
+      return;
+    }
+
+    this.promptScheduledOrVisible = true;
     setTimeout(() => {
-      void this.showPrompt(state).catch((error) => {
-        console.error("[Documint] review prompt error:", error);
-      });
+      void this.showPrompt(state)
+        .catch((error) => {
+          console.error("[Documint] review prompt error:", error);
+        })
+        .finally(() => {
+          this.promptScheduledOrVisible = false;
+        });
     }, PROMPT_DELAY_MS);
   }
 
