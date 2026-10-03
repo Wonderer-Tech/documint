@@ -9,6 +9,7 @@ All notable changes to DocuMint are documented here.
 ### Fixed
 
 - Replaced a timing-sensitive Local Project Map hash-navigation browser assertion with a state-based wait so release validation is stable in CI as well as locally.
+- Review/feedback prompting now appears once on the first DocuMint activation after install instead of waiting for three successful generations; postponed prompts remain limited to once every seven days.
 - Kept the 1.0.8 Local Project Map, source-analysis, UI, review/feedback, privacy, and release-hardening feature set unchanged.
 
 ## 1.0.8 — Local Project Map & source-grounded insights
