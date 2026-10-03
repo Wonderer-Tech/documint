@@ -1,8 +1,8 @@
-export const REVIEW_PROMPT_FIRST_SUCCESS_COUNT = 3;
 export const REVIEW_PROMPT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface ReviewPromptState {
   successfulGenerations: number;
+  firstPromptShown?: boolean;
   lastPromptAt?: number;
   completed?: boolean;
   disabled?: boolean;
@@ -36,6 +36,8 @@ export function normalizeReviewPromptState(
 
   return {
     successfulGenerations,
+    firstPromptShown:
+      record.firstPromptShown === true || lastPromptAt !== undefined,
     lastPromptAt,
     completed: record.completed === true,
     disabled: record.disabled === true,
@@ -50,8 +52,10 @@ export function isReviewPromptDue(
   if (state.completed || state.disabled) {
     return false;
   }
-  if (state.successfulGenerations < REVIEW_PROMPT_FIRST_SUCCESS_COUNT) {
-    return false;
+
+  // First DocuMint activation after install/upgrade: show once.
+  if (!state.firstPromptShown) {
+    return true;
   }
 
   const safeNow =
@@ -71,6 +75,7 @@ export function markReviewPromptShown(
     Number.isFinite(now) && now >= 0 ? Math.floor(now) : Date.now();
   return {
     ...state,
+    firstPromptShown: true,
     lastPromptAt: safeNow,
   };
 }
