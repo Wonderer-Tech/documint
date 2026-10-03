@@ -11,7 +11,7 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 
 **🎉 400+ downloads and counting.** Thank you to everyone who has tried DocuMint and helped shape it.
 
-> **Current Marketplace build: 1.0.9.** It includes the full 1.0.8 Local Project Map upgrade plus the final browser-navigation/release fix.
+> **1.0.9 release:** the full 1.0.8 Local Project Map upgrade plus the final browser-navigation/release fix.
 
 DocuMint writes generated documentation to:
 
