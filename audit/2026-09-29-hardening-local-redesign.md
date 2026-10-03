@@ -88,17 +88,19 @@ _Last updated: 2026-10-01_
 - ✅ The corrected 1.0.8 head passed unit/regression, compile/bundle, Local self-audit, full browser acceptance, VSIX packaging, archive integrity validation, and `npm run release:readiness`.
 - ✅ The 1.0.8 GitHub tag/release workflow then completed successfully and published `documint-1.0.8.vsix`.
 - ⏳ Marketplace had already received 1.0.8 before the final browser-navigation fix, so the package version is now **1.0.9** for the corrected Marketplace republish.
-- ⏳ Re-run `npm run release:readiness` once for the 1.0.9 metadata/artifact before creating the v1.0.9 tag and Marketplace upload.
+- ✅ 1.0.9 review prompting was revised to show once on first DocuMint activation, retain the seven-day postponed cadence, preserve old prompt state, and guard against duplicate activation/generation scheduling.
+- ⏳ Because that review-prompt change landed after the previous green readiness run, re-run `npm run release:readiness` for the current 1.0.9 head before creating the v1.0.9 tag and Marketplace upload.
 
 ### Current next step
 
-The implementation and final browser-navigation fix are already validated. 1.0.9 is a Marketplace hotfix version bump so the corrected build can be published after 1.0.8 was uploaded too early.
+The corrected browser-navigation build was already validated, but the first-activation review-prompt change landed afterward. The current 1.0.9 head therefore needs one final full readiness run.
 
-1. Pull the 1.0.9 metadata changes.
-2. Run `npm run release:readiness` once to produce `release-artifacts/documint-1.0.9.vsix`.
-3. Create/push the `v1.0.9` tag so the GitHub Release workflow publishes the matching GitHub asset.
-4. Publish `documint-1.0.9.vsix` to the VS Code Marketplace.
-5. Keep main-push CI path-gated unless/until that workflow policy is intentionally changed.
+1. Pull the current 1.0.9 head.
+2. Run `npm run release:readiness` and require a complete PASS.
+3. Confirm `release-artifacts/documint-1.0.9.vsix` and `release-artifacts/readiness/readiness.json` were regenerated.
+4. Create/push the `v1.0.9` tag so the GitHub Release workflow validates and publishes the matching GitHub asset.
+5. Publish that 1.0.9 VSIX to the VS Code Marketplace.
+6. Keep main-push CI path-gated unless/until that workflow policy is intentionally changed.
 
 
 
