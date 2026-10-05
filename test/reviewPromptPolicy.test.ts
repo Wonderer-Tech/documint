@@ -10,7 +10,7 @@ import {
   recordSuccessfulGenerationForReview,
 } from "../src/services/reviewPromptPolicy";
 
-test("review prompt is due on first DocuMint activation", () => {
+test("review card is due on first DocuMint activation", () => {
   assert.equal(isReviewPromptDue(undefined, 1_000), true);
   assert.equal(
     isReviewPromptDue(
@@ -25,7 +25,7 @@ test("review prompt is due on first DocuMint activation", () => {
   );
 });
 
-test("review prompt repeats only after the seven-day cooldown", () => {
+test("review card repeats only after the seven-day cooldown", () => {
   const state = {
     successfulGenerations: 0,
     firstPromptShown: true,
@@ -42,7 +42,7 @@ test("review prompt repeats only after the seven-day cooldown", () => {
   );
 });
 
-test("successful generation can request a due prompt without consuming the cooldown", () => {
+test("successful generation can request a due review card without consuming cooldown", () => {
   const first = recordSuccessfulGenerationForReview(undefined, 5_000);
   assert.equal(first.state.successfulGenerations, 1);
   assert.equal(first.shouldPrompt, true);
@@ -54,7 +54,7 @@ test("successful generation can request a due prompt without consuming the coold
   assert.equal(second.shouldPrompt, true);
 });
 
-test("legacy prompt timestamps count as an already-shown first prompt", () => {
+test("legacy prompt timestamps count as an already-shown first review card", () => {
   const normalized = normalizeReviewPromptState({
     successfulGenerations: 3,
     lastPromptAt: 20_000,
@@ -71,7 +71,7 @@ test("legacy prompt timestamps count as an already-shown first prompt", () => {
   );
 });
 
-test("review completion and opt-out permanently suppress future prompts", () => {
+test("review completion and opt-out permanently suppress future cards", () => {
   const completed = isReviewPromptDue(
     completeReviewPrompt({ successfulGenerations: 0 }),
     50_000,
@@ -85,7 +85,7 @@ test("review completion and opt-out permanently suppress future prompts", () => 
   assert.equal(disabled, false);
 });
 
-test("review prompt state normalization rejects malformed counters and timestamps", () => {
+test("review state normalization rejects malformed counters and timestamps", () => {
   assert.deepEqual(
     normalizeReviewPromptState({
       successfulGenerations: -8.7,
@@ -104,10 +104,22 @@ test("review prompt state normalization rejects malformed counters and timestamp
   );
 });
 
-test("extension schedules activation prompt and records Local and AI successes", () => {
+test("review experience is rendered inside the DocuMint sidebar", () => {
   const extensionSource = readFileSync("src/extensionBase.ts", "utf8");
   const serviceSource = readFileSync(
     "src/services/reviewPromptService.ts",
+    "utf8",
+  );
+  const providerSource = readFileSync(
+    "src/views/sidebarProvider.ts",
+    "utf8",
+  );
+  const templateSource = readFileSync(
+    "src/views/sidebarTemplate.ts",
+    "utf8",
+  );
+  const clientSource = readFileSync(
+    "src/views/sidebarClientScript.ts",
     "utf8",
   );
 
@@ -121,28 +133,49 @@ test("extension schedules activation prompt and records Local and AI successes",
   );
   assert.match(
     extensionSource,
-    /reviewPromptService\.schedulePromptOnActivation\(\)/,
+    /reviewPromptService\.shouldShowOnActivation\(\)/,
   );
+  assert.match(extensionSource, /setReviewPromptVisible\(visible\)/);
+  assert.match(extensionSource, /aiDocGenerator\.reviewPromptPresented/);
+  assert.match(extensionSource, /aiDocGenerator\.reviewMarketplace/);
+  assert.match(extensionSource, /aiDocGenerator\.reviewFeedback/);
+  assert.match(extensionSource, /aiDocGenerator\.reviewLater/);
+  assert.match(extensionSource, /aiDocGenerator\.reviewNever/);
+
   assert.match(serviceSource, /vscode\.ExtensionMode\.Development/);
   assert.match(
     serviceSource,
     /globalState\.update\(REVIEW_STATE_KEY, undefined\)/,
   );
-  assert.match(serviceSource, /markReviewPromptShown\(latest\)/);
-  assert.match(
-    serviceSource,
-    /If you love DocuMint and it genuinely helps your work, please review us on the Marketplace\./,
-  );
-  assert.match(serviceSource, /Review on Marketplace/);
-  assert.match(serviceSource, /Tell us what to improve/);
-  assert.doesNotMatch(serviceSource, /showInputBox/);
-  assert.match(serviceSource, /What should we improve\?/);
-  assert.match(serviceSource, /Later/);
-  assert.match(serviceSource, /Don't ask again/);
+  assert.match(serviceSource, /markReviewPromptShown\(current\)/);
   assert.match(
     serviceSource,
     /marketplace\.visualstudio\.com\/items\?itemName=wonderertech\.documint/,
   );
   assert.match(serviceSource, /github\.com\/Wonderer-Tech\/documint\/issues\/new/);
-  assert.match(serviceSource, /globalState/);
+  assert.doesNotMatch(serviceSource, /showInformationMessage/);
+
+  assert.match(providerSource, /reviewPromptVisible: false/);
+  assert.match(providerSource, /review-prompt-presented/);
+  assert.match(providerSource, /review-marketplace/);
+  assert.match(providerSource, /review-feedback/);
+  assert.match(providerSource, /review-later/);
+  assert.match(providerSource, /review-never/);
+
+  assert.match(templateSource, /id="reviewCard"/);
+  assert.match(templateSource, /id="reviewStars"/);
+  assert.equal((templateSource.match(/class="review-star"/g) ?? []).length, 5);
+  assert.match(templateSource, /id="reviewFeedback"/);
+  assert.match(templateSource, /What should we improve\?/);
+  assert.match(templateSource, /Open GitHub feedback issue/);
+  assert.match(templateSource, /Review on Marketplace/);
+  assert.match(templateSource, /Don't ask again/);
+
+  assert.match(clientSource, /function setReviewRating/);
+  assert.match(clientSource, /function setReviewPromptVisible/);
+  assert.match(clientSource, /type: 'review-prompt-presented'/);
+  assert.match(clientSource, /type: 'review-marketplace'/);
+  assert.match(clientSource, /type: 'review-feedback'/);
+  assert.match(clientSource, /type: 'review-later'/);
+  assert.match(clientSource, /type: 'review-never'/);
 });
