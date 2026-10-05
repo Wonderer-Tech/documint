@@ -89,18 +89,18 @@ _Last updated: 2026-10-01_
 - ✅ The 1.0.8 GitHub tag/release workflow then completed successfully and published `documint-1.0.8.vsix`.
 - ✅ v1.0.9 was already released before the finalized first-activation review-prompt change landed.
 - ✅ The review flow is now a full card inside the DocuMint sidebar: 1–5 stars, Marketplace review action, inline improvement textarea, GitHub issue handoff, Later/close, and Don't ask again. The seven-day postponed cadence and legacy prompt state are preserved; no native notification is used for review UI.
-- ⏳ The package version is now **1.0.10** so the finalized review-prompt behavior can be published as a new Marketplace/GitHub build.
-- ⏳ Re-run `npm run release:readiness` for the current 1.0.10 head before creating the v1.0.10 tag and Marketplace upload.
+- ⏳ The package version is now **1.0.11** so the complete in-sidebar review/rating/feedback card can be published as a new Marketplace/GitHub build.
+- ⏳ Re-run `npm run release:readiness` for the current 1.0.11 head before creating the v1.0.11 tag and Marketplace upload.
 
 ### Current next step
 
-v1.0.9 is already published. The finalized review-prompt behavior now lives on the 1.0.10 head and needs one complete release validation.
+The complete sidebar review/rating/feedback card now lives on the 1.0.11 head and needs one full release validation.
 
-1. Pull the current 1.0.10 head.
+1. Pull the current 1.0.11 head.
 2. Run `npm run release:readiness` and require a complete PASS.
-3. Confirm `release-artifacts/documint-1.0.10.vsix` and `release-artifacts/readiness/readiness.json` were regenerated.
-4. Create/push the `v1.0.10` tag so the GitHub Release workflow validates and publishes the matching GitHub asset.
-5. Publish that 1.0.10 VSIX to the VS Code Marketplace.
+3. Confirm `release-artifacts/documint-1.0.11.vsix` and `release-artifacts/readiness/readiness.json` were regenerated.
+4. Create/push the `v1.0.11` tag so the GitHub Release workflow validates and publishes the matching GitHub asset.
+5. Publish that 1.0.11 VSIX to the VS Code Marketplace.
 6. Keep main-push CI path-gated unless/until that workflow policy is intentionally changed.
 
 
