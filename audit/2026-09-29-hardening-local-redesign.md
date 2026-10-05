@@ -88,7 +88,7 @@ _Last updated: 2026-10-01_
 - ✅ The corrected 1.0.8 head passed unit/regression, compile/bundle, Local self-audit, full browser acceptance, VSIX packaging, archive integrity validation, and `npm run release:readiness`.
 - ✅ The 1.0.8 GitHub tag/release workflow then completed successfully and published `documint-1.0.8.vsix`.
 - ✅ v1.0.9 was already released before the finalized first-activation review-prompt change landed.
-- ✅ The review prompt now shows once on first DocuMint activation, retains the seven-day postponed cadence, preserves legacy prompt state, and guards against duplicate activation/generation scheduling.
+- ✅ The review flow is now a full card inside the DocuMint sidebar: 1–5 stars, Marketplace review action, inline improvement textarea, GitHub issue handoff, Later/close, and Don't ask again. The seven-day postponed cadence and legacy prompt state are preserved; no native notification is used for review UI.
 - ⏳ The package version is now **1.0.10** so the finalized review-prompt behavior can be published as a new Marketplace/GitHub build.
 - ⏳ Re-run `npm run release:readiness` for the current 1.0.10 head before creating the v1.0.10 tag and Marketplace upload.
 
