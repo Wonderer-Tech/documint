@@ -133,7 +133,7 @@ test("review experience is rendered inside the DocuMint sidebar", () => {
   );
   assert.match(
     extensionSource,
-    /reviewPromptService\.shouldShowOnActivation\(\)/,
+    /reviewPromptService\s*\.\s*shouldShowOnActivation\(\)/,
   );
   assert.match(extensionSource, /setReviewPromptVisible\(visible\)/);
   assert.match(extensionSource, /aiDocGenerator\.reviewPromptPresented/);
