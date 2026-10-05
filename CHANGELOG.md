@@ -13,7 +13,9 @@ All notable changes to DocuMint are documented here.
 - Keep postponed prompts limited to once every seven days.
 - Preserve legacy review-prompt state and explicit opt-out/completion state.
 - Prevent duplicate prompts when activation and generation events occur close together.
-- Keep Marketplace review and GitHub improvement feedback as separate explicit actions.
+- Replace the native notification-only review flow with a complete review card inside the DocuMint sidebar.
+- Add an interactive 1–5 star selector, Marketplace review action, inline improvement textarea, character count, and prefilled GitHub feedback issue flow.
+- Keep Marketplace review and GitHub improvement feedback as separate explicit actions; star selection stays local until the user continues to the Marketplace.
 
 ## 1.0.9 — Marketplace hotfix
 
