@@ -9,6 +9,7 @@ All notable changes to DocuMint are documented here.
 ### Fixed
 
 - Show the review prompt once on first DocuMint activation after install instead of waiting for three successful generations.
+- Activate DocuMint on `onStartupFinished` so the first-install prompt can run without requiring the user to open the DocuMint view or invoke a command first.
 - Keep postponed prompts limited to once every seven days.
 - Preserve legacy review-prompt state and explicit opt-out/completion state.
 - Prevent duplicate prompts when activation and generation events occur close together.
