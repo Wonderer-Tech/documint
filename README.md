@@ -57,7 +57,7 @@ Instead of giving you a long generated document and asking you to figure out whe
 - **A softer generated UI** — the paper-grid visual system now has restrained Jelly-style depth, light/dark support, smoother interactions, and reduced-motion-aware transitions.
 - **Local AI runtimes** — Ollama and LM Studio are first-class presets with local model discovery and no API key requirement.
 - **Cleaner privacy boundaries** — Local Documentation remains provider-independent and self-contained; generated Local HTML does not require CDN assets.
-- **Review & feedback flow** — DocuMint can show one review prompt on first activation, then no more than once every seven days when postponed; Marketplace review, GitHub improvement feedback, and explicit opt-out remain separate actions.
+- **Review & feedback flow** — a full sidebar card with 1–5 stars, Marketplace review, an inline GitHub feedback box, seven-day postpone cadence, and explicit opt-out.
 - **Release hardening** — locked installs, browser acceptance, self-audit, CSP/network hardening, and reproducible release-readiness checks are now part of the release path.
 
 ## 1.0.7 vs 1.0.10
@@ -258,9 +258,9 @@ npm run compile
 6. Click **Generate Documentation** / **Generate Local Documentation** for workspace scope, or use **File** / **Folder** quick buttons.
 7. Open generated files from `documint/`.
 
-### Review & Feedback Prompt
+### Review & Feedback Card
 
-After install, DocuMint auto-activates when VS Code finishes starting and may show one native VS Code review prompt: **“If you love DocuMint and it genuinely helps your work, please review us on the Marketplace.”** If dismissed or postponed, it can appear again no more than once every 7 days. A successful generation can also surface the prompt when that seven-day window is due. **Review on Marketplace** opens DocuMint's Marketplace review section directly with no intermediate DocuMint page. **Tell us what to improve** opens a prefilled GitHub feedback issue directly. Choosing either review/feedback action or **Don't ask again** stops future prompts. The cadence is stored in VS Code extension global state; DocuMint does not send feedback automatically.
+After install, DocuMint auto-activates when VS Code finishes starting and makes a review card available inside the **DocuMint sidebar**. The card includes a 1–5 star selector, a clear **Review on Marketplace** action, and an inline **What should we improve?** feedback box that opens a prefilled GitHub issue. The star selector is a local UI choice only; the public rating is submitted on the Marketplace. If the card is postponed or closed, it can appear again no more than once every 7 days, and a successful generation can surface it again when that window is due. **Don't ask again** permanently disables the card. Review cadence is stored in VS Code extension global state, and DocuMint does not send feedback automatically.
 
 ## Commands
 
