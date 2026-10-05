@@ -61,7 +61,7 @@ export class ReviewPromptService {
     );
   }
 
-  public async reviewOnMarketplace(rating?: number): Promise<void> {
+  public async reviewOnMarketplace(_rating?: number): Promise<void> {
     const current = this.context.globalState.get<ReviewPromptState>(
       REVIEW_STATE_KEY,
     );
@@ -70,11 +70,7 @@ export class ReviewPromptService {
       completeReviewPrompt(current),
     );
 
-    const target = new URL(MARKETPLACE_REVIEW_URL);
-    if (normalizeRating(rating)) {
-      target.searchParams.set("documintRating", String(normalizeRating(rating)));
-    }
-    await vscode.env.openExternal(vscode.Uri.parse(target.toString()));
+    await vscode.env.openExternal(vscode.Uri.parse(MARKETPLACE_REVIEW_URL));
   }
 
   public async sendFeedback(
