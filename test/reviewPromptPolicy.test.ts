@@ -126,7 +126,7 @@ test("review experience is rendered inside the DocuMint sidebar", () => {
   assert.equal(
     (
       extensionSource.match(
-        /reviewPromptService\.recordSuccessfulGeneration\(\)/g,
+        /reviewPromptService\s*\.\s*recordSuccessfulGeneration\(\)/g,
       ) ?? []
     ).length,
     2,
