@@ -87,19 +87,20 @@ _Last updated: 2026-10-01_
 - ✅ Browser acceptance uses a cross-platform Python 3 launcher with `DOCUMINT_PYTHON` override support, and release readiness preflights Playwright/Chromium before verify/browser/package execution.
 - ✅ The corrected 1.0.8 head passed unit/regression, compile/bundle, Local self-audit, full browser acceptance, VSIX packaging, archive integrity validation, and `npm run release:readiness`.
 - ✅ The 1.0.8 GitHub tag/release workflow then completed successfully and published `documint-1.0.8.vsix`.
-- ⏳ Marketplace had already received 1.0.8 before the final browser-navigation fix, so the package version is now **1.0.9** for the corrected Marketplace republish.
-- ✅ 1.0.9 review prompting was revised to show once on first DocuMint activation, retain the seven-day postponed cadence, preserve old prompt state, and guard against duplicate activation/generation scheduling.
-- ⏳ Because that review-prompt change landed after the previous green readiness run, re-run `npm run release:readiness` for the current 1.0.9 head before creating the v1.0.9 tag and Marketplace upload.
+- ✅ v1.0.9 was already released before the finalized first-activation review-prompt change landed.
+- ✅ The review prompt now shows once on first DocuMint activation, retains the seven-day postponed cadence, preserves legacy prompt state, and guards against duplicate activation/generation scheduling.
+- ⏳ The package version is now **1.0.10** so the finalized review-prompt behavior can be published as a new Marketplace/GitHub build.
+- ⏳ Re-run `npm run release:readiness` for the current 1.0.10 head before creating the v1.0.10 tag and Marketplace upload.
 
 ### Current next step
 
-The corrected browser-navigation build was already validated, but the first-activation review-prompt change landed afterward. The current 1.0.9 head therefore needs one final full readiness run.
+v1.0.9 is already published. The finalized review-prompt behavior now lives on the 1.0.10 head and needs one complete release validation.
 
-1. Pull the current 1.0.9 head.
+1. Pull the current 1.0.10 head.
 2. Run `npm run release:readiness` and require a complete PASS.
-3. Confirm `release-artifacts/documint-1.0.9.vsix` and `release-artifacts/readiness/readiness.json` were regenerated.
-4. Create/push the `v1.0.9` tag so the GitHub Release workflow validates and publishes the matching GitHub asset.
-5. Publish that 1.0.9 VSIX to the VS Code Marketplace.
+3. Confirm `release-artifacts/documint-1.0.10.vsix` and `release-artifacts/readiness/readiness.json` were regenerated.
+4. Create/push the `v1.0.10` tag so the GitHub Release workflow validates and publishes the matching GitHub asset.
+5. Publish that 1.0.10 VSIX to the VS Code Marketplace.
 6. Keep main-push CI path-gated unless/until that workflow policy is intentionally changed.
 
 
