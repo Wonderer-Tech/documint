@@ -2,6 +2,27 @@
 
 All notable changes to DocuMint are documented here.
 
+## 1.0.11 — Sidebar review & feedback card
+
+1.0.11 replaces the notification-style review flow with a complete review experience inside the DocuMint sidebar.
+
+### Added
+
+- Full in-sidebar review card shown on first eligible activation.
+- Interactive 1–5 star selector with clear rating state.
+- **Review on Marketplace** action from the card.
+- Inline **What should we improve?** textarea with character count.
+- Prefilled GitHub feedback issue flow carrying the written feedback and optional local star selection.
+- **Later**, close, and **Don't ask again** controls inside the same card.
+- Sidebar-host message routing and regression coverage for the complete card.
+
+### Changed
+
+- Review cadence remains first eligible activation plus a seven-day postponed cooldown.
+- The cooldown begins when the review card is actually presented.
+- Development-host runs reset review state so F5 reliably exercises the fresh review experience.
+- Review UI no longer relies on a native VS Code notification.
+
 ## 1.0.10 — First-activation review prompt fix
 
 1.0.10 republishes the 1.0.9 build with the finalized review/feedback cadence. v1.0.9 had already been released before this behavior change landed.
