@@ -22,20 +22,30 @@ const PROMPT_DELAY_MS = 1400;
 
 export class ReviewPromptService {
   private promptScheduledOrVisible = false;
+  private developmentStatePrepared = false;
 
   constructor(private readonly context: vscode.ExtensionContext) {}
 
   public async schedulePromptOnActivation(): Promise<void> {
+    if (
+      this.context.extensionMode === vscode.ExtensionMode.Development &&
+      !this.developmentStatePrepared
+    ) {
+      this.developmentStatePrepared = true;
+      await this.context.globalState.update(REVIEW_STATE_KEY, undefined);
+      console.log("[Documint] review prompt: reset state for Extension Development Host");
+    }
+
     const current = this.context.globalState.get<ReviewPromptState>(
       REVIEW_STATE_KEY,
     );
     if (!isReviewPromptDue(current)) {
+      console.log("[Documint] review prompt: not due on activation");
       return;
     }
 
-    const shown = markReviewPromptShown(current);
-    await this.context.globalState.update(REVIEW_STATE_KEY, shown);
-    this.schedulePrompt(shown);
+    console.log("[Documint] review prompt: scheduled on activation");
+    this.schedulePrompt(current);
   }
 
   public async recordSuccessfulGeneration(): Promise<void> {
@@ -70,6 +80,19 @@ export class ReviewPromptService {
   }
 
   private async showPrompt(state: ReviewPromptState): Promise<void> {
+    const latest =
+      this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
+      state;
+
+    if (!isReviewPromptDue(latest)) {
+      console.log("[Documint] review prompt: no longer due before display");
+      return;
+    }
+
+    const shown = markReviewPromptShown(latest);
+    await this.context.globalState.update(REVIEW_STATE_KEY, shown);
+    console.log("[Documint] review prompt: displaying");
+
     const selection = await vscode.window.showInformationMessage(
       "If you love DocuMint and it genuinely helps your work, please review us on the Marketplace.",
       REVIEW_ACTION,
@@ -79,24 +102,24 @@ export class ReviewPromptService {
     );
 
     if (selection === REVIEW_ACTION) {
-      const latest =
+      const latestState =
         this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
-        state;
+        shown;
       await this.context.globalState.update(
         REVIEW_STATE_KEY,
-        completeReviewPrompt(latest),
+        completeReviewPrompt(latestState),
       );
       await vscode.env.openExternal(vscode.Uri.parse(MARKETPLACE_REVIEW_URL));
       return;
     }
 
     if (selection === FEEDBACK_ACTION) {
-      const latest =
+      const latestState =
         this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
-        state;
+        shown;
       await this.context.globalState.update(
         REVIEW_STATE_KEY,
-        completeReviewPrompt(latest),
+        completeReviewPrompt(latestState),
       );
 
       const issue = new URL(FEEDBACK_ISSUE_URL);
@@ -118,12 +141,12 @@ export class ReviewPromptService {
     }
 
     if (selection === DISABLE_ACTION) {
-      const latest =
+      const latestState =
         this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
-        state;
+        shown;
       await this.context.globalState.update(
         REVIEW_STATE_KEY,
-        disableReviewPrompt(latest),
+        disableReviewPrompt(latestState),
       );
     }
   }
