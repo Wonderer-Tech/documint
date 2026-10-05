@@ -62,7 +62,7 @@ export class ReviewPromptService {
     this.schedulePrompt(decision.state);
   }
 
-  private schedulePrompt(state: ReviewPromptState): void {
+  private schedulePrompt(state: ReviewPromptState | undefined): void {
     if (this.promptScheduledOrVisible) {
       return;
     }
@@ -79,7 +79,7 @@ export class ReviewPromptService {
     }, PROMPT_DELAY_MS);
   }
 
-  private async showPrompt(state: ReviewPromptState): Promise<void> {
+  private async showPrompt(state: ReviewPromptState | undefined): Promise<void> {
     const latest =
       this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
       state;
