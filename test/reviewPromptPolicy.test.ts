@@ -42,16 +42,16 @@ test("review prompt repeats only after the seven-day cooldown", () => {
   );
 });
 
-test("successful generation can surface a due prompt without a generation threshold", () => {
+test("successful generation can request a due prompt without consuming the cooldown", () => {
   const first = recordSuccessfulGenerationForReview(undefined, 5_000);
   assert.equal(first.state.successfulGenerations, 1);
   assert.equal(first.shouldPrompt, true);
-  assert.equal(first.state.firstPromptShown, true);
-  assert.equal(first.state.lastPromptAt, 5_000);
+  assert.equal(first.state.firstPromptShown, false);
+  assert.equal(first.state.lastPromptAt, undefined);
 
   const second = recordSuccessfulGenerationForReview(first.state, 6_000);
   assert.equal(second.state.successfulGenerations, 2);
-  assert.equal(second.shouldPrompt, false);
+  assert.equal(second.shouldPrompt, true);
 });
 
 test("legacy prompt timestamps count as an already-shown first prompt", () => {
@@ -123,6 +123,12 @@ test("extension schedules activation prompt and records Local and AI successes",
     extensionSource,
     /reviewPromptService\.schedulePromptOnActivation\(\)/,
   );
+  assert.match(serviceSource, /vscode\.ExtensionMode\.Development/);
+  assert.match(
+    serviceSource,
+    /globalState\.update\(REVIEW_STATE_KEY, undefined\)/,
+  );
+  assert.match(serviceSource, /markReviewPromptShown\(latest\)/);
   assert.match(
     serviceSource,
     /If you love DocuMint and it genuinely helps your work, please review us on the Marketplace\./,
