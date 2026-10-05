@@ -34,10 +34,10 @@ test("manifest distinguishes shared settings from AI-only controls", () => {
   assert.match(properties["documint.targetLanguages"].description, /both AI and Local/i);
 });
 
-test("manifest relies on automatic command/view activation for the current VS Code engine", () => {
+test("manifest activates after startup so first-install review prompting can run", () => {
   const activationEvents = (manifest as { activationEvents?: string[] }).activationEvents;
 
-  assert.equal(activationEvents, undefined);
+  assert.deepEqual(activationEvents, ["onStartupFinished"]);
   assert.equal(manifest.engines.vscode, "^1.110.0");
 });
 
