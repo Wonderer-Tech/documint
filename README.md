@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
-![Version](https://img.shields.io/badge/version-1.0.10-green)
+![Version](https://img.shields.io/badge/version-1.0.11-green)
 ![Marketplace installs](https://img.shields.io/badge/Marketplace%20installs-400%2B-brightgreen)
 
 **Understand a codebase without reading every file first.**
@@ -11,7 +11,7 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 
 **🎉 400+ downloads and counting.** Thank you to everyone who has tried DocuMint and helped shape it.
 
-> **1.0.10 release:** the full 1.0.8 Local Project Map upgrade plus the final browser-navigation/release fixes and the corrected first-activation review-prompt behavior.
+> **1.0.11 release:** the full Local Project Map upgrade plus the complete in-sidebar rating, review, and improvement-feedback card.
 
 DocuMint writes generated documentation to:
 
@@ -20,9 +20,9 @@ DocuMint writes generated documentation to:
 
 ## Table of Contents
 
-- [What's New in 1.0.10](#whats-new-in-1010)
-- [1.0.7 vs 1.0.10](#107-vs-1010)
-- [See 1.0.10 in Action](#see-1010-in-action)
+- [What's New in 1.0.11](#whats-new-in-1011)
+- [1.0.7 vs 1.0.11](#107-vs-1011)
+- [See 1.0.11 in Action](#see-1011-in-action)
 - [How It Works](#how-it-works)
 - [Local Project Map](#local-project-map)
 - [Supported Providers](#supported-providers)
@@ -39,9 +39,9 @@ DocuMint writes generated documentation to:
 - [Contributing](#contributing)
 - [License](#license)
 
-## What's New in 1.0.10
+## What's New in 1.0.11
 
-1.0.10 is the corrected Marketplace build containing the full Local Documentation upgrade plus the final first-activation review-prompt fixes that landed after v1.0.9 had already been released.
+1.0.11 keeps the full Local Documentation upgrade and adds the finished review experience directly inside the DocuMint sidebar: 1–5 stars, Marketplace review, inline improvement feedback, GitHub issue handoff, Later, and Don't ask again.
 
 Instead of giving you a long generated document and asking you to figure out where to begin, DocuMint now answers the questions developers usually ask when they open an unfamiliar repository.
 
@@ -60,9 +60,9 @@ Instead of giving you a long generated document and asking you to figure out whe
 - **Review & feedback flow** — a full sidebar card with 1–5 stars, Marketplace review, an inline GitHub feedback box, seven-day postpone cadence, and explicit opt-out.
 - **Release hardening** — locked installs, browser acceptance, self-audit, CSP/network hardening, and reproducible release-readiness checks are now part of the release path.
 
-## 1.0.7 vs 1.0.10
+## 1.0.7 vs 1.0.11
 
-| Area | 1.0.7 | 1.0.10 |
+| Area | 1.0.7 | 1.0.11 |
 | --- | --- | --- |
 | Main focus | Folder-first reader navigation | Codebase understanding + reader navigation |
 | Local HTML | Navigable generated documentation | Question-first interactive project map |
@@ -77,7 +77,7 @@ Instead of giving you a long generated document and asking you to figure out whe
 | Generated UI | Reader navigation polish | Paper-grid + restrained Jelly softness + soft transitions |
 | Feedback | No dedicated cadence | Marketplace review / GitHub improvement feedback with cooldown and opt-out |
 
-## See 1.0.10 in Action
+## See 1.0.11 in Action
 
 These screenshots are generated from DocuMint's own source tree, so the views below show the product documenting itself.
 
@@ -85,31 +85,31 @@ These screenshots are generated from DocuMint's own source tree, so the views be
 
 Counts, languages, entry points, dependencies, documentation coverage, symbols, exports, and more are grouped into one readable starting point.
 
-![DocuMint 1.0.10 At a glance](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-18-49.png)
+![DocuMint 1.0.11 At a glance](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-18-49.png)
 
 ### Big picture — see how modules connect
 
 The module graph shows structural relationships without turning the page into an unreadable arrow wall. You can switch connection density and zoom into more detail in the generated report.
 
-![DocuMint 1.0.10 Big picture](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-19-21.png)
+![DocuMint 1.0.11 Big picture](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-19-21.png)
 
 ### What's inside — spot where the code actually lives
 
 The treemap makes repository size and module/file distribution visual, so large files and dense areas stand out immediately.
 
-![DocuMint 1.0.10 What's inside](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-05.png)
+![DocuMint 1.0.11 What's inside](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-05.png)
 
 ### Start here — get a practical reading order
 
 DocuMint uses detected entry points and resolved dependencies to suggest a source-backed place to begin reading. It is guidance, not an invented claim about the only correct order.
 
-![DocuMint 1.0.10 Start here](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-27.png)
+![DocuMint 1.0.11 Start here](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-27.png)
 
 ### Dependency reach — find widely used files
 
 The dependency-reach view helps you see which files are depended on by more of the project and how that relates to source size.
 
-![DocuMint 1.0.10 Dependency reach](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-38.png)
+![DocuMint 1.0.11 Dependency reach](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-38.png)
 
 ## How It Works
 
