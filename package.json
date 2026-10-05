@@ -50,6 +50,9 @@
     "vscode": "^1.110.0"
   },
   "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "commands": [
       {
