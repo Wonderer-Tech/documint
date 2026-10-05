@@ -2,6 +2,18 @@
 
 All notable changes to DocuMint are documented here.
 
+## 1.0.10 — First-activation review prompt fix
+
+1.0.10 republishes the 1.0.9 build with the finalized review/feedback cadence. v1.0.9 had already been released before this behavior change landed.
+
+### Fixed
+
+- Show the review prompt once on first DocuMint activation after install instead of waiting for three successful generations.
+- Keep postponed prompts limited to once every seven days.
+- Preserve legacy review-prompt state and explicit opt-out/completion state.
+- Prevent duplicate prompts when activation and generation events occur close together.
+- Keep Marketplace review and GitHub improvement feedback as separate explicit actions.
+
 ## 1.0.9 — Marketplace hotfix
 
 1.0.9 republishes the 1.0.8 feature set with the final browser-navigation acceptance fix and the revised first-activation review prompt. The Marketplace had already received 1.0.8 before those final changes landed, so 1.0.9 is the corrected Marketplace build.
