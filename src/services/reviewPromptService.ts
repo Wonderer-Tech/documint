@@ -14,140 +14,133 @@ const MARKETPLACE_REVIEW_URL =
 const FEEDBACK_ISSUE_URL =
   "https://github.com/Wonderer-Tech/documint/issues/new";
 
-const REVIEW_ACTION = "Review on Marketplace";
-const FEEDBACK_ACTION = "Tell us what to improve";
-const LATER_ACTION = "Later";
-const DISABLE_ACTION = "Don't ask again";
-const PROMPT_DELAY_MS = 1400;
-
 export class ReviewPromptService {
-  private promptScheduledOrVisible = false;
   private developmentStatePrepared = false;
 
   constructor(private readonly context: vscode.ExtensionContext) {}
 
-  public async schedulePromptOnActivation(): Promise<void> {
+  public async shouldShowOnActivation(): Promise<boolean> {
     if (
       this.context.extensionMode === vscode.ExtensionMode.Development &&
       !this.developmentStatePrepared
     ) {
       this.developmentStatePrepared = true;
       await this.context.globalState.update(REVIEW_STATE_KEY, undefined);
-      console.log("[Documint] review prompt: reset state for Extension Development Host");
+      console.log(
+        "[Documint] review card: reset state for Extension Development Host",
+      );
     }
 
     const current = this.context.globalState.get<ReviewPromptState>(
       REVIEW_STATE_KEY,
     );
-    if (!isReviewPromptDue(current)) {
-      console.log("[Documint] review prompt: not due on activation");
-      return;
-    }
-
-    console.log("[Documint] review prompt: scheduled on activation");
-    this.schedulePrompt(current);
+    return isReviewPromptDue(current);
   }
 
-  public async recordSuccessfulGeneration(): Promise<void> {
+  public async recordSuccessfulGeneration(): Promise<boolean> {
     const current = this.context.globalState.get<ReviewPromptState>(
       REVIEW_STATE_KEY,
     );
     const decision = recordSuccessfulGenerationForReview(current);
 
     await this.context.globalState.update(REVIEW_STATE_KEY, decision.state);
-    if (!decision.shouldPrompt) {
-      return;
-    }
-
-    this.schedulePrompt(decision.state);
+    return decision.shouldPrompt;
   }
 
-  private schedulePrompt(state: ReviewPromptState | undefined): void {
-    if (this.promptScheduledOrVisible) {
+  public async markPresented(): Promise<void> {
+    const current = this.context.globalState.get<ReviewPromptState>(
+      REVIEW_STATE_KEY,
+    );
+    if (!isReviewPromptDue(current)) {
       return;
     }
 
-    this.promptScheduledOrVisible = true;
-    setTimeout(() => {
-      void this.showPrompt(state)
-        .catch((error) => {
-          console.error("[Documint] review prompt error:", error);
-        })
-        .finally(() => {
-          this.promptScheduledOrVisible = false;
-        });
-    }, PROMPT_DELAY_MS);
+    await this.context.globalState.update(
+      REVIEW_STATE_KEY,
+      markReviewPromptShown(current),
+    );
   }
 
-  private async showPrompt(state: ReviewPromptState | undefined): Promise<void> {
-    const latest =
-      this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
-      state;
-
-    if (!isReviewPromptDue(latest)) {
-      console.log("[Documint] review prompt: no longer due before display");
-      return;
-    }
-
-    const shown = markReviewPromptShown(latest);
-    await this.context.globalState.update(REVIEW_STATE_KEY, shown);
-    console.log("[Documint] review prompt: displaying");
-
-    const selection = await vscode.window.showInformationMessage(
-      "If you love DocuMint and it genuinely helps your work, please review us on the Marketplace.",
-      REVIEW_ACTION,
-      FEEDBACK_ACTION,
-      LATER_ACTION,
-      DISABLE_ACTION,
+  public async reviewOnMarketplace(rating?: number): Promise<void> {
+    const current = this.context.globalState.get<ReviewPromptState>(
+      REVIEW_STATE_KEY,
+    );
+    await this.context.globalState.update(
+      REVIEW_STATE_KEY,
+      completeReviewPrompt(current),
     );
 
-    if (selection === REVIEW_ACTION) {
-      const latestState =
-        this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
-        shown;
-      await this.context.globalState.update(
-        REVIEW_STATE_KEY,
-        completeReviewPrompt(latestState),
-      );
-      await vscode.env.openExternal(vscode.Uri.parse(MARKETPLACE_REVIEW_URL));
-      return;
+    const target = new URL(MARKETPLACE_REVIEW_URL);
+    if (normalizeRating(rating)) {
+      target.searchParams.set("documintRating", String(normalizeRating(rating)));
     }
-
-    if (selection === FEEDBACK_ACTION) {
-      const latestState =
-        this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
-        shown;
-      await this.context.globalState.update(
-        REVIEW_STATE_KEY,
-        completeReviewPrompt(latestState),
-      );
-
-      const issue = new URL(FEEDBACK_ISSUE_URL);
-      issue.searchParams.set("title", "DocuMint feedback");
-      issue.searchParams.set(
-        "body",
-        [
-          "## What should we improve?",
-          "",
-          "<!-- Tell us what felt confusing, slow, missing, or could be better. -->",
-          "",
-          "## What worked well?",
-          "",
-          "<!-- Optional: tell us what you liked so we do not break it. -->",
-        ].join("\n"),
-      );
-      await vscode.env.openExternal(vscode.Uri.parse(issue.toString()));
-      return;
-    }
-
-    if (selection === DISABLE_ACTION) {
-      const latestState =
-        this.context.globalState.get<ReviewPromptState>(REVIEW_STATE_KEY) ??
-        shown;
-      await this.context.globalState.update(
-        REVIEW_STATE_KEY,
-        disableReviewPrompt(latestState),
-      );
-    }
+    await vscode.env.openExternal(vscode.Uri.parse(target.toString()));
   }
+
+  public async sendFeedback(
+    feedback: string,
+    rating?: number,
+  ): Promise<boolean> {
+    const normalizedFeedback = feedback.trim();
+    if (!normalizedFeedback) {
+      return false;
+    }
+
+    const current = this.context.globalState.get<ReviewPromptState>(
+      REVIEW_STATE_KEY,
+    );
+    await this.context.globalState.update(
+      REVIEW_STATE_KEY,
+      completeReviewPrompt(current),
+    );
+
+    const issue = new URL(FEEDBACK_ISSUE_URL);
+    issue.searchParams.set("title", "DocuMint feedback");
+    issue.searchParams.set(
+      "body",
+      [
+        "## What should we improve?",
+        "",
+        normalizedFeedback,
+        "",
+        "## Rating",
+        "",
+        normalizeRating(rating)
+          ? String(normalizeRating(rating)) + " / 5"
+          : "Not provided",
+        "",
+        "---",
+        "Submitted from the DocuMint sidebar feedback card.",
+      ].join("\n"),
+    );
+
+    await vscode.env.openExternal(vscode.Uri.parse(issue.toString()));
+    return true;
+  }
+
+  public async postpone(): Promise<void> {
+    // The cooldown begins when the card is presented, so Later only hides it.
+  }
+
+  public async disable(): Promise<void> {
+    const current = this.context.globalState.get<ReviewPromptState>(
+      REVIEW_STATE_KEY,
+    );
+    await this.context.globalState.update(
+      REVIEW_STATE_KEY,
+      disableReviewPrompt(current),
+    );
+  }
+}
+
+function normalizeRating(value: number | undefined): number | undefined {
+  if (!Number.isFinite(value)) {
+    return undefined;
+  }
+
+  const rating = Math.floor(value as number);
+  if (rating < 1 || rating > 5) {
+    return undefined;
+  }
+  return rating;
 }
