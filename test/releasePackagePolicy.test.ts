@@ -79,7 +79,7 @@ test("README-only media stays out of VSIX while runtime icons remain packageable
       readme.includes(
         `https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/${screenshot}`,
       ),
-      `README should use current 1.0.9 screenshot: ${screenshot}`,
+      `README should use current 1.0.10 screenshot: ${screenshot}`,
     );
   }
 
