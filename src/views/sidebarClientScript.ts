@@ -46,6 +46,20 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
   var cancelApiKeyBtn = $('cancelApiKeyBtn');
   var apiKeyFeedback = $('apiKeyFeedback');
 
+  var reviewCard = $('reviewCard');
+  var reviewStars = $('reviewStars');
+  var reviewRatingLabel = $('reviewRatingLabel');
+  var reviewMarketplaceBtn = $('reviewMarketplaceBtn');
+  var reviewFeedback = $('reviewFeedback');
+  var reviewFeedbackBtn = $('reviewFeedbackBtn');
+  var reviewFeedbackStatus = $('reviewFeedbackStatus');
+  var reviewFeedbackCount = $('reviewFeedbackCount');
+  var reviewLaterBtn = $('reviewLaterBtn');
+  var reviewNeverBtn = $('reviewNeverBtn');
+  var reviewCloseBtn = $('reviewCloseBtn');
+  var reviewRating = 0;
+  var reviewPromptPresentedSent = false;
+
   function isLocalMode() {
     return generationModeSel && generationModeSel.value === 'local';
   }
@@ -261,6 +275,77 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  function setReviewRating(rating) {
+    reviewRating = Math.max(0, Math.min(5, Number(rating) || 0));
+
+    if (reviewStars) {
+      reviewStars.querySelectorAll('.review-star').forEach(function(star) {
+        var value = Number(star.getAttribute('data-rating')) || 0;
+        star.classList.toggle('selected', value <= reviewRating);
+        star.textContent = value <= reviewRating ? '★' : '☆';
+        star.setAttribute(
+          'aria-checked',
+          value === reviewRating ? 'true' : 'false'
+        );
+      });
+    }
+
+    var labels = {
+      0: 'Choose 1–5 stars',
+      1: '1 / 5 — Tell us what went wrong',
+      2: '2 / 5 — We’d like to improve',
+      3: '3 / 5 — Thanks for the feedback',
+      4: '4 / 5 — Glad it’s helping',
+      5: '5 / 5 — Thank you!'
+    };
+    if (reviewRatingLabel) {
+      reviewRatingLabel.textContent = labels[reviewRating] || labels[0];
+    }
+    if (reviewMarketplaceBtn) {
+      reviewMarketplaceBtn.disabled = reviewRating === 0;
+    }
+  }
+
+  function updateReviewFeedbackState() {
+    if (!reviewFeedback) return;
+    var value = reviewFeedback.value || '';
+    var length = value.length;
+    if (reviewFeedbackCount) {
+      reviewFeedbackCount.textContent = length + ' / 2000';
+    }
+    if (reviewFeedbackBtn) {
+      reviewFeedbackBtn.disabled = !value.trim();
+    }
+    if (reviewFeedbackStatus && value.trim()) {
+      reviewFeedbackStatus.textContent = '';
+    }
+  }
+
+  function resetReviewCardInputs() {
+    setReviewRating(0);
+    if (reviewFeedback) reviewFeedback.value = '';
+    if (reviewFeedbackStatus) reviewFeedbackStatus.textContent = '';
+    updateReviewFeedbackState();
+  }
+
+  function setReviewPromptVisible(visible) {
+    if (!reviewCard) return;
+
+    reviewCard.classList.toggle('hidden', !visible);
+    if (visible) {
+      if (!reviewPromptPresentedSent) {
+        reviewPromptPresentedSent = true;
+        vscode.postMessage({ type: 'review-prompt-presented' });
+      }
+      window.setTimeout(function() {
+        reviewCard.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }, 0);
+    } else {
+      reviewPromptPresentedSent = false;
+      resetReviewCardInputs();
+    }
+  }
+
   function getCustomEndpoint() {
     return customEndpointInput ? customEndpointInput.value.trim() : '';
   }
@@ -327,6 +412,64 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
     }
 
     return true;
+  }
+
+  if (reviewStars) {
+    reviewStars.querySelectorAll('.review-star').forEach(function(star) {
+      star.addEventListener('click', function() {
+        setReviewRating(Number(star.getAttribute('data-rating')) || 0);
+      });
+    });
+  }
+
+  if (reviewFeedback) {
+    reviewFeedback.addEventListener('input', updateReviewFeedbackState);
+  }
+
+  if (reviewMarketplaceBtn) {
+    reviewMarketplaceBtn.addEventListener('click', function() {
+      if (!reviewRating) return;
+      vscode.postMessage({
+        type: 'review-marketplace',
+        rating: reviewRating
+      });
+      setReviewPromptVisible(false);
+    });
+  }
+
+  if (reviewFeedbackBtn) {
+    reviewFeedbackBtn.addEventListener('click', function() {
+      var feedback = reviewFeedback ? reviewFeedback.value.trim() : '';
+      if (!feedback) {
+        if (reviewFeedbackStatus) {
+          reviewFeedbackStatus.textContent = 'Write a short note first.';
+        }
+        if (reviewFeedback) reviewFeedback.focus();
+        return;
+      }
+
+      vscode.postMessage({
+        type: 'review-feedback',
+        rating: reviewRating || undefined,
+        feedback: feedback
+      });
+      setReviewPromptVisible(false);
+    });
+  }
+
+  function postponeReviewCard() {
+    vscode.postMessage({ type: 'review-later' });
+    setReviewPromptVisible(false);
+  }
+
+  if (reviewLaterBtn) reviewLaterBtn.addEventListener('click', postponeReviewCard);
+  if (reviewCloseBtn) reviewCloseBtn.addEventListener('click', postponeReviewCard);
+
+  if (reviewNeverBtn) {
+    reviewNeverBtn.addEventListener('click', function() {
+      vscode.postMessage({ type: 'review-never' });
+      setReviewPromptVisible(false);
+    });
   }
 
   generationModeSel.addEventListener('change', function() {
@@ -461,10 +604,15 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
           applyNormalizedSettings(s.settings);
         }
         setApiKeyStatus(s.apiKeyConfigured, s.settings && s.settings.provider);
+        setReviewPromptVisible(!!s.reviewPromptVisible);
         if (s.isGenerating) setGenerating(true);
         if (s.logs && s.logs.length) {
           s.logs.forEach(function(l) { addLog(l.message, l.type, l.timestamp); });
         }
+        break;
+
+      case 'review-prompt-visibility':
+        setReviewPromptVisible(!!msg.visible);
         break;
 
       case 'settings-normalized':
@@ -523,6 +671,7 @@ export const SIDEBAR_CLIENT_SCRIPT = String.raw`
     }
   });
 
+  resetReviewCardInputs();
   vscode.postMessage({ type: 'ready' });
 
 })();
