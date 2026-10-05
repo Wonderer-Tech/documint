@@ -75,7 +75,7 @@ Instead of giving you a long generated document and asking you to figure out whe
 | Project scale | File navigation and existing charts | Treemap + dependency-reach scatter + architecture insights |
 | Local AI providers | Cloud/custom provider flow | Adds first-class **Ollama** and **LM Studio** presets |
 | Generated UI | Reader navigation polish | Paper-grid + restrained Jelly softness + soft transitions |
-| Feedback | No dedicated cadence | Marketplace review / GitHub improvement feedback with cooldown and opt-out |
+| Feedback | No dedicated cadence | Full sidebar card with 1–5 stars, Marketplace review, GitHub improvement feedback, seven-day postpone cadence, and opt-out |
 
 ## See 1.0.11 in Action
 
