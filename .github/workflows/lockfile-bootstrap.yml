@@ -62,7 +62,7 @@ jobs:
           EOF
 
       - name: Upload package lock artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: documint-package-lock-${{ github.sha }}
           path: lockfile-artifact/
@@ -87,7 +87,7 @@ jobs:
 
       - name: Upload bootstrap readiness evidence
         if: ${{ always() && inputs.run_readiness }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: documint-bootstrap-readiness-${{ github.sha }}
           path: |
