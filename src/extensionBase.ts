@@ -64,9 +64,14 @@ export function activate(context: vscode.ExtensionContext) {
   const docGenerator = new DocGeneratorService(context, secretManager);
   const localDocGenerator = new LocalDocumentationGenerator();
   const reviewPromptService = new ReviewPromptService(context);
-  void reviewPromptService.schedulePromptOnActivation().catch((error) => {
-    console.error("[Documint] review prompt activation error:", error);
-  });
+  void reviewPromptService
+    .shouldShowOnActivation()
+    .then((visible) => {
+      sidebarProvider.setReviewPromptVisible(visible);
+    })
+    .catch((error) => {
+      console.error("[Documint] review card activation error:", error);
+    });
   let activeCancellationSource: vscode.CancellationTokenSource | undefined;
 
   function resolveRunProvider(provider?: string): string {
@@ -237,9 +242,14 @@ export function activate(context: vscode.ExtensionContext) {
           "Local Documentation generation completed!",
           "success",
         );
-        void reviewPromptService.recordSuccessfulGeneration().catch((error) => {
-          console.error("[Documint] review prompt state error:", error);
-        });
+        void reviewPromptService
+          .recordSuccessfulGeneration()
+          .then((visible) => {
+            if (visible) sidebarProvider.setReviewPromptVisible(true);
+          })
+          .catch((error) => {
+            console.error("[Documint] review card state error:", error);
+          });
 
         const actions: string[] = [];
         if (outputPaths.html) actions.push("Open HTML");
@@ -421,9 +431,14 @@ export function activate(context: vscode.ExtensionContext) {
         "Documentation generation completed!",
         "success",
       );
-      void reviewPromptService.recordSuccessfulGeneration().catch((error) => {
-        console.error("[Documint] review prompt state error:", error);
-      });
+      void reviewPromptService
+        .recordSuccessfulGeneration()
+        .then((visible) => {
+          if (visible) sidebarProvider.setReviewPromptVisible(true);
+        })
+        .catch((error) => {
+          console.error("[Documint] review card state error:", error);
+        });
 
       const actions: string[] = [];
       if (outputPaths.html) actions.push("Open HTML");
@@ -559,6 +574,60 @@ export function activate(context: vscode.ExtensionContext) {
 
       sidebarProvider.addLogEntry("No active generation to cancel", "info");
     }),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "aiDocGenerator.reviewPromptPresented",
+      async () => {
+        await reviewPromptService.markPresented();
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "aiDocGenerator.reviewMarketplace",
+      async (rating?: number) => {
+        sidebarProvider.setReviewPromptVisible(false);
+        await reviewPromptService.reviewOnMarketplace(rating);
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "aiDocGenerator.reviewFeedback",
+      async (payload?: { feedback?: string; rating?: number }) => {
+        const opened = await reviewPromptService.sendFeedback(
+          payload?.feedback ?? "",
+          payload?.rating,
+        );
+        if (opened) {
+          sidebarProvider.setReviewPromptVisible(false);
+        }
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "aiDocGenerator.reviewLater",
+      async () => {
+        await reviewPromptService.postpone();
+        sidebarProvider.setReviewPromptVisible(false);
+      },
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "aiDocGenerator.reviewNever",
+      async () => {
+        await reviewPromptService.disable();
+        sidebarProvider.setReviewPromptVisible(false);
+      },
+    ),
   );
 
   context.subscriptions.push(
