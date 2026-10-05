@@ -11,7 +11,7 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 
 **🎉 400+ downloads and counting.** Thank you to everyone who has tried DocuMint and helped shape it.
 
-> **1.0.9 release:** the full 1.0.8 Local Project Map upgrade plus the final browser-navigation/release fix.
+> **1.0.9 release:** the full 1.0.8 Local Project Map upgrade plus the final browser-navigation/release fix and first-activation review-prompt update.
 
 DocuMint writes generated documentation to:
 
@@ -41,7 +41,7 @@ DocuMint writes generated documentation to:
 
 ## What's New in 1.0.9
 
-1.0.9 is the corrected Marketplace build of the major Local Documentation upgrade introduced in 1.0.8. It keeps the same feature set, while including the final browser-navigation/release fix that landed after 1.0.8 had already been published to the Marketplace.
+1.0.9 is the corrected Marketplace build of the major Local Documentation upgrade introduced in 1.0.8. It keeps the same feature set, while including the final browser-navigation/release fix and the first-activation review-prompt update that landed after 1.0.8 had already been published to the Marketplace.
 
 Instead of giving you a long generated document and asking you to figure out where to begin, DocuMint now answers the questions developers usually ask when they open an unfamiliar repository.
 
@@ -57,7 +57,7 @@ Instead of giving you a long generated document and asking you to figure out whe
 - **A softer generated UI** — the paper-grid visual system now has restrained Jelly-style depth, light/dark support, smoother interactions, and reduced-motion-aware transitions.
 - **Local AI runtimes** — Ollama and LM Studio are first-class presets with local model discovery and no API key requirement.
 - **Cleaner privacy boundaries** — Local Documentation remains provider-independent and self-contained; generated Local HTML does not require CDN assets.
-- **Review & feedback flow** — after meaningful use, DocuMint can ask for a Marketplace review or open a GitHub feedback issue, with a seven-day cooldown when postponed and an explicit opt-out.
+- **Review & feedback flow** — DocuMint can show one review prompt on first activation, then no more than once every seven days when postponed; Marketplace review, GitHub improvement feedback, and explicit opt-out remain separate actions.
 - **Release hardening** — locked installs, browser acceptance, self-audit, CSP/network hardening, and reproducible release-readiness checks are now part of the release path.
 
 ## 1.0.7 vs 1.0.9
