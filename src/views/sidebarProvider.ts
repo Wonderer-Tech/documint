@@ -13,6 +13,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   private _state = {
     isGenerating: false,
     apiKeyConfigured: false,
+    reviewPromptVisible: false,
     logs: [] as Array<{ message: string; type: string; timestamp: string }>,
     progress: {
       percentage: 0,
@@ -51,6 +52,43 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         switch (msg.type) {
           case "ready":
             this._restoreState();
+            break;
+
+          case "review-prompt-presented":
+            await vscode.commands.executeCommand(
+              "aiDocGenerator.reviewPromptPresented",
+            );
+            break;
+
+          case "review-marketplace":
+            await vscode.commands.executeCommand(
+              "aiDocGenerator.reviewMarketplace",
+              typeof msg.rating === "number" ? msg.rating : undefined,
+            );
+            break;
+
+          case "review-feedback":
+            await vscode.commands.executeCommand(
+              "aiDocGenerator.reviewFeedback",
+              {
+                feedback:
+                  typeof msg.feedback === "string" ? msg.feedback : "",
+                rating:
+                  typeof msg.rating === "number" ? msg.rating : undefined,
+              },
+            );
+            break;
+
+          case "review-later":
+            await vscode.commands.executeCommand(
+              "aiDocGenerator.reviewLater",
+            );
+            break;
+
+          case "review-never":
+            await vscode.commands.executeCommand(
+              "aiDocGenerator.reviewNever",
+            );
             break;
 
           case "generate-documentation":
@@ -171,6 +209,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         console.error("[Documint] webview message handler error:", e);
       }
     });
+  }
+
+  public setReviewPromptVisible(visible: boolean) {
+    this._state.reviewPromptVisible = visible;
+    this._post({ type: "review-prompt-visibility", visible });
   }
 
   public updateProgress(progress: {
