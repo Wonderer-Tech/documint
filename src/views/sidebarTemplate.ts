@@ -37,6 +37,64 @@ ${SIDEBAR_STYLES}
   </div>
 </div>
 
+<section class="review-card hidden" id="reviewCard" aria-labelledby="reviewCardTitle">
+  <div class="review-card-top">
+    <div>
+      <div class="review-eyebrow">QUICK FEEDBACK</div>
+      <h2 class="review-title" id="reviewCardTitle">How is DocuMint working for you?</h2>
+    </div>
+    <button class="review-close" id="reviewCloseBtn" type="button" aria-label="Remind me later" title="Later">×</button>
+  </div>
+
+  <p class="review-copy">
+    If DocuMint is helping your work, a quick Marketplace review helps a lot.
+    If something feels rough, tell us what to improve below.
+  </p>
+
+  <div class="review-rating-block">
+    <div class="review-subtitle">Rate your experience</div>
+    <div class="review-stars" id="reviewStars" role="radiogroup" aria-label="Rate DocuMint from 1 to 5 stars">
+      <button class="review-star" type="button" data-rating="1" role="radio" aria-checked="false" aria-label="1 star">☆</button>
+      <button class="review-star" type="button" data-rating="2" role="radio" aria-checked="false" aria-label="2 stars">☆</button>
+      <button class="review-star" type="button" data-rating="3" role="radio" aria-checked="false" aria-label="3 stars">☆</button>
+      <button class="review-star" type="button" data-rating="4" role="radio" aria-checked="false" aria-label="4 stars">☆</button>
+      <button class="review-star" type="button" data-rating="5" role="radio" aria-checked="false" aria-label="5 stars">☆</button>
+    </div>
+    <div class="review-rating-label" id="reviewRatingLabel">Choose 1–5 stars</div>
+    <button class="btn btn-primary review-marketplace-btn" id="reviewMarketplaceBtn" type="button" disabled>
+      Review on Marketplace
+    </button>
+    <div class="review-note">
+      Your star choice stays in DocuMint until you continue to the Marketplace, where the public rating is submitted.
+    </div>
+  </div>
+
+  <div class="review-divider"><span>or</span></div>
+
+  <div class="review-feedback-block">
+    <label class="review-subtitle" for="reviewFeedback">What should we improve?</label>
+    <textarea
+      id="reviewFeedback"
+      class="review-feedback-input"
+      rows="4"
+      maxlength="2000"
+      placeholder="Tell us what felt confusing, slow, missing, or could be better…"
+    ></textarea>
+    <div class="review-feedback-meta">
+      <span id="reviewFeedbackStatus" role="status" aria-live="polite"></span>
+      <span id="reviewFeedbackCount">0 / 2000</span>
+    </div>
+    <button class="btn btn-secondary" id="reviewFeedbackBtn" type="button" disabled>
+      Open GitHub feedback issue
+    </button>
+  </div>
+
+  <div class="review-footer-actions">
+    <button class="review-link-btn" id="reviewLaterBtn" type="button">Later</button>
+    <button class="review-link-btn danger" id="reviewNeverBtn" type="button">Don't ask again</button>
+  </div>
+</section>
+
 <div class="section hidden" id="authSection">
   <div class="section-label">
     Authentication
