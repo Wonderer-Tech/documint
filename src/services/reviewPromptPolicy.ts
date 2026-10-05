@@ -53,7 +53,7 @@ export function isReviewPromptDue(
     return false;
   }
 
-  // First DocuMint activation after install/upgrade: show once.
+  // Fresh DocuMint state: show once on the first activation.
   if (!state.firstPromptShown) {
     return true;
   }
@@ -95,7 +95,7 @@ export function recordSuccessfulGenerationForReview(
   }
 
   return {
-    state: markReviewPromptShown(state, now),
+    state,
     shouldPrompt: true,
   };
 }
