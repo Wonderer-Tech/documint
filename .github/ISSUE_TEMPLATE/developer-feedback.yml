@@ -1,0 +1,61 @@
+name: "Developer feedback / real-world trial"
+description: "Share real use, usability friction, incorrect documentation, or suggestions"
+title: "[Feedback]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying DocuMint! For a conversational first impression, use [community challenge #10](https://github.com/Wonderer-Tech/documint/issues/10). Use this form when you have a specific, actionable finding. Please never paste credentials or proprietary source.
+  - type: input
+    id: version
+    attributes:
+      label: DocuMint version
+      placeholder: "e.g. 1.0.11"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: "OS and VS Code version"
+      placeholder: "e.g. Ubuntu 24.04 / VS Code 1.110"
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode used
+      options:
+        - Local Documentation — No AI
+        - AI Documentation — Cloud
+        - AI Documentation — Ollama / LM Studio
+        - Other / not yet tried
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Project context
+      description: "Languages, approximate number of files, project shape; no private code required"
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual behavior / useful or confusing experience
+      description: "What did you try? What worked, failed or felt unclear?"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce (if applicable)
+      description: "Sanitized example, screenshots, errors, or minimal public fixture"
+    validations:
+      required: false
+  - type: textarea
+    id: improvement
+    attributes:
+      label: What should DocuMint improve first?
+    validations:
+      required: false
