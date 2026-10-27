@@ -44,7 +44,7 @@ DocuMint writes generated documentation to:
 
 **Can DocuMint help you understand an unfamiliar codebase faster?** Try the local-first workflow and tell us what actually works.
 
-**[Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=wonderertech.documint)** · **[Join the community challenge](https://github.com/Wonderer-Tech/documint/issues/10)** · **[Contribute](CONTRIBUTING.md)**
+**[Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=wonderertech.documint)** · **[Join Discussions](https://github.com/Wonderer-Tech/documint/discussions)** · **[Community challenge](https://github.com/Wonderer-Tech/documint/issues/10)** · **[Contribute](CONTRIBUTING.md)**
 
 1. Open a real project in VS Code and select **DocuMint → Local Documentation — No AI**.
 2. Generate documentation for a workspace or folder—no API key or account required.
