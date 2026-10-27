@@ -20,6 +20,7 @@ DocuMint writes generated documentation to:
 
 ## Table of Contents
 
+- [Developer Challenge](#-developer-challenge--try-documint-on-a-real-repository)
 - [What's New in 1.0.11](#whats-new-in-1011)
 - [1.0.7 vs 1.0.11](#107-vs-1011)
 - [See 1.0.11 in Action](#see-1011-in-action)
@@ -38,6 +39,21 @@ DocuMint writes generated documentation to:
 - [Known Limitations](#known-limitations)
 - [Contributing](#contributing)
 - [License](#license)
+
+## 🚀 Developer Challenge — Try DocuMint on a Real Repository
+
+**Can DocuMint help you understand an unfamiliar codebase faster?** Try the local-first workflow and tell us what actually works.
+
+**[Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=wonderertech.documint)** · **[Join the community challenge](https://github.com/Wonderer-Tech/documint/issues/10)** · **[Contribute](CONTRIBUTING.md)**
+
+1. Open a real project in VS Code and select **DocuMint → Local Documentation — No AI**.
+2. Generate documentation for a workspace or folder—no API key or account required.
+3. Open `documint/documentation.html`; explore **At a glance**, **Big picture**, **Start here**, and **Dependency reach**.
+4. Report useful insights, broken links, incorrect dependency relationships, slow scans, or missing languages in [issue #10](https://github.com/Wonderer-Tech/documint/issues/10). Include a sanitized reproduction, never private code or credentials.
+5. If you've used it, leave an **honest** [Marketplace rating or review](https://marketplace.visualstudio.com/items?itemName=wonderertech.documint), whether positive or critical.
+6. [Star this repository](https://github.com/Wonderer-Tech/documint) if it deserves your support; fork when you want to experiment or contribute. Neither is required.
+
+**New to open source?** Start with [CONTRIBUTING.md](CONTRIBUTING.md) or browse [open issues](https://github.com/Wonderer-Tech/documint/issues). The community challenge aims for **10,000 genuine stars over time**—not automated, exchanged, or paid engagement.
 
 ## What's New in 1.0.11
 
