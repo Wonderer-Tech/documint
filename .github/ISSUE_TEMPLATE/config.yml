@@ -3,3 +3,9 @@ contact_links:
   - name: Security vulnerability
     url: https://github.com/Wonderer-Tech/documint/security
     about: Use GitHub's private security reporting flow when available. Do not post exploit details publicly.
+  - name: Developer trial and community challenge
+    url: https://github.com/Wonderer-Tech/documint/issues/10
+    about: Try DocuMint on your project, tell us what works, and join the genuine developer community.
+  - name: Marketplace rating and review
+    url: https://marketplace.visualstudio.com/items?itemName=wonderertech.documint
+    about: Used the extension? Share an honest rating or review, including constructive criticism.
