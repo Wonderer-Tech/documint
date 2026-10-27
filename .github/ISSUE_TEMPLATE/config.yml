@@ -9,3 +9,6 @@ contact_links:
   - name: Marketplace rating and review
     url: https://marketplace.visualstudio.com/items?itemName=wonderertech.documint
     about: Used the extension? Share an honest rating or review, including constructive criticism.
+  - name: Developer discussions and Q&A
+    url: https://github.com/Wonderer-Tech/documint/discussions
+    about: Ask questions, introduce yourself, discuss ideas, and share generated documentation examples.
