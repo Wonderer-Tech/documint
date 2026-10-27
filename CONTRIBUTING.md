@@ -2,6 +2,16 @@
 
 Thanks for helping improve DocuMint.
 
+## First contribution: try it and report what you find
+
+You do **not** need to fork the repository to help. Install [DocuMint from the Marketplace](https://marketplace.visualstudio.com/items?itemName=wonderertech.documint) and use **Local Documentation — No AI** on a project you are allowed to inspect. Open the generated `documint/documentation.html` and test the entry-point overview, module relationships and search/navigation.
+
+Share your experience in the [developer challenge and feedback issue (#10)](https://github.com/Wonderer-Tech/documint/issues/10), or open a separate [bug report](https://github.com/Wonderer-Tech/documint/issues/new/choose) for an actionable defect. Helpful reports include the DocuMint version, OS, VS Code version, language, approximate project size, expected versus actual behavior, and a minimal *sanitized* reproduction. Do not submit proprietary source code, API tokens or secrets.
+
+For code contributions, first check the [open issues](https://github.com/Wonderer-Tech/documint/issues) for an unclaimed focused task. Comment on the issue with your approach; fork the repository if needed, keep changes scoped, add a focused regression test, run `npm run check` and submit a PR linking to the issue. Maintainers review contributions for correctness, security, test coverage and consistency with the source-grounded Local mode.
+
+Stars and Marketplace ratings are appreciated but **never** required for reporting bugs, participating or having a PR reviewed. Reviews should reflect actual experience, including criticism.
+
 ## Development setup
 
 Prerequisites:
