@@ -17,6 +17,24 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 
 > **1.0.11 release:** the full Local Project Map upgrade plus the complete in-sidebar rating, review, and improvement-feedback card.
 
+## Why DocuMint?
+
+Explore the codebase on your terms: generate local documentation without a model, inspect the source-backed project map, or opt in to AI-assisted explanations.
+
+<table>
+  <tr>
+    <td width="33%" align="center">
+      <a href="#how-it-works"><img src="resources/readme/local-first.svg" alt="Local-first — no API key required; source-grounded output" width="300"></a>
+    </td>
+    <td width="33%" align="center">
+      <a href="#local-project-map"><img src="resources/readme/project-map.svg" alt="Project map — architecture, entry points, and dependencies" width="300"></a>
+    </td>
+    <td width="33%" align="center">
+      <a href="#supported-providers"><img src="resources/readme/optional-ai.svg" alt="Optional AI — local models or cloud APIs when you choose" width="300"></a>
+    </td>
+  </tr>
+</table>
+
 DocuMint writes generated documentation to:
 
 - `documint/documentation.md`
@@ -24,6 +42,7 @@ DocuMint writes generated documentation to:
 
 ## Table of Contents
 
+- [Why DocuMint?](#why-documint)
 - [Developer Challenge](#-developer-challenge--try-documint-on-a-real-repository)
 - [What's New in 1.0.11](#whats-new-in-1011)
 - [1.0.7 vs 1.0.11](#107-vs-1011)
