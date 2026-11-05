@@ -3,13 +3,13 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.110.0-blue)
 ![Version](https://img.shields.io/badge/version-1.0.11-green)
-![Marketplace installs](https://img.shields.io/badge/Marketplace%20installs-400%2B-brightgreen)
+![Marketplace installs](https://img.shields.io/badge/Marketplace%20installs-600%2B-brightgreen)
 
 **Understand a codebase without reading every file first.**
 
 DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and HTML documentation. Use **Local Documentation — No AI** for deterministic, source-grounded docs that stay on your machine, or switch to AI mode when you want provider-enhanced explanations.
 
-**🎉 400+ downloads and counting.** Thank you to everyone who has tried DocuMint and helped shape it.
+**🎉 600+ Marketplace downloads and counting.** Thank you to everyone who has tried DocuMint and helped shape it.
 
 > **1.0.11 release:** the full Local Project Map upgrade plus the complete in-sidebar rating, review, and improvement-feedback card.
 
