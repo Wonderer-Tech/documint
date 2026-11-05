@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="220" viewBox="0 0 480 220" role="img" aria-label="Local-first: No API key required. Source-grounded output.">
+  <defs>
+    <linearGradient id="surface" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#111E34"/><stop offset="1" stop-color="#09111F"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#62C1FF" stop-opacity=".24"/><stop offset="1" stop-color="#62C1FF" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#FFFFFF" stroke-opacity=".045"/></pattern>
+  </defs>
+  <rect x="1" y="1" width="478" height="218" rx="22" fill="url(#surface)" stroke="#62C1FF" stroke-opacity=".32" stroke-width="2"/>
+  <rect x="2" y="2" width="476" height="216" rx="21" fill="url(#grid)"/>
+  <circle cx="396" cy="104" r="115" fill="url(#halo)"/>
+  <rect x="30" y="29" width="5" height="16" rx="2.5" fill="#62C1FF"/>
+  <text x="45" y="42" font-size="13" font-weight="700" letter-spacing="1.4" fill="#62C1FF" font-family="Segoe UI,Arial,sans-serif">01 / PRIVATE BY DEFAULT</text>
+  <text x="30" y="105" font-size="31" font-weight="750" fill="#F4F8FF" font-family="Segoe UI,Arial,sans-serif">Local-first</text>
+  <text x="30" y="140" font-size="16" fill="#B9C8DA" font-family="Segoe UI,Arial,sans-serif">No API key required.</text>
+  <text x="30" y="163" font-size="16" fill="#B9C8DA" font-family="Segoe UI,Arial,sans-serif">Source-grounded output.</text>
+  <path d="M30 188H210" stroke="#62C1FF" stroke-width="2.5" stroke-linecap="round" stroke-opacity=".8"/>
+  <rect x="344" y="54" width="83" height="107" rx="11" fill="#172D4B" stroke="#62C1FF" stroke-width="2"/><path d="M364 78H407M364 93H399M364 108H391" stroke="#A4DFFF" stroke-width="4" stroke-linecap="round"/><rect x="358" y="122" width="55" height="54" rx="13" fill="#102236" stroke="#62C1FF" stroke-width="2"/><path d="M374 144V138a11 11 0 0 1 22 0v6" fill="none" stroke="#62C1FF" stroke-width="3.5" stroke-linecap="round"/><rect x="371" y="144" width="28" height="21" rx="5" fill="#62C1FF"/><circle cx="385" cy="153" r="2.5" fill="#102236"/>
+</svg>
