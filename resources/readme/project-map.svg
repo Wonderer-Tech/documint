@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="220" viewBox="0 0 480 220" role="img" aria-label="Project map: Architecture and entry points. Dependencies you can follow.">
+  <defs>
+    <linearGradient id="surface" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#111E34"/><stop offset="1" stop-color="#09111F"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#65DEC6" stop-opacity=".24"/><stop offset="1" stop-color="#65DEC6" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#FFFFFF" stroke-opacity=".045"/></pattern>
+  </defs>
+  <rect x="1" y="1" width="478" height="218" rx="22" fill="url(#surface)" stroke="#65DEC6" stroke-opacity=".32" stroke-width="2"/>
+  <rect x="2" y="2" width="476" height="216" rx="21" fill="url(#grid)"/>
+  <circle cx="396" cy="104" r="115" fill="url(#halo)"/>
+  <rect x="30" y="29" width="5" height="16" rx="2.5" fill="#65DEC6"/>
+  <text x="45" y="42" font-size="13" font-weight="700" letter-spacing="1.4" fill="#65DEC6" font-family="Segoe UI,Arial,sans-serif">02 / SEE THE STRUCTURE</text>
+  <text x="30" y="105" font-size="31" font-weight="750" fill="#F4F8FF" font-family="Segoe UI,Arial,sans-serif">Project map</text>
+  <text x="30" y="140" font-size="16" fill="#B9C8DA" font-family="Segoe UI,Arial,sans-serif">Architecture and entry points.</text>
+  <text x="30" y="163" font-size="16" fill="#B9C8DA" font-family="Segoe UI,Arial,sans-serif">Dependencies you can follow.</text>
+  <path d="M30 188H210" stroke="#65DEC6" stroke-width="2.5" stroke-linecap="round" stroke-opacity=".8"/>
+  <path d="M361 79L402 53L433 96L398 141L352 126L361 79L398 141M361 79L433 96" fill="none" stroke="#65DEC6" stroke-opacity=".58" stroke-width="3"/><rect x="345" y="65" width="32" height="28" rx="7" fill="#1C4E53" stroke="#65DEC6" stroke-width="2"/><rect x="390" y="40" width="26" height="27" rx="7" fill="#1C4E53" stroke="#65DEC6" stroke-width="2"/><rect x="418" y="83" width="30" height="27" rx="7" fill="#1C4E53" stroke="#65DEC6" stroke-width="2"/><rect x="380" y="128" width="36" height="31" rx="7" fill="#27635E" stroke="#65DEC6" stroke-width="2"/><rect x="337" y="112" width="30" height="27" rx="7" fill="#1C4E53" stroke="#65DEC6" stroke-width="2"/><circle cx="398" cy="143" r="4" fill="#B6FFEE"/>
+</svg>
