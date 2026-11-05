@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="resources/icon.png" alt="DocuMint logo" width="128" height="128">
+</p>
+
 # DocuMint — Code Documentation Generator for VS Code
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
