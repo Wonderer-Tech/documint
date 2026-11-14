@@ -129,7 +129,10 @@ async function fetchBounded(fetchImpl, url, limit, token) {
       : "text/plain",
     "User-Agent": "DocuMint-ChatGPT-Public-ReadOnly/0.1.0",
   };
-  if (token) headers.Authorization = "Bearer " + token;
+  // The optional token is only sent to GitHub's API, never to raw file hosts.
+  if (token && url.hostname === "api.github.com") {
+    headers.Authorization = "Bearer " + token;
+  }
 
   const response = await fetchImpl(url, {
     method: "GET",
@@ -203,6 +206,7 @@ export async function fetchPublicRepository(
   const candidates = tree.tree
     .filter((entry) =>
       entry.type === "blob" &&
+      entry.mode !== "120000" &&
       isSafeSourcePath(entry.path) &&
       Number.isInteger(entry.size) &&
       entry.size >= 0 &&
@@ -217,9 +221,13 @@ export async function fetchPublicRepository(
     throw new Error("Requested file was not found among permitted, size-bounded source files");
   }
 
-  const selection = candidates.slice(0, maxFiles);
-  if (focusPath && !selection.some((entry) => entry.path === focusPath)) {
-    selection[selection.length - 1] = candidates.find((entry) => entry.path === focusPath);
+  let selection = candidates.slice(0, maxFiles);
+  if (focusPath) {
+    const focused = candidates.find((entry) => entry.path === focusPath);
+    // Fetch the requested file first so the overall byte budget cannot
+    // accidentally exclude the only file the user asked to inspect.
+    selection = [focused, ...selection.filter((entry) => entry.path !== focusPath)]
+      .slice(0, maxFiles);
   }
 
   const rawBase = "https://raw.githubusercontent.com/" +
@@ -239,11 +247,17 @@ export async function fetchPublicRepository(
     }
   });
 
-  const files = result.filter(Boolean);
-  const totalBytes = files.reduce((sum, file) =>
-    sum + Buffer.byteLength(file.content, "utf8"), 0);
-  if (totalBytes > MAX_TOTAL_SOURCE_BYTES) {
-    throw new Error("Selected repository source exceeds the 4 MiB analysis limit");
+  const files = [];
+  let totalBytes = 0;
+  let omittedByByteLimit = 0;
+  for (const file of result.filter(Boolean)) {
+    const bytes = Buffer.byteLength(file.content, "utf8");
+    if (totalBytes + bytes > MAX_TOTAL_SOURCE_BYTES) {
+      omittedByByteLimit++;
+      continue;
+    }
+    totalBytes += bytes;
+    files.push(file);
   }
   if (!files.length) throw new Error("No supported public source files could be fetched");
 
@@ -280,12 +294,14 @@ export async function fetchPublicRepository(
       fetched: files.length,
       eligibleSourceFiles: candidates.length,
       omittedByFileLimit: Math.max(0, candidates.length - selection.length),
-      failedToFetch: selection.length - files.length,
+      failedToFetch: result.filter((file) => !file).length,
+      omittedByByteLimit,
       githubTreeTruncated: tree.truncated === true,
       complete:
         tree.truncated !== true &&
         candidates.length <= selection.length &&
-        files.length === selection.length,
+        result.every(Boolean) &&
+        omittedByByteLimit === 0,
     },
   };
 }
