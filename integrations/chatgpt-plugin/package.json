@@ -1,0 +1,20 @@
+{
+  "name": "@documint/chatgpt-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Read-only ChatGPT MCP plugin powered by DocuMint's source-grounded analyzer",
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "scripts": {
+    "build": "../../node_modules/.bin/esbuild src/coreBridge.ts --bundle --platform=node --format=cjs --target=node22 --outfile=dist/core.cjs",
+    "start": "node server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "npm run build && npm run test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.2",
+    "zod": "^3.25.76"
+  }
+}
