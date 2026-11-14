@@ -150,6 +150,12 @@ The dependency-reach view helps you see which files are depended on by more of t
 
 ![DocuMint 1.0.11 Dependency reach](https://raw.githubusercontent.com/Wonderer-Tech/documint/main/resources/Screenshot%20From%202026-10-01%2012-20-38.png)
 
+## ChatGPT Plugin (Developer Preview)
+
+DocuMint also has an experimental **read-only MCP server** for using its source-grounded analyzer in ChatGPT. The tools analyze **public GitHub repositories**, expose file/dependency evidence, and produce a bounded Local Markdown excerpt. No source code is executed, no GitHub repository is modified, and no AI provider is called by DocuMint.
+
+The server lives in [`integrations/chatgpt-plugin/`](integrations/chatgpt-plugin/README.md). To use it in ChatGPT, you must run or deploy the MCP endpoint and connect it through **Plugins → Add custom MCP server**. **The server has not been deployed or registered automatically.** It is separate from the VS Code extension, and the current preview does not support private GitHub repositories or local workspace access.
+
 ## How It Works
 
 DocuMint always starts by scanning the selected Workspace, Folder, or File and extracting source facts such as imports, exports, symbols, entry points, TODO/FIXME/HACK comments, environment references, and resolved project dependencies.
