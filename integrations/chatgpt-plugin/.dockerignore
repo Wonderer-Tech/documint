@@ -1,0 +1,2 @@
+# Docker build context is the repository root, so the root .dockerignore applies.
+# Keep secrets, local credentials and generated documentation out of images.
