@@ -24,6 +24,7 @@ tsconfig.json
 node_modules/**
 tools/**
 audit/**
+integrations/**
 
 # Package/build artifacts
 *.vsix
