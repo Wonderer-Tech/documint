@@ -11,6 +11,7 @@ This is a **standalone remote MCP server** for connecting DocuMint to ChatGPT as
   - `documint_generate_markdown`: bounded excerpt from the deterministic Local Markdown renderer
 - Excludes private repos, secrets-like files, test/build outputs and oversized inputs.
 - Every result contains the default branch, immutable commit SHA, source tree SHA and scan coverage. Source files and optional README/Makefile/Dockerfile are fetched at that same commit to prevent mixed-revision documentation. A sampled/truncated repository is marked **PARTIAL**.
+- Coverage is **PARTIAL** whenever source files are omitted due to size limits, invalid tree size metadata, fetch failures, file-count/total-byte limits, or GitHub's truncated tree. `omittedOversizedSourceFiles` and `omittedUnknownSizeSourceFiles` distinguish source omissions from intentionally excluded test/build/secret-like paths.
 - No local filesystem or private workspace access. This is *not* a private-repo connector or a full hosted documentation service.
 - No UI resource is registered; ChatGPT uses normal tool responses.
 

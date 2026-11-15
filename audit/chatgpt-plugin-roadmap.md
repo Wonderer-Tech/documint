@@ -42,3 +42,9 @@ From a network-enabled checkout:
 - Pin the public default branch to an immutable Git commit SHA before requesting tree, source files and optional root files. Return commit SHA and revision URL to MCP clients so citations can refer to a stable revision.
 - Expand mocked regression coverage for commit pinning, invalid Git refs and slash-containing branch names. A separate local Node.js fixture exercised 6/6 related cases successfully, including private-repo rejection and truncated-tree coverage.
 - **Not yet verified:** the full repository-installed test suite, actual MCP SDK handshake, live GitHub fetch and end-to-end ChatGPT connection. Do not call the preview production-ready based on the mocked tests.
+
+## Follow-up hardening (2026-11-15, partial-coverage safety)
+
+- Corrected a false-completeness condition: supported source paths excluded by the 128 KiB per-file limit or missing/invalid Git-tree sizes now force `coverage.complete = false`.
+- Added `omittedOversizedSourceFiles` and `omittedUnknownSizeSourceFiles` counts and three security/coverage regression cases. A local dependency-free Node.js harness verified RED (3/3 failures) before code changes and GREEN (9/9 total local cases passing) after changes.
+- MCP SDK installation and handshake remain unverified here: npm registry requests failed with `EAI_AGAIN` (DNS resolution). No deployment, PR, or GitHub Actions were initiated.

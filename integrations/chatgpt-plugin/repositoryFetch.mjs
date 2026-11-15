@@ -217,15 +217,27 @@ export async function fetchPublicRepository(
 
   if (!Array.isArray(tree.tree)) throw new Error("GitHub did not return a repository tree");
 
-  const candidates = tree.tree
-    .filter((entry) =>
-      entry.type === "blob" &&
-      entry.mode !== "120000" &&
-      isSafeSourcePath(entry.path) &&
-      Number.isInteger(entry.size) &&
-      entry.size >= 0 &&
-      entry.size <= MAX_FILE_BYTES
-    )
+  // Keep skipped source counts so bounded scans cannot report full coverage
+  // when permitted source files exceed the per-file limit or lack valid sizes.
+  const sourceEntries = tree.tree.filter((entry) =>
+    entry.type === "blob" &&
+    entry.mode !== "120000" &&
+    isSafeSourcePath(entry.path)
+  );
+  let omittedOversizedSourceFiles = 0;
+  let omittedUnknownSizeSourceFiles = 0;
+  const candidates = sourceEntries
+    .filter((entry) => {
+      if (!Number.isSafeInteger(entry.size) || entry.size < 0) {
+        omittedUnknownSizeSourceFiles++;
+        return false;
+      }
+      if (entry.size > MAX_FILE_BYTES) {
+        omittedOversizedSourceFiles++;
+        return false;
+      }
+      return true;
+    })
     .sort((a, b) =>
       priority(a.path) - priority(b.path) ||
       a.path.localeCompare(b.path)
@@ -308,12 +320,16 @@ export async function fetchPublicRepository(
       selected: selection.length,
       fetched: files.length,
       eligibleSourceFiles: candidates.length,
+      omittedOversizedSourceFiles,
+      omittedUnknownSizeSourceFiles,
       omittedByFileLimit: Math.max(0, candidates.length - selection.length),
       failedToFetch: result.filter((file) => !file).length,
       omittedByByteLimit,
       githubTreeTruncated: tree.truncated === true,
       complete:
         tree.truncated !== true &&
+        omittedOversizedSourceFiles === 0 &&
+        omittedUnknownSizeSourceFiles === 0 &&
         candidates.length <= selection.length &&
         result.every(Boolean) &&
         omittedByByteLimit === 0,
