@@ -83,9 +83,14 @@ test("README-only media stays out of VSIX while runtime icons remain packageable
     );
   }
 
+  const marketplaceBadge = readme.match(
+    /img\.shields\.io\/badge\/Marketplace%20installs-([1-9]\d*)%2B-brightgreen/,
+  );
+  assert.ok(marketplaceBadge, "README must show a positive VS Code Marketplace install count");
   assert.match(
     readme,
-    /img\.shields\.io\/badge\/Marketplace%20installs-400%2B-brightgreen/,
+    new RegExp(`\\b${marketplaceBadge[1]}\\+ Marketplace downloads and counting\\b`),
+    "README badge and downloads announcement must agree",
   );
 
   for (const staleMedia of [
