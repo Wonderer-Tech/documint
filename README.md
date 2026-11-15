@@ -18,17 +18,17 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 > **1.0.11 release:** the full Local Project Map upgrade plus the complete in-sidebar rating, review, and improvement-feedback card.
 
 
-## 🚀 NEW — DocuMint Embedded Interactive HTML Skill (v0.3.0)
+## 🚀 NEW — DocuMint Interactive HTML & Markdown Skill (v0.3.1)
 
 <p align="center"><img src="plugins/documint/assets/logo.svg" alt="DocuMint Skill Plugin" width="88" height="88"></p>
 
 **Your source. DocuMint's original interactive project-map UI. No MCP, VPS or DocuMint CLI required to view the result.**
 
-![Embedded Skill](https://img.shields.io/badge/Skill%20Plugin-v0.3.0-0078D7)
+![Embedded Skill](https://img.shields.io/badge/Skill%20Plugin-v0.3.1-0078D7)
 ![GitHub](https://img.shields.io/badge/Source-Available%20on%20GitHub-2ea44f)
 ![Public Directory](https://img.shields.io/badge/ChatGPT%20Directory-Not%20Yet%20Published-orange)
 
-**New in v0.3.0:** The skill packages **the original DocuMint Local HTML renderer's CSS, JavaScript and project-map markup** as a self-contained offline HTML shell. Given a JSON representation of authorized source evidence, the same browser interface displays the project map, searchable file explorer, architecture relationships, dependency reach, treemap, zoom/pan and theme controls.
+**New in v0.3.1:** Say **Use DocuMint**, then choose **HTML**, **Markdown (.md)** or **Both** in chat (unless your request already specifies a format). HTML uses the bundled original viewer; Markdown uses the same source-grounded project facts. The skill packages **the original DocuMint Local HTML renderer's CSS, JavaScript and project-map markup** as a self-contained offline HTML shell. Given a JSON representation of authorized source evidence, the same browser interface displays the project map, searchable file explorer, architecture relationships, dependency reach, treemap, zoom/pan and theme controls.
 
 | Capability | Behavior |
 | --- | --- |
@@ -36,7 +36,9 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 | 🔍 File explorer & search | Search files, symbols and relationships from supplied facts |
 | 🔗 Architecture & treemap | Original visual components driven by inspected source evidence |
 | 🛡️ Transparent coverage | Indexed vs actually inspected files, revision and evidence limitations |
-| 📄 Portable offline report | One standalone HTML file with embedded JSON; no remote assets |
+| 📄 Output selection | HTML, Markdown (.md), or Both; generate only selected file(s) |
+| 🌐 Portable offline report | Original HTML viewer with embedded JSON and no remote assets |
+| 💬 ChatGPT input | Skill-only format choice is conversational; native clickable checkboxes require a separate supported UI extension |
 | ⚙️ Developer tooling | Original Node CLI remains optional for deterministic Local Mode analysis |
 
 **Get started (source repository):**
