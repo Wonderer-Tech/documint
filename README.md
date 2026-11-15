@@ -18,17 +18,17 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 > **1.0.11 release:** the full Local Project Map upgrade plus the complete in-sidebar rating, review, and improvement-feedback card.
 
 
-## 🚀 NEW — DocuMint Interactive HTML & Markdown Skill (v0.3.1)
+## 🚀 NEW — DocuMint Interactive HTML & Markdown Skill (v0.3.2)
 
 <p align="center"><img src="plugins/documint/assets/logo.svg" alt="DocuMint Skill Plugin" width="88" height="88"></p>
 
 **Your source. DocuMint's original interactive project-map UI. No MCP, VPS or DocuMint CLI required to view the result.**
 
-![Embedded Skill](https://img.shields.io/badge/Skill%20Plugin-v0.3.1-0078D7)
+![Embedded Skill](https://img.shields.io/badge/Skill%20Plugin-v0.3.2-0078D7)
 ![GitHub](https://img.shields.io/badge/Source-Available%20on%20GitHub-2ea44f)
 ![Public Directory](https://img.shields.io/badge/ChatGPT%20Directory-Not%20Yet%20Published-orange)
 
-**New in v0.3.1:** Say **Use DocuMint**, then choose **HTML**, **Markdown (.md)** or **Both** in chat (unless your request already specifies a format). HTML uses the bundled original viewer; Markdown uses the same source-grounded project facts. The skill packages **the original DocuMint Local HTML renderer's CSS, JavaScript and project-map markup** as a self-contained offline HTML shell. Given a JSON representation of authorized source evidence, the same browser interface displays the project map, searchable file explorer, architecture relationships, dependency reach, treemap, zoom/pan and theme controls.
+**New in v0.3.2:** Say **Use DocuMint**, then choose **HTML**, **Markdown (.md)** or **Both** in chat (unless your request already specifies a format). HTML uses the bundled original viewer; Markdown uses the same source-grounded project facts. The skill packages **the original DocuMint Local HTML renderer's CSS, JavaScript and project-map markup** as a self-contained offline HTML shell. Given a JSON representation of authorized source evidence, the same browser interface displays the project map, searchable file explorer, architecture relationships, dependency reach, treemap, zoom/pan and theme controls.
 
 | Capability | Behavior |
 | --- | --- |
@@ -38,6 +38,8 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 | 🛡️ Transparent coverage | Indexed vs actually inspected files, revision and evidence limitations |
 | 📄 Output selection | HTML, Markdown (.md), or Both; generate only selected file(s) |
 | 🌐 Portable offline report | Original HTML viewer with embedded JSON and no remote assets |
+| 📦 Verified download | HTML choice requires a **completed** `documentation.html`; a generator-only ZIP is not a valid result |
+| ✅ Renderer integrity | Packaged original UI is pinned by Git blob SHA and validated before output |
 | 💬 ChatGPT input | Skill-only format choice is conversational; native clickable checkboxes require a separate supported UI extension |
 | ⚙️ Developer tooling | Original Node CLI remains optional for deterministic Local Mode analysis |
 
@@ -51,7 +53,7 @@ python3 tools/documint_skill_plugin.py check
 python3 tools/documint_skill_plugin.py package --output documint-embedded-skill.zip
 ```
 
-The Skill can populate the bundled [project-data schema](plugins/documint/skills/documenting-codebases/assets/project-data.schema.json) from accessible source and combine it with the [real HTML shell](plugins/documint/skills/documenting-codebases/assets/documint-renderer.html). A file-writing tool is still needed to create and deliver the final artifact; a Skill cannot grant tool access on its own.
+The Skill can populate the bundled [project-data schema](plugins/documint/skills/documenting-codebases/assets/project-data.schema.json) from accessible source and combine it with the [real HTML shell](plugins/documint/skills/documenting-codebases/assets/documint-renderer.html). A file-writing tool is still needed to create and deliver the final artifact; a Skill cannot grant tool access on its own. **If HTML was selected, the final answer must link a real ready-to-open `documentation.html`; a ZIP containing only `render_documint.py` is incomplete.** The Skill supports repairing legacy JSON-only generator ZIPs offline using its packaged original renderer and `--input-zip`.
 
 **[Plugin source & usage](plugins/documint/)** · **[Skill instructions](plugins/documint/skills/documenting-codebases/SKILL.md)** · **[Renderer contract](plugins/documint/skills/documenting-codebases/references/embedded-renderer.md)** · **[Support](https://github.com/Wonderer-Tech/documint/issues)**
 
