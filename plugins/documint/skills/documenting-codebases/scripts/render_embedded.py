@@ -126,17 +126,110 @@ def embed_project_data(template: str, data: dict, *, nonce: str | None = None) -
     return template.replace(DATA_MARKER, encoded).replace(NONCE_MARKER, chosen_nonce)
 
 
+
+def _markdown_text(value: object) -> str:
+    """Escape source strings for safe, readable Markdown."""
+    text = " ".join(str(value).split()).replace("\\", "\\\\")
+    for char in (chr(96), "*", "_", "[", "]", "<", ">", "#", "|"):
+        text = text.replace(char, "\\" + char)
+    return text
+
+
+def markdown_from_project(data: dict) -> str:
+    """Build a conservative Markdown report using the same validated JSON."""
+    validate_project_data(data)
+    summary = data["summary"]
+    prov = data["provenance"]
+    lines = [
+        "# " + _markdown_text(data["projectName"]), "",
+        "> DocuMint Skill output from AI-assisted evidence; not the VS Code deterministic analyzer.", "",
+        "## Source coverage", "",
+        "- Source: " + _markdown_text(prov["source"]),
+        "- Revision: " + _markdown_text(prov.get("revision") or "not pinned"),
+        f"- Coverage: {prov['inspectedFiles']} inspected / {prov['indexedFiles']} indexed files",
+        "- Analysis mode: " + _markdown_text(prov["analysisMode"]),
+    ]
+    if prov.get("notes"):
+        lines.append("- Limits: " + _markdown_text(prov["notes"]))
+    lines += ["", "## Project summary", "",
+              f"- Indexed files: {summary['files']}",
+              f"- Known lines: {summary['lines']}",
+              f"- Module groups: {len(data['modules'])}",
+              f"- Observed internal dependencies: {summary['internalDependencies']}",
+              "", "## Modules", ""]
+    for module in data["modules"]:
+        lines.append("- " + _markdown_text(module["name"]) +
+                     f" — {module['files']} indexed file(s), {module['lines']} known lines")
+        if module.get("description"):
+            lines.append("  - " + _markdown_text(module["description"]))
+    lines += ["", "## Indexed source files", ""]
+    for file in data["files"]:
+        entry = "- " + chr(96) + _markdown_text(file["path"]) + chr(96)
+        if file.get("description"):
+            entry += " — " + _markdown_text(file["description"])
+        lines.append(entry)
+    if data["edges"]:
+        lines += ["", "## Observed module dependencies", ""]
+        for edge in data["edges"]:
+            lines.append("- " + _markdown_text(edge["from"]) + " → " +
+                         _markdown_text(edge["to"]) + f" ({edge['count']} edge(s))")
+    for section in data.get("documentationSections", []):
+        if not isinstance(section, dict) or not isinstance(section.get("heading"), str):
+            continue
+        lines += ["", "## " + _markdown_text(section["heading"]), ""]
+        for paragraph in section.get("paragraphs", []):
+            lines += [_markdown_text(paragraph), ""]
+        for item in section.get("items", []):
+            lines.append("- " + _markdown_text(item))
+    lines += ["", "## Verification limits", "",
+              "Filename-only entries are not evidence of code behavior or passing tests.", ""]
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def write_selected_outputs(data: dict, template_path: Path,
+                           output_directory: Path, output_format: str) -> list[Path]:
+    """Use the original HTML viewer for HTML, Markdown from the same data for .md."""
+    if output_format not in {"html", "markdown", "both"}:
+        raise ValueError(f"unsupported output format: {output_format}")
+    validate_project_data(data)
+    html = (embed_project_data(template_path.read_text(encoding="utf-8"), data)
+            if output_format in {"html", "both"} else None)
+    markdown = (markdown_from_project(data) if output_format in {"markdown", "both"}
+                else None)
+    output_directory.mkdir(parents=True, exist_ok=True)
+    written = []
+    if html is not None:
+        output = output_directory / "documentation.html"
+        output.write_text(html, encoding="utf-8")
+        written.append(output)
+    if markdown is not None:
+        output = output_directory / "documentation.md"
+        output.write_text(markdown, encoding="utf-8")
+        written.append(output)
+    return written
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data", required=True, type=Path, help="source-grounded LocalCodeMapData JSON")
+    parser.add_argument("--data", required=True, type=Path, help="source-grounded project JSON")
     parser.add_argument("--template", type=Path, default=Path(__file__).resolve().parent.parent / "assets/documint-renderer.html")
-    parser.add_argument("--output", required=True, type=Path, help="output documentation.html")
+    parser.add_argument("--format", choices=("html", "markdown", "both"), default="html")
+    parser.add_argument("--out-dir", type=Path, default=Path.cwd(), help="output directory for selected file(s)")
+    parser.add_argument("--output", type=Path, help="legacy single-output path")
     args = parser.parse_args()
+    if args.output and args.format == "both":
+        parser.error("use --out-dir for --format both")
     data = json.loads(args.data.read_text(encoding="utf-8"))
-    result = embed_project_data(args.template.read_text(encoding="utf-8"), data)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(result, encoding="utf-8")
-    print(f"Wrote {args.output} ({len(result.encode('utf-8'))} bytes) — source evidence: {data['provenance']['inspectedFiles']}/{data['provenance']['indexedFiles']} inspected")
+    paths = write_selected_outputs(data, args.template,
+                                   args.output.parent if args.output else args.out_dir,
+                                   args.format)
+    if args.output:
+        paths[0].replace(args.output)
+        paths = [args.output]
+    for p in paths:
+        print(f"Wrote {p} ({p.stat().st_size} bytes) — "
+              f"source evidence: {data['provenance']['inspectedFiles']}/"
+              f"{data['provenance']['indexedFiles']} inspected")
     return 0
 
 
