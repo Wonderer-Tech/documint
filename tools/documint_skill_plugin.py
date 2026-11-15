@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -85,6 +86,17 @@ def validate_plugin(repo_root: Path) -> dict:
     names = [_check_skill(file) for file in skill_files]
     _require((root / "skills/documenting-codebases/assets/documint-renderer.html").is_file(),
              "Embedded HTML renderer asset missing")
+    # Merely carrying a fake miniature HTML shell was previously enough to pass
+    # structural package tests. Enforce the pinned original 300+ KB Local renderer.
+    renderer = root / "skills/documenting-codebases/assets/documint-renderer.html"
+    raw_renderer = renderer.read_bytes()
+    git_header = b"blob " + str(len(raw_renderer)).encode("ascii") + b"\x00"
+    git_sha = hashlib.sha1(git_header + raw_renderer).hexdigest()
+    _require(len(raw_renderer) >= 300_000 and
+             git_sha == "ec66c180f09a0df8ef2eb6f3c8765b185716d8f6",
+             "Canonical DocuMint renderer SHA mismatch, truncated, or missing")
+
+
     _require((root / "skills/documenting-codebases/assets/project-data.schema.json").is_file(),
              "Project-data schema missing")
     _require((root / "skills/documenting-codebases/scripts/render_embedded.py").is_file(),
