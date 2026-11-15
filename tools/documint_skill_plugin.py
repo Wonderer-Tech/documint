@@ -6,6 +6,8 @@ import argparse
 import json
 from pathlib import Path
 import re
+import shutil
+import subprocess
 import sys
 import zipfile
 from xml.etree import ElementTree
@@ -143,8 +145,37 @@ def validate_plugin(repo_root: Path) -> dict:
     return {"name": manifest["name"], "version": manifest["version"], "skills": names}
 
 
+RUNTIME_PATH = "skills/documenting-codebases/scripts/documint-cli.cjs"
+
+
+def build_runtime(repo_root: Path) -> None:
+    """Build the exact VS Code Local Mode renderer into a standalone CJS asset."""
+    try:
+        subprocess.run(["npm", "run", "skill:bundle"], cwd=repo_root, check=True)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise PluginValidationError(
+            "Could not build interactive CLI. Run `npm ci` and `npm run skill:bundle` "
+            "in the DocuMint repository first."
+        ) from exc
+    license_dir = repo_root / "plugins/documint/skills/documenting-codebases/scripts/licenses"
+    license_dir.mkdir(parents=True, exist_ok=True)
+    for dependency in ("typescript", "marked"):
+        dependency_dir = repo_root / "node_modules" / dependency
+        candidates = ("LICENSE.txt", "LICENSE.md", "LICENSE", "LICENSE-MIT", "license.md")
+        license_file = next((dependency_dir / name for name in candidates
+                             if (dependency_dir / name).is_file()), None)
+        if license_file is None:
+            raise PluginValidationError(
+                f"Missing bundled runtime license for {dependency}; run npm ci"
+            )
+        shutil.copyfile(license_file, license_dir / f"{dependency}.LICENSE.txt")
+
+
 def build_zip(repo_root: Path, destination: Path) -> Path:
     validate_plugin(repo_root)
+    runtime = repo_root.resolve() / "plugins/documint" / RUNTIME_PATH
+    _require(runtime.is_file() and runtime.stat().st_size > 0,
+             "Compiled CLI missing: run `npm run skill:bundle` before packaging")
     root = repo_root.resolve() / "plugins/documint"
     target = destination.resolve()
     _require(not target.is_relative_to(root.resolve()), "ZIP cannot be inside plugin directory")
@@ -167,6 +198,7 @@ def build_zip(repo_root: Path, destination: Path) -> Path:
         _require("plugin.json" in zf.namelist() and
                  "skills/documenting-codebases/SKILL.md" in zf.namelist(),
                  "ZIP lacks installable plugin entries")
+        _require(RUNTIME_PATH in zf.namelist(), "Compiled interactive CLI is absent from ZIP")
     return target
 
 
@@ -179,6 +211,7 @@ def main() -> int:
     try:
         result = validate_plugin(repo_root)
         if args.action == "package":
+            build_runtime(repo_root)
             print(f"PACKAGED {build_zip(repo_root, args.output)}")
         else:
             print(f"VALID: {result['name']} v{result['version']}; skills: {', '.join(result['skills'])}")

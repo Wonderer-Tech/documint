@@ -1,16 +1,16 @@
 # DocuMint Skill Plugin — Submission Worksheet
 
-**Submission type:** Skills only; no MCP server. **Status:** prepared for owner verification, not submitted.
-**Plugin name:** DocuMint
-**Publisher:** Wonderer Tech (must select matching verified OpenAI Platform identity).
-**Category:** Productivity
-**Website:** https://github.com/Wonderer-Tech/documint
-**Support:** https://github.com/Wonderer-Tech/documint/issues
-**Privacy:** https://github.com/Wonderer-Tech/documint/blob/main/plugins/documint/PRIVACY.md
+**Submission type:** Skills only; compiled local Node CLI bundled in ZIP, no MCP server. **Status:** prepared for owner verification, not submitted.  
+**Plugin name:** DocuMint  
+**Publisher:** Wonderer Tech (must select matching verified OpenAI Platform developer/business identity).  
+**Category:** Productivity  
+**Website:** https://github.com/Wonderer-Tech/documint  
+**Support:** https://github.com/Wonderer-Tech/documint/issues  
+**Privacy:** https://github.com/Wonderer-Tech/documint/blob/main/plugins/documint/PRIVACY.md  
 **Terms:** https://github.com/Wonderer-Tech/documint/blob/main/plugins/documint/TERMS.md
 
-**Short description:** Document code with evidence
-**Long description:** Use existing authorized source access or attached files to explain codebase architecture, entry points, imports, dependencies, APIs, security boundaries, and relevant source files. Produce evidence-linked Markdown documentation and clear coverage limits; no dedicated server required.
+**Short description:** Source-grounded documentation for codebases.  
+**Long description:** Use the real DocuMint Local Mode source analyzer and offline interactive HTML renderer to document a local/extracted repository when Node execution is available. Produce the same interactive code map, source explorer, search, dependency visualizations and Markdown as VS Code Local Mode. If execution is unavailable, state the limitation and offer an evidence-linked Markdown fallback; no server required.
 
 ## Starter prompts
 
@@ -36,11 +36,12 @@ The reviewer can use the non-sensitive sample files under `review-fixtures/examp
 
 ## Availability and release
 
-Select intended countries/regions only after the publisher approves support and legal coverage. Initial release notes: "Initial skill-only release of DocuMint: source-grounded codebase documentation, architecture mapping, source-file walkthroughs and Markdown templates. No MCP server or additional account needed."
+Select intended countries/regions only after the publisher approves support and legal coverage. Initial release notes: "Interactive engine update for DocuMint: source-grounded codebase documentation, architecture mapping, source-file walkthroughs and Markdown templates. No MCP server or additional account needed."
 
 ## Owner-only gates
 
 - Confirm verified business/developer identity, Apps Management: Write permission, and legal/support URLs.
-- Install locally and run the skill against the five positive and three negative cases; record actual observations.
+- Build the distributable ZIP with `python3 tools/documint_skill_plugin.py package --output documint-interactive-skill.zip` after `npm ci`. Inspect that the compiled `scripts/documint-cli.cjs` is present and license notices bundled.
+- Install locally and run the skill and executable against the five positive and three negative cases; record actual observations. Verify the interactive HTML in a browser. Keep the no-execution fallback case distinct.
 - Upload the skill bundle in the Platform portal, complete required attestations, and select Submit for Review.
 - After approval, explicitly Publish in the Platform portal. Neither the ZIP nor a GitHub commit performs this step.

@@ -1,6 +1,6 @@
 # DocuMint documentation standards
 
-These conventions reflect the question-first organization of the DocuMint VS Code extension but do **not** claim to reproduce its deterministic source analyzer or generated HTML.
+These conventions apply to **AI-assisted Markdown fallback** only. When the executable DocuMint Local CLI runs, the actual VS Code Local Mode analyzer and HTML renderer produce the full interactive HTML and deterministic Markdown.
 
 ## Project / folder document
 
@@ -28,5 +28,5 @@ Identify file path/revision, role, imports and exports, key symbols, data flow, 
 2. Sources and limitations remain visible even for a short output.
 3. No secrets or private source are exposed without authorization.
 4. No claim of successful build/test or runtime invocation unless observed through a permitted tool.
-5. No implication that the skill ran the DocuMint VS Code Local engine or its HTML renderer.
-6. Requested Markdown is complete and usable; an HTML artifact is offered only when supported and requested.
+5. Claim the real DocuMint Local engine ran only when the CLI was executed and its output files were verified.
+6. Prefer interactive HTML plus Markdown when execution supports the CLI; otherwise provide honest Markdown-only fallback.

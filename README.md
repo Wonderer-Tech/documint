@@ -18,17 +18,17 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 > **1.0.11 release:** the full Local Project Map upgrade plus the complete in-sidebar rating, review, and improvement-feedback card.
 
 
-## 🚀 NEW FEATURE LAUNCH — DocuMint Skill Plugin for ChatGPT & Codex
+## 🚀 DocuMint Interactive HTML Skill — Same Local Renderer as VS Code (v0.2.0)
 
 <p align="center"><img src="plugins/documint/assets/logo.svg" alt="DocuMint Skill Plugin" width="88" height="88"></p>
 
 **Source-grounded code documentation in ChatGPT and Codex. No DocuMint server, MCP, or VPS required.**
 
-![Skill Plugin](https://img.shields.io/badge/Skill%20Plugin-v0.1.1-0078D7)
+![Skill Plugin](https://img.shields.io/badge/Skill%20Plugin-v0.2.0-0078D7)
 ![Source](https://img.shields.io/badge/Source-Available%20Now-2ea44f)
 ![Directory](https://img.shields.io/badge/ChatGPT%20Directory-Submission%20Pending-orange)
 
-**The DocuMint Skill Plugin is available now as an open-source package.** It guides ChatGPT or Codex through source-based codebase documentation using files you provide or source already accessible through authorized tools.
+**The DocuMint Skill Plugin source is available on GitHub.** Version 0.2.0 adds a Node.js CLI that calls the **same SourceAnalyzer and interactive HTML renderer used in DocuMint VS Code Local Mode**. When the host has permission to run Node and access source files, it can generate the real `documint/documentation.html` and `documentation.md`. A built Skill ZIP embeds the CLI; raw Git source needs a local bundle step.
 
 | Feature | What you get |
 | --- | --- |
@@ -43,11 +43,13 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 ```bash
 git clone https://github.com/Wonderer-Tech/documint.git
 cd documint
-python3 tools/documint_skill_plugin.py check
-python3 tools/documint_skill_plugin.py package --output documint-skill-plugin.zip
+npm ci
+npm run documint:bundle
+node dist/documint-cli.cjs --root /path/to/project --json
+python3 tools/documint_skill_plugin.py package --output documint-interactive-skill.zip
 ```
 
-Install the generated **Skill-only Agent Plugin ZIP** through a compatible plugin installation flow. Example prompts:
+Install the **built Skill-only Agent Plugin ZIP** through a compatible plugin installation flow. The compiled CLI needs Node.js 22+ and access to an extracted source directory; neither MCP nor a server is needed. If ChatGPT cannot execute Node, the Skill must disclose this limit and cannot produce identical HTML in that session. Example prompts:
 
 > Use DocuMint to map the architecture of these source files. Cite the path behind each finding.
 
@@ -55,7 +57,7 @@ Install the generated **Skill-only Agent Plugin ZIP** through a compatible plugi
 
 **[Plugin source & setup](plugins/documint/)** · **[Skill instructions](plugins/documint/skills/documenting-codebases/SKILL.md)** · **[Submission checklist](plugins/documint/SUBMISSION.md)** · **[Support](https://github.com/Wonderer-Tech/documint/issues)**
 
-> **Availability:** The **open-source Skill Plugin is available on GitHub**. It is **not yet published in the public ChatGPT Plugins Directory**; submission, review and publishing will follow separately. This skill does not execute the VS Code extension's deterministic analyzer, and VS Code Marketplace install numbers are for the extension only.
+> **Availability:** Interactive HTML integration **source is available in this repository**; a complete ZIP must be built and tested with `npm ci` before publishing. ChatGPT Plugins Directory publication is still pending. The CLI reuses the VS Code **Local Mode** analyzer, not AI-provider mode; VS Code Marketplace install numbers refer only to the extension.
 
 ---
 
@@ -84,7 +86,7 @@ DocuMint writes generated documentation to:
 
 ## Table of Contents
 
-- [New: Skill Plugin for ChatGPT & Codex](#-new-feature-launch--documint-skill-plugin-for-chatgpt--codex)
+- [Interactive HTML Skill Plugin](#-documint-interactive-html-skill--same-local-renderer-as-vs-code-v020)
 - [Why DocuMint?](#why-documint)
 - [Developer Challenge](#-developer-challenge--try-documint-on-a-real-repository)
 - [What's New in 1.0.11](#whats-new-in-1011)

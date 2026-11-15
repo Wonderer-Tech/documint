@@ -407,7 +407,10 @@
     "release:readiness": "node tools/release-readiness.mjs",
     "lockfile:validate": "node tools/validate-lockfile.mjs",
     "lockfile:adopt": "node tools/adopt-lockfile.mjs",
-    "lockfile:bootstrap": "node tools/trigger-lockfile-bootstrap.mjs"
+    "lockfile:bootstrap": "node tools/trigger-lockfile-bootstrap.mjs",
+    "documint:bundle": "esbuild src/headless/cliEntry.ts --bundle --platform=node --format=cjs --target=node22 --outfile=dist/documint-cli.cjs",
+    "skill:bundle": "esbuild src/headless/cliEntry.ts --bundle --platform=node --format=cjs --target=node22 --outfile=plugins/documint/skills/documenting-codebases/scripts/documint-cli.cjs",
+    "documint:cli": "npm run documint:bundle && node dist/documint-cli.cjs"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

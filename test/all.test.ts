@@ -18,6 +18,7 @@ import "./generationCacheIdentity.test";
 import "./generationDepth.test";
 import "./generationMode.test";
 import "./generationRunPipeline.test";
+import "./headlessDocumentation.test";
 import "./htmlBaseScript.test";
 import "./htmlBaseStyles.test";
 import "./htmlJellyUi.test";

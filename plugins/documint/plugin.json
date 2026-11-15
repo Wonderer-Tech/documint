@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "documint",
-  "version": "0.1.1",
-  "description": "Source-grounded codebase documentation workflows for ChatGPT and Codex, without a dedicated server.",
+  "version": "0.2.0",
+  "description": "Generate the same DocuMint Local Mode interactive HTML and Markdown documentation through a serverless, execution-capable Skill plugin.",
   "author": {
     "name": "Wonderer Tech",
     "url": "https://github.com/Wonderer-Tech"
@@ -22,7 +22,7 @@
       "interface": {
         "displayName": "DocuMint",
         "shortDescription": "Document code with evidence",
-        "longDescription": "Explain files, build evidence-backed project maps, and prepare Markdown documentation using the source you provide or can access with existing tools. No DocuMint server required.",
+        "longDescription": "Create the same interactive HTML project map, file navigation, search, diagrams and dependency insights as DocuMint VS Code Local Mode, using a bundled Node CLI when source and execution tools are available. Markdown fallback where execution is unavailable. No DocuMint server.",
         "developerName": "Wonderer Tech",
         "category": "Productivity",
         "capabilities": [
@@ -44,7 +44,7 @@
         "termsOfServiceURL": "https://github.com/Wonderer-Tech/documint/blob/main/plugins/documint/TERMS.md"
       },
       "publication": {
-        "release_notes": "Initial serverless skill-only DocuMint plugin: evidence-grounded architecture maps, source-file explanations and Markdown documentation. No MCP server or third-party sign-in required."
+        "release_notes": "Interactive HTML engine integration: DocuMint Local Mode source analyzer and HTML renderer now run through a serverless CLI. The installer bundles executable assets; Node execution capability is required for interactive HTML generation."
       }
     }
   }

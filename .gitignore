@@ -99,3 +99,7 @@ ehthumbs.db
 Desktop.ini
 desktop.ini
 Icon?
+
+# Generated Skill runtime bundle; package builder embeds it in distributable ZIP
+/plugins/documint/skills/documenting-codebases/scripts/documint-cli.cjs
+/plugins/documint/skills/documenting-codebases/scripts/licenses/
