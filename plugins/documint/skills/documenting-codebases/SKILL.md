@@ -1,6 +1,6 @@
 ---
 name: documenting-codebases
-description: Use when someone asks for DocuMint interactive HTML documentation, a source-grounded project map, codebase architecture, dependency navigation, file explanations, a technical walkthrough or project Markdown from accessible repository source.
+description: Use when the user says "Use DocuMint" or "DocuMint" alone, invokes DocuMint, or asks for HTML/Markdown source-grounded codebase documentation, project maps, architecture, dependency navigation, file walkthroughs or onboarding.
 ---
 
 # DocuMint — embedded interactive documentation
@@ -8,6 +8,20 @@ description: Use when someone asks for DocuMint interactive HTML documentation, 
 The default output is a self-contained `documentation.html` using DocuMint's **actual Local HTML UI assets**: original styles, project-map markup, file navigation, architecture diagram, treemap, search and theme behavior. The browser runs its JavaScript when the HTML opens offline. **Do not recreate the interface from scratch.** No DocuMint CLI, MCP endpoint or external server is required for this rendering method.
 
 **Important boundary:** The UI assets come from the VS Code Local renderer, but facts assembled from a ChatGPT/GitHub session are **AI-assisted**, not the deterministic SourceAnalyzer output. Do not claim identical analysis, complete coverage or byte-identical VS Code artifacts unless independently demonstrated.
+
+## Activation and format selection
+
+**Trigger:** The short prompt **"Use DocuMint"** or just **"DocuMint"** counts as an invocation even without a repository or output format. The host must have the skill installed and available; metadata encourages but cannot guarantee automatic activation.
+
+**Format selection:** If the user has not selected an output format, ask exactly one single-choice chat question:
+
+> DocuMint output format? **HTML** · **Markdown (.md)** · **Both**
+
+Accept HTML/1, Markdown/.md/2 or Both/3. If the format was clearly provided in this request or earlier relevant context, do not ask again. Preserve the choice during this documentation task. A skill-only plugin **cannot create native clickable checkboxes** in ChatGPT; do not pretend Markdown checkboxes are interactive. A host may provide a native UI only through separately supported capabilities.
+
+Next, reuse the repository or source files already authorized in the conversation. If none exists, request accessible source after the format selection. Do not request Google Drive or Google Docs access, modify unrelated documents, or run GitHub Actions.
+
+**Output contract:** HTML produces only `documentation.html` using the original bundled DocuMint Local HTML viewer. Markdown produces only `documentation.md`; Both produces both from the same `project-data.json`. Never silently substitute a format or rebuild the HTML layout from scratch. Verify actual generated files and provide downloads if file-write tools are available; otherwise explain the capability limitation, without fake links.
 
 ## Obtain authorized source evidence
 
@@ -18,14 +32,14 @@ The default output is a self-contained `documentation.html` using DocuMint's **a
 ## Render using the bundled HTML, not a hand-written substitute
 
 4. Load [documint-renderer.html](assets/documint-renderer.html). It contains original DocuMint UI CSS and JavaScript plus a **single** `__DOCUMINT_DATA_BASE64__` placeholder and per-artifact `__DOCUMINT_CSP_NONCE__` placeholders. Preserve all other markup, scripts and styling. See [renderer instructions](references/embedded-renderer.md).
-5. Materialize `documentation.html` by embedding UTF-8 JSON **as base64** and replacing all CSP nonce markers with a fresh random nonce. If the host can run Python and write files, the packaged standard-library-only helper does this safely:
+5. Generate the selected output(s) from the same validated project JSON. For HTML, embed UTF-8 JSON as base64 in the unchanged original viewer and replace CSP nonce markers. For Markdown, render conservative source-grounded text from the same evidence. Where Python/file tools are available:
 
    ```bash
-   python3 <skill-dir>/scripts/render_embedded.py --data project-data.json --output documentation.html
+   python3 <skill-dir>/scripts/render_embedded.py --data project-data.json --format both --out-dir ./documint
    ```
 
    The script is **only a JSON-to-HTML assembler**, not the DocuMint CLI or code analyzer. A host with a binary-safe file-edit capability can instead perform the exact substitutions itself, without Python. Never write raw unescaped JSON inside a `<script>` tag. Never modify the original UI to fake completed analysis.
-6. Before sharing, verify the output exists, contains `data-documint-local-code-map`, has no unreplaced placeholders, and loads its file explorer and graph in a browser when a browser tool is available. Deliver `documentation.html` with `project-data.json` and an explanation of inspected coverage. A separate Markdown artifact is optional; never claim to have produced one without creating it.
+6. Choose `--format html`, `--format markdown`, or `--format both` per selection. Verify that selected files exist. HTML must preserve `data-documint-local-code-map`, have no unreplaced placeholders, and load its explorer/graph when a browser tool is available. Markdown must have explicit source coverage. Deliver direct download links for selected files and state inspected versus indexed coverage. Never claim success without actual files.
 
 ## No file output / no execution available
 

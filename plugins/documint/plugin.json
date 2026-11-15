@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "documint",
-  "version": "0.3.0",
-  "description": "Create interactive DocuMint HTML from source-grounded JSON with bundled original UI assets; no DocuMint CLI, MCP or server.",
+  "version": "0.3.1",
+  "description": "DocuMint interactive HTML or Markdown documentation with chat format selection and original viewer; no MCP server.",
   "author": {
     "name": "Wonderer Tech",
     "url": "https://github.com/Wonderer-Tech"
@@ -22,7 +22,7 @@
       "interface": {
         "displayName": "DocuMint",
         "shortDescription": "Interactive code documentation",
-        "longDescription": "Generate an offline interactive DocuMint project map from repository files you can access. Uses the original Local HTML viewer styles and browser JavaScript packaged with the skill; AI-assisted source facts and coverage are shown transparently. No DocuMint server or Node CLI required for rendering.",
+        "longDescription": "Say Use DocuMint to choose HTML, Markdown or Both. Generate downloadable documentation from authorized source using original embedded DocuMint Local HTML viewer assets and source-grounded Markdown. Selection is conversational because a skill-only plugin cannot force clickable ChatGPT checkboxes; downloads depend on host file tools.",
         "developerName": "Wonderer Tech",
         "category": "Productivity",
         "capabilities": [
@@ -33,9 +33,9 @@
         "websiteURL": "https://github.com/Wonderer-Tech/documint",
         "brandColor": "#0078D7",
         "defaultPrompt": [
-          "Use DocuMint to create an interactive HTML project map for this accessible repository.",
-          "Document these source files with DocuMint and show evidence coverage.",
-          "Explain this codebase with a DocuMint offline architecture explorer."
+          "Use DocuMint",
+          "Use DocuMint to generate HTML documentation for these files.",
+          "Use DocuMint to generate both HTML and Markdown."
         ],
         "logo": "./assets/logo.svg",
         "composerIcon": "./assets/composer-icon.svg",
@@ -44,7 +44,7 @@
         "termsOfServiceURL": "https://github.com/Wonderer-Tech/documint/blob/main/plugins/documint/TERMS.md"
       },
       "publication": {
-        "release_notes": "DocuMint embedded interactive HTML v0.3.0: original project-map UI assets and browser renderer bundled with the Skill; structured AI-assisted source facts, coverage labeling and offline HTML generation. No MCP server or DocuMint CLI."
+        "release_notes": "DocuMint v0.3.1 adds short-prompt activation, conversational HTML/Markdown/Both selection, original embedded HTML viewer, and source-grounded Markdown. No MCP server."
       }
     }
   }
