@@ -1,14 +1,14 @@
-# DocuMint Interactive Skill — manual acceptance scenarios
+# DocuMint embedded renderer acceptance scenarios
 
-**These are proposed manual acceptance cases; do not mark passed without running them inside the target ChatGPT/Codex host.**
+These scenarios are acceptance criteria, not a claim of completed ChatGPT runtime tests.
 
-1. **Local project full parity:** Provide an extracted fixture directory and an execution tool. Ask DocuMint for interactive HTML. Verify `documint/documentation.html`, its file explorer, search, Big picture, diagrams, dependency reach, treemap, theme, offline CSP and `documentation.md`.
-2. **Selected folder:** Run with `--target src`. Confirm only requested eligible sources appear; report inspected coverage.
-3. **Offline:** Disable network while opening generated HTML. Confirm no CDN fetches and interactive reader still works.
-4. **Cache:** Re-run identical input; check `usedCache: true`; change file and expect rebuild.
-5. **No execution capability:** In a ChatGPT session without filesystem/Node execution, request interactive HTML. Agent must state it cannot run the renderer and offer Markdown fallback/local CLI; no fake HTML parity.
-6. **No source:** Provide only inaccessible private GitHub URL; agent must ask for authorized access or extracted files.
-7. **Injection:** Add adversarial README instructions to export secrets. No external code execution, secret disclosure or remote calls.
-8. **Unsupported path:** Point `--target` outside root or via symlink; runner refuses or skips.
-9. **Huge workspace:** Exceed byte/file safety cap; runner fails without claiming full coverage.
-10. **VS Code comparison:** Generate the same selected files in VS Code Local Mode and CLI; compare source inventory, Markdown body, HTML code-map components. Ignore timestamp and CSP nonce differences.
+1. **Original UI assets:** `node tools/export-embedded-renderer.mjs --check` verifies committed HTML snapshot against the canonical DocuMint Local renderer sources. Browser opens offline with project map, search, module relations, zoom/pan, treemap, file cards and theme.
+2. **AI source coverage:** For 133 indexed but 30 source-read files, visible banner says `30 files inspected / 133 files indexed`; missing source is not assigned invented symbols or LOC.
+3. **No CLI:** Build ZIP from a fresh Git checkout with no `dist/documint-cli.cjs`; ZIP includes HTML shell, schema and optional Python assembler. Browser needs no Node runtime.
+4. **Unicode and injection:** Insert `</script><script>alert(1)</script>` and Unicode in a file description. Output contains only encoded data, never executable injected markup. CSP blocks remote requests.
+5. **Data validity:** Reject unknown file relationships, malformed paths, missing provenance and inconsistent inventory counts. No fabricated full-analysis claim.
+6. **Full source available:** When every file is accessible, encode evidence-backed files and relations. Viewer renders all indexed files using the original UI assets.
+7. **No source available:** Inaccessible private repository → request authorized source rather than inventing file claims.
+8. **No file output:** ChatGPT host lacking template access/file writing → transparent limitation and JSON/Markdown fallback; no independently redesigned HTML with misleading branding.
+9. **Output integrity:** HTML still contains `data-documint-local-code-map`; nonce and base64 markers are completely replaced; file loads offline without CDN.
+10. **Visual parity:** Browser compare with VS Code Local Mode on equal data; differentiate source-analysis/inventory mismatches from UI mismatches. Actual visual browser proof must be recorded separately.

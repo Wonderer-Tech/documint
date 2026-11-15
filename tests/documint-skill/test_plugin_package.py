@@ -101,16 +101,16 @@ class SkillPackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / "documint-skill.zip"
             with self.copy_repo() as root:
-                runtime = root / "plugins/documint/skills/documenting-codebases/scripts/documint-cli.cjs"
-                runtime.parent.mkdir(parents=True, exist_ok=True)
-                runtime.write_text("// fake test-only CLI for ZIP structure test\n", encoding="utf-8")
                 build_zip(root, target)
             with zipfile.ZipFile(target) as zf:
                 names = zf.namelist()
                 self.assertIn("plugin.json", names)
                 self.assertNotIn('.codex-plugin/plugin.json', names)
                 self.assertIn("skills/documenting-codebases/SKILL.md", names)
-                self.assertIn("skills/documenting-codebases/scripts/documint-cli.cjs", names)
+                self.assertIn("skills/documenting-codebases/assets/documint-renderer.html", names)
+                self.assertIn("skills/documenting-codebases/assets/project-data.schema.json", names)
+                self.assertIn("skills/documenting-codebases/scripts/render_embedded.py", names)
+                self.assertNotIn("skills/documenting-codebases/scripts/documint-cli.cjs", names)
                 self.assertNotIn("mcp.json", names)
                 self.assertNotIn(".mcp.json", names)
                 self.assertFalse(any(n.startswith("plugins/") for n in names))
@@ -121,24 +121,22 @@ class SkillPackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             first, second = Path(directory) / "a.zip", Path(directory) / "b.zip"
             with self.copy_repo() as root:
-                runtime = root / "plugins/documint/skills/documenting-codebases/scripts/documint-cli.cjs"
-                runtime.parent.mkdir(parents=True, exist_ok=True)
-                runtime.write_text("// fake test-only CLI for ZIP structure test\n", encoding="utf-8")
                 build_zip(root, first)
                 build_zip(root, second)
             self.assertEqual(first.read_bytes(), second.read_bytes())
 
-    def test_zip_rejects_missing_compiled_cli(self):
+    def test_zip_rejects_missing_embedded_renderer(self):
         with self.copy_repo() as root, tempfile.TemporaryDirectory() as directory:
-            with self.assertRaisesRegex(PluginValidationError, "Compiled CLI missing"):
+            (root / "plugins/documint/skills/documenting-codebases/assets/documint-renderer.html").unlink()
+            with self.assertRaises(PluginValidationError):
                 build_zip(root, Path(directory) / "bad.zip")
 
-    def test_skill_instructs_real_cli_and_no_execution_fallback(self):
+    def test_skill_uses_bundled_renderer_not_required_cli(self):
         skill = (REPO / "plugins/documint/skills/documenting-codebases/SKILL.md").read_text()
-        self.assertIn("documint-cli.cjs", skill)
-        self.assertIn("documentation.html", skill)
-        self.assertIn("lacks a Node command execution", skill)
-        self.assertIn("No MCP server", skill)
+        self.assertIn("documint-renderer.html", skill)
+        self.assertIn("__DOCUMINT_DATA_BASE64__", skill)
+        self.assertIn("without Python", skill)
+        self.assertIn("No DocuMint CLI", skill)
 
     from contextlib import contextmanager
 

@@ -1,0 +1,153 @@
+{
+  "projectName": "Example Notes",
+  "summary": {
+    "files": 3,
+    "lines": 22,
+    "describedFiles": 1,
+    "undocumentedFiles": 2,
+    "symbols": 2,
+    "exports": 1,
+    "internalDependencies": 1,
+    "externalDependencies": 0,
+    "todos": 0,
+    "languages": [
+      {
+        "name": "javascript",
+        "files": 2,
+        "lines": 18
+      },
+      {
+        "name": "json",
+        "files": 1,
+        "lines": 4
+      }
+    ],
+    "entryPoints": [
+      "src/main.js"
+    ],
+    "externalDependencyNames": []
+  },
+  "files": [
+    {
+      "path": "package.json",
+      "module": "root",
+      "language": "json",
+      "lines": 4,
+      "exports": [],
+      "internalSymbols": [],
+      "todos": [],
+      "environmentVariables": [],
+      "uses": [],
+      "usedBy": [],
+      "entryPoint": false
+    },
+    {
+      "path": "src/main.js",
+      "module": "src",
+      "language": "javascript",
+      "lines": 9,
+      "description": "Starts the sample application.",
+      "descriptionSource": "file-comment",
+      "exports": [
+        {
+          "name": "start",
+          "kind": "function",
+          "line": 3
+        }
+      ],
+      "internalSymbols": [],
+      "todos": [],
+      "environmentVariables": [],
+      "uses": [
+        "src/text.js"
+      ],
+      "usedBy": [],
+      "entryPoint": true
+    },
+    {
+      "path": "src/text.js",
+      "module": "src/util",
+      "language": "javascript",
+      "lines": 9,
+      "exports": [],
+      "internalSymbols": [
+        {
+          "name": "normalize",
+          "kind": "function",
+          "line": 2
+        }
+      ],
+      "todos": [],
+      "environmentVariables": [],
+      "uses": [],
+      "usedBy": [
+        "src/main.js"
+      ],
+      "entryPoint": false
+    }
+  ],
+  "modules": [
+    {
+      "name": "root",
+      "primaryFilePaths": [
+        "package.json"
+      ],
+      "files": 1,
+      "lines": 4
+    },
+    {
+      "name": "src",
+      "primaryFilePaths": [
+        "src/main.js"
+      ],
+      "files": 1,
+      "lines": 9
+    },
+    {
+      "name": "src/util",
+      "primaryFilePaths": [
+        "src/text.js"
+      ],
+      "files": 1,
+      "lines": 9
+    }
+  ],
+  "edges": [
+    {
+      "from": "src",
+      "to": "src/util",
+      "count": 1
+    }
+  ],
+  "readingPath": [
+    {
+      "path": "src/main.js",
+      "reason": "Observed entry point"
+    },
+    {
+      "path": "src/text.js",
+      "reason": "Imported by src/main.js"
+    }
+  ],
+  "referencedEnvironmentVariables": [],
+  "provenance": {
+    "analysisMode": "ai-assisted",
+    "source": "review-fixture files provided with plugin",
+    "revision": "fixture-v1",
+    "indexedFiles": 3,
+    "inspectedFiles": 3,
+    "notes": "Illustrative fixture; not a real project audit."
+  },
+  "documentationSections": [
+    {
+      "heading": "Source overview",
+      "paragraphs": [
+        "This tiny example illustrates how project facts and source provenance populate the original DocuMint interactive UI."
+      ],
+      "items": [
+        "The inspected entry point references the helper module.",
+        "No external services are required for rendering."
+      ]
+    }
+  ]
+}

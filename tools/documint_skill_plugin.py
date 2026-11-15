@@ -6,8 +6,6 @@ import argparse
 import json
 from pathlib import Path
 import re
-import shutil
-import subprocess
 import sys
 import zipfile
 from xml.etree import ElementTree
@@ -85,6 +83,12 @@ def validate_plugin(repo_root: Path) -> dict:
     skill_files = sorted((root / "skills").glob("*/SKILL.md"))
     _require(len(skill_files) == 1, "Expected exactly one complete DocuMint skill")
     names = [_check_skill(file) for file in skill_files]
+    _require((root / "skills/documenting-codebases/assets/documint-renderer.html").is_file(),
+             "Embedded HTML renderer asset missing")
+    _require((root / "skills/documenting-codebases/assets/project-data.schema.json").is_file(),
+             "Project-data schema missing")
+    _require((root / "skills/documenting-codebases/scripts/render_embedded.py").is_file(),
+             "JSON embedding helper missing")
     _require((root / "README.md").is_file(), "Missing plugin usage guide")
     _require((root / "LICENSE").is_file(), "Missing MIT license")
     interface = manifest.get("extensions", {}).get("com.openai", {}).get("interface", {})
@@ -145,41 +149,27 @@ def validate_plugin(repo_root: Path) -> dict:
     return {"name": manifest["name"], "version": manifest["version"], "skills": names}
 
 
-RUNTIME_PATH = "skills/documenting-codebases/scripts/documint-cli.cjs"
-
-
-def build_runtime(repo_root: Path) -> None:
-    """Build the exact VS Code Local Mode renderer into a standalone CJS asset."""
-    try:
-        subprocess.run(["npm", "run", "skill:bundle"], cwd=repo_root, check=True)
-    except (OSError, subprocess.CalledProcessError) as exc:
-        raise PluginValidationError(
-            "Could not build interactive CLI. Run `npm ci` and `npm run skill:bundle` "
-            "in the DocuMint repository first."
-        ) from exc
-    license_dir = repo_root / "plugins/documint/skills/documenting-codebases/scripts/licenses"
-    license_dir.mkdir(parents=True, exist_ok=True)
-    for dependency in ("typescript", "marked"):
-        dependency_dir = repo_root / "node_modules" / dependency
-        candidates = ("LICENSE.txt", "LICENSE.md", "LICENSE", "LICENSE-MIT", "license.md")
-        license_file = next((dependency_dir / name for name in candidates
-                             if (dependency_dir / name).is_file()), None)
-        if license_file is None:
-            raise PluginValidationError(
-                f"Missing bundled runtime license for {dependency}; run npm ci"
-            )
-        shutil.copyfile(license_file, license_dir / f"{dependency}.LICENSE.txt")
+EMBEDDED_HTML_PATH = "skills/documenting-codebases/assets/documint-renderer.html"
+ASSEMBLER_PATH = "skills/documenting-codebases/scripts/render_embedded.py"
+SCHEMA_PATH = "skills/documenting-codebases/assets/project-data.schema.json"
 
 
 def build_zip(repo_root: Path, destination: Path) -> Path:
     validate_plugin(repo_root)
-    runtime = repo_root.resolve() / "plugins/documint" / RUNTIME_PATH
-    _require(runtime.is_file() and runtime.stat().st_size > 0,
-             "Compiled CLI missing: run `npm run skill:bundle` before packaging")
+    root = repo_root.resolve() / "plugins/documint"
+    shell = (root / EMBEDDED_HTML_PATH).read_text(encoding="utf-8")
+    _require(shell.count("__DOCUMINT_DATA_BASE64__") == 1, "Embedded renderer missing unique JSON marker")
+    _require("__DOCUMINT_CSP_NONCE__" in shell and "data-documint-local-code-map" in shell,
+             "Embedded renderer missing CSP or canonical DocuMint UI")
+    _require((root / ASSEMBLER_PATH).is_file(), "Embedded JSON assembler missing")
+    _require((root / SCHEMA_PATH).is_file(), "Embedded project schema missing")
     root = repo_root.resolve() / "plugins/documint"
     target = destination.resolve()
     _require(not target.is_relative_to(root.resolve()), "ZIP cannot be inside plugin directory")
-    files = sorted(path for path in root.rglob("*") if path.is_file())
+    files = sorted(path for path in root.rglob("*") if path.is_file()
+                   and path.name != "documint-cli.cjs"
+                   and "__pycache__" not in path.parts
+                   and not path.name.endswith(".pyc"))
     _require(files, "Plugin is empty")
     _require(not any(path.is_symlink() for path in files), "No symlinks allowed in ZIP")
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -198,7 +188,9 @@ def build_zip(repo_root: Path, destination: Path) -> Path:
         _require("plugin.json" in zf.namelist() and
                  "skills/documenting-codebases/SKILL.md" in zf.namelist(),
                  "ZIP lacks installable plugin entries")
-        _require(RUNTIME_PATH in zf.namelist(), "Compiled interactive CLI is absent from ZIP")
+        _require(EMBEDDED_HTML_PATH in zf.namelist(), "Embedded interactive HTML is absent from ZIP")
+        _require(ASSEMBLER_PATH in zf.namelist(), "JSON assembler is absent from ZIP")
+        _require(SCHEMA_PATH in zf.namelist(), "Project JSON schema is absent from ZIP")
     return target
 
 
@@ -211,7 +203,6 @@ def main() -> int:
     try:
         result = validate_plugin(repo_root)
         if args.action == "package":
-            build_runtime(repo_root)
             print(f"PACKAGED {build_zip(repo_root, args.output)}")
         else:
             print(f"VALID: {result['name']} v{result['version']}; skills: {', '.join(result['skills'])}")

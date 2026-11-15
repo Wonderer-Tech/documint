@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "documint",
-  "version": "0.2.0",
-  "description": "Generate the same DocuMint Local Mode interactive HTML and Markdown documentation through a serverless, execution-capable Skill plugin.",
+  "version": "0.3.0",
+  "description": "Create interactive DocuMint HTML from source-grounded JSON with bundled original UI assets; no DocuMint CLI, MCP or server.",
   "author": {
     "name": "Wonderer Tech",
     "url": "https://github.com/Wonderer-Tech"
@@ -21,8 +21,8 @@
     "com.openai": {
       "interface": {
         "displayName": "DocuMint",
-        "shortDescription": "Document code with evidence",
-        "longDescription": "Create the same interactive HTML project map, file navigation, search, diagrams and dependency insights as DocuMint VS Code Local Mode, using a bundled Node CLI when source and execution tools are available. Markdown fallback where execution is unavailable. No DocuMint server.",
+        "shortDescription": "Interactive code documentation",
+        "longDescription": "Generate an offline interactive DocuMint project map from repository files you can access. Uses the original Local HTML viewer styles and browser JavaScript packaged with the skill; AI-assisted source facts and coverage are shown transparently. No DocuMint server or Node CLI required for rendering.",
         "developerName": "Wonderer Tech",
         "category": "Productivity",
         "capabilities": [
@@ -33,9 +33,9 @@
         "websiteURL": "https://github.com/Wonderer-Tech/documint",
         "brandColor": "#0078D7",
         "defaultPrompt": [
-          "Use DocuMint to document this codebase from the files I provide.",
-          "Create a source-grounded architecture map and reading path for this repository.",
-          "Explain this source file, including exports, imports and important behavior."
+          "Use DocuMint to create an interactive HTML project map for this accessible repository.",
+          "Document these source files with DocuMint and show evidence coverage.",
+          "Explain this codebase with a DocuMint offline architecture explorer."
         ],
         "logo": "./assets/logo.svg",
         "composerIcon": "./assets/composer-icon.svg",
@@ -44,7 +44,7 @@
         "termsOfServiceURL": "https://github.com/Wonderer-Tech/documint/blob/main/plugins/documint/TERMS.md"
       },
       "publication": {
-        "release_notes": "Interactive HTML engine integration: DocuMint Local Mode source analyzer and HTML renderer now run through a serverless CLI. The installer bundles executable assets; Node execution capability is required for interactive HTML generation."
+        "release_notes": "DocuMint embedded interactive HTML v0.3.0: original project-map UI assets and browser renderer bundled with the Skill; structured AI-assisted source facts, coverage labeling and offline HTML generation. No MCP server or DocuMint CLI."
       }
     }
   }

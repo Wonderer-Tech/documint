@@ -1,4 +1,4 @@
-# DocuMint Skill Plugin — Submission Worksheet
+# DocuMint Interactive Skill Plugin v0.3.0 — Submission Worksheet
 
 **Submission type:** Skills only; compiled local Node CLI bundled in ZIP, no MCP server. **Status:** prepared for owner verification, not submitted.  
 **Plugin name:** DocuMint  
@@ -45,3 +45,7 @@ Select intended countries/regions only after the publisher approves support and 
 - Install locally and run the skill and executable against the five positive and three negative cases; record actual observations. Verify the interactive HTML in a browser. Keep the no-execution fallback case distinct.
 - Upload the skill bundle in the Platform portal, complete required attestations, and select Submit for Review.
 - After approval, explicitly Publish in the Platform portal. Neither the ZIP nor a GitHub commit performs this step.
+
+## v0.3.0 embedded renderer review case
+
+Attach an authorized example project. Generate source-grounded `project-data.json` with truthful `provenance`, then embed it in the bundled HTML shell. Verify `data-documint-local-code-map` and interactive controls in an offline browser. An agent without a file-writing tool must disclose this boundary instead of claiming to run the original analyzer. Compare original UI assets, not deterministic source-analysis results.

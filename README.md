@@ -18,46 +18,42 @@ DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and 
 > **1.0.11 release:** the full Local Project Map upgrade plus the complete in-sidebar rating, review, and improvement-feedback card.
 
 
-## 🚀 DocuMint Interactive HTML Skill — Same Local Renderer as VS Code (v0.2.0)
+## 🚀 NEW — DocuMint Embedded Interactive HTML Skill (v0.3.0)
 
 <p align="center"><img src="plugins/documint/assets/logo.svg" alt="DocuMint Skill Plugin" width="88" height="88"></p>
 
-**Source-grounded code documentation in ChatGPT and Codex. No DocuMint server, MCP, or VPS required.**
+**Your source. DocuMint's original interactive project-map UI. No MCP, VPS or DocuMint CLI required to view the result.**
 
-![Skill Plugin](https://img.shields.io/badge/Skill%20Plugin-v0.2.0-0078D7)
-![Source](https://img.shields.io/badge/Source-Available%20Now-2ea44f)
-![Directory](https://img.shields.io/badge/ChatGPT%20Directory-Submission%20Pending-orange)
+![Embedded Skill](https://img.shields.io/badge/Skill%20Plugin-v0.3.0-0078D7)
+![GitHub](https://img.shields.io/badge/Source-Available%20on%20GitHub-2ea44f)
+![Public Directory](https://img.shields.io/badge/ChatGPT%20Directory-Not%20Yet%20Published-orange)
 
-**The DocuMint Skill Plugin source is available on GitHub.** Version 0.2.0 adds a Node.js CLI that calls the **same SourceAnalyzer and interactive HTML renderer used in DocuMint VS Code Local Mode**. When the host has permission to run Node and access source files, it can generate the real `documint/documentation.html` and `documentation.md`. A built Skill ZIP embeds the CLI; raw Git source needs a local bundle step.
+**New in v0.3.0:** The skill packages **the original DocuMint Local HTML renderer's CSS, JavaScript and project-map markup** as a self-contained offline HTML shell. Given a JSON representation of authorized source evidence, the same browser interface displays the project map, searchable file explorer, architecture relationships, dependency reach, treemap, zoom/pan and theme controls.
 
-| Feature | What you get |
+| Capability | Behavior |
 | --- | --- |
-| 🧭 **Project map** | Source-grounded architecture, entry points and recommended reading order |
-| 🔗 **Dependency insights** | Observed import relationships and module boundaries, with explicit limits |
-| 🔍 **File explanations** | Exports, functions, imports, code locations and unresolved questions |
-| 📝 **Markdown documentation** | Structured documentation, handoff notes and README drafts |
-| 🛡️ **Evidence first** | Source paths, inspected-scope reporting and partial-coverage warnings |
+| 🧭 Project orientation | Original DocuMint question-first project map UI |
+| 🔍 File explorer & search | Search files, symbols and relationships from supplied facts |
+| 🔗 Architecture & treemap | Original visual components driven by inspected source evidence |
+| 🛡️ Transparent coverage | Indexed vs actually inspected files, revision and evidence limitations |
+| 📄 Portable offline report | One standalone HTML file with embedded JSON; no remote assets |
+| ⚙️ Developer tooling | Original Node CLI remains optional for deterministic Local Mode analysis |
 
-### Get the Skill Plugin
+**Get started (source repository):**
 
 ```bash
 git clone https://github.com/Wonderer-Tech/documint.git
 cd documint
-npm ci
-npm run documint:bundle
-node dist/documint-cli.cjs --root /path/to/project --json
-python3 tools/documint_skill_plugin.py package --output documint-interactive-skill.zip
+node tools/export-embedded-renderer.mjs --check
+python3 tools/documint_skill_plugin.py check
+python3 tools/documint_skill_plugin.py package --output documint-embedded-skill.zip
 ```
 
-Install the **built Skill-only Agent Plugin ZIP** through a compatible plugin installation flow. The compiled CLI needs Node.js 22+ and access to an extracted source directory; neither MCP nor a server is needed. If ChatGPT cannot execute Node, the Skill must disclose this limit and cannot produce identical HTML in that session. Example prompts:
+The Skill can populate the bundled [project-data schema](plugins/documint/skills/documenting-codebases/assets/project-data.schema.json) from accessible source and combine it with the [real HTML shell](plugins/documint/skills/documenting-codebases/assets/documint-renderer.html). A file-writing tool is still needed to create and deliver the final artifact; a Skill cannot grant tool access on its own.
 
-> Use DocuMint to map the architecture of these source files. Cite the path behind each finding.
+**[Plugin source & usage](plugins/documint/)** · **[Skill instructions](plugins/documint/skills/documenting-codebases/SKILL.md)** · **[Renderer contract](plugins/documint/skills/documenting-codebases/references/embedded-renderer.md)** · **[Support](https://github.com/Wonderer-Tech/documint/issues)**
 
-> Use DocuMint to explain `src/index.ts`, its exports and dependencies, and flag anything unverified.
-
-**[Plugin source & setup](plugins/documint/)** · **[Skill instructions](plugins/documint/skills/documenting-codebases/SKILL.md)** · **[Submission checklist](plugins/documint/SUBMISSION.md)** · **[Support](https://github.com/Wonderer-Tech/documint/issues)**
-
-> **Availability:** Interactive HTML integration **source is available in this repository**; a complete ZIP must be built and tested with `npm ci` before publishing. ChatGPT Plugins Directory publication is still pending. The CLI reuses the VS Code **Local Mode** analyzer, not AI-provider mode; VS Code Marketplace install numbers refer only to the extension.
+> **Accuracy boundary:** The *interactive UI assets* are reused, but ChatGPT-created source facts are AI-assisted, not byte-identical results from the deterministic TypeScript analyzer. The package is available on GitHub; **public ChatGPT Plugins Directory publication is pending**.
 
 ---
 
@@ -86,7 +82,7 @@ DocuMint writes generated documentation to:
 
 ## Table of Contents
 
-- [Interactive HTML Skill Plugin](#-documint-interactive-html-skill--same-local-renderer-as-vs-code-v020)
+- [Interactive HTML Skill Plugin](#-new--documint-embedded-interactive-html-skill-v030)
 - [Why DocuMint?](#why-documint)
 - [Developer Challenge](#-developer-challenge--try-documint-on-a-real-repository)
 - [What's New in 1.0.11](#whats-new-in-1011)
