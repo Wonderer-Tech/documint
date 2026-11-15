@@ -12,7 +12,9 @@
     "start": "node server.mjs",
     "test": "node --test test/*.test.mjs",
     "check": "npm run build && npm run test && npm run test:mcp",
-    "test:mcp": "node --test smoke/mcpProtocol.test.mjs"
+    "test:mcp": "node --test smoke/mcpProtocol.test.mjs",
+    "test:live": "node --test smoke/liveRepositoryAcceptance.test.mjs",
+    "check:live": "npm run check && DOCUMINT_LIVE_ACCEPT=1 npm run test:live"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.2",

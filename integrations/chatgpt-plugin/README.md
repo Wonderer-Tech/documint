@@ -114,3 +114,42 @@ reservation, host validation and Git blob integrity. The MCP SDK smoke
 suite additionally checks Host rejection on the real server, but it must
 not be considered passing until `npm run check` completes on a
 network-enabled checkout with SDK dependencies installed.
+
+
+## Opt-in live repository acceptance
+
+Once `npm run check` passes (29 offline collector tests and 3 SDK smoke
+tests before these new contract tests), run an **explicit** public-GitHub
+acceptance check from `integrations/chatgpt-plugin`:
+
+```bash
+npm run check:live
+```
+
+The live command rebuilds the headless analyzer, runs offline tests, then
+starts the actual Streamable HTTP server on a random loopback port and
+connects through the MCP SDK. It invokes **all three** tools against the
+real public `Wonderer-Tech/documint` repository, with `max_files: 10`
+per scan (and `max_chars: 5000` for Markdown). It validates stable
+commit-SHA attribution, partial coverage, module/file output and bounded
+Markdown, and prints a small evidence record.
+
+Live verification is deliberately **excluded** from ordinary
+`npm run check`; running `check:live` explicitly opts into GitHub API/raw
+requests. It uses public GET requests and does not modify any repository,
+dispatch GitHub Actions or publish the MCP endpoint. An optional
+`GITHUB_TOKEN` can improve GitHub's API request allowance; do not log
+or commit tokens. The test launches the MCP server on `127.0.0.1`
+and stops it afterwards.
+
+If only the remote acceptance step is needed after a successful build:
+
+```bash
+DOCUMINT_LIVE_ACCEPT=1 npm run test:live
+```
+
+**Verification distinction:** This opt-in runner and its unit-test
+contracts have been added, but the real MCP-to-GitHub live run still
+requires execution from a network-enabled checkout. Live GitHub
+metadata was independently read using the GitHub connector; that alone
+does not prove the MCP tools have passed the acceptance test.

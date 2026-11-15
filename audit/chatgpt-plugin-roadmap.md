@@ -86,3 +86,26 @@ From a network-enabled checkout:
   build and end-to-end ChatGPT installation not run (npm/GitHub DNS
   unavailable in this sandbox). Do not deploy as public production
   service based only on these results.
+
+
+## Live GitHub acceptance gate (2026-11-15)
+
+- New `smoke/liveRepositoryAcceptance.test.mjs` invokes real Streamable
+  HTTP MCP server, then analyzes, explains and generates Markdown from
+  the public `Wonderer-Tech/documint` repository (10 source files max).
+- New `smoke/liveAcceptanceAssertions.mjs` checks revision attribution,
+  repository identity, true partial coverage, requested file identity and
+  bounded Markdown. Eight dependency-free contract tests were RED before
+  implementation and GREEN afterwards in the local Node.js 22 harness.
+- Added `npm run test:live` with `DOCUMINT_LIVE_ACCEPT=1` requirement,
+  and `npm run check:live` to run both offline and real live checks.
+- Independent GitHub connector reads found public default branch `main`,
+  commit `3233ea1a18585df4ed9f0d3524a722a6c605c3ea`,
+  241 tree entries and 103 size-eligible source files; raw
+  `src/analyzer/sourceAnalyzer.ts` content matched the file API result
+  for that pinned commit. These are **GitHub API checks**, not a successful
+  live MCP tool invocation.
+- The sandbox lacks npm SDK installation/network DNS, so full
+  `npm run check:live` has **not** been executed here. User's prior
+  Ubuntu run confirmed 29 offline tests and 3 MCP smoke tests passed
+  before this change. No public deployment, ChatGPT connection or release.
