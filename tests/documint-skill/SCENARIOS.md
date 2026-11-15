@@ -24,3 +24,11 @@ These scenarios are acceptance criteria, not a claim of completed ChatGPT runtim
 - No source: request authorized repository or uploaded files after choice. No Google Drive, Google Docs or GitHub Actions.
 - No file-write tool: explain limitation; never fabricate a downloadable link.
 - Verify browser components and actual ChatGPT installation separately; Python tests cannot establish UI delivery.
+
+## v0.3.2 complete-file gates (manual host acceptance still required)
+
+- HTML or Both must yield downloadable `documentation.html` using original DocuMint UI assets; scripts-only ZIPs fail.
+- ZIP recovery reads root `project-data.json` only, then creates finished documentation using pinned viewer; no `urllib`/network needed.
+- Fake, truncated or modified renderer must fail hard before creating HTML.
+- Verify final CSP nonce, data payload, project map, search and treemap; do not report success on missing files.
+- Host cannot read/materialize the renderer or write HTML: report exact limitation, not another HTML design or generator package.

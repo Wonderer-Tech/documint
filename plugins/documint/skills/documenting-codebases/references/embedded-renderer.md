@@ -14,3 +14,7 @@ The optional `scripts/render_embedded.py` helper handles steps 2–4, validates 
 **Parity:** same renderer *UI assets*, not necessarily the same analysis inventory, document prose, timestamp or exact bytes produced by VS Code. The original renderer's source-specific features rely on the completeness and accuracy of structured facts supplied in the JSON.
 
 **Updating the snapshot:** from the DocuMint source root, run `node tools/export-embedded-renderer.mjs --write` and verify `node tools/export-embedded-renderer.mjs --check`. The exporter fails on unknown source changes instead of silently dropping UI components.
+
+## Final artifact requirement
+
+A finished downloadable `documentation.html` is mandatory when HTML is selected; no generator-only ZIP. The original renderer asset is pinned to Git blob SHA-1 `ec66c180f09a0df8ef2eb6f3c8765b185716d8f6`. Use the bundled asset; if inaccessible, read the exact canonical file via an authorized GitHub connector and materialize it into the current host. `--input-zip` recovers `project-data.json` from an older ZIP without running its scripts; `--zip-out` packages **finished documentation files**.

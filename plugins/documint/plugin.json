@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "documint",
-  "version": "0.3.1",
-  "description": "DocuMint interactive HTML or Markdown documentation with chat format selection and original viewer; no MCP server.",
+  "version": "0.3.2",
+  "description": "DocuMint code documentation: HTML, Markdown or both, with original viewer identity and ready-artifact validation; no MCP server.",
   "author": {
     "name": "Wonderer Tech",
     "url": "https://github.com/Wonderer-Tech"
@@ -22,7 +22,7 @@
       "interface": {
         "displayName": "DocuMint",
         "shortDescription": "Interactive code documentation",
-        "longDescription": "Say Use DocuMint to choose HTML, Markdown or Both. Generate downloadable documentation from authorized source using original embedded DocuMint Local HTML viewer assets and source-grounded Markdown. Selection is conversational because a skill-only plugin cannot force clickable ChatGPT checkboxes; downloads depend on host file tools.",
+        "longDescription": "Say Use DocuMint and select HTML, Markdown or Both. HTML is a finished downloadable artifact from the original DocuMint Local viewer, validated offline against its pinned renderer SHA; generator-only ZIPs do not satisfy the request. Legacy project-data ZIPs can be repaired. Source analysis is AI-assisted unless the original deterministic analyzer ran. Requires host file-writing capability; no MCP server or Google Drive.",
         "developerName": "Wonderer Tech",
         "category": "Productivity",
         "capabilities": [
@@ -44,7 +44,7 @@
         "termsOfServiceURL": "https://github.com/Wonderer-Tech/documint/blob/main/plugins/documint/TERMS.md"
       },
       "publication": {
-        "release_notes": "DocuMint v0.3.1 adds short-prompt activation, conversational HTML/Markdown/Both selection, original embedded HTML viewer, and source-grounded Markdown. No MCP server."
+        "release_notes": "v0.3.2 adds strict direct HTML delivery, original renderer integrity pin, offline legacy ZIP recovery, ready-artifact ZIP validation and end-to-end tests."
       }
     }
   }

@@ -1,4 +1,4 @@
-# DocuMint Interactive HTML Skill Plugin v0.3.1
+# DocuMint Interactive HTML Skill Plugin v0.3.2
 
 **One familiar UI, no DocuMint CLI.** This Skill bundles a complete HTML shell exported from the actual DocuMint VS Code Local HTML CSS, JavaScript and project-map markup. It uses a project JSON object to render an offline HTML artifact in a browser. No MCP server, VPS, API key or Node.js execution is required **by the installed viewer**.
 
@@ -22,6 +22,21 @@ Type **Use DocuMint**. The Skill then offers **HTML**, **Markdown (.md)** or **B
 | Both | `documentation.html` and `documentation.md` from one evidence model |
 
 A **skill-only plugin cannot force clickable ChatGPT checkboxes**. Interactive custom forms require a supported UI extension, typically MCP-backed; this Skill intentionally needs no MCP/server and no Google Drive permissions. File downloads require file-writing tools in the host. The original HTML UI assets are reused, but AI-assisted facts and Markdown are not byte-identical to VS Code Local SourceAnalyzer outputs.
+
+## Ready-to-download HTML is mandatory
+
+**HTML selection must produce a finished \`documentation.html\`, not a generator script.** The installed asset \`skills/documenting-codebases/assets/documint-renderer.html\` is the original full DocuMint viewer and is SHA-pinned as Git blob \`ec66c180f09a0df8ef2eb6f3c8765b185716d8f6\`. The packager rejects truncated/lookalike assets, and the renderer verifies that only project JSON and CSP nonce are substituted.
+
+For a prior generator-only ZIP, using the **installed skill** (not a script inside the input archive):
+
+\`\`\`bash
+python3 skills/documenting-codebases/scripts/render_embedded.py \
+  --input-zip /path/to/DocuMint_PEVS_Original_Renderer_Package.zip \
+  --format both --out-dir ./finished \
+  --zip-out ./DocuMint_READY.zip
+\`\`\`
+
+This extracts only \`project-data.json\` from that ZIP, never executes archive scripts, and writes \`finished/documentation.html\`, \`finished/documentation.md\` and a ready ZIP containing actual documentation. With no ability to access/materialize the pinned renderer or create files, report generation failure—not success with a generator package. Google Drive, MCP servers and internet connectivity are not required by the renderer.
 
 ## Quick start
 
@@ -48,6 +63,6 @@ python3 tools/documint_skill_plugin.py check
 python3 tools/documint_skill_plugin.py package --output documint-embedded-skill.zip
 ```
 
-The *existing* `documint-cli.cjs` remains optional for Codex/local workflows and direct AST-based Local Mode; it is not bundled as a Skill requirement in v0.3.0.
+The *existing* `documint-cli.cjs` remains optional for Codex/local workflows and direct AST-based Local Mode; it is not bundled as a Skill requirement in v0.3.2.
 
 Privacy: [PRIVACY.md](PRIVACY.md) · Terms: [TERMS.md](TERMS.md) · Submission: [SUBMISSION.md](SUBMISSION.md) · Issues: https://github.com/Wonderer-Tech/documint/issues.
