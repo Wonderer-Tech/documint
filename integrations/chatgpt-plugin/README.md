@@ -40,6 +40,19 @@ npm run check
 npx @modelcontextprotocol/inspector@latest
 ```
 
+`npm run check` now builds the headless analyzer, runs the mock-GitHub
+collector tests, and runs `test:mcp` against a **real, spawned local
+Streamable HTTP server** using the MCP SDK client. The smoke test verifies
+initialization, exactly three read-only tools, rejection of unsafe
+repository URLs, HTTP body-size enforcement, and Origin blocking. It uses
+an ephemeral loopback port, disables GitHub tokens, and requires no live
+GitHub fetch. The SDK and root build dependencies must already be installed.
+
+The smoke suite is a **verification gate, not a claim of a successful run**:
+it still needs to run in a network-enabled checkout. This session's npm
+registry access returned `EAI_AGAIN`. A passed syntax check alone does
+not prove that the SDK handshake works.
+
 In MCP Inspector, select Streamable HTTP and connect to `http://127.0.0.1:8787/mcp`. Verify `tools/list` and each tool's read-only behavior, including malformed inputs and private-repo refusal.
 
 ## Connect to ChatGPT

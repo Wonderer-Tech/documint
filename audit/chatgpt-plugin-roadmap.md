@@ -48,3 +48,10 @@ From a network-enabled checkout:
 - Corrected a false-completeness condition: supported source paths excluded by the 128 KiB per-file limit or missing/invalid Git-tree sizes now force `coverage.complete = false`.
 - Added `omittedOversizedSourceFiles` and `omittedUnknownSizeSourceFiles` counts and three security/coverage regression cases. A local dependency-free Node.js harness verified RED (3/3 failures) before code changes and GREEN (9/9 total local cases passing) after changes.
 - MCP SDK installation and handshake remain unverified here: npm registry requests failed with `EAI_AGAIN` (DNS resolution). No deployment, PR, or GitHub Actions were initiated.
+
+## Next milestone (2026-11-15, MCP protocol smoke gate)
+
+- Added `integrations/chatgpt-plugin/smoke/mcpProtocol.test.mjs` to spin up the real server over loopback and connect using the v1 MCP SDK `Client` + `StreamableHTTPClientTransport`.
+- The test checks SDK initialization, exact tool registry/read-only annotations, three invalid-repository tool errors, HTTP 413 body-limit rejection and Origin rejection. It intentionally avoids external GitHub traffic.
+- Wired `npm run check` to run build + adapter tests + the new `npm run test:mcp` gate.
+- **Not verified yet:** the SDK smoke test execution because `@modelcontextprotocol/sdk` cannot be installed in this sandbox (`EAI_AGAIN`). `node --check` of the new test script succeeded; this is only a syntax-level check.

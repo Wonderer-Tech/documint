@@ -11,7 +11,8 @@
     "build": "../../node_modules/.bin/esbuild src/coreBridge.ts --bundle --platform=node --format=cjs --target=node22 --outfile=dist/core.cjs",
     "start": "node server.mjs",
     "test": "node --test test/*.test.mjs",
-    "check": "npm run build && npm run test"
+    "check": "npm run build && npm run test && npm run test:mcp",
+    "test:mcp": "node --test smoke/mcpProtocol.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.2",
