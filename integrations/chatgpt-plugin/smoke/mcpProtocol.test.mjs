@@ -57,6 +57,8 @@ before(async () => {
       HOST: "127.0.0.1",
       PORT: String(port),
       GITHUB_TOKEN: "",
+      MCP_ACCESS_TOKEN: "",
+      MCP_REQUIRE_ACCESS_TOKEN: "0",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });

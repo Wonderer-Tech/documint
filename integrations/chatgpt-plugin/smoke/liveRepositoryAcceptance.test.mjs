@@ -45,7 +45,8 @@ async function start() {
   const base = "http://127.0.0.1:" + port;
   let output = "";
   const child = spawn(process.execPath, [SERVER], {
-    env: { ...process.env, PORT: String(port), HOST: "127.0.0.1", MCP_ALLOWED_HOSTS: "" },
+    env: { ...process.env, PORT: String(port), HOST: "127.0.0.1",
+      MCP_ALLOWED_HOSTS: "", MCP_ACCESS_TOKEN: "", MCP_REQUIRE_ACCESS_TOKEN: "0" },
     stdio: ["ignore", "pipe", "pipe"],
   });
   for (const stream of [child.stdout, child.stderr]) {

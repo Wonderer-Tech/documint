@@ -109,3 +109,24 @@ From a network-enabled checkout:
   `npm run check:live` has **not** been executed here. User's prior
   Ubuntu run confirmed 29 offline tests and 3 MCP smoke tests passed
   before this change. No public deployment, ChatGPT connection or release.
+
+
+## Post-live acceptance: guarded preview HTTP transport (2026-11-15)
+
+- Added opt-in, single-operator bearer-token protection on `/mcp` with
+  constant-time digest comparison; token values are never returned in errors.
+  `MCP_REQUIRE_ACCESS_TOKEN=1` refuses startup without a token.
+- Docker runtime defaults to mandatory token mode; loopback-only local
+  container use requires explicit `MCP_REQUIRE_ACCESS_TOKEN=0`.
+- Extracted bounded `application/json` request parsing, preserving the
+  MCP transport, with distinct 400 / 413 / 415 failure codes for malformed,
+  oversized and unsupported requests, including chunked transfers.
+- HTTP header/request/keepalive timeouts are explicitly bounded.
+- Added dependency-free unit tests and actual Node HTTP chunked-request
+  coverage: 13/13 passed locally under Node.js 22.16.0; the existing
+  41-test baseline was confirmed by the user's Ubuntu logs.
+- Added real spawned-server protected HTTP smoke tests; full MCP SDK and
+  Docker image checks still need execution in the user's connected checkout.
+- This is **not** OAuth 2.1 and is **not** public multi-user release
+  certification. Secure MCP Tunnel or an audited OAuth-capable proxy is
+  recommended for connecting ChatGPT privately.

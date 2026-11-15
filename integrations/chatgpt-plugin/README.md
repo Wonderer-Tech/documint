@@ -153,3 +153,53 @@ contracts have been added, but the real MCP-to-GitHub live run still
 requires execution from a network-enabled checkout. Live GitHub
 metadata was independently read using the GitHub connector; that alone
 does not prove the MCP tools have passed the acceptance test.
+
+
+## Secure preview access and bounded MCP HTTP requests (2026-11-15)
+
+The local Node.js development server keeps its existing anonymous,
+**loopback-only** behavior when no `MCP_ACCESS_TOKEN` is configured.
+For a single-operator preview, you may configure a random token:
+
+```bash
+export MCP_ACCESS_TOKEN="$(openssl rand -hex 32)"
+MCP_REQUIRE_ACCESS_TOKEN=1 npm start
+```
+
+MCP requests must then carry `Authorization: Bearer <token>`. An invalid
+or missing header receives HTTP 401. `/health` remains intentionally
+minimal and unauthenticated. Generate a separate secret per deployment,
+keep it outside Git and logs, and use a secret manager where possible.
+This **is not an OAuth server** and does not provide account identity,
+scopes, consent, or ChatGPT OAuth linking. For ChatGPT personal previews,
+prefer Secure MCP Tunnel to the loopback server with tunnel access controls,
+or a properly configured OAuth-capable reverse proxy. ChatGPT OAuth
+connection must be tested independently; do not assume a custom Bearer
+token can be entered as OAuth credentials.
+
+The container image now sets `MCP_REQUIRE_ACCESS_TOKEN=1` by default
+and refuses startup without `MCP_ACCESS_TOKEN`. To test a container
+**only on your own machine, with the host port bound to loopback**, opt
+out explicitly:
+
+```bash
+docker run --rm -e MCP_REQUIRE_ACCESS_TOKEN=0 \
+  -p 127.0.0.1:8787:8787 documint-chatgpt
+```
+
+Do not use that opt-out with public port mappings. For an authenticated
+container preview, supply a secret through a trusted deployment secret
+manager (environment injection is supported). Even with a static token,
+**do not expose this preview as a multi-user production service**: public
+production requires per-user OAuth 2.1 authorization, TLS/mTLS or trusted
+proxy identity, distributed quotas, monitoring, and operator review.
+
+MCP POST requests must use `application/json`; compressed request bodies
+are rejected. Declared or streamed bodies exceeding 32 KiB return
+HTTP 413. Invalid JSON returns 400, unsupported media types 415, and
+authentication failures 401. The server also bounds HTTP header,
+request and keep-alive timeouts, plus requests per connection.
+
+Run `npm run check` to exercise the unit tests and the protected
+HTTP-server smoke suite. This is separate from `npm run check:live`,
+which additionally contacts the real public GitHub repository.

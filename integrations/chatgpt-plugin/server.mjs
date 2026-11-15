@@ -7,6 +7,8 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { z } from "zod";
 import { fetchPublicRepository } from "./repositoryFetch.mjs";
 import { parseAllowedHosts, isTrustedHttpHost } from "./hostPolicy.mjs";
+import { configureMcpAccess, isAuthorizedRequest } from "./authPolicy.mjs";
+import { HttpRequestError, readMcpBody } from "./bodyPolicy.mjs";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const corePath = fileURLToPath(new URL("./dist/core.cjs", import.meta.url));
@@ -21,6 +23,10 @@ const { analyzePluginFiles } = require(corePath);
 const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || "127.0.0.1";
 const ALLOWED_HOSTS = parseAllowedHosts(process.env.MCP_ALLOWED_HOSTS);
+const ACCESS_DIGEST = configureMcpAccess({
+  token: process.env.MCP_ACCESS_TOKEN,
+  required: process.env.MCP_REQUIRE_ACCESS_TOKEN,
+});
 const MAX_BODY_BYTES = 32 * 1024;
 const MAX_ACTIVE_REQUESTS = 6;
 const RATE_WINDOW_MS = 60_000;
@@ -199,17 +205,6 @@ function jsonError(res, status, message) {
   res.end(JSON.stringify({ error: message }));
 }
 
-async function parseBody(req) {
-  const chunks = [];
-  let total = 0;
-  for await (const chunk of req) {
-    total += chunk.length;
-    if (total > MAX_BODY_BYTES) throw new Error("Request body exceeds 32 KiB");
-    chunks.push(chunk);
-  }
-  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
-}
-
 function allowRequest(req) {
   // No browser-origin cross-site access. MCP clients normally make server-side
   // calls without an Origin header. This also helps prevent DNS rebinding.
@@ -246,6 +241,10 @@ const httpServer = createServer(async (req, res) => {
   }
 
   if (pathname !== "/mcp") return jsonError(res, 404, "Not found");
+  if (!isAuthorizedRequest(req.headers.authorization, ACCESS_DIGEST)) {
+    res.setHeader("www-authenticate", 'Bearer realm="DocuMint MCP"');
+    return jsonError(res, 401, "Unauthorized");
+  }
   if (req.method !== "POST" && req.method !== "GET" && req.method !== "DELETE") {
     res.setHeader("allow", "POST, GET, DELETE");
     return jsonError(res, 405, "Method not allowed");
@@ -278,15 +277,26 @@ const httpServer = createServer(async (req, res) => {
 
   res.once("close", () => void finish());
   try {
-    const body = req.method === "POST" ? await parseBody(req) : undefined;
+    const body = req.method === "POST"
+      ? await readMcpBody(req, MAX_BODY_BYTES) : undefined;
     await server.connect(transport);
     await transport.handleRequest(req, res, body);
   } catch (error) {
     console.error("[DocuMint MCP] request failed:", error instanceof Error ? error.name : "Error");
-    jsonError(res, 400, "Invalid MCP request");
+    if (error instanceof HttpRequestError) {
+      jsonError(res, error.status, error.message);
+    } else {
+      jsonError(res, 400, "Invalid MCP request");
+    }
     void finish();
   }
 });
+
+// Bound sockets and request bodies even when a client never finishes sending.
+httpServer.headersTimeout = 10_000;
+httpServer.requestTimeout = 20_000;
+httpServer.keepAliveTimeout = 5_000;
+httpServer.maxRequestsPerSocket = 100;
 
 if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
   throw new Error("PORT must be between 1 and 65535");
