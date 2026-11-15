@@ -55,3 +55,10 @@ From a network-enabled checkout:
 - The test checks SDK initialization, exact tool registry/read-only annotations, three invalid-repository tool errors, HTTP 413 body-limit rejection and Origin rejection. It intentionally avoids external GitHub traffic.
 - Wired `npm run check` to run build + adapter tests + the new `npm run test:mcp` gate.
 - **Not verified yet:** the SDK smoke test execution because `@modelcontextprotocol/sdk` cannot be installed in this sandbox (`EAI_AGAIN`). `node --check` of the new test script succeeded; this is only a syntax-level check.
+
+## Source integrity hardening (2026-11-15)
+
+- Count in-scope Git gitlinks (submodules) as `omittedSubmodules`, forcing partial coverage without downloading nested repositories.
+- Detect standard Git LFS pointer contents among fetched source blobs; report `omittedLfsPointerFiles` and exclude pointer text from analysis. Plain source comments mentioning Git LFS remain source code.
+- Dependency-free local Node regression tests: 3 new tests were red before implementation; four new source-integrity cases and nine preexisting local fixture tests passed after implementation (13/13). This local suite used a faithful collector copy because the whole repository and SDK dependencies are not mounted here.
+- Real MCP SDK smoke test still blocks on unavailable SDK installation; `ERR_MODULE_NOT_FOUND` was reproduced. This is not a verified ChatGPT connection or deployable release.

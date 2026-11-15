@@ -83,6 +83,12 @@ export function isSafeSourcePath(filePath) {
   return SOURCE_EXTENSIONS.has(extension);
 }
 
+// Only a complete Git LFS pointer is recognized; source comments mentioning
+// LFS are never discarded as pointer files.
+function isGitLfsPointer(content) {
+  return /^version https:\/\/git-lfs\.github\.com\/spec\/v1\r?\n(?:ext-[^\r\n]*\r?\n)*oid sha256:[a-f0-9]{64}\r?\nsize [0-9]+\r?\n?$/.test(content);
+}
+
 function priority(path) {
   if (path === "package.json") return 0;
   if (/^(src|app|apps|lib|packages)\//i.test(path)) return 1;
@@ -217,6 +223,17 @@ export async function fetchPublicRepository(
 
   if (!Array.isArray(tree.tree)) throw new Error("GitHub did not return a repository tree");
 
+  // Gitlinks point to other repositories and are not included in our scan.
+  // Count in-scope submodules as missing source; skip excluded test/build paths.
+  const omittedSubmodules = tree.tree.filter((entry) =>
+    entry.type === "commit" &&
+    entry.mode === "160000" &&
+    typeof entry.path === "string" &&
+    entry.path.split("/").every((segment) =>
+      segment && segment !== "." && segment !== ".." &&
+      !segment.startsWith(".") && !EXCLUDED_SEGMENTS.has(segment.toLowerCase()))
+  ).length;
+
   // Keep skipped source counts so bounded scans cannot report full coverage
   // when permitted source files exceed the per-file limit or lack valid sizes.
   const sourceEntries = tree.tree.filter((entry) =>
@@ -276,7 +293,12 @@ export async function fetchPublicRepository(
   const files = [];
   let totalBytes = 0;
   let omittedByByteLimit = 0;
+  let omittedLfsPointerFiles = 0;
   for (const file of result.filter(Boolean)) {
+    if (isGitLfsPointer(file.content)) {
+      omittedLfsPointerFiles++;
+      continue;
+    }
     const bytes = Buffer.byteLength(file.content, "utf8");
     if (totalBytes + bytes > MAX_TOTAL_SOURCE_BYTES) {
       omittedByByteLimit++;
@@ -322,12 +344,16 @@ export async function fetchPublicRepository(
       eligibleSourceFiles: candidates.length,
       omittedOversizedSourceFiles,
       omittedUnknownSizeSourceFiles,
+      omittedSubmodules,
+      omittedLfsPointerFiles,
       omittedByFileLimit: Math.max(0, candidates.length - selection.length),
       failedToFetch: result.filter((file) => !file).length,
       omittedByByteLimit,
       githubTreeTruncated: tree.truncated === true,
       complete:
         tree.truncated !== true &&
+        omittedSubmodules === 0 &&
+        omittedLfsPointerFiles === 0 &&
         omittedOversizedSourceFiles === 0 &&
         omittedUnknownSizeSourceFiles === 0 &&
         candidates.length <= selection.length &&
