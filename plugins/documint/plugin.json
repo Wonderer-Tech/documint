@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "documint",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Source-grounded codebase documentation workflows for ChatGPT and Codex, without a dedicated server.",
   "author": {
     "name": "Wonderer Tech",
@@ -21,13 +21,14 @@
     "com.openai": {
       "interface": {
         "displayName": "DocuMint",
-        "shortDescription": "Source-grounded documentation for codebases.",
+        "shortDescription": "Document code with evidence",
         "longDescription": "Explain files, build evidence-backed project maps, and prepare Markdown documentation using the source you provide or can access with existing tools. No DocuMint server required.",
         "developerName": "Wonderer Tech",
         "category": "Productivity",
         "capabilities": [
-          "Read",
-          "Write"
+          "Code documentation",
+          "Architecture mapping",
+          "File explanations"
         ],
         "websiteURL": "https://github.com/Wonderer-Tech/documint",
         "brandColor": "#0078D7",
@@ -37,7 +38,13 @@
           "Explain this source file, including exports, imports and important behavior."
         ],
         "logo": "./assets/logo.svg",
-        "composerIcon": "./assets/composer-icon.svg"
+        "composerIcon": "./assets/composer-icon.svg",
+        "supportURL": "https://github.com/Wonderer-Tech/documint/issues",
+        "privacyPolicyURL": "https://github.com/Wonderer-Tech/documint/blob/feat/chatgpt-skill-plugin/plugins/documint/PRIVACY.md",
+        "termsOfServiceURL": "https://github.com/Wonderer-Tech/documint/blob/feat/chatgpt-skill-plugin/plugins/documint/TERMS.md"
+      },
+      "publication": {
+        "release_notes": "Initial serverless skill-only DocuMint plugin: evidence-grounded architecture maps, source-file explanations and Markdown documentation. No MCP server or third-party sign-in required."
       }
     }
   }

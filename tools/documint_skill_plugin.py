@@ -86,6 +86,26 @@ def validate_plugin(repo_root: Path) -> dict:
     _require((root / "README.md").is_file(), "Missing plugin usage guide")
     _require((root / "LICENSE").is_file(), "Missing MIT license")
     interface = manifest.get("extensions", {}).get("com.openai", {}).get("interface", {})
+    _require(isinstance(interface, dict), "Missing OpenAI-specific interface")
+    for field in ("displayName", "shortDescription", "longDescription", "developerName", "category"):
+        _require(isinstance(interface.get(field), str) and bool(interface[field].strip()),
+                 f"Missing listing metadata: {field}")
+    _require(len(interface["displayName"]) <= 30 and len(interface["shortDescription"]) <= 30 and
+             len(interface["longDescription"]) <= 4000 and len(interface["developerName"]) <= 80,
+             "Public listing metadata exceeds submission limits")
+    for field in ("websiteURL", "supportURL", "privacyPolicyURL", "termsOfServiceURL"):
+        url = interface.get(field)
+        _require(isinstance(url, str) and url.startswith("https://") and
+                 "example.com" not in url, f"Missing valid listing URL: {field}")
+    prompts = interface.get("defaultPrompt", [])
+    _require(isinstance(prompts, list) and len(prompts) <= 3 and
+             all(isinstance(value, str) and 0 < len(value) <= 128 for value in prompts),
+             "Invalid starter prompts")
+    _require((root / "PRIVACY.md").is_file() and (root / "TERMS.md").is_file(),
+             "Privacy policy and terms files are required for this submission")
+    publication = manifest.get("extensions", {}).get("com.openai", {}).get("publication", {})
+    _require(isinstance(publication.get("release_notes"), str) and bool(publication["release_notes"].strip()),
+             "Missing initial release notes")
     for field in ("logo", "composerIcon"):
         relative = interface.get(field, "")
         _require(isinstance(relative, str) and relative.startswith("./assets/") and

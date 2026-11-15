@@ -33,6 +33,29 @@ class SkillPackageTests(unittest.TestCase):
             with self.assertRaises(PluginValidationError):
                 validate_plugin(root)
 
+    def test_official_portable_plugin_format(self):
+        manifest = json.loads((REPO / 'plugins/documint/plugin.json').read_text())
+        self.assertEqual(manifest['$schema'], 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json')
+        self.assertNotIn('skills', manifest)  # skill folder is autodiscovered in portable format
+        self.assertNotIn('mcpServers', manifest)
+        self.assertNotIn('apps', manifest)
+        self.assertFalse((REPO / 'plugins/documint/.codex-plugin').exists())
+        ui = manifest['extensions']['com.openai']['interface']
+        self.assertLessEqual(len(ui['shortDescription']), 30)
+        self.assertTrue(all(isinstance(p, str) and len(p) <= 128 for p in ui['defaultPrompt']))
+        self.assertLessEqual(len(ui['defaultPrompt']), 3)
+        for field in ('websiteURL','supportURL','privacyPolicyURL','termsOfServiceURL'):
+            self.assertTrue(ui[field].startswith('https://'), field)
+        self.assertIn('publication', manifest['extensions']['com.openai'])
+        self.assertTrue((REPO / 'plugins/documint/PRIVACY.md').is_file())
+        self.assertTrue((REPO / 'plugins/documint/TERMS.md').is_file())
+
+    def test_missing_policy_file_is_rejected(self):
+        with self.copy_repo() as root:
+            (root / 'plugins/documint/PRIVACY.md').unlink()
+            with self.assertRaises(PluginValidationError):
+                validate_plugin(root)
+
     def test_missing_skill_rejected(self):
         with self.copy_repo() as root:
             (root / "plugins/documint/skills/documenting-codebases/SKILL.md").unlink()
@@ -81,6 +104,7 @@ class SkillPackageTests(unittest.TestCase):
             with zipfile.ZipFile(target) as zf:
                 names = zf.namelist()
                 self.assertIn("plugin.json", names)
+                self.assertNotIn('.codex-plugin/plugin.json', names)
                 self.assertIn("skills/documenting-codebases/SKILL.md", names)
                 self.assertNotIn("mcp.json", names)
                 self.assertNotIn(".mcp.json", names)
