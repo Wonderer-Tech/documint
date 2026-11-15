@@ -1,4 +1,6 @@
 # Local/dev metadata
+.agents/**
+plugins/**
 .git/**
 .github/**
 .claude/**

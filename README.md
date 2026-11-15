@@ -13,6 +13,8 @@
 
 DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and HTML documentation. Use **Local Documentation — No AI** for deterministic, source-grounded docs that stay on your machine, or switch to AI mode when you want provider-enhanced explanations.
 
+**New: ChatGPT/Codex Skill Plugin (no server).** The [DocuMint skill-only package](plugins/documint/) creates source-grounded project maps, file explanations and Markdown documentation from files you provide or from already-authorized tools. It does **not** execute the VS Code extension's deterministic analyzer. Build its standalone ZIP with `python3 tools/documint_skill_plugin.py package --output documint-skill-plugin.zip`; the [skill validation scenarios](tests/documint-skill/SCENARIOS.md) document acceptance cases. No MCP or VPS is needed for this skill.
+
 **🎉 600+ Marketplace downloads and counting.** Thank you to everyone who has tried DocuMint and helped shape it.
 
 > **1.0.11 release:** the full Local Project Map upgrade plus the complete in-sidebar rating, review, and improvement-feedback card.
