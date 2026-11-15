@@ -125,6 +125,18 @@ class SkillPackageTests(unittest.TestCase):
                 build_zip(root, second)
             self.assertEqual(first.read_bytes(), second.read_bytes())
 
+    def test_zip_rejects_fake_renderer_with_only_correct_marker(self):
+        with self.copy_repo() as root, tempfile.TemporaryDirectory() as directory:
+            renderer = root / "plugins/documint/skills/documenting-codebases/assets/documint-renderer.html"
+            renderer.write_text(
+                '<!DOCTYPE html><html><body data-documint-local-code-map>'
+                '__DOCUMINT_DATA_BASE64__ __DOCUMINT_CSP_NONCE__'
+                '</body></html>',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(PluginValidationError, "Canonical DocuMint renderer SHA mismatch"):
+                build_zip(root, Path(directory) / "fake-viewer.zip")
+
     def test_zip_rejects_missing_embedded_renderer(self):
         with self.copy_repo() as root, tempfile.TemporaryDirectory() as directory:
             (root / "plugins/documint/skills/documenting-codebases/assets/documint-renderer.html").unlink()
