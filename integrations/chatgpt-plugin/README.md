@@ -82,3 +82,35 @@ docker run --rm -p 127.0.0.1:8787:8787 documint-chatgpt
 ```
 
 The public `/mcp` URL must remain reachable for a persistent connection. For public plugin submission, use a stable HTTPS deployment instead of a temporary tunnel.
+
+
+## Source integrity, request budgeting and HTTP Host safety
+
+DocuMint now reserves the 4 MiB source-byte budget using the pinned Git tree
+metadata *before* downloading raw source files. The downloaded text is still
+checked against the existing actual-byte limits. Skipped files are counted
+in `coverage.omittedByByteLimit`, and count-limit omissions remain separate.
+When Git tree blob SHA metadata is available, raw source content and optional
+root metadata are checked against the Git blob hash. Mismatched sources are
+not analyzed; scans with failed source fetches are reported as partial.
+
+The HTTP endpoint only trusts `localhost`, `127.0.0.1` and `[::1]`
+as Host headers by default, protecting local/tunneled services against
+Host-header and DNS-rebinding attacks. If a trusted HTTPS tunnel forwards
+the original public Host, explicitly opt it in:
+
+```bash
+MCP_ALLOWED_HOSTS=documint.example.com npm start
+```
+
+List only trusted literal DNS hostnames separated by commas. Do not set
+wildcards or include `https://`, ports or path components. Loopback
+hosts remain allowed for local health checks. An unrecognized Host
+receives HTTP 421; a public HTTPS endpoint still requires an independent
+authentication, rate-limiting and abuse review before broad exposure.
+
+The test suite now contains dependency-free regression checks for byte
+reservation, host validation and Git blob integrity. The MCP SDK smoke
+suite additionally checks Host rejection on the real server, but it must
+not be considered passing until `npm run check` completes on a
+network-enabled checkout with SDK dependencies installed.

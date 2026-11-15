@@ -62,3 +62,27 @@ From a network-enabled checkout:
 - Detect standard Git LFS pointer contents among fetched source blobs; report `omittedLfsPointerFiles` and exclude pointer text from analysis. Plain source comments mentioning Git LFS remain source code.
 - Dependency-free local Node regression tests: 3 new tests were red before implementation; four new source-integrity cases and nine preexisting local fixture tests passed after implementation (13/13). This local suite used a faithful collector copy because the whole repository and SDK dependencies are not mounted here.
 - Real MCP SDK smoke test still blocks on unavailable SDK installation; `ERR_MODULE_NOT_FOUND` was reproduced. This is not a verified ChatGPT connection or deployable release.
+
+
+## Large follow-up batch (2026-11-15): integrity, efficiency and Host boundary
+
+- Added dependency-free `sourceBudget.mjs`: pre-reserves 4 MiB total
+  source bytes to avoid fetching files that cannot fit. Maintains
+  separate byte-budget and file-count omission accounting.
+- Added `blobIntegrity.mjs`: compares fetched UTF-8 bytes against
+  GitHub tree-provided Git blob SHA-1/SHA-256. A mismatching source blob
+  is excluded; optional root documentation is checked the same way.
+- Added `hostPolicy.mjs` with strict loopback allowlist and an
+  explicit `MCP_ALLOWED_HOSTS` override for known proxy/tunnel Hosts.
+  Every route rejects unknown Host with HTTP 421.
+- Updated container runtime-stage COPY to include the new modules,
+  extended real MCP smoke test for Host rejection, and added five
+  dependency-free test files.
+- **Observed local verification:** 15 new test cases and 13 existing
+  local regression fixtures: 28/28 passed with Node.js v22.16.0.
+  This local collector fixture is not an exact runtime check of the remote
+  GitHub branch, which is not directly cloneable in this environment.
+- **Open gates:** full `npm run check`, MCP SDK handshake, Docker
+  build and end-to-end ChatGPT installation not run (npm/GitHub DNS
+  unavailable in this sandbox). Do not deploy as public production
+  service based only on these results.

@@ -6,6 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 import { fetchPublicRepository } from "./repositoryFetch.mjs";
+import { parseAllowedHosts, isTrustedHttpHost } from "./hostPolicy.mjs";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const corePath = fileURLToPath(new URL("./dist/core.cjs", import.meta.url));
@@ -19,6 +20,7 @@ const { analyzePluginFiles } = require(corePath);
 
 const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || "127.0.0.1";
+const ALLOWED_HOSTS = parseAllowedHosts(process.env.MCP_ALLOWED_HOSTS);
 const MAX_BODY_BYTES = 32 * 1024;
 const MAX_ACTIVE_REQUESTS = 6;
 const RATE_WINDOW_MS = 60_000;
@@ -230,6 +232,9 @@ function allowRequest(req) {
 }
 
 const httpServer = createServer(async (req, res) => {
+  if (!isTrustedHttpHost(req.headers.host, ALLOWED_HOSTS)) {
+    return jsonError(res, 421, "Untrusted Host");
+  }
   const pathname = new URL(req.url ?? "/", "http://localhost").pathname;
 
   if (pathname === "/health" && req.method === "GET") {

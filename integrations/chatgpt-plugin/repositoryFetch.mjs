@@ -1,3 +1,5 @@
+import { reserveSourceBytes } from "./sourceBudget.mjs";
+import { matchesGitBlobSha } from "./blobIntegrity.mjs";
 /**
  * Public GitHub input adapter for the DocuMint ChatGPT MCP plugin.
  *
@@ -273,6 +275,12 @@ export async function fetchPublicRepository(
       .slice(0, maxFiles);
   }
 
+  const omittedByFileLimit = Math.max(0, candidates.length - selection.length);
+  // Reserve GitHub tree-declared bytes before downloading. The decoded
+  // response still undergoes the existing actual-byte check below.
+  const reservation = reserveSourceBytes(selection, MAX_TOTAL_SOURCE_BYTES);
+  selection = reservation.scheduled;
+
   const rawBase = "https://raw.githubusercontent.com/" +
     encodeURIComponent(owner) + "/" + encodeURIComponent(name) + "/" +
     commitSha + "/";
@@ -284,6 +292,9 @@ export async function fetchPublicRepository(
         MAX_FILE_BYTES, token,
       );
       if (content.includes("\0")) throw new Error("Binary content rejected");
+      if (matchesGitBlobSha(content, entry.sha) === false) {
+        throw new Error("GitHub raw blob hash mismatch");
+      }
       return { path: entry.path, content };
     } catch {
       return undefined;
@@ -292,7 +303,7 @@ export async function fetchPublicRepository(
 
   const files = [];
   let totalBytes = 0;
-  let omittedByByteLimit = 0;
+  let omittedByByteLimit = reservation.omitted;
   let omittedLfsPointerFiles = 0;
   for (const file of result.filter(Boolean)) {
     if (isGitLfsPointer(file.content)) {
@@ -317,8 +328,10 @@ export async function fetchPublicRepository(
     );
     if (!entry) return undefined;
     try {
-      return await fetchBounded(fetchImpl,
+      const content = await fetchBounded(fetchImpl,
         new URL(rawBase + encodeRawPath(entry.path)), maxBytes, token);
+      return matchesGitBlobSha(content, entry.sha) === false
+        ? undefined : content;
     } catch {
       return undefined;
     }
@@ -346,7 +359,7 @@ export async function fetchPublicRepository(
       omittedUnknownSizeSourceFiles,
       omittedSubmodules,
       omittedLfsPointerFiles,
-      omittedByFileLimit: Math.max(0, candidates.length - selection.length),
+      omittedByFileLimit,
       failedToFetch: result.filter((file) => !file).length,
       omittedByByteLimit,
       githubTreeTruncated: tree.truncated === true,

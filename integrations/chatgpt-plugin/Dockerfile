@@ -18,6 +18,9 @@ COPY --from=builder /work/integrations/chatgpt-plugin/package.json ./
 RUN npm install --omit=dev --no-audit --no-fund
 COPY --from=builder /work/integrations/chatgpt-plugin/server.mjs ./
 COPY --from=builder /work/integrations/chatgpt-plugin/repositoryFetch.mjs ./
+COPY --from=builder /work/integrations/chatgpt-plugin/sourceBudget.mjs ./
+COPY --from=builder /work/integrations/chatgpt-plugin/blobIntegrity.mjs ./
+COPY --from=builder /work/integrations/chatgpt-plugin/hostPolicy.mjs ./
 COPY --from=builder /work/integrations/chatgpt-plugin/dist ./dist
 USER node
 EXPOSE 8787

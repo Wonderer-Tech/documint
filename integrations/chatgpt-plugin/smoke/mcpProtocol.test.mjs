@@ -7,6 +7,7 @@
 import test, { before, after } from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { request as httpRequest } from "node:http";
 import { once } from "node:events";
 import { createServer } from "node:net";
 import { fileURLToPath } from "node:url";
@@ -131,4 +132,21 @@ test("HTTP gateway rejects oversized JSON and unsafe browser origins before MCP 
     });
     assert.equal(browser.status, 429);
     assert.match((await browser.json()).error, /unsafe Origin/);
+  });
+
+test("HTTP gateway rejects DNS rebinding hosts while preserving local health checks",
+  { timeout: 12000 }, async () => {
+    const status = await new Promise((resolve, reject) => {
+      const req = httpRequest(baseUrl + "/health", {
+        headers: { Host: "dns-rebind.attacker.invalid" },
+      }, (res) => {
+        res.resume();
+        res.once("end", () => resolve(res.statusCode));
+      });
+      req.once("error", reject);
+      req.end();
+    });
+    assert.equal(status, 421);
+    const healthy = await fetch(baseUrl + "/health");
+    assert.equal(healthy.status, 200);
   });
