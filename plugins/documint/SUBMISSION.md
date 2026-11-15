@@ -6,8 +6,8 @@
 **Category:** Productivity
 **Website:** https://github.com/Wonderer-Tech/documint
 **Support:** https://github.com/Wonderer-Tech/documint/issues
-**Privacy:** https://github.com/Wonderer-Tech/documint/blob/feat/chatgpt-skill-plugin/plugins/documint/PRIVACY.md
-**Terms:** https://github.com/Wonderer-Tech/documint/blob/feat/chatgpt-skill-plugin/plugins/documint/TERMS.md
+**Privacy:** https://github.com/Wonderer-Tech/documint/blob/main/plugins/documint/PRIVACY.md
+**Terms:** https://github.com/Wonderer-Tech/documint/blob/main/plugins/documint/TERMS.md
 
 **Short description:** Document code with evidence
 **Long description:** Use existing authorized source access or attached files to explain codebase architecture, entry points, imports, dependencies, APIs, security boundaries, and relevant source files. Produce evidence-linked Markdown documentation and clear coverage limits; no dedicated server required.

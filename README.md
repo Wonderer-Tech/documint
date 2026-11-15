@@ -13,11 +13,51 @@
 
 DocuMint turns a VS Code workspace, folder, or file into navigable Markdown and HTML documentation. Use **Local Documentation — No AI** for deterministic, source-grounded docs that stay on your machine, or switch to AI mode when you want provider-enhanced explanations.
 
-**New: ChatGPT/Codex Skill Plugin (no server).** The [DocuMint skill-only package](plugins/documint/) creates source-grounded project maps, file explanations and Markdown documentation from files you provide or from already-authorized tools. It does **not** execute the VS Code extension's deterministic analyzer. Build its standalone ZIP with `python3 tools/documint_skill_plugin.py package --output documint-skill-plugin.zip`; the [skill validation scenarios](tests/documint-skill/SCENARIOS.md) document acceptance cases. No MCP or VPS is needed for this skill.
-
 **🎉 600+ Marketplace downloads and counting.** Thank you to everyone who has tried DocuMint and helped shape it.
 
 > **1.0.11 release:** the full Local Project Map upgrade plus the complete in-sidebar rating, review, and improvement-feedback card.
+
+
+## 🚀 NEW FEATURE LAUNCH — DocuMint Skill Plugin for ChatGPT & Codex
+
+<p align="center"><img src="plugins/documint/assets/logo.svg" alt="DocuMint Skill Plugin" width="88" height="88"></p>
+
+**Source-grounded code documentation in ChatGPT and Codex. No DocuMint server, MCP, or VPS required.**
+
+![Skill Plugin](https://img.shields.io/badge/Skill%20Plugin-v0.1.1-0078D7)
+![Source](https://img.shields.io/badge/Source-Available%20Now-2ea44f)
+![Directory](https://img.shields.io/badge/ChatGPT%20Directory-Submission%20Pending-orange)
+
+**The DocuMint Skill Plugin is available now as an open-source package.** It guides ChatGPT or Codex through source-based codebase documentation using files you provide or source already accessible through authorized tools.
+
+| Feature | What you get |
+| --- | --- |
+| 🧭 **Project map** | Source-grounded architecture, entry points and recommended reading order |
+| 🔗 **Dependency insights** | Observed import relationships and module boundaries, with explicit limits |
+| 🔍 **File explanations** | Exports, functions, imports, code locations and unresolved questions |
+| 📝 **Markdown documentation** | Structured documentation, handoff notes and README drafts |
+| 🛡️ **Evidence first** | Source paths, inspected-scope reporting and partial-coverage warnings |
+
+### Get the Skill Plugin
+
+```bash
+git clone https://github.com/Wonderer-Tech/documint.git
+cd documint
+python3 tools/documint_skill_plugin.py check
+python3 tools/documint_skill_plugin.py package --output documint-skill-plugin.zip
+```
+
+Install the generated **Skill-only Agent Plugin ZIP** through a compatible plugin installation flow. Example prompts:
+
+> Use DocuMint to map the architecture of these source files. Cite the path behind each finding.
+
+> Use DocuMint to explain `src/index.ts`, its exports and dependencies, and flag anything unverified.
+
+**[Plugin source & setup](plugins/documint/)** · **[Skill instructions](plugins/documint/skills/documenting-codebases/SKILL.md)** · **[Submission checklist](plugins/documint/SUBMISSION.md)** · **[Support](https://github.com/Wonderer-Tech/documint/issues)**
+
+> **Availability:** The **open-source Skill Plugin is available on GitHub**. It is **not yet published in the public ChatGPT Plugins Directory**; submission, review and publishing will follow separately. This skill does not execute the VS Code extension's deterministic analyzer, and VS Code Marketplace install numbers are for the extension only.
+
+---
 
 ## Why DocuMint?
 
@@ -44,6 +84,7 @@ DocuMint writes generated documentation to:
 
 ## Table of Contents
 
+- [New: Skill Plugin for ChatGPT & Codex](#-new-feature-launch--documint-skill-plugin-for-chatgpt--codex)
 - [Why DocuMint?](#why-documint)
 - [Developer Challenge](#-developer-challenge--try-documint-on-a-real-repository)
 - [What's New in 1.0.11](#whats-new-in-1011)

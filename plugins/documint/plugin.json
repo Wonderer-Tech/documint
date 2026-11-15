@@ -40,8 +40,8 @@
         "logo": "./assets/logo.svg",
         "composerIcon": "./assets/composer-icon.svg",
         "supportURL": "https://github.com/Wonderer-Tech/documint/issues",
-        "privacyPolicyURL": "https://github.com/Wonderer-Tech/documint/blob/feat/chatgpt-skill-plugin/plugins/documint/PRIVACY.md",
-        "termsOfServiceURL": "https://github.com/Wonderer-Tech/documint/blob/feat/chatgpt-skill-plugin/plugins/documint/TERMS.md"
+        "privacyPolicyURL": "https://github.com/Wonderer-Tech/documint/blob/main/plugins/documint/PRIVACY.md",
+        "termsOfServiceURL": "https://github.com/Wonderer-Tech/documint/blob/main/plugins/documint/TERMS.md"
       },
       "publication": {
         "release_notes": "Initial serverless skill-only DocuMint plugin: evidence-grounded architecture maps, source-file explanations and Markdown documentation. No MCP server or third-party sign-in required."
