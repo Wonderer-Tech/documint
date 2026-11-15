@@ -1,0 +1,20 @@
+{
+  "name": "wonderer-tech-devtools",
+  "interface": {
+    "displayName": "Wonderer Tech Developer Tools"
+  },
+  "plugins": [
+    {
+      "name": "documint",
+      "source": {
+        "source": "local",
+        "path": "./plugins/documint"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

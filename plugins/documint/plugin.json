@@ -1,0 +1,44 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "documint",
+  "version": "0.1.0",
+  "description": "Source-grounded codebase documentation workflows for ChatGPT and Codex, without a dedicated server.",
+  "author": {
+    "name": "Wonderer Tech",
+    "url": "https://github.com/Wonderer-Tech"
+  },
+  "homepage": "https://github.com/Wonderer-Tech/documint",
+  "repository": "https://github.com/Wonderer-Tech/documint",
+  "license": "MIT",
+  "keywords": [
+    "code documentation",
+    "architecture",
+    "onboarding",
+    "codebase",
+    "developer tools"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "DocuMint",
+        "shortDescription": "Source-grounded documentation for codebases.",
+        "longDescription": "Explain files, build evidence-backed project maps, and prepare Markdown documentation using the source you provide or can access with existing tools. No DocuMint server required.",
+        "developerName": "Wonderer Tech",
+        "category": "Productivity",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "websiteURL": "https://github.com/Wonderer-Tech/documint",
+        "brandColor": "#0078D7",
+        "defaultPrompt": [
+          "Use DocuMint to document this codebase from the files I provide.",
+          "Create a source-grounded architecture map and reading path for this repository.",
+          "Explain this source file, including exports, imports and important behavior."
+        ],
+        "logo": "./assets/logo.svg",
+        "composerIcon": "./assets/composer-icon.svg"
+      }
+    }
+  }
+}
