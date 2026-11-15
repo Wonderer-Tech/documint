@@ -47,11 +47,11 @@ Never ask for Google Drive/Docs permissions or run GitHub Actions for this workf
 5. Generate the selected output(s) from the same validated project JSON. For HTML, embed UTF-8 JSON as base64 in the unchanged original viewer and replace CSP nonce markers. For Markdown, render conservative source-grounded text from the same evidence. Where Python/file tools are available:
 
    ```bash
-   python3 <skill-dir>/scripts/render_embedded.py --data project-data.json --format both --out-dir ./documint
+   python3 <skill-dir>/scripts/render_embedded.py --data project-data.json --format html --out-dir ./documint
    ```
 
    The script is **only a JSON-to-HTML assembler**, not the DocuMint CLI or code analyzer. A host with a binary-safe file-edit capability can instead perform the exact substitutions itself, without Python. Never write raw unescaped JSON inside a `<script>` tag. Never modify the original UI to fake completed analysis.
-6. Choose `--format html`, `--format markdown`, or `--format both` per selection. Verify that selected files exist. HTML must preserve `data-documint-local-code-map`, have no unreplaced placeholders, and load its explorer/graph when a browser tool is available. Markdown must have explicit source coverage. Deliver direct download links for selected files and state inspected versus indexed coverage. Never claim success without actual files.
+6. Choose `--format html`, `--format markdown`, or `--format both` per selection; the command above is the **HTML** example. Verify that selected files exist. HTML must preserve `data-documint-local-code-map`, have no unreplaced placeholders, and load its explorer/graph when a browser tool is available. Markdown must have explicit source coverage. Deliver direct download links for selected files and state inspected versus indexed coverage. Never claim success without actual files.
 
 ## No file output / no execution available
 
