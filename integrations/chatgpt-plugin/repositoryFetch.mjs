@@ -192,11 +192,25 @@ export async function fetchPublicRepository(
   }
 
   const branch = metadata.default_branch;
+  // Resolve the mutable default branch once; fetch the tree and all source
+  // content by immutable commit SHA to prevent mixed revisions mid-scan.
+  const repoApi = "https://api.github.com/repos/" +
+    encodeURIComponent(owner) + "/" + encodeURIComponent(name);
+  const revision = await fetchJson(
+    fetchImpl,
+    new URL(repoApi + "/git/ref/heads/" + encodeRawPath(branch)),
+    MAX_METADATA_BYTES,
+    token,
+  );
+  const commitSha = revision?.object?.sha;
+  if (revision?.object?.type !== "commit" ||
+      typeof commitSha !== "string" ||
+      !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(commitSha)) {
+    throw new Error("GitHub did not return a verified commit SHA");
+  }
   const tree = await fetchJson(
     fetchImpl,
-    new URL("https://api.github.com/repos/" +
-      encodeURIComponent(owner) + "/" + encodeURIComponent(name) +
-      "/git/trees/" + encodeURIComponent(branch) + "?recursive=1"),
+    new URL(repoApi + "/git/trees/" + commitSha + "?recursive=1"),
     MAX_TREE_BYTES,
     token,
   );
@@ -232,7 +246,7 @@ export async function fetchPublicRepository(
 
   const rawBase = "https://raw.githubusercontent.com/" +
     encodeURIComponent(owner) + "/" + encodeURIComponent(name) + "/" +
-    encodeURIComponent(branch) + "/";
+    commitSha + "/";
 
   const result = await parallelMap(selection, async (entry) => {
     try {
@@ -286,6 +300,7 @@ export async function fetchPublicRepository(
     repository: slug,
     sourceUrl: "https://github.com/" + slug,
     branch,
+    commitSha,
     treeSha: typeof tree.sha === "string" ? tree.sha : null,
     files,
     extras: { readme, makefile, dockerfile },

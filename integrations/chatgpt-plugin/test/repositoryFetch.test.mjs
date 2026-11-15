@@ -47,8 +47,9 @@ test("source path filter rejects secrets, build output and tests", () => {
   }
 });
 
-function mockGithubFetch({ privateRepo = false, truncated = false } = {}) {
+function mockGithubFetch({ privateRepo = false, truncated = false, invalidRef = false, branch = "main" } = {}) {
   const calls = [];
+  const commitSha = "a".repeat(40);
   const source = new Map([
     ["package.json", '{"name":"example","scripts":{"test":"node --test"}}'],
     ["src/index.ts", 'import { run } from "./lib";\\nexport const value = run();'],
@@ -73,18 +74,26 @@ function mockGithubFetch({ privateRepo = false, truncated = false } = {}) {
       calls.push({ address, options });
       if (address === "https://api.github.com/repos/example/project") {
         return new Response(
-          JSON.stringify({ private: privateRepo, default_branch: "main" }),
+          JSON.stringify({ private: privateRepo, default_branch: branch }),
           { status: 200 },
         );
       }
       if (address ===
-          "https://api.github.com/repos/example/project/git/trees/main?recursive=1") {
+          "https://api.github.com/repos/example/project/git/ref/heads/" + branch) {
+        return Response.json({
+          object: { type: "commit", sha: invalidRef ? "bad-sha" : commitSha },
+        });
+      }
+      if (address ===
+          "https://api.github.com/repos/example/project/git/trees/" +
+          commitSha + "?recursive=1") {
         return new Response(
           JSON.stringify({ tree: entries, sha: "sample-sha", truncated }),
           { status: 200 },
         );
       }
-      const prefix = "https://raw.githubusercontent.com/example/project/main/";
+      const prefix = "https://raw.githubusercontent.com/example/project/" +
+        commitSha + "/";
       if (address.startsWith(prefix)) {
         const path = decodeURIComponent(address.slice(prefix.length));
         if (source.has(path)) {
@@ -104,6 +113,15 @@ test("read-only public collection is bounded, deterministic and explicit about c
   });
   assert.equal(result.repository, "example/project");
   assert.equal(result.treeSha, "sample-sha");
+  assert.equal(result.commitSha, "a".repeat(40));
+  const rawCalls = mock.calls.filter((call) =>
+    call.address.startsWith("https://raw.githubusercontent.com/"));
+  assert.ok(rawCalls.length > 0);
+  assert.ok(rawCalls.every((call) =>
+    call.address.startsWith("https://raw.githubusercontent.com/example/project/" +
+      result.commitSha + "/")));
+  assert.ok(mock.calls.some((call) =>
+    call.address.endsWith("/git/ref/heads/main")));
   assert.equal(result.files.length, 3);
   assert.equal(result.files[0].path, "package.json");
   assert.ok(result.files.every((file) => isSafeSourcePath(file.path)));
@@ -152,4 +170,32 @@ test("truncated GitHub trees never claim complete analysis", async () => {
   assert.equal(result.coverage.complete, false);
   assert.equal(result.coverage.githubTreeTruncated, true);
   assert.ok(result.files.some((file) => file.path === "src/lib.ts"));
+});
+
+
+test("invalid commit references are rejected before any raw source requests", async () => {
+  const mock = mockGithubFetch({ invalidRef: true });
+  await assert.rejects(
+    () => fetchPublicRepository("example/project", {
+      maxFiles: 10,
+      fetchImpl: mock.fetchImpl,
+    }),
+    /verified commit SHA/,
+  );
+  assert.equal(mock.calls.filter((call) =>
+    call.address.startsWith("https://raw.githubusercontent.com/")).length, 0);
+});
+
+test("slash-containing default branch names resolve to a single commit", async () => {
+  const mock = mockGithubFetch({ branch: "release/stable" });
+  const result = await fetchPublicRepository("example/project", {
+    maxFiles: 10,
+    fetchImpl: mock.fetchImpl,
+  });
+  assert.equal(result.branch, "release/stable");
+  assert.equal(result.commitSha, "a".repeat(40));
+  assert.ok(mock.calls.some((call) =>
+    call.address.endsWith("/git/ref/heads/release/stable")));
+  assert.ok(mock.calls.every((call) =>
+    !call.address.startsWith("https://raw.githubusercontent.com/example/project/release/")));
 });

@@ -57,6 +57,8 @@ function scope(source) {
     repository: source.repository,
     sourceUrl: source.sourceUrl,
     branch: source.branch,
+    commitSha: source.commitSha,
+    revisionUrl: source.sourceUrl + "/tree/" + source.commitSha,
     treeSha: source.treeSha,
     coverage: source.coverage,
     caution: source.coverage.complete
