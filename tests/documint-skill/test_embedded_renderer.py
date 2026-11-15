@@ -85,4 +85,73 @@ class EmbedTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "edge"):
             validate_project_data(data)
 
+
+class FormatSelectionTests(unittest.TestCase):
+    def test_html_only_uses_original_shell_and_no_markdown(self):
+        from tempfile import TemporaryDirectory
+        from render_embedded import write_selected_outputs
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            template = root / "viewer.html"
+            template.write_text(SHELL, encoding="utf-8")
+            result = write_selected_outputs(model(), template, root / "out", "html")
+            self.assertEqual({p.name for p in result}, {"documentation.html"})
+            self.assertIn("data-documint-local-code-map", result[0].read_text(encoding="utf-8"))
+            self.assertFalse((root / "out/documentation.md").exists())
+
+    def test_markdown_only_skips_html_template(self):
+        from tempfile import TemporaryDirectory
+        from render_embedded import write_selected_outputs
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            result = write_selected_outputs(model(), root / "does-not-exist.html", root / "out", "markdown")
+            self.assertEqual({p.name for p in result}, {"documentation.md"})
+            doc = result[0].read_text(encoding="utf-8")
+            self.assertIn("app.py", doc)
+            self.assertIn("1 inspected / 1 indexed", doc)
+            self.assertFalse((root / "out/documentation.html").exists())
+
+    def test_both_writes_two_downloads_from_one_json(self):
+        from tempfile import TemporaryDirectory
+        from render_embedded import write_selected_outputs
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            template = root / "viewer.html"
+            template.write_text(SHELL, encoding="utf-8")
+            result = write_selected_outputs(model(), template, root / "out", "both")
+            self.assertEqual({p.name for p in result}, {"documentation.html", "documentation.md"})
+
+    def test_invalid_format_fails_before_writing(self):
+        from tempfile import TemporaryDirectory
+        from render_embedded import write_selected_outputs
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            with self.assertRaisesRegex(ValueError, "format"):
+                write_selected_outputs(model(), root / "missing.html", root / "out", "pdf")
+            self.assertFalse((root / "out").exists())
+
+    def test_markdown_escapes_untrusted_source_html(self):
+        from render_embedded import markdown_from_project
+        data = model()
+        data["documentationSections"] = [{
+            "heading": "Overview <script>alert(1)</script>",
+            "paragraphs": ["Source <img src=x onerror=alert(1)> inspected"],
+            "items": ["Evidence only"],
+        }]
+        doc = markdown_from_project(data)
+        self.assertNotIn("<script>", doc)
+        self.assertNotIn("<img ", doc)
+        self.assertIn("Evidence only", doc)
+
+    def test_short_trigger_and_format_choice_are_packaged(self):
+        skill = (Path(__file__).parents[2] / "plugins/documint/skills/documenting-codebases/SKILL.md").read_text()
+        manifest = json.loads((Path(__file__).parents[2] / "plugins/documint/plugin.json").read_text())
+        self.assertIn("Use DocuMint", skill)
+        self.assertIn("format selection", skill.lower())
+        self.assertIn("HTML", skill)
+        self.assertIn("Markdown", skill)
+        self.assertIn("Both", skill)
+        self.assertIn("cannot create native clickable checkboxes", skill)
+        self.assertEqual(manifest["extensions"]["com.openai"]["interface"]["defaultPrompt"][0], "Use DocuMint")
+
 if __name__ == "__main__": unittest.main()
